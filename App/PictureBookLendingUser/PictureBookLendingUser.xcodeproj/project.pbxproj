@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EFF77F242DD672BC009BD213 /* PictureBookLendingCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFF77F232DD672BC009BD213 /* PictureBookLendingCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		EFF77E772DD66A2A009BD213 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFF77F242DD672BC009BD213 /* PictureBookLendingCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +83,7 @@
 				EFF77E682DD66A29009BD213 /* PictureBookLendingUser */,
 				EFF77E792DD66A2A009BD213 /* PictureBookLendingUserTests */,
 				EFF77E832DD66A2A009BD213 /* PictureBookLendingUserUITests */,
+				EFF77F222DD672BC009BD213 /* Frameworks */,
 				EFF77E672DD66A29009BD213 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +96,13 @@
 				EFF77E802DD66A2A009BD213 /* PictureBookLendingUserUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		EFF77F222DD672BC009BD213 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +125,7 @@
 			);
 			name = PictureBookLendingUser;
 			packageProductDependencies = (
+				EFF77F232DD672BC009BD213 /* PictureBookLendingCore */,
 			);
 			productName = PictureBookLendingUser;
 			productReference = EFF77E662DD66A29009BD213 /* PictureBookLendingUser.app */;
@@ -195,6 +209,9 @@
 			);
 			mainGroup = EFF77E5D2DD66A29009BD213;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EFF77F1D2DD6714A009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFF77E672DD66A29009BD213 /* Products */;
 			projectDirPath = "";
@@ -407,7 +424,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
@@ -446,7 +463,7 @@
 				"INFOPLIST_KEY_UIStatusBarStyle[sdk=iphonesimulator*]" = UIStatusBarStyleDefault;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
@@ -593,6 +610,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		EFF77F1D2DD6714A009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../PictureBookLendingCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EFF77F232DD672BC009BD213 /* PictureBookLendingCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EFF77F1D2DD6714A009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */;
+			productName = PictureBookLendingCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EFF77E5E2DD66A29009BD213 /* Project object */;
 }
