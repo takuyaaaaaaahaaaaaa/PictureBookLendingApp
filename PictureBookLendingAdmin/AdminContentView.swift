@@ -1,26 +1,12 @@
 import SwiftUI
-import PictureBookLendingCore
 
-@main
-public struct AdminApp: App {
-    public init() {}
-    
-    public var body: some Scene {
-        WindowGroup {
-            AdminContentView()
-        }
-    }
-}
-
-public struct AdminContentView: View {
+struct AdminContentView: View {
     private let bookManagementService = BookManagementService()
     @State private var books: [Book] = []
     
-    public init() {}
-    
-    public var body: some View {
+    var body: some View {
         NavigationView {
-            List(books, id: \.id) { book in
+            List(books) { book in
                 VStack(alignment: .leading) {
                     Text(book.title)
                         .font(.headline)
@@ -47,5 +33,11 @@ public struct AdminContentView: View {
                 books = [book1, book2]
             }
         }
+    }
+}
+
+struct AdminContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        AdminContentView()
     }
 }
