@@ -62,8 +62,11 @@ struct LendingView: View {
                 }
             }
             .sheet(isPresented: $showingNewLoanSheet) {
-                // Note: Placeholder for NewLoanView
-                Text("貸出登録フォーム").onDisappear {
+                NewLoanView(
+                    bookModel: bookModel,
+                    userModel: userModel,
+                    lendingModel: lendingModel
+                ).onDisappear {
                     loadLoans()
                 }
             }

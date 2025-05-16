@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * 利用者詳細表示ビュー
@@ -7,13 +8,15 @@ import PictureBookLendingCore
  * 選択された利用者の詳細情報を表示し、編集や貸出履歴の確認などの機能を提供します。
  */
 struct UserDetailView: View {
-    @Environment(\.userModel) private var userModel
-    @Environment(\.lendingModel) private var lendingModel
-    @Environment(\.bookModel) private var bookModel
-    @Environment(\.dismiss) private var dismiss
+    let userModel: UserModel
+    let lendingModel: LendingModel
+    let bookModel: BookModel
     
     // 表示対象の利用者
     let user: User
+    
+    // 更新後の利用者情報
+    @State private var updatedUser: User
     
     // 編集シート表示状態
     @State private var showingEditSheet = false
@@ -21,12 +24,20 @@ struct UserDetailView: View {
     // 現在の貸出数
     @State private var activeLoansCount = 0
     
+    init(userModel: UserModel, lendingModel: LendingModel, bookModel: BookModel, user: User) {
+        self.userModel = userModel
+        self.lendingModel = lendingModel
+        self.bookModel = bookModel
+        self.user = user
+        self._updatedUser = State(initialValue: user)
+    }
+    
     var body: some View {
         List {
             Section("基本情報") {
-                DetailRow(label: "名前", value: user.name)
-                DetailRow(label: "グループ", value: user.group)
-                DetailRow(label: "管理ID", value: user.id.uuidString)
+                DetailRow(label: "名前", value: updatedUser.name)
+                DetailRow(label: "グループ", value: updatedUser.group)
+                DetailRow(label: "管理ID", value: updatedUser.id.uuidString)
             }
             
             Section("貸出状況") {
@@ -40,23 +51,19 @@ struct UserDetailView: View {
             }
             
             Section("貸出履歴") {
-                if let lendingModel = lendingModel, let loans = try? lendingModel.getLoansByUser(userId: user.id) {
-                    if loans.isEmpty {
-                        Text("貸出履歴はありません")
-                            .italic()
-                            .foregroundColor(.secondary)
-                    } else {
-                        ForEach(loans) { loan in
-                            UserLoanHistoryRow(loan: loan)
-                        }
-                    }
+                let loans = (try? lendingModel.getLoansByUser(userId: user.id)) ?? []
+                if loans.isEmpty {
+                    Text("貸出履歴はありません")
+                        .italic()
+                        .foregroundColor(.secondary)
                 } else {
-                    Text("貸出履歴の取得に失敗しました")
-                        .foregroundColor(.red)
+                    ForEach(loans) { loan in
+                        UserLoanHistoryRow(bookModel: bookModel, loan: loan)
+                    }
                 }
             }
         }
-        .navigationTitle(user.name)
+        .navigationTitle(updatedUser.name)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("編集") {
@@ -65,7 +72,14 @@ struct UserDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditSheet) {
-            UserFormView(mode: .edit(user))
+            UserFormView(
+                userModel: userModel,
+                mode: .edit(updatedUser),
+                onSave: { savedUser in
+                    updatedUser = savedUser
+                    checkLoanStatus()
+                }
+            )
         }
         .onAppear {
             checkLoanStatus()
@@ -74,10 +88,8 @@ struct UserDetailView: View {
     
     // 貸出状態の確認
     private func checkLoanStatus() {
-        if let lendingModel = lendingModel {
-            let activeLoans = lendingModel.getActiveLoans()
-            activeLoansCount = activeLoans.filter { $0.userId == user.id }.count
-        }
+        let activeLoans = lendingModel.getActiveLoans()
+        activeLoansCount = activeLoans.filter { $0.userId == updatedUser.id }.count
     }
 }
 
@@ -85,8 +97,7 @@ struct UserDetailView: View {
  * 利用者の貸出履歴表示用の行コンポーネント
  */
 struct UserLoanHistoryRow: View {
-    @Environment(\.bookModel) private var bookModel
-    
+    let bookModel: BookModel
     let loan: Loan
     
     var body: some View {
@@ -116,7 +127,7 @@ struct UserLoanHistoryRow: View {
     
     // 書籍名の取得
     private var bookTitle: String {
-        if let bookModel = bookModel, let book = bookModel.findBookById(loan.bookId) {
+        if let book = bookModel.findBookById(loan.bookId) {
             return book.title
         }
         return "不明な書籍"
@@ -138,7 +149,49 @@ struct UserLoanHistoryRow: View {
 }
 
 #Preview {
-    NavigationStack {
-        UserDetailView(user: User(name: "山田太郎", group: "1年2組"))
+    let bookModel = BookModel(repository: MockBookRepository())
+    let userModel = UserModel(repository: MockUserRepository())
+    let lendingModel = LendingModel(
+        bookModel: bookModel,
+        userModel: userModel,
+        repository: MockLoanRepository()
+    )
+    let user = User(name: "山田太郎", group: "1年2組")
+    
+    return NavigationStack {
+        UserDetailView(
+            userModel: userModel,
+            lendingModel: lendingModel,
+            bookModel: bookModel,
+            user: user
+        )
     }
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockUserRepository: UserRepository {
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return [] }
+    func findById(_ id: UUID) throws -> User? { return nil }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockLoanRepository: LoanRepository {
+    func save(_ loan: Loan) throws -> Loan { return loan }
+    func fetchAll() throws -> [Loan] { return [] }
+    func findById(_ id: UUID) throws -> Loan? { return nil }
+    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
+    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
+    func fetchActiveLoans() throws -> [Loan] { return [] }
+    func update(_ loan: Loan) throws -> Loan { return loan }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

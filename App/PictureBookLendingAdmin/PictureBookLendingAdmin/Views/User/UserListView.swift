@@ -9,6 +9,8 @@ import Observation
  */
 struct UserListView: View {
     let userModel: UserModel
+    let lendingModel: LendingModel
+    let bookModel: BookModel
     
     // 利用者の検索文字列
     @State private var searchText = ""
@@ -24,8 +26,12 @@ struct UserListView: View {
             List {
                 if !users.isEmpty {
                     ForEach(filteredUsers(users)) { user in
-                        // Note: Placeholder for UserDetailView which would be implemented similarly
-                        NavigationLink(destination: Text(user.name)) {
+                        NavigationLink(destination: UserDetailView(
+                            userModel: userModel,
+                            lendingModel: lendingModel,
+                            bookModel: bookModel,
+                            user: user
+                        )) {
                             UserRowView(user: user)
                         }
                     }
@@ -46,8 +52,9 @@ struct UserListView: View {
             }
             .searchable(text: $searchText, prompt: "名前またはグループで検索")
             .sheet(isPresented: $showingAddSheet) {
-                // Note: Placeholder for UserFormView
-                Text("利用者登録フォーム")
+                UserFormView(userModel: userModel, mode: .add, onSave: { _ in
+                    loadUsers()
+                })
             }
             .onAppear {
                 loadUsers()
@@ -110,8 +117,34 @@ struct UserRowView: View {
 }
 
 #Preview {
+    let bookModel = BookModel(repository: MockBookRepository())
     let userModel = UserModel(repository: MockUserRepository())
-    return UserListView(userModel: userModel)
+    let lendingModel = LendingModel(
+        bookModel: bookModel,
+        userModel: userModel,
+        repository: MockLoanRepository()
+    )
+    return UserListView(userModel: userModel, lendingModel: lendingModel, bookModel: bookModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockLoanRepository: LoanRepository {
+    func save(_ loan: Loan) throws -> Loan { return loan }
+    func fetchAll() throws -> [Loan] { return [] }
+    func findById(_ id: UUID) throws -> Loan? { return nil }
+    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
+    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
+    func fetchActiveLoans() throws -> [Loan] { return [] }
+    func update(_ loan: Loan) throws -> Loan { return loan }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }
 
 // プレビュー用のモックリポジトリ

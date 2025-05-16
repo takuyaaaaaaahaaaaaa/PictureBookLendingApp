@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * 新規貸出登録ビュー
@@ -7,9 +8,9 @@ import PictureBookLendingCore
  * 絵本の新規貸出を登録するためのフォームを提供します。
  */
 struct NewLoanView: View {
-    @Environment(\.bookModel) private var bookModel
-    @Environment(\.userModel) private var userModel
-    @Environment(\.lendingModel) private var lendingModel
+    let bookModel: BookModel
+    let userModel: UserModel
+    let lendingModel: LendingModel
     @Environment(\.dismiss) private var dismiss
     
     // 選択された絵本のID
@@ -35,49 +36,41 @@ struct NewLoanView: View {
         NavigationStack {
             Form {
                 Section(header: Text("絵本を選択")) {
-                    if let bookModel = bookModel, let books = filteredBooks(bookModel) {
-                        if books.isEmpty {
-                            Text("検索条件に一致する絵本はありません")
-                                .italic()
-                                .foregroundColor(.secondary)
-                        } else {
-                            ForEach(books) { book in
-                                BookSelectionRow(
-                                    book: book,
-                                    isSelected: book.id == selectedBookId,
-                                    isLent: isBookLent(book.id)
-                                ) {
-                                    selectedBookId = book.id
-                                }
-                                .disabled(isBookLent(book.id))
-                            }
-                        }
+                    let books = filteredBooks()
+                    if books.isEmpty {
+                        Text("検索条件に一致する絵本はありません")
+                            .italic()
+                            .foregroundColor(.secondary)
                     } else {
-                        Text("絵本情報を読み込めませんでした")
-                            .foregroundColor(.red)
+                        ForEach(books) { book in
+                            BookSelectionRow(
+                                book: book,
+                                isSelected: book.id == selectedBookId,
+                                isLent: isBookLent(book.id)
+                            ) {
+                                selectedBookId = book.id
+                            }
+                            .disabled(isBookLent(book.id))
+                        }
                     }
                 }
                 .searchable(text: $bookSearchText, prompt: "絵本を検索")
                 
                 Section(header: Text("利用者を選択")) {
-                    if let userModel = userModel, let users = filteredUsers(userModel) {
-                        if users.isEmpty {
-                            Text("検索条件に一致する利用者はいません")
-                                .italic()
-                                .foregroundColor(.secondary)
-                        } else {
-                            ForEach(users) { user in
-                                UserSelectionRow(
-                                    user: user,
-                                    isSelected: user.id == selectedUserId
-                                ) {
-                                    selectedUserId = user.id
-                                }
+                    let users = filteredUsers()
+                    if users.isEmpty {
+                        Text("検索条件に一致する利用者はいません")
+                            .italic()
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(users) { user in
+                            UserSelectionRow(
+                                user: user,
+                                isSelected: user.id == selectedUserId
+                            ) {
+                                selectedUserId = user.id
                             }
                         }
-                    } else {
-                        Text("利用者情報を読み込めませんでした")
-                            .foregroundColor(.red)
                     }
                 }
                 .searchable(text: $userSearchText, prompt: "利用者を検索")
@@ -120,7 +113,7 @@ struct NewLoanView: View {
     }
     
     // フィルタリングされた書籍リスト
-    private func filteredBooks(_ bookModel: BookModel) -> [Book]? {
+    private func filteredBooks() -> [Book] {
         let books = bookModel.getAllBooks()
         
         if bookSearchText.isEmpty {
@@ -134,7 +127,7 @@ struct NewLoanView: View {
     }
     
     // フィルタリングされた利用者リスト
-    private func filteredUsers(_ userModel: UserModel) -> [User]? {
+    private func filteredUsers() -> [User] {
         let users = userModel.getAllUsers()
         
         if userSearchText.isEmpty {
@@ -149,14 +142,12 @@ struct NewLoanView: View {
     
     // 書籍が貸出中かどうかのチェック
     private func isBookLent(_ bookId: UUID) -> Bool {
-        guard let lendingModel = lendingModel else { return false }
         return lendingModel.isBookLent(bookId: bookId)
     }
     
     // 貸出登録
     private func registerLoan() {
-        guard let lendingModel = lendingModel,
-              let bookId = selectedBookId,
+        guard let bookId = selectedBookId,
               let userId = selectedUserId else {
             showError("必要な情報が選択されていません")
             return
@@ -260,5 +251,42 @@ struct UserSelectionRow: View {
 }
 
 #Preview {
-    NewLoanView()
+    // デモ用のモックモデル
+    let bookModel = BookModel(repository: MockBookRepository())
+    let userModel = UserModel(repository: MockUserRepository())
+    let lendingModel = LendingModel(
+        bookModel: bookModel,
+        userModel: userModel,
+        repository: MockLoanRepository()
+    )
+    
+    return NewLoanView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockUserRepository: UserRepository {
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return [] }
+    func findById(_ id: UUID) throws -> User? { return nil }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockLoanRepository: LoanRepository {
+    func save(_ loan: Loan) throws -> Loan { return loan }
+    func fetchAll() throws -> [Loan] { return [] }
+    func findById(_ id: UUID) throws -> Loan? { return nil }
+    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
+    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
+    func fetchActiveLoans() throws -> [Loan] { return [] }
+    func update(_ loan: Loan) throws -> Loan { return loan }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

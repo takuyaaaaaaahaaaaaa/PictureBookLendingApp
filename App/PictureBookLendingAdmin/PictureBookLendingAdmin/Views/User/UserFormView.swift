@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /// 利用者フォームの操作モード
 enum UserFormMode {
@@ -13,11 +14,15 @@ enum UserFormMode {
  * 利用者の新規登録と既存利用者の編集に使用できるフォームビューです。
  */
 struct UserFormView: View {
-    @Environment(\.userModel) private var userModel
-    @Environment(\.dismiss) private var dismiss
+    let userModel: UserModel
     
     // フォームのモード（追加/編集）
     let mode: UserFormMode
+    
+    // 保存完了時のコールバック
+    var onSave: ((User) -> Void)? = nil
+    
+    @Environment(\.dismiss) private var dismiss
     
     // フォーム入力値
     @State private var name: String = ""
@@ -81,16 +86,12 @@ struct UserFormView: View {
     
     // 利用者の保存/更新処理
     private func saveUser() {
-        guard let userModel = userModel else {
-            showError("モデルが利用できません")
-            return
-        }
-        
         do {
             switch mode {
             case .add:
                 let newUser = User(name: name, group: group)
-                _ = try userModel.registerUser(newUser)
+                let savedUser = try userModel.registerUser(newUser)
+                onSave?(savedUser)
                 
             case .edit(let user):
                 let updatedUser = User(
@@ -98,7 +99,8 @@ struct UserFormView: View {
                     name: name,
                     group: group
                 )
-                _ = try userModel.updateUser(updatedUser)
+                let savedUser = try userModel.updateUser(updatedUser)
+                onSave?(savedUser)
             }
             
             dismiss()
@@ -115,5 +117,15 @@ struct UserFormView: View {
 }
 
 #Preview {
-    UserFormView(mode: .add)
+    let userModel = UserModel(repository: MockUserRepository())
+    return UserFormView(userModel: userModel, mode: .add)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockUserRepository: UserRepository {
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return [] }
+    func findById(_ id: UUID) throws -> User? { return nil }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

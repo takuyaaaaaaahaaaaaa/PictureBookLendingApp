@@ -29,7 +29,7 @@ struct ContentView: View {
                 .tag(0)
             
             // 利用者管理タブ
-            UserListView(userModel: userModel)
+            UserListView(userModel: userModel, lendingModel: lendingModel, bookModel: bookModel)
                 .tabItem {
                     Label("利用者管理", systemImage: "person.2")
                 }
