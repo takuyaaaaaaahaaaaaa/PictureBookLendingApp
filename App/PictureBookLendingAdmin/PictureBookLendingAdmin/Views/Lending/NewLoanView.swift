@@ -108,6 +108,7 @@ struct NewLoanView: View {
                 // データを最新の状態に更新
                 bookModel.refreshBooks()
                 userModel.refreshUsers()
+                lendingModel.refreshLoans()
             }
         }
     }
@@ -159,8 +160,23 @@ struct NewLoanView: View {
         }
         
         do {
+            // 最新データで状態を更新してから貸出処理
+            lendingModel.refreshLoans()
+            
+            // すでに貸出中かどうか再確認
+            if lendingModel.isBookLent(bookId: bookId) {
+                showError("この絵本はすでに貸出中です")
+                return
+            }
+            
             _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
             dismiss()
+        } catch LendingModelError.bookAlreadyLent {
+            showError("この絵本はすでに貸出中です")
+        } catch LendingModelError.bookNotFound {
+            showError("選択された絵本が見つかりません")
+        } catch LendingModelError.userNotFound {
+            showError("選択された利用者が見つかりません")
         } catch {
             showError("貸出登録に失敗しました: \(error.localizedDescription)")
         }

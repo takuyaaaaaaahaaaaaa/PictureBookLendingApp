@@ -83,6 +83,7 @@ struct LendingView: View {
     private func loadLoans() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
+        lendingModel.refreshLoans()
         loans = lendingModel.getAllLoans()
     }
     

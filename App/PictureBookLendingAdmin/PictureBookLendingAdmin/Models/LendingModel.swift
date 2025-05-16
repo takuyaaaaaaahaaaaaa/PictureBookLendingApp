@@ -175,12 +175,19 @@ enum LendingModelError: Error, Equatable {
      * - Returns: 貸出中の場合はtrue、そうでなければfalse
      */
     func isBookLent(bookId: UUID) -> Bool {
-        // キャッシュを更新
-        refreshActiveLoans()
-        
+        // 現在のloansから貸出中かどうかを確認
         return loans.contains { loan in
             loan.bookId == bookId && !loan.isReturned
         }
+    }
+    
+    /**
+     * 貸出情報を最新の状態に更新する
+     * 
+     * リポジトリから最新のデータを取得して内部キャッシュを更新します。
+     */
+    func refreshLoans() {
+        refreshActiveLoans()
     }
     
     /**
@@ -229,12 +236,6 @@ enum LendingModelError: Error, Equatable {
      * - Returns: 全ての貸出情報リスト
      */
     func getAllLoans() -> [Loan] {
-        do {
-            loans = try repository.fetchAll()
-        } catch {
-            print("貸出情報の取得に失敗しました: \(error)")
-        }
-        
         return loans
     }
     
