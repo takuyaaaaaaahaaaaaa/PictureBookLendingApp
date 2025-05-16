@@ -1,66 +1,56 @@
-//
-//  ContentView.swift
-//  PictureBookLendingAdmin
-//
-//  Created by takuya_tominaga on 5/16/25.
-//
-
 import SwiftUI
-import SwiftData
 
+/**
+ * 絵本貸出管理アプリのメインコンテンツビュー
+ *
+ * タブベースのナビゲーション構造を提供し、以下の主要機能へのアクセスを提供します：
+ * - 絵本管理（一覧表示、追加、編集、削除）
+ * - 利用者管理（一覧表示、追加、編集、削除）
+ * - 貸出・返却管理（貸出、返却、履歴確認）
+ * - ダッシュボード（概要情報の表示）
+ */
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Environment(\.bookModel) private var bookModel
+    @Environment(\.userModel) private var userModel
+    @Environment(\.lendingModel) private var lendingModel
+    
+    // 選択中のタブを管理
+    @State private var selectedTab = 0
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
+        TabView(selection: $selectedTab) {
+            // 絵本管理タブ
+            BookListView()
+                .tabItem {
+                    Label("絵本管理", systemImage: "book")
                 }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                .tag(0)
+            
+            // 利用者管理タブ
+            UserListView()
+                .tabItem {
+                    Label("利用者管理", systemImage: "person.2")
                 }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+                .tag(1)
+            
+            // 貸出・返却タブ
+            LendingView()
+                .tabItem {
+                    Label("貸出・返却", systemImage: "arrow.left.arrow.right")
                 }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+                .tag(2)
+            
+            // ダッシュボードタブ
+            DashboardView()
+                .tabItem {
+                    Label("ダッシュボード", systemImage: "chart.pie")
+                }
+                .tag(3)
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: SwiftDataBook.self, inMemory: true)
 }

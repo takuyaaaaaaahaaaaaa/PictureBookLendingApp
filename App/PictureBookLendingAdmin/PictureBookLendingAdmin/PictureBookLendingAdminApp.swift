@@ -21,7 +21,6 @@ struct PictureBookLendingAdminApp: App {
     init() {
         // SwiftDataモデルコンテナの設定
         let schema = Schema([
-            Item.self,
             SwiftDataBook.self,
             SwiftDataUser.self,
             SwiftDataLoan.self
