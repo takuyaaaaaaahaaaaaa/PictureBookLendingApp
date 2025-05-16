@@ -7,7 +7,8 @@ import PictureBookLendingCore
  * 登録されている全ての絵本を一覧表示し、新規追加、編集、削除などの操作を提供します。
  */
 struct BookListView: View {
-    @Environment(\.bookModel) private var bookModel
+    @EnvironmentObject private var bookModel: BookModel
+    @Environment(\.bookModel) private var bookModelEnv
     
     // 絵本の検索文字列
     @State private var searchText = ""
@@ -15,10 +16,16 @@ struct BookListView: View {
     // 新規絵本追加用のシート表示状態
     @State private var showingAddSheet = false
     
+    // 絵本リストの更新トリガー
+    @State private var refreshTrigger = false
+    
+    // 現在の絵本リスト
+    @State private var books: [Book] = []
+    
     var body: some View {
         NavigationStack {
             List {
-                if let books = bookModel?.getAllBooks(), !books.isEmpty {
+                if !books.isEmpty {
                     ForEach(filteredBooks(books)) { book in
                         NavigationLink(destination: BookDetailView(book: book)) {
                             BookRowView(book: book)
@@ -41,7 +48,15 @@ struct BookListView: View {
             }
             .searchable(text: $searchText, prompt: "絵本のタイトルまたは著者で検索")
             .sheet(isPresented: $showingAddSheet) {
-                BookFormView(mode: .add)
+                BookFormView(mode: .add, onSave: { _ in
+                    loadBooks()
+                })
+            }
+            .onAppear {
+                loadBooks()
+            }
+            .refreshable {
+                loadBooks()
             }
         }
     }
@@ -58,10 +73,13 @@ struct BookListView: View {
         }
     }
     
+    // 書籍リストの読み込み
+    private func loadBooks() {
+        books = bookModel.getAllBooks()
+    }
+    
     // 絵本の削除処理
     private func deleteBooks(at offsets: IndexSet) {
-        guard let books = bookModel?.getAllBooks() else { return }
-        
         for index in offsets {
             let book = books[index]
             do {

@@ -53,6 +53,7 @@ struct PictureBookLendingAdminApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(bookModel)
                 .environment(\.bookModel, bookModel)
                 .environment(\.userModel, userModel)
                 .environment(\.lendingModel, lendingModel)

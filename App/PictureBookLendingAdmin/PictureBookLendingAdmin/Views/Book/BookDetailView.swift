@@ -7,7 +7,8 @@ import PictureBookLendingCore
  * 選択された絵本の詳細情報を表示し、編集や貸出履歴の確認などの機能を提供します。
  */
 struct BookDetailView: View {
-    @Environment(\.bookModel) private var bookModel
+    @EnvironmentObject private var bookModel: BookModel
+    @Environment(\.bookModel) private var bookModelEnv
     @Environment(\.lendingModel) private var lendingModel
     @Environment(\.dismiss) private var dismiss
     
@@ -20,12 +21,20 @@ struct BookDetailView: View {
     // 貸出状態確認用フラグ
     @State private var isCurrentlyLent = false
     
+    // 更新後の絵本情報
+    @State private var updatedBook: Book
+    
+    init(book: Book) {
+        self.book = book
+        self._updatedBook = State(initialValue: book)
+    }
+    
     var body: some View {
         List {
             Section("基本情報") {
-                DetailRow(label: "タイトル", value: book.title)
-                DetailRow(label: "著者", value: book.author)
-                DetailRow(label: "管理ID", value: book.id.uuidString)
+                DetailRow(label: "タイトル", value: updatedBook.title)
+                DetailRow(label: "著者", value: updatedBook.author)
+                DetailRow(label: "管理ID", value: updatedBook.id.uuidString)
             }
             
             Section("貸出状況") {
@@ -64,7 +73,10 @@ struct BookDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditSheet) {
-            BookFormView(mode: .edit(book))
+            BookFormView(mode: .edit(updatedBook), onSave: { savedBook in
+                updatedBook = savedBook
+                checkLendingStatus()
+            })
         }
         .onAppear {
             checkLendingStatus()

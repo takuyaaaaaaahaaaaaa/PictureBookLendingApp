@@ -13,11 +13,15 @@ enum BookFormMode {
  * 絵本の新規登録と既存絵本の編集に使用できるフォームビューです。
  */
 struct BookFormView: View {
-    @Environment(\.bookModel) private var bookModel
+    @EnvironmentObject private var bookModel: BookModel
+    @Environment(\.bookModel) private var bookModelEnv
     @Environment(\.dismiss) private var dismiss
     
     // フォームのモード（追加/編集）
     let mode: BookFormMode
+    
+    // 保存完了時のコールバック
+    var onSave: ((Book) -> Void)? = nil
     
     // フォーム入力値
     @State private var title: String = ""
@@ -81,16 +85,13 @@ struct BookFormView: View {
     
     // 絵本の保存/更新処理
     private func saveBook() {
-        guard let bookModel = bookModel else {
-            showError("モデルが利用できません")
-            return
-        }
         
         do {
             switch mode {
             case .add:
                 let newBook = Book(title: title, author: author)
-                _ = try bookModel.registerBook(newBook)
+                let savedBook = try bookModel.registerBook(newBook)
+                onSave?(savedBook)
                 
             case .edit(let book):
                 let updatedBook = Book(
@@ -98,7 +99,8 @@ struct BookFormView: View {
                     title: title,
                     author: author
                 )
-                _ = try bookModel.updateBook(updatedBook)
+                let savedBook = try bookModel.updateBook(updatedBook)
+                onSave?(savedBook)
             }
             
             dismiss()
