@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Observation
 
 @main
 struct PictureBookLendingAdminApp: App {
@@ -52,42 +53,9 @@ struct PictureBookLendingAdminApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(bookModel)
-                .environment(\.bookModel, bookModel)
-                .environment(\.userModel, userModel)
-                .environment(\.lendingModel, lendingModel)
+            ContentView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
         }
         .modelContainer(sharedModelContainer)
     }
 }
 
-// 環境変数キーの拡張
-private struct BookModelKey: EnvironmentKey {
-    static let defaultValue: BookModel? = nil
-}
-
-private struct UserModelKey: EnvironmentKey {
-    static let defaultValue: UserModel? = nil
-}
-
-private struct LendingModelKey: EnvironmentKey {
-    static let defaultValue: LendingModel? = nil
-}
-
-extension EnvironmentValues {
-    var bookModel: BookModel? {
-        get { self[BookModelKey.self] }
-        set { self[BookModelKey.self] = newValue }
-    }
-    
-    var userModel: UserModel? {
-        get { self[UserModelKey.self] }
-        set { self[UserModelKey.self] = newValue }
-    }
-    
-    var lendingModel: LendingModel? {
-        get { self[LendingModelKey.self] }
-        set { self[LendingModelKey.self] = newValue }
-    }
-}

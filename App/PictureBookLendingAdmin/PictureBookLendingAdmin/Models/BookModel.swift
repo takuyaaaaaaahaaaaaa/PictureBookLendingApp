@@ -1,5 +1,5 @@
 import Foundation
-import SwiftUI
+import Observation
 import PictureBookLendingCore
 
 /**
@@ -25,13 +25,13 @@ enum BookModelError: Error, Equatable {
  * - 絵本の削除
  * などの機能を提供します。
  */
-class BookModel: ObservableObject {
+@Observable class BookModel {
     
     /// 書籍リポジトリ
     private let repository: BookRepository
     
     /// キャッシュ用の絵本リスト
-    @Published private(set) var books: [Book] = []
+    private(set) var books: [Book] = []
     
     /**
      * イニシャライザ

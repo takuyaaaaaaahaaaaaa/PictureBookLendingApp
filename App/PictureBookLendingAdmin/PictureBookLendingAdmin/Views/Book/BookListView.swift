@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * 絵本一覧表示ビュー
@@ -7,17 +8,13 @@ import PictureBookLendingCore
  * 登録されている全ての絵本を一覧表示し、新規追加、編集、削除などの操作を提供します。
  */
 struct BookListView: View {
-    @EnvironmentObject private var bookModel: BookModel
-    @Environment(\.bookModel) private var bookModelEnv
+    let bookModel: BookModel
     
     // 絵本の検索文字列
     @State private var searchText = ""
     
     // 新規絵本追加用のシート表示状態
     @State private var showingAddSheet = false
-    
-    // 絵本リストの更新トリガー
-    @State private var refreshTrigger = false
     
     // 現在の絵本リスト
     @State private var books: [Book] = []
@@ -27,7 +24,7 @@ struct BookListView: View {
             List {
                 if !books.isEmpty {
                     ForEach(filteredBooks(books)) { book in
-                        NavigationLink(destination: BookDetailView(book: book)) {
+                        NavigationLink(destination: BookDetailView(bookModel: bookModel, book: book)) {
                             BookRowView(book: book)
                         }
                     }
@@ -48,7 +45,7 @@ struct BookListView: View {
             }
             .searchable(text: $searchText, prompt: "絵本のタイトルまたは著者で検索")
             .sheet(isPresented: $showingAddSheet) {
-                BookFormView(mode: .add, onSave: { _ in
+                BookFormView(bookModel: bookModel, mode: .add, onSave: { _ in
                     loadBooks()
                 })
             }
@@ -83,11 +80,12 @@ struct BookListView: View {
         for index in offsets {
             let book = books[index]
             do {
-                _ = try bookModel?.deleteBook(book.id)
+                _ = try bookModel.deleteBook(book.id)
             } catch {
                 print("絵本の削除に失敗しました: \(error)")
             }
         }
+        loadBooks()
     }
 }
 
@@ -112,5 +110,20 @@ struct BookRowView: View {
 }
 
 #Preview {
-    BookListView()
+    let bookModel = BookModel(repository: MockBookRepository())
+    return BookListView(bookModel: bookModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    private var books: [Book] = [
+        Book(title: "はらぺこあおむし", author: "エリック・カール"),
+        Book(title: "ぐりとぐら", author: "中川李枝子")
+    ]
+    
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return books }
+    func findById(_ id: UUID) throws -> Book? { return books.first }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

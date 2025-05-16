@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /// 絵本フォームの操作モード
 enum BookFormMode {
@@ -13,15 +14,15 @@ enum BookFormMode {
  * 絵本の新規登録と既存絵本の編集に使用できるフォームビューです。
  */
 struct BookFormView: View {
-    @EnvironmentObject private var bookModel: BookModel
-    @Environment(\.bookModel) private var bookModelEnv
-    @Environment(\.dismiss) private var dismiss
+    let bookModel: BookModel
     
     // フォームのモード（追加/編集）
     let mode: BookFormMode
     
     // 保存完了時のコールバック
     var onSave: ((Book) -> Void)? = nil
+    
+    @Environment(\.dismiss) private var dismiss
     
     // フォーム入力値
     @State private var title: String = ""
@@ -85,7 +86,6 @@ struct BookFormView: View {
     
     // 絵本の保存/更新処理
     private func saveBook() {
-        
         do {
             switch mode {
             case .add:
@@ -117,5 +117,15 @@ struct BookFormView: View {
 }
 
 #Preview {
-    BookFormView(mode: .add)
+    let bookModel = BookModel(repository: MockBookRepository())
+    return BookFormView(bookModel: bookModel, mode: .add)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

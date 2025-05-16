@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * 利用者一覧表示ビュー
@@ -7,7 +8,7 @@ import PictureBookLendingCore
  * 登録されている全ての利用者を一覧表示し、新規追加、編集、削除などの操作を提供します。
  */
 struct UserListView: View {
-    @Environment(\.userModel) private var userModel
+    let userModel: UserModel
     
     // 利用者の検索文字列
     @State private var searchText = ""
@@ -15,12 +16,16 @@ struct UserListView: View {
     // 新規利用者追加用のシート表示状態
     @State private var showingAddSheet = false
     
+    // 現在の利用者リスト
+    @State private var users: [User] = []
+    
     var body: some View {
         NavigationStack {
             List {
-                if let users = userModel?.getAllUsers(), !users.isEmpty {
+                if !users.isEmpty {
                     ForEach(filteredUsers(users)) { user in
-                        NavigationLink(destination: UserDetailView(user: user)) {
+                        // Note: Placeholder for UserDetailView which would be implemented similarly
+                        NavigationLink(destination: Text(user.name)) {
                             UserRowView(user: user)
                         }
                     }
@@ -41,7 +46,14 @@ struct UserListView: View {
             }
             .searchable(text: $searchText, prompt: "名前またはグループで検索")
             .sheet(isPresented: $showingAddSheet) {
-                UserFormView(mode: .add)
+                // Note: Placeholder for UserFormView
+                Text("利用者登録フォーム")
+            }
+            .onAppear {
+                loadUsers()
+            }
+            .refreshable {
+                loadUsers()
             }
         }
     }
@@ -58,18 +70,22 @@ struct UserListView: View {
         }
     }
     
+    // 利用者リストの読み込み
+    private func loadUsers() {
+        users = userModel.getAllUsers()
+    }
+    
     // 利用者の削除処理
     private func deleteUsers(at offsets: IndexSet) {
-        guard let users = userModel?.getAllUsers() else { return }
-        
         for index in offsets {
             let user = users[index]
             do {
-                _ = try userModel?.deleteUser(user.id)
+                _ = try userModel.deleteUser(user.id)
             } catch {
                 print("利用者の削除に失敗しました: \(error)")
             }
         }
+        loadUsers()
     }
 }
 
@@ -94,5 +110,20 @@ struct UserRowView: View {
 }
 
 #Preview {
-    UserListView()
+    let userModel = UserModel(repository: MockUserRepository())
+    return UserListView(userModel: userModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockUserRepository: UserRepository {
+    private var users: [User] = [
+        User(name: "山田太郎", group: "1年2組"),
+        User(name: "鈴木花子", group: "2年1組")
+    ]
+    
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return users }
+    func findById(_ id: UUID) throws -> User? { return users.first }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

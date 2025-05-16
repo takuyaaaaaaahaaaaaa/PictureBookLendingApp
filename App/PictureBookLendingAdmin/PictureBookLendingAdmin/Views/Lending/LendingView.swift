@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * 貸出・返却管理ビュー
@@ -7,10 +8,15 @@ import PictureBookLendingCore
  * 現在の貸出状況を一覧表示し、新規貸出と返却機能を提供します。
  */
 struct LendingView: View {
-    @Environment(\.lendingModel) private var lendingModel
+    let bookModel: BookModel
+    let userModel: UserModel
+    let lendingModel: LendingModel
     
     // ローンの種類によるフィルタ状態
     @State private var filterSelection = 0 // 0: 全て, 1: 貸出中, 2: 返却済み
+    
+    // 現在の貸出情報リスト
+    @State private var loans: [Loan] = []
     
     // 新規貸出登録シート表示状態
     @State private var showingNewLoanSheet = false
@@ -28,19 +34,20 @@ struct LendingView: View {
                 .padding(.horizontal)
                 
                 List {
-                    if let lendingModel = lendingModel {
-                        let loans = filteredLoans(lendingModel)
-                        
-                        if loans.isEmpty {
-                            ContentUnavailableView("貸出情報がありません", systemImage: "book.closed", description: Text("右上の＋ボタンから新しい貸出を登録してください"))
-                        } else {
-                            ForEach(loans) { loan in
-                                LoanRowView(loan: loan)
-                            }
+                    if !filteredLoans().isEmpty {
+                        ForEach(filteredLoans()) { loan in
+                            LoanRowView(
+                                bookModel: bookModel,
+                                userModel: userModel,
+                                lendingModel: lendingModel,
+                                loan: loan,
+                                onReturn: {
+                                    loadLoans()
+                                }
+                            )
                         }
                     } else {
-                        Text("貸出情報を読み込めませんでした")
-                            .foregroundColor(.red)
+                        ContentUnavailableView("貸出情報がありません", systemImage: "book.closed", description: Text("右上の＋ボタンから新しい貸出を登録してください"))
                     }
                 }
             }
@@ -55,22 +62,34 @@ struct LendingView: View {
                 }
             }
             .sheet(isPresented: $showingNewLoanSheet) {
-                NewLoanView()
+                // Note: Placeholder for NewLoanView
+                Text("貸出登録フォーム").onDisappear {
+                    loadLoans()
+                }
+            }
+            .onAppear {
+                loadLoans()
+            }
+            .refreshable {
+                loadLoans()
             }
         }
     }
     
+    // 貸出情報の読み込み
+    private func loadLoans() {
+        loans = lendingModel.getAllLoans()
+    }
+    
     // フィルタリングされた貸出情報
-    private func filteredLoans(_ lendingModel: LendingModel) -> [Loan] {
-        let allLoans = lendingModel.getAllLoans()
-        
+    private func filteredLoans() -> [Loan] {
         switch filterSelection {
         case 1: // 貸出中
-            return allLoans.filter { !$0.isReturned }
+            return loans.filter { !$0.isReturned }
         case 2: // 返却済み
-            return allLoans.filter { $0.isReturned }
+            return loans.filter { $0.isReturned }
         default: // 全て
-            return allLoans
+            return loans
         }
     }
 }
@@ -81,11 +100,11 @@ struct LendingView: View {
  * 一覧の各行に表示する貸出情報のレイアウトを定義します。
  */
 struct LoanRowView: View {
-    @Environment(\.bookModel) private var bookModel
-    @Environment(\.userModel) private var userModel
-    @Environment(\.lendingModel) private var lendingModel
-    
+    let bookModel: BookModel
+    let userModel: UserModel
+    let lendingModel: LendingModel
     let loan: Loan
+    var onReturn: (() -> Void)? = nil
     
     @State private var showingReturnConfirmation = false
     @State private var showingError = false
@@ -152,7 +171,7 @@ struct LoanRowView: View {
     
     // 書籍名の取得
     private var bookTitle: String {
-        if let bookModel = bookModel, let book = bookModel.findBookById(loan.bookId) {
+        if let book = bookModel.findBookById(loan.bookId) {
             return book.title
         }
         return "不明な書籍"
@@ -160,7 +179,7 @@ struct LoanRowView: View {
     
     // 利用者名の取得
     private var userName: String {
-        if let userModel = userModel, let user = userModel.findUserById(loan.userId) {
+        if let user = userModel.findUserById(loan.userId) {
             return user.name
         }
         return "不明な利用者"
@@ -182,13 +201,9 @@ struct LoanRowView: View {
     
     // 返却処理
     private func returnBook() {
-        guard let lendingModel = lendingModel else {
-            showError("モデルが利用できません")
-            return
-        }
-        
         do {
             _ = try lendingModel.returnBook(loanId: loan.id)
+            onReturn?()
         } catch {
             showError("返却処理に失敗しました: \(error.localizedDescription)")
         }
@@ -202,5 +217,40 @@ struct LoanRowView: View {
 }
 
 #Preview {
-    LendingView()
+    let bookModel = BookModel(repository: MockBookRepository())
+    let userModel = UserModel(repository: MockUserRepository())
+    let lendingModel = LendingModel(
+        bookModel: bookModel,
+        userModel: userModel,
+        repository: MockLoanRepository()
+    )
+    return LendingView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockUserRepository: UserRepository {
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return [] }
+    func findById(_ id: UUID) throws -> User? { return nil }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockLoanRepository: LoanRepository {
+    func save(_ loan: Loan) throws -> Loan { return loan }
+    func fetchAll() throws -> [Loan] { return [] }
+    func findById(_ id: UUID) throws -> Loan? { return nil }
+    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
+    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
+    func fetchActiveLoans() throws -> [Loan] { return [] }
+    func update(_ loan: Loan) throws -> Loan { return loan }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

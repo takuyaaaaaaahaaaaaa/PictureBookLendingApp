@@ -1,5 +1,6 @@
 import SwiftUI
 import PictureBookLendingCore
+import Observation
 
 /**
  * ダッシュボードビュー
@@ -11,9 +12,15 @@ import PictureBookLendingCore
  * などを表示します。
  */
 struct DashboardView: View {
-    @Environment(\.bookModel) private var bookModel
-    @Environment(\.userModel) private var userModel
-    @Environment(\.lendingModel) private var lendingModel
+    let bookModel: BookModel
+    let userModel: UserModel
+    let lendingModel: LendingModel
+    
+    // 統計情報
+    @State private var bookCount: Int = 0
+    @State private var userCount: Int = 0
+    @State private var activeLoansCount: Int = 0
+    @State private var overdueLoans: [Loan] = []
     
     var body: some View {
         NavigationStack {
@@ -21,14 +28,18 @@ struct DashboardView: View {
                 VStack(spacing: 16) {
                     // 統計情報カード
                     StatisticsCardView(
-                        bookCount: bookModel?.getAllBooks().count ?? 0,
-                        userCount: userModel?.getAllUsers().count ?? 0,
-                        activeLoansCount: lendingModel?.getActiveLoans().count ?? 0
+                        bookCount: bookCount,
+                        userCount: userCount,
+                        activeLoansCount: activeLoansCount
                     )
                     
                     // 期限切れ貸出の警告
-                    if let overdueLoans = getOverdueLoans(), !overdueLoans.isEmpty {
-                        OverdueWarningView(loans: overdueLoans)
+                    if !overdueLoans.isEmpty {
+                        OverdueWarningView(
+                            bookModel: bookModel,
+                            userModel: userModel,
+                            loans: overdueLoans
+                        )
                     }
                     
                     // 概要情報
@@ -37,23 +48,25 @@ struct DashboardView: View {
                 .padding()
             }
             .navigationTitle("ダッシュボード")
+            .onAppear {
+                refreshData()
+            }
             .refreshable {
-                // データを更新する
-                _ = bookModel?.getAllBooks()
-                _ = userModel?.getAllUsers()
-                _ = lendingModel?.getAllLoans()
+                refreshData()
             }
         }
     }
     
-    // 返却期限切れの貸出を取得
-    private func getOverdueLoans() -> [Loan]? {
-        guard let lendingModel = lendingModel else { return nil }
+    // データの更新
+    private func refreshData() {
+        bookCount = bookModel.getAllBooks().count
+        userCount = userModel.getAllUsers().count
         
         let activeLoans = lendingModel.getActiveLoans()
-        let today = Date()
+        activeLoansCount = activeLoans.count
         
-        return activeLoans.filter { loan in
+        let today = Date()
+        overdueLoans = activeLoans.filter { loan in
             loan.dueDate < today
         }
     }
@@ -136,9 +149,8 @@ struct StatItem: View {
  * 返却期限切れ警告ビュー
  */
 struct OverdueWarningView: View {
-    @Environment(\.bookModel) private var bookModel
-    @Environment(\.userModel) private var userModel
-    
+    let bookModel: BookModel
+    let userModel: UserModel
     let loans: [Loan]
     
     var body: some View {
@@ -203,7 +215,7 @@ struct OverdueWarningView: View {
     
     // 書籍名の取得
     private func getBookTitle(for id: UUID) -> String {
-        if let bookModel = bookModel, let book = bookModel.findBookById(id) {
+        if let book = bookModel.findBookById(id) {
             return book.title
         }
         return "不明な書籍"
@@ -211,7 +223,7 @@ struct OverdueWarningView: View {
     
     // 利用者名の取得
     private func getUserName(for id: UUID) -> String {
-        if let userModel = userModel, let user = userModel.findUserById(id) {
+        if let user = userModel.findUserById(id) {
             return user.name
         }
         return "不明な利用者"
@@ -230,7 +242,7 @@ struct OverdueWarningView: View {
     private func daysSinceOverdue(_ dueDate: Date) -> Int {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.day], from: dueDate, to: Date())
-        return components.day ?? 0
+        return max(0, components.day ?? 0)
     }
 }
 
@@ -244,7 +256,6 @@ struct SummaryCardsView: View {
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
-            // ここにその他の概要情報を追加
             InfoCardView(
                 title: "新機能",
                 description: "貸出管理アプリの使い方については「絵本の貸出管理」ボタンをタップして確認してください。",
@@ -298,5 +309,40 @@ struct InfoCardView: View {
 }
 
 #Preview {
-    DashboardView()
+    let bookModel = BookModel(repository: MockBookRepository())
+    let userModel = UserModel(repository: MockUserRepository())
+    let lendingModel = LendingModel(
+        bookModel: bookModel,
+        userModel: userModel,
+        repository: MockLoanRepository()
+    )
+    return DashboardView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+}
+
+// プレビュー用のモックリポジトリ
+private class MockBookRepository: BookRepository {
+    func save(_ book: Book) throws -> Book { return book }
+    func fetchAll() throws -> [Book] { return [] }
+    func findById(_ id: UUID) throws -> Book? { return nil }
+    func update(_ book: Book) throws -> Book { return book }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockUserRepository: UserRepository {
+    func save(_ user: User) throws -> User { return user }
+    func fetchAll() throws -> [User] { return [] }
+    func findById(_ id: UUID) throws -> User? { return nil }
+    func update(_ user: User) throws -> User { return user }
+    func delete(_ id: UUID) throws -> Bool { return true }
+}
+
+private class MockLoanRepository: LoanRepository {
+    func save(_ loan: Loan) throws -> Loan { return loan }
+    func fetchAll() throws -> [Loan] { return [] }
+    func findById(_ id: UUID) throws -> Loan? { return nil }
+    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
+    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
+    func fetchActiveLoans() throws -> [Loan] { return [] }
+    func update(_ loan: Loan) throws -> Loan { return loan }
+    func delete(_ id: UUID) throws -> Bool { return true }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import PictureBookLendingCore
 
 /**
@@ -24,7 +25,7 @@ enum UserModelError: Error, Equatable {
  * - 利用者の削除
  * などの機能を提供します。
  */
-class UserModel {
+@Observable class UserModel {
     
     /// 利用者リポジトリ
     private let repository: UserRepository

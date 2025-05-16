@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 import PictureBookLendingCore
 
 /**
@@ -31,7 +32,7 @@ enum LendingModelError: Error, Equatable {
  * - 特定の利用者の貸出履歴
  * などの機能を提供します。
  */
-class LendingModel {
+@Observable class LendingModel {
     
     /// 書籍管理モデル
     private let bookModel: BookModel
