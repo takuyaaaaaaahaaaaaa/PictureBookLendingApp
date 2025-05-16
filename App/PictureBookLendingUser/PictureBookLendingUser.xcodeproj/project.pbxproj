@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		EFF780362DD6CCE6009BD213 /* PictureBookLendingCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFF780352DD6CCE6009BD213 /* PictureBookLendingCore */; };
+		EFF780382DD6CCEA009BD213 /* PictureBookLendingCore in Frameworks */ = {isa = PBXBuildFile; productRef = EFF780372DD6CCEA009BD213 /* PictureBookLendingCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		EFF77E772DD66A2A009BD213 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -40,11 +45,6 @@
 			path = PictureBookLendingUserTests;
 			sourceTree = "<group>";
 		};
-		EFF77E832DD66A2A009BD213 /* PictureBookLendingUserUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = PictureBookLendingUserUITests;
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFF780362DD6CCE6009BD213 /* PictureBookLendingCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +60,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EFF780382DD6CCEA009BD213 /* PictureBookLendingCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -77,7 +79,7 @@
 			children = (
 				EFF77E682DD66A29009BD213 /* PictureBookLendingUser */,
 				EFF77E792DD66A2A009BD213 /* PictureBookLendingUserTests */,
-				EFF77E832DD66A2A009BD213 /* PictureBookLendingUserUITests */,
+				EFF780342DD6CCE6009BD213 /* Frameworks */,
 				EFF77E672DD66A29009BD213 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -90,6 +92,13 @@
 				EFF77E802DD66A2A009BD213 /* PictureBookLendingUserUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		EFF780342DD6CCE6009BD213 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -112,6 +121,7 @@
 			);
 			name = PictureBookLendingUser;
 			packageProductDependencies = (
+				EFF780352DD6CCE6009BD213 /* PictureBookLendingCore */,
 			);
 			productName = PictureBookLendingUser;
 			productReference = EFF77E662DD66A29009BD213 /* PictureBookLendingUser.app */;
@@ -135,6 +145,7 @@
 			);
 			name = PictureBookLendingUserTests;
 			packageProductDependencies = (
+				EFF780372DD6CCEA009BD213 /* PictureBookLendingCore */,
 			);
 			productName = PictureBookLendingUserTests;
 			productReference = EFF77E762DD66A2A009BD213 /* PictureBookLendingUserTests.xctest */;
@@ -152,9 +163,6 @@
 			);
 			dependencies = (
 				EFF77E822DD66A2A009BD213 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				EFF77E832DD66A2A009BD213 /* PictureBookLendingUserUITests */,
 			);
 			name = PictureBookLendingUserUITests;
 			packageProductDependencies = (
@@ -195,6 +203,9 @@
 			);
 			mainGroup = EFF77E5D2DD66A29009BD213;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				EFF7802D2DD6CCAD009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFF77E672DD66A29009BD213 /* Products */;
 			projectDirPath = "";
@@ -595,6 +606,26 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		EFF7802D2DD6CCAD009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../PictureBookLendingCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		EFF780352DD6CCE6009BD213 /* PictureBookLendingCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EFF7802D2DD6CCAD009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */;
+			productName = PictureBookLendingCore;
+		};
+		EFF780372DD6CCEA009BD213 /* PictureBookLendingCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = EFF7802D2DD6CCAD009BD213 /* XCLocalSwiftPackageReference "../PictureBookLendingCore" */;
+			productName = PictureBookLendingCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = EFF77E5E2DD66A29009BD213 /* Project object */;
 }
