@@ -33,25 +33,38 @@ enum LendingModelError: Error, Equatable {
  */
 class LendingModel {
     
-    /// 絵本管理モデル
+    /// 書籍管理モデル
     private let bookModel: BookModel
     
     /// 利用者管理モデル
     private let userModel: UserModel
     
-    /// 貸出情報のリスト
+    /// 貸出リポジトリ
+    private let repository: LoanRepository
+    
+    /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
     
     /**
-     * 初期化
+     * イニシャライザ
      *
      * - Parameters:
-     *   - bookModel: 絵本管理モデル
+     *   - bookModel: 書籍管理モデル
      *   - userModel: 利用者管理モデル
+     *   - repository: 貸出リポジトリ
      */
-    init(bookModel: BookModel, userModel: UserModel) {
+    init(bookModel: BookModel, userModel: UserModel, repository: LoanRepository) {
         self.bookModel = bookModel
         self.userModel = userModel
+        self.repository = repository
+        
+        // 初期データのロード
+        do {
+            self.loans = try repository.fetchAll()
+        } catch {
+            print("初期データのロードに失敗しました: \(error)")
+            self.loans = []
+        }
     }
     
     /**
@@ -90,10 +103,17 @@ class LendingModel {
             returnedDate: nil
         )
         
-        // 貸出リストに追加
-        loans.append(loan)
-        
-        return loan
+        do {
+            // リポジトリに保存
+            let savedLoan = try repository.save(loan)
+            
+            // キャッシュに追加
+            loans.append(savedLoan)
+            
+            return savedLoan
+        } catch {
+            throw LendingModelError.lendingFailed
+        }
     }
     
     /**
@@ -105,17 +125,26 @@ class LendingModel {
      */
     func returnBook(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
-        guard let index = loans.firstIndex(where: { $0.id == loanId }) else {
+        guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
+            // リポジトリからも検索
+            do {
+                if try repository.findById(loanId) == nil {
+                    throw LendingModelError.loanNotFound
+                }
+            } catch {
+                throw LendingModelError.loanNotFound
+            }
+            
             throw LendingModelError.loanNotFound
         }
         
         // すでに返却済みかチェック
-        if loans[index].isReturned {
+        if loans[loanIndex].isReturned {
             throw LendingModelError.returnFailed
         }
         
         // 返却処理：返却日を設定
-        var updatedLoan = loans[index]
+        var updatedLoan = loans[loanIndex]
         let returnedLoan = Loan(
             id: updatedLoan.id,
             bookId: updatedLoan.bookId,
@@ -125,10 +154,17 @@ class LendingModel {
             returnedDate: Date()
         )
         
-        // 更新
-        loans[index] = returnedLoan
-        
-        return returnedLoan
+        do {
+            // リポジトリで更新
+            let result = try repository.update(returnedLoan)
+            
+            // キャッシュも更新
+            loans[loanIndex] = result
+            
+            return result
+        } catch {
+            throw LendingModelError.returnFailed
+        }
     }
     
     /**
@@ -138,8 +174,41 @@ class LendingModel {
      * - Returns: 貸出中の場合はtrue、そうでなければfalse
      */
     func isBookLent(bookId: UUID) -> Bool {
+        // キャッシュを更新
+        refreshActiveLoans()
+        
         return loans.contains { loan in
             loan.bookId == bookId && !loan.isReturned
+        }
+    }
+    
+    /**
+     * 貸出中の貸出情報を最新の状態に更新
+     */
+    private func refreshActiveLoans() {
+        do {
+            let activeLoans = try repository.fetchActiveLoans()
+            
+            // アクティブな貸出のみを更新
+            for activeLoan in activeLoans {
+                if let index = loans.firstIndex(where: { $0.id == activeLoan.id }) {
+                    loans[index] = activeLoan
+                } else {
+                    loans.append(activeLoan)
+                }
+            }
+            
+            // 返却済みの貸出情報も更新
+            let allLoans = try repository.fetchAll()
+            for loan in allLoans where loan.isReturned {
+                if let index = loans.firstIndex(where: { $0.id == loan.id }) {
+                    loans[index] = loan
+                } else {
+                    loans.append(loan)
+                }
+            }
+        } catch {
+            print("貸出情報の更新に失敗しました: \(error)")
         }
     }
     
@@ -149,6 +218,7 @@ class LendingModel {
      * - Returns: 貸出中の貸出情報リスト
      */
     func getActiveLoans() -> [Loan] {
+        refreshActiveLoans()
         return loans.filter { !$0.isReturned }
     }
     
@@ -158,6 +228,12 @@ class LendingModel {
      * - Returns: 全ての貸出情報リスト
      */
     func getAllLoans() -> [Loan] {
+        do {
+            loans = try repository.fetchAll()
+        } catch {
+            print("貸出情報の取得に失敗しました: \(error)")
+        }
+        
         return loans
     }
     
@@ -168,7 +244,12 @@ class LendingModel {
      * - Returns: 指定された利用者の貸出情報リスト
      */
     func getLoansByUser(userId: UUID) -> [Loan] {
-        return loans.filter { $0.userId == userId }
+        do {
+            return try repository.findByUserId(userId)
+        } catch {
+            print("利用者の貸出履歴の取得に失敗しました: \(error)")
+            return loans.filter { $0.userId == userId }
+        }
     }
     
     /**
@@ -178,6 +259,11 @@ class LendingModel {
      * - Returns: 指定された絵本の貸出情報リスト
      */
     func getLoansByBook(bookId: UUID) -> [Loan] {
-        return loans.filter { $0.bookId == bookId }
+        do {
+            return try repository.findByBookId(bookId)
+        } catch {
+            print("絵本の貸出履歴の取得に失敗しました: \(error)")
+            return loans.filter { $0.bookId == bookId }
+        }
     }
 }

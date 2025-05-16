@@ -15,6 +15,21 @@ import PictureBookLendingCore
  */
 final class UserModelTests: XCTestCase {
     
+    private var mockRepository: MockUserRepository!
+    private var userModel: UserModel!
+    
+    override func setUp() {
+        super.setUp()
+        mockRepository = MockUserRepository()
+        userModel = UserModel(repository: mockRepository)
+    }
+    
+    override func tearDown() {
+        mockRepository = nil
+        userModel = nil
+        super.tearDown()
+    }
+    
     /**
      * 利用者登録機能のテスト
      *
@@ -22,7 +37,6 @@ final class UserModelTests: XCTestCase {
      */
     func testRegisterUser() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let user = User(name: "山田太郎", group: "1年2組")
         
         // 2. Act - 実行
@@ -42,13 +56,12 @@ final class UserModelTests: XCTestCase {
      */
     func testGetAllUsers() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let user1 = User(name: "山田太郎", group: "1年2組")
         let user2 = User(name: "鈴木花子", group: "2年1組")
         
         // 2. Act - 実行
-        try userModel.registerUser(user1)
-        try userModel.registerUser(user2)
+        _ = try userModel.registerUser(user1)
+        _ = try userModel.registerUser(user2)
         let users = userModel.getAllUsers()
         
         // 3. Assert - 検証
@@ -63,7 +76,6 @@ final class UserModelTests: XCTestCase {
      */
     func testFindUserById() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
@@ -83,7 +95,6 @@ final class UserModelTests: XCTestCase {
      */
     func testUpdateUser() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
@@ -107,7 +118,6 @@ final class UserModelTests: XCTestCase {
      */
     func testDeleteUser() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
@@ -128,7 +138,6 @@ final class UserModelTests: XCTestCase {
      */
     func testDeleteNonExistingUser() throws {
         // 1. Arrange - 準備
-        let userModel = UserModel()
         let nonExistingId = UUID()
         
         // 2. Act & Assert - 実行と検証

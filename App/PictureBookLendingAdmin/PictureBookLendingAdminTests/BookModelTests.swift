@@ -15,6 +15,21 @@ import PictureBookLendingCore
  */
 final class BookModelTests: XCTestCase {
     
+    private var mockRepository: MockBookRepository!
+    private var bookModel: BookModel!
+    
+    override func setUp() {
+        super.setUp()
+        mockRepository = MockBookRepository()
+        bookModel = BookModel(repository: mockRepository)
+    }
+    
+    override func tearDown() {
+        mockRepository = nil
+        bookModel = nil
+        super.tearDown()
+    }
+    
     /**
      * 書籍登録機能のテスト
      *
@@ -22,7 +37,6 @@ final class BookModelTests: XCTestCase {
      */
     func testRegisterBook() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         
         // 2. Act - 実行
@@ -42,13 +56,12 @@ final class BookModelTests: XCTestCase {
      */
     func testGetAllBooks() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
         
         // 2. Act - 実行
-        try bookModel.registerBook(book1)
-        try bookModel.registerBook(book2)
+        _ = try bookModel.registerBook(book1)
+        _ = try bookModel.registerBook(book2)
         let books = bookModel.getAllBooks()
         
         // 3. Assert - 検証
@@ -63,7 +76,6 @@ final class BookModelTests: XCTestCase {
      */
     func testFindBookById() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -83,7 +95,6 @@ final class BookModelTests: XCTestCase {
      */
     func testUpdateBook() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -107,7 +118,6 @@ final class BookModelTests: XCTestCase {
      */
     func testDeleteBook() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -128,7 +138,6 @@ final class BookModelTests: XCTestCase {
      */
     func testDeleteNonExistingBook() throws {
         // 1. Arrange - 準備
-        let bookModel = BookModel()
         let nonExistingId = UUID()
         
         // 2. Act & Assert - 実行と検証

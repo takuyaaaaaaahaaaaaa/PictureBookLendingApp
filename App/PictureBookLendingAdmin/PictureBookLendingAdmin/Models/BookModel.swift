@@ -26,8 +26,28 @@ enum BookModelError: Error, Equatable {
  */
 class BookModel {
     
-    /// 管理している絵本のリスト
+    /// 書籍リポジトリ
+    private let repository: BookRepository
+    
+    /// キャッシュ用の絵本リスト
     private(set) var books: [Book] = []
+    
+    /**
+     * イニシャライザ
+     *
+     * - Parameter repository: 書籍リポジトリ
+     */
+    init(repository: BookRepository) {
+        self.repository = repository
+        
+        // 初期データのロード
+        do {
+            self.books = try repository.fetchAll()
+        } catch {
+            print("初期データのロードに失敗しました: \(error)")
+            self.books = []
+        }
+    }
     
     /**
      * 絵本を登録する
@@ -39,14 +59,17 @@ class BookModel {
      * - Throws: 登録に失敗した場合は `BookModelError.registrationFailed` を投げます
      */
     func registerBook(_ book: Book) throws -> Book {
-        // 重複IDをチェック
-        if let _ = books.first(where: { $0.id == book.id }) {
+        do {
+            // リポジトリに保存
+            let savedBook = try repository.save(book)
+            
+            // キャッシュに追加
+            books.append(savedBook)
+            
+            return savedBook
+        } catch {
             throw BookModelError.registrationFailed
         }
-        
-        // 追加
-        books.append(book)
-        return book
     }
     
     /**
@@ -57,6 +80,13 @@ class BookModel {
      * - Returns: 全ての絵本の配列
      */
     func getAllBooks() -> [Book] {
+        // キャッシュを最新の状態に更新
+        do {
+            books = try repository.fetchAll()
+        } catch {
+            print("絵本リストの更新に失敗しました: \(error)")
+        }
+        
         return books
     }
     
@@ -69,7 +99,18 @@ class BookModel {
      * - Returns: 見つかった絵本（見つからない場合はnil）
      */
     func findBookById(_ id: UUID) -> Book? {
-        return books.first { $0.id == id }
+        // キャッシュから検索
+        if let cachedBook = books.first(where: { $0.id == id }) {
+            return cachedBook
+        }
+        
+        // リポジトリから検索
+        do {
+            return try repository.findById(id)
+        } catch {
+            print("絵本の検索に失敗しました: \(error)")
+            return nil
+        }
     }
     
     /**
@@ -82,12 +123,24 @@ class BookModel {
      * - Throws: 更新に失敗した場合は `BookModelError` を投げます
      */
     func updateBook(_ book: Book) throws -> Book {
-        guard let index = books.firstIndex(where: { $0.id == book.id }) else {
+        do {
+            // リポジトリで更新
+            let updatedBook = try repository.update(book)
+            
+            // キャッシュも更新
+            if let index = books.firstIndex(where: { $0.id == book.id }) {
+                books[index] = updatedBook
+            } else {
+                // キャッシュになければ追加
+                books.append(updatedBook)
+            }
+            
+            return updatedBook
+        } catch RepositoryError.notFound {
             throw BookModelError.bookNotFound
+        } catch {
+            throw BookModelError.updateFailed
         }
-        
-        books[index] = book
-        return book
     }
     
     /**
@@ -100,11 +153,18 @@ class BookModel {
      * - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
      */
     func deleteBook(_ id: UUID) throws -> Bool {
-        guard let index = books.firstIndex(where: { $0.id == id }) else {
+        do {
+            // リポジトリから削除
+            let result = try repository.delete(id)
+            
+            // キャッシュからも削除
+            books.removeAll(where: { $0.id == id })
+            
+            return result
+        } catch RepositoryError.notFound {
             throw BookModelError.bookNotFound
+        } catch {
+            throw BookModelError.updateFailed
         }
-        
-        books.remove(at: index)
-        return true
     }
 }

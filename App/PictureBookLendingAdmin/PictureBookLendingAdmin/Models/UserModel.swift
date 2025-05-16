@@ -26,8 +26,28 @@ enum UserModelError: Error, Equatable {
  */
 class UserModel {
     
-    /// 管理している利用者のリスト
+    /// 利用者リポジトリ
+    private let repository: UserRepository
+    
+    /// キャッシュ用の利用者リスト
     private(set) var users: [User] = []
+    
+    /**
+     * イニシャライザ
+     *
+     * - Parameter repository: 利用者リポジトリ
+     */
+    init(repository: UserRepository) {
+        self.repository = repository
+        
+        // 初期データのロード
+        do {
+            self.users = try repository.fetchAll()
+        } catch {
+            print("初期データのロードに失敗しました: \(error)")
+            self.users = []
+        }
+    }
     
     /**
      * 利用者を登録する
@@ -39,14 +59,17 @@ class UserModel {
      * - Throws: 登録に失敗した場合は `UserModelError.registrationFailed` を投げます
      */
     func registerUser(_ user: User) throws -> User {
-        // 重複IDをチェック
-        if let _ = users.first(where: { $0.id == user.id }) {
+        do {
+            // リポジトリに保存
+            let savedUser = try repository.save(user)
+            
+            // キャッシュに追加
+            users.append(savedUser)
+            
+            return savedUser
+        } catch {
             throw UserModelError.registrationFailed
         }
-        
-        // 追加
-        users.append(user)
-        return user
     }
     
     /**
@@ -57,6 +80,13 @@ class UserModel {
      * - Returns: 全ての利用者の配列
      */
     func getAllUsers() -> [User] {
+        // キャッシュを最新の状態に更新
+        do {
+            users = try repository.fetchAll()
+        } catch {
+            print("利用者リストの更新に失敗しました: \(error)")
+        }
+        
         return users
     }
     
@@ -69,7 +99,18 @@ class UserModel {
      * - Returns: 見つかった利用者（見つからない場合はnil）
      */
     func findUserById(_ id: UUID) -> User? {
-        return users.first { $0.id == id }
+        // キャッシュから検索
+        if let cachedUser = users.first(where: { $0.id == id }) {
+            return cachedUser
+        }
+        
+        // リポジトリから検索
+        do {
+            return try repository.findById(id)
+        } catch {
+            print("利用者の検索に失敗しました: \(error)")
+            return nil
+        }
     }
     
     /**
@@ -82,12 +123,24 @@ class UserModel {
      * - Throws: 更新に失敗した場合は `UserModelError` を投げます
      */
     func updateUser(_ user: User) throws -> User {
-        guard let index = users.firstIndex(where: { $0.id == user.id }) else {
+        do {
+            // リポジトリで更新
+            let updatedUser = try repository.update(user)
+            
+            // キャッシュも更新
+            if let index = users.firstIndex(where: { $0.id == user.id }) {
+                users[index] = updatedUser
+            } else {
+                // キャッシュになければ追加
+                users.append(updatedUser)
+            }
+            
+            return updatedUser
+        } catch RepositoryError.notFound {
             throw UserModelError.userNotFound
+        } catch {
+            throw UserModelError.updateFailed
         }
-        
-        users[index] = user
-        return user
     }
     
     /**
@@ -100,11 +153,18 @@ class UserModel {
      * - Throws: 削除対象が見つからない場合は `UserModelError.userNotFound` を投げます
      */
     func deleteUser(_ id: UUID) throws -> Bool {
-        guard let index = users.firstIndex(where: { $0.id == id }) else {
+        do {
+            // リポジトリから削除
+            let result = try repository.delete(id)
+            
+            // キャッシュからも削除
+            users.removeAll(where: { $0.id == id })
+            
+            return result
+        } catch RepositoryError.notFound {
             throw UserModelError.userNotFound
+        } catch {
+            throw UserModelError.updateFailed
         }
-        
-        users.remove(at: index)
-        return true
     }
 }

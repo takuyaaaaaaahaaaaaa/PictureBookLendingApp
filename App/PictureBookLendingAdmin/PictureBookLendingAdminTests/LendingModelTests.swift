@@ -15,20 +15,27 @@ import PictureBookLendingCore
  */
 final class LendingModelTests: XCTestCase {
     
-    var bookModel: BookModel!
-    var userModel: UserModel!
-    var lendingModel: LendingModel!
+    private var mockRepositoryFactory: MockRepositoryFactory!
+    private var bookModel: BookModel!
+    private var userModel: UserModel!
+    private var lendingModel: LendingModel!
     
-    var testBook: Book!
-    var testUser: User!
+    private var testBook: Book!
+    private var testUser: User!
     
     override func setUp() {
         super.setUp()
         
         // テスト用に各モデルを初期化
-        bookModel = BookModel()
-        userModel = UserModel()
-        lendingModel = LendingModel(bookModel: bookModel, userModel: userModel)
+        mockRepositoryFactory = MockRepositoryFactory()
+        
+        bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+        userModel = UserModel(repository: mockRepositoryFactory.userRepository)
+        lendingModel = LendingModel(
+            bookModel: bookModel,
+            userModel: userModel,
+            repository: mockRepositoryFactory.loanRepository
+        )
         
         // テスト用データのセットアップ
         testBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
@@ -44,6 +51,7 @@ final class LendingModelTests: XCTestCase {
     }
     
     override func tearDown() {
+        mockRepositoryFactory = nil
         bookModel = nil
         userModel = nil
         lendingModel = nil
@@ -91,7 +99,7 @@ final class LendingModelTests: XCTestCase {
         let userId = testUser.id
         
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 2. Act & Assert - 実行と検証
         XCTAssertThrowsError(try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)) { error in
@@ -193,7 +201,7 @@ final class LendingModelTests: XCTestCase {
         let userId = testUser.id
         
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 2. Act - 実行
         let userLoans = lendingModel.getLoansByUser(userId: userId)
@@ -217,10 +225,10 @@ final class LendingModelTests: XCTestCase {
         let loan = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 返却する
-        try lendingModel.returnBook(loanId: loan.id)
+        _ = try lendingModel.returnBook(loanId: loan.id)
         
         // もう一度貸し出す
-        try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 2. Act - 実行
         let bookLoans = lendingModel.getLoansByBook(bookId: bookId)
