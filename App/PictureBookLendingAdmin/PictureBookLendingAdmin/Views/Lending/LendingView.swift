@@ -81,6 +81,8 @@ struct LendingView: View {
     
     // 貸出情報の読み込み
     private func loadLoans() {
+        bookModel.refreshBooks()
+        userModel.refreshUsers()
         loans = lendingModel.getAllLoans()
     }
     

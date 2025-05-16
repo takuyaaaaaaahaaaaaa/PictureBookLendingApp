@@ -81,14 +81,20 @@ enum UserModelError: Error, Equatable {
      * - Returns: 全ての利用者の配列
      */
     func getAllUsers() -> [User] {
-        // キャッシュを最新の状態に更新
+        return users
+    }
+    
+    /**
+     * 利用者リストを最新の状態に更新する
+     * 
+     * リポジトリから最新のデータを取得して内部キャッシュを更新します。
+     */
+    func refreshUsers() {
         do {
             users = try repository.fetchAll()
         } catch {
             print("利用者リストの更新に失敗しました: \(error)")
         }
-        
-        return users
     }
     
     /**

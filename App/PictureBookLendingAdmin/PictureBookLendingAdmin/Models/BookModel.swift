@@ -81,14 +81,20 @@ enum BookModelError: Error, Equatable {
      * - Returns: 全ての絵本の配列
      */
     func getAllBooks() -> [Book] {
-        // キャッシュを最新の状態に更新
+        return books
+    }
+    
+    /**
+     * 絵本リストを最新の状態に更新する
+     * 
+     * リポジトリから最新のデータを取得して内部キャッシュを更新します。
+     */
+    func refreshBooks() {
         do {
             books = try repository.fetchAll()
         } catch {
             print("絵本リストの更新に失敗しました: \(error)")
         }
-        
-        return books
     }
     
     /**

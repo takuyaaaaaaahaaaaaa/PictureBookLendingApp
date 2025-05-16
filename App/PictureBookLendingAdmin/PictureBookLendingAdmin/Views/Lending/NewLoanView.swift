@@ -104,6 +104,11 @@ struct NewLoanView: View {
             } message: {
                 Text(errorMessage)
             }
+            .onAppear {
+                // データを最新の状態に更新
+                bookModel.refreshBooks()
+                userModel.refreshUsers()
+            }
         }
     }
     
