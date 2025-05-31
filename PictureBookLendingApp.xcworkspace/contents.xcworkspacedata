@@ -5,6 +5,6 @@
       location = "group:App/PictureBookLendingAdmin/PictureBookLendingAdmin.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:App/PictureBookLendingUser/PictureBookLendingUser.xcodeproj">
+      location = "group:App/PictureBookLendingCore">
    </FileRef>
 </Workspace>
