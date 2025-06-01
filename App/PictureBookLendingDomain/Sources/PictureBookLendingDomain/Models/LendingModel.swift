@@ -1,11 +1,10 @@
 import Foundation
 import Observation
-import PictureBookLendingCore
 
 /**
  * 貸出管理に関するエラー
  */
-enum LendingModelError: Error, Equatable {
+public enum LendingModelError: Error, Equatable {
     /// 指定された貸出情報が見つからない場合のエラー
     case loanNotFound
     /// 指定された利用者が見つからない場合のエラー
@@ -32,7 +31,7 @@ enum LendingModelError: Error, Equatable {
  * - 特定の利用者の貸出履歴
  * などの機能を提供します。
  */
-@Observable class LendingModel {
+@Observable public class LendingModel {
     
     /// 書籍管理モデル
     private let bookModel: BookModel
@@ -54,7 +53,7 @@ enum LendingModelError: Error, Equatable {
      *   - userModel: 利用者管理モデル
      *   - repository: 貸出リポジトリ
      */
-    init(bookModel: BookModel, userModel: UserModel, repository: LoanRepository) {
+    public init(bookModel: BookModel, userModel: UserModel, repository: LoanRepository) {
         self.bookModel = bookModel
         self.userModel = userModel
         self.repository = repository
@@ -78,7 +77,7 @@ enum LendingModelError: Error, Equatable {
      * - Returns: 作成された貸出情報
      * - Throws: 貸出処理に失敗した場合は `LendingModelError` を投げます
      */
-    func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
+    public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
         guard let _ = bookModel.findBookById(bookId) else {
             throw LendingModelError.bookNotFound
@@ -124,7 +123,7 @@ enum LendingModelError: Error, Equatable {
      * - Returns: 更新された貸出情報
      * - Throws: 返却処理に失敗した場合は `LendingModelError` を投げます
      */
-    func returnBook(loanId: UUID) throws -> Loan {
+    public func returnBook(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
             // リポジトリからも検索
@@ -174,7 +173,7 @@ enum LendingModelError: Error, Equatable {
      * - Parameter bookId: 確認する絵本のID
      * - Returns: 貸出中の場合はtrue、そうでなければfalse
      */
-    func isBookLent(bookId: UUID) -> Bool {
+    public func isBookLent(bookId: UUID) -> Bool {
         // 現在のloansから貸出中かどうかを確認
         return loans.contains { loan in
             loan.bookId == bookId && !loan.isReturned
@@ -186,7 +185,7 @@ enum LendingModelError: Error, Equatable {
      * 
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
-    func refreshLoans() {
+    public func refreshLoans() {
         refreshActiveLoans()
     }
     
@@ -225,7 +224,7 @@ enum LendingModelError: Error, Equatable {
      *
      * - Returns: 貸出中の貸出情報リスト
      */
-    func getActiveLoans() -> [Loan] {
+    public func getActiveLoans() -> [Loan] {
         refreshActiveLoans()
         return loans.filter { !$0.isReturned }
     }
@@ -235,7 +234,7 @@ enum LendingModelError: Error, Equatable {
      *
      * - Returns: 全ての貸出情報リスト
      */
-    func getAllLoans() -> [Loan] {
+    public func getAllLoans() -> [Loan] {
         return loans
     }
     
@@ -245,7 +244,7 @@ enum LendingModelError: Error, Equatable {
      * - Parameter userId: 取得したい利用者のID
      * - Returns: 指定された利用者の貸出情報リスト
      */
-    func getLoansByUser(userId: UUID) -> [Loan] {
+    public func getLoansByUser(userId: UUID) -> [Loan] {
         do {
             return try repository.findByUserId(userId)
         } catch {
@@ -260,7 +259,7 @@ enum LendingModelError: Error, Equatable {
      * - Parameter bookId: 取得したい絵本のID
      * - Returns: 指定された絵本の貸出情報リスト
      */
-    func getLoansByBook(bookId: UUID) -> [Loan] {
+    public func getLoansByBook(bookId: UUID) -> [Loan] {
         do {
             return try repository.findByBookId(bookId)
         } catch {

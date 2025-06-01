@@ -1,11 +1,10 @@
 import Foundation
 import Observation
-import PictureBookLendingCore
 
 /**
  * 利用者管理に関するエラー
  */
-enum UserModelError: Error, Equatable {
+public enum UserModelError: Error, Equatable {
     /// 指定された利用者が見つからない場合のエラー
     case userNotFound
     /// 利用者登録に失敗した場合のエラー
@@ -25,20 +24,20 @@ enum UserModelError: Error, Equatable {
  * - 利用者の削除
  * などの機能を提供します。
  */
-@Observable class UserModel {
+@Observable public class UserModel {
     
     /// 利用者リポジトリ
     private let repository: UserRepository
     
     /// キャッシュ用の利用者リスト
-    private(set) var users: [User] = []
+    public private(set) var users: [User] = []
     
     /**
      * イニシャライザ
      *
      * - Parameter repository: 利用者リポジトリ
      */
-    init(repository: UserRepository) {
+    public init(repository: UserRepository) {
         self.repository = repository
         
         // 初期データのロード
@@ -59,7 +58,7 @@ enum UserModelError: Error, Equatable {
      * - Returns: 登録された利用者（IDが割り当てられます）
      * - Throws: 登録に失敗した場合は `UserModelError.registrationFailed` を投げます
      */
-    func registerUser(_ user: User) throws -> User {
+    public func registerUser(_ user: User) throws -> User {
         do {
             // リポジトリに保存
             let savedUser = try repository.save(user)
@@ -80,7 +79,7 @@ enum UserModelError: Error, Equatable {
      *
      * - Returns: 全ての利用者の配列
      */
-    func getAllUsers() -> [User] {
+    public func getAllUsers() -> [User] {
         return users
     }
     
@@ -89,7 +88,7 @@ enum UserModelError: Error, Equatable {
      * 
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
-    func refreshUsers() {
+    public func refreshUsers() {
         do {
             users = try repository.fetchAll()
         } catch {
@@ -105,7 +104,7 @@ enum UserModelError: Error, Equatable {
      * - Parameter id: 検索する利用者のID
      * - Returns: 見つかった利用者（見つからない場合はnil）
      */
-    func findUserById(_ id: UUID) -> User? {
+    public func findUserById(_ id: UUID) -> User? {
         // キャッシュから検索
         if let cachedUser = users.first(where: { $0.id == id }) {
             return cachedUser
@@ -129,7 +128,7 @@ enum UserModelError: Error, Equatable {
      * - Returns: 更新された利用者
      * - Throws: 更新に失敗した場合は `UserModelError` を投げます
      */
-    func updateUser(_ user: User) throws -> User {
+    public func updateUser(_ user: User) throws -> User {
         do {
             // リポジトリで更新
             let updatedUser = try repository.update(user)
@@ -159,7 +158,7 @@ enum UserModelError: Error, Equatable {
      * - Returns: 削除に成功したかどうか
      * - Throws: 削除対象が見つからない場合は `UserModelError.userNotFound` を投げます
      */
-    func deleteUser(_ id: UUID) throws -> Bool {
+    public func deleteUser(_ id: UUID) throws -> Bool {
         do {
             // リポジトリから削除
             let result = try repository.delete(id)

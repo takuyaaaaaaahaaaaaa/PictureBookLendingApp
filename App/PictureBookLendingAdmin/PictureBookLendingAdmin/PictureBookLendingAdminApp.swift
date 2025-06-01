@@ -1,6 +1,6 @@
 import SwiftUI
 import SwiftData
-import Observation
+import PictureBookLendingDomain
 
 @main
 struct PictureBookLendingAdminApp: App {

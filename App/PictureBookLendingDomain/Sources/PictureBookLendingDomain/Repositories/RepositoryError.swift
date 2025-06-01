@@ -5,7 +5,7 @@ import Foundation
  *
  * データの永続化や取得に関する各種エラーを定義します
  */
-enum RepositoryError: Error, Equatable {
+public enum RepositoryError: Error, Equatable {
     /// データが見つからない場合のエラー
     case notFound
     /// データの保存に失敗した場合のエラー
