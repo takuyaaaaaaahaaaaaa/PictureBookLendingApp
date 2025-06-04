@@ -1,4 +1,5 @@
-import XCTest
+import Testing
+import Foundation
 @testable import PictureBookLendingDomain
 
 /**
@@ -12,19 +13,17 @@ import XCTest
  * - 絵本ごとの貸出履歴取得
  * などの機能をテストします。
  */
-final class LendingModelTests: XCTestCase {
+struct LendingModelTests {
     
-    private var mockRepositoryFactory: MockRepositoryFactory!
-    private var bookModel: BookModel!
-    private var userModel: UserModel!
-    private var lendingModel: LendingModel!
+    private let mockRepositoryFactory: MockRepositoryFactory
+    private let bookModel: BookModel
+    private let userModel: UserModel
+    private let lendingModel: LendingModel
     
-    private var testBook: Book!
-    private var testUser: User!
+    private let testBook: Book
+    private let testUser: User
     
-    override func setUp() {
-        super.setUp()
-        
+    init() throws {
         // テスト用に各モデルを初期化
         mockRepositoryFactory = MockRepositoryFactory()
         
@@ -37,26 +36,12 @@ final class LendingModelTests: XCTestCase {
         )
         
         // テスト用データのセットアップ
-        testBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
-        testUser = User(name: "山田太郎", group: "1年2組")
+        let initialBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let initialUser = User(name: "山田太郎", group: "1年2組")
         
-        do {
-            // 本とユーザーを登録
-            testBook = try bookModel.registerBook(testBook)
-            testUser = try userModel.registerUser(testUser)
-        } catch {
-            XCTFail("セットアップ中にエラーが発生しました: \(error)")
-        }
-    }
-    
-    override func tearDown() {
-        mockRepositoryFactory = nil
-        bookModel = nil
-        userModel = nil
-        lendingModel = nil
-        testBook = nil
-        testUser = nil
-        super.tearDown()
+        // 本とユーザーを登録
+        testBook = try bookModel.registerBook(initialBook)
+        testUser = try userModel.registerUser(initialUser)
     }
     
     /**
@@ -64,7 +49,8 @@ final class LendingModelTests: XCTestCase {
      *
      * 絵本をユーザーに貸し出し、正しく貸出記録が作成されることを確認します。
      */
-    func testLendBook() throws {
+    @Test
+    func lendBook() throws {
         // 1. Arrange - 準備
         let bookId = testBook.id
         let userId = testUser.id
@@ -74,16 +60,16 @@ final class LendingModelTests: XCTestCase {
         let loan = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 3. Assert - 検証
-        XCTAssertEqual(loan.bookId, bookId)
-        XCTAssertEqual(loan.userId, userId)
-        XCTAssertEqual(loan.dueDate, dueDate)
-        XCTAssertNil(loan.returnedDate)
-        XCTAssertFalse(loan.isReturned)
+        #expect(loan.bookId == bookId)
+        #expect(loan.userId == userId)
+        #expect(loan.dueDate == dueDate)
+        #expect(loan.returnedDate == nil)
+        #expect(loan.isReturned == false)
         
         // 貸出中の本リストにあることを確認
         let activeLoans = lendingModel.getActiveLoans()
-        XCTAssertEqual(activeLoans.count, 1)
-        XCTAssertEqual(activeLoans.first?.bookId, bookId)
+        #expect(activeLoans.count == 1)
+        #expect(activeLoans.first?.bookId == bookId)
     }
     
     /**
@@ -92,7 +78,8 @@ final class LendingModelTests: XCTestCase {
      * すでに貸出中の絵本を再度貸し出そうとした場合、
      * 適切なエラーが発生することを確認します。
      */
-    func testLendBookAlreadyLent() throws {
+    @Test
+    func lendBookAlreadyLent() throws {
         // 1. Arrange - 準備
         let bookId = testBook.id
         let userId = testUser.id
@@ -101,8 +88,8 @@ final class LendingModelTests: XCTestCase {
         _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         // 2. Act & Assert - 実行と検証
-        XCTAssertThrowsError(try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)) { error in
-            XCTAssertEqual(error as? LendingModelError, LendingModelError.bookAlreadyLent)
+        #expect(throws: LendingModelError.bookAlreadyLent) {
+            try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         }
     }
     
@@ -112,15 +99,16 @@ final class LendingModelTests: XCTestCase {
      * 存在しない絵本IDを指定して貸出を試みた場合、
      * 適切なエラーが発生することを確認します。
      */
-    func testLendNonExistingBook() throws {
+    @Test
+    func lendNonExistingBook() throws {
         // 1. Arrange - 準備
         let nonExistingBookId = UUID()
         let userId = testUser.id
         
         // 2. Act & Assert - 実行と検証
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        XCTAssertThrowsError(try lendingModel.lendBook(bookId: nonExistingBookId, userId: userId, dueDate: dueDate)) { error in
-            XCTAssertEqual(error as? LendingModelError, LendingModelError.bookNotFound)
+        #expect(throws: LendingModelError.bookNotFound) {
+            try lendingModel.lendBook(bookId: nonExistingBookId, userId: userId, dueDate: dueDate)
         }
     }
     
@@ -130,15 +118,16 @@ final class LendingModelTests: XCTestCase {
      * 存在しないユーザーIDを指定して貸出を試みた場合、
      * 適切なエラーが発生することを確認します。
      */
-    func testLendToNonExistingUser() throws {
+    @Test
+    func lendToNonExistingUser() throws {
         // 1. Arrange - 準備
         let nonExistingUserId = UUID()
         let bookId = testBook.id
         
         // 2. Act & Assert - 実行と検証
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        XCTAssertThrowsError(try lendingModel.lendBook(bookId: bookId, userId: nonExistingUserId, dueDate: dueDate)) { error in
-            XCTAssertEqual(error as? LendingModelError, LendingModelError.userNotFound)
+        #expect(throws: LendingModelError.userNotFound) {
+            try lendingModel.lendBook(bookId: bookId, userId: nonExistingUserId, dueDate: dueDate)
         }
     }
     
@@ -147,7 +136,8 @@ final class LendingModelTests: XCTestCase {
      *
      * 貸出中の絵本を返却し、正しく返却記録が更新されることを確認します。
      */
-    func testReturnBook() throws {
+    @Test
+    func returnBook() throws {
         // 1. Arrange - 準備
         let bookId = testBook.id
         let userId = testUser.id
@@ -160,17 +150,17 @@ final class LendingModelTests: XCTestCase {
         let returnedLoan = try lendingModel.returnBook(loanId: loanId)
         
         // 3. Assert - 検証
-        XCTAssertNotNil(returnedLoan.returnedDate)
-        XCTAssertTrue(returnedLoan.isReturned)
+        #expect(returnedLoan.returnedDate != nil)
+        #expect(returnedLoan.isReturned == true)
         
         // 貸出中リストにないことを確認
         let activeLoans = lendingModel.getActiveLoans()
-        XCTAssertEqual(activeLoans.count, 0)
+        #expect(activeLoans.count == 0)
         
         // 履歴には残っていることを確認
         let allLoans = lendingModel.getAllLoans()
-        XCTAssertEqual(allLoans.count, 1)
-        XCTAssertTrue(allLoans.first?.isReturned ?? false)
+        #expect(allLoans.count == 1)
+        #expect(allLoans.first?.isReturned ?? false == true)
     }
     
     /**
@@ -179,13 +169,14 @@ final class LendingModelTests: XCTestCase {
      * 存在しない貸出IDを指定して返却を試みた場合、
      * 適切なエラーが発生することを確認します。
      */
-    func testReturnNonExistingLoan() throws {
+    @Test
+    func returnNonExistingLoan() throws {
         // 1. Arrange - 準備
         let nonExistingLoanId = UUID()
         
         // 2. Act & Assert - 実行と検証
-        XCTAssertThrowsError(try lendingModel.returnBook(loanId: nonExistingLoanId)) { error in
-            XCTAssertEqual(error as? LendingModelError, LendingModelError.loanNotFound)
+        #expect(throws: LendingModelError.loanNotFound) {
+            try lendingModel.returnBook(loanId: nonExistingLoanId)
         }
     }
     
@@ -194,7 +185,8 @@ final class LendingModelTests: XCTestCase {
      *
      * 特定ユーザーの貸出履歴が正しく取得できることを確認します。
      */
-    func testGetUserLoans() throws {
+    @Test
+    func getUserLoans() throws {
         // 1. Arrange - 準備
         let bookId = testBook.id
         let userId = testUser.id
@@ -206,8 +198,8 @@ final class LendingModelTests: XCTestCase {
         let userLoans = lendingModel.getLoansByUser(userId: userId)
         
         // 3. Assert - 検証
-        XCTAssertEqual(userLoans.count, 1)
-        XCTAssertEqual(userLoans.first?.userId, userId)
+        #expect(userLoans.count == 1)
+        #expect(userLoans.first?.userId == userId)
     }
     
     /**
@@ -215,7 +207,8 @@ final class LendingModelTests: XCTestCase {
      *
      * 特定の絵本の貸出履歴が正しく取得できることを確認します。
      */
-    func testGetBookLoanHistory() throws {
+    @Test
+    func getBookLoanHistory() throws {
         // 1. Arrange - 準備
         let bookId = testBook.id
         let userId = testUser.id
@@ -233,8 +226,8 @@ final class LendingModelTests: XCTestCase {
         let bookLoans = lendingModel.getLoansByBook(bookId: bookId)
         
         // 3. Assert - 検証
-        XCTAssertEqual(bookLoans.count, 2)
-        XCTAssertEqual(bookLoans.filter { $0.isReturned }.count, 1)
-        XCTAssertEqual(bookLoans.filter { !$0.isReturned }.count, 1)
+        #expect(bookLoans.count == 2)
+        #expect(bookLoans.filter { $0.isReturned }.count == 1)
+        #expect(bookLoans.filter { !$0.isReturned }.count == 1)
     }
 }
