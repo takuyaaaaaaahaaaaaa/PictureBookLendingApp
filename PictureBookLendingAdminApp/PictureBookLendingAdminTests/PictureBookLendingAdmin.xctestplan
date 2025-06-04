@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "id" : "86AA3CCE-4665-4E6B-B73F-74E644273669",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
+      "identifier" : "EFF77EEF2DD66AAB009BD213",
+      "name" : "PictureBookLendingAdmin"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
+        "identifier" : "EFF77EFF2DD66AAD009BD213",
+        "name" : "PictureBookLendingAdminTests"
+      }
+    },
+    {
+      "enabled" : false,
+      "target" : {
+        "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
+        "identifier" : "EFF77F092DD66AAD009BD213",
+        "name" : "PictureBookLendingAdminUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

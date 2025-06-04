@@ -6,7 +6,8 @@
       "Bash(xcodebuild test:*)",
       "Bash(mkdir:*)",
       "Bash(rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(xcodebuild:*)"
     ],
     "deny": []
   }
