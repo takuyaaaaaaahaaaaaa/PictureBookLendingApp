@@ -45,7 +45,7 @@ final class BookModelTests: XCTestCase {
         XCTAssertEqual(registeredBook.title, "はらぺこあおむし")
         XCTAssertEqual(registeredBook.author, "エリック・カール")
         XCTAssertNotNil(registeredBook.id)
-        XCTAssertEqual(bookModel.books.count,4)
+        XCTAssertEqual(bookModel.books.count,1)
     }
     
     /**

@@ -36,16 +36,6 @@
 		EFF77F0A2DD66AAD009BD213 /* PictureBookLendingAdminUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PictureBookLendingAdminUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		EFD4D1502DF0A34B0031DDBC /* Exceptions for "PictureBookLendingAdminTests" folder in "PictureBookLendingAdminTests" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				PictureBookLendingAdmin.xctestplan,
-			);
-			target = EFF77EFF2DD66AAD009BD213 /* PictureBookLendingAdminTests */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		EFF77EF22DD66AAB009BD213 /* PictureBookLendingAdmin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -54,9 +44,6 @@
 		};
 		EFF77F032DD66AAD009BD213 /* PictureBookLendingAdminTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				EFD4D1502DF0A34B0031DDBC /* Exceptions for "PictureBookLendingAdminTests" folder in "PictureBookLendingAdminTests" target */,
-			);
 			path = PictureBookLendingAdminTests;
 			sourceTree = "<group>";
 		};

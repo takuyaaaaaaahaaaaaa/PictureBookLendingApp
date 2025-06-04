@@ -17,14 +17,6 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
-      "target" : {
-        "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
-        "identifier" : "EFF77EFF2DD66AAD009BD213",
-        "name" : "PictureBookLendingAdminTests"
-      }
-    },
-    {
       "target" : {
         "containerPath" : "container:PictureBookLendingDomain",
         "identifier" : "PictureBookLendingDomainTests",
@@ -32,11 +24,11 @@
       }
     },
     {
-      "enabled" : false,
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
-        "identifier" : "EFF77F092DD66AAD009BD213",
-        "name" : "PictureBookLendingAdminUITests"
+        "identifier" : "EFF77EFF2DD66AAD009BD213",
+        "name" : "PictureBookLendingAdminTests"
       }
     }
   ],
