@@ -25,6 +25,13 @@
       }
     },
     {
+      "target" : {
+        "containerPath" : "container:PictureBookLendingDomain",
+        "identifier" : "PictureBookLendingDomainTests",
+        "name" : "PictureBookLendingDomainTests"
+      }
+    },
+    {
       "enabled" : false,
       "target" : {
         "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",

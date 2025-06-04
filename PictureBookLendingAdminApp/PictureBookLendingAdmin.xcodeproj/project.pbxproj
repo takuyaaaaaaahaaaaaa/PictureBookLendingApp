@@ -204,6 +204,7 @@
 					};
 					EFF77EFF2DD66AAD009BD213 = {
 						CreatedOnToolsVersion = 16.3;
+						LastSwiftMigration = 1640;
 						TestTargetID = EFF77EEF2DD66AAB009BD213;
 					};
 					EFF77F092DD66AAD009BD213 = {
@@ -497,6 +498,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
@@ -510,6 +512,7 @@
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PictureBookLendingAdmin.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PictureBookLendingAdmin";
@@ -521,6 +524,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
