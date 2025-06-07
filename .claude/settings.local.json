@@ -6,7 +6,12 @@
       "Bash(xcodebuild test:*)",
       "Bash(mkdir:*)",
       "Bash(rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(mv:*)",
+      "Bash(swift test)",
+      "WebFetch(domain:docs.swift.org)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

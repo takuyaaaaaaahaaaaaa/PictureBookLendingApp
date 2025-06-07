@@ -6,8 +6,7 @@ This is an iOS/macOS application built with SwiftUI and SwiftData, structured as
 
 - **PictureBookLendingApp.xcworkspace**: Main workspace containing all projects
   - **PictureBookLendingAdmin**: Admin application
-  - **PictureBookLendingUser**: User application
-  - **PictureBookLendingCore**: Shared core module (currently empty)
+  - **PictureBookLendingDomain**: Domain module containing models and repository protocols
 
 ## Building and Running
 
@@ -24,7 +23,7 @@ open PictureBookLendingApp.xcworkspace
 
 #### Building and Running
 1. Open the workspace in Xcode
-2. Select the desired scheme (PictureBookLendingAdmin or PictureBookLendingUser)
+2. Select the PictureBookLendingAdmin scheme
 3. Choose the target device/simulator
 4. Press ⌘+R to build and run
 
@@ -34,25 +33,32 @@ open PictureBookLendingApp.xcworkspace
 
 ## Architecture
 
-The application follows a multi-module architecture:
+The application follows a multi-module MV (Model-View) architecture:
 
-- **PictureBookLendingUser**: End-user client application
 - **PictureBookLendingAdmin**: Administrator client application
-- **PictureBookLendingCore**: Intended for shared code and models (currently not implemented)
+- **PictureBookLendingDomain**: Domain module with:
+  - Observable models (BookModel, UserModel, LendingModel)
+  - Domain entities (Book, User, Loan)
+  - Repository protocols
 
 ### Technology Stack
 
 - **SwiftUI**: UI framework
 - **SwiftData**: Persistence framework
 - **Swift Package Manager**: Dependency management
+- **Observation**: For reactive models
 
 ### Data Model
 
-Currently using a simple `Item` model with a timestamp property, implemented with SwiftData.
+The domain layer contains:
+- **Entities**: Book, User, Loan
+- **Observable Models**: BookModel, UserModel, LendingModel
+- **Repository Protocols**: BookRepository, UserRepository, LoanRepository
 
 ## Development Notes
 
-- The project was recently converted from UIKit to SwiftUI
-- The architecture was refactored to use a workspace with multiple targets
-- SwiftData is being used for persistence
-- Current implementation is minimal with placeholder views and models
+- The project follows MV architecture pattern inspired by Apple's Food Truck sample
+- PictureBookLendingUser has been removed to focus on admin functionality
+- Observable models are located in the Domain module, not the app layer
+- RepositoryFactory remains in the app layer as it's an implementation detail
+- SwiftData implementations are kept in the Admin app
