@@ -17,7 +17,7 @@ jobs:
             (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
             (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
 
-        runs-on: ubuntu-latest
+        runs-on: macos-latest
 
         permissions:
             contents: write
@@ -39,4 +39,5 @@ jobs:
                   claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
                   claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
                   claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+                  allowed_tools: 'Bash'
 
