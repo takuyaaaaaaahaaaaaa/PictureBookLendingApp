@@ -144,7 +144,7 @@ public enum LendingModelError: Error, Equatable {
         }
         
         // 返却処理：返却日を設定
-        var updatedLoan = loans[loanIndex]
+        let updatedLoan = loans[loanIndex]
         let returnedLoan = Loan(
             id: updatedLoan.id,
             bookId: updatedLoan.bookId,
