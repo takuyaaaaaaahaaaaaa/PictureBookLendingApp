@@ -110,20 +110,14 @@ struct BookRowView: View {
 }
 
 #Preview {
-    let bookModel = BookModel(repository: MockBookRepository())
-    return BookListView(bookModel: bookModel)
-}
-
-// プレビュー用のモックリポジトリ
-private class MockBookRepository: BookRepository {
-    private var books: [Book] = [
-        Book(title: "はらぺこあおむし", author: "エリック・カール"),
-        Book(title: "ぐりとぐら", author: "中川李枝子")
-    ]
+    let mockFactory = MockRepositoryFactory()
     
-    func save(_ book: Book) throws -> Book { return book }
-    func fetchAll() throws -> [Book] { return books }
-    func findById(_ id: UUID) throws -> Book? { return books.first }
-    func update(_ book: Book) throws -> Book { return book }
-    func delete(_ id: UUID) throws -> Bool { return true }
+    // プレビュー用のサンプルデータを追加
+    let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
+    let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+    try? mockFactory.bookRepository.save(book1)
+    try? mockFactory.bookRepository.save(book2)
+    
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    return BookListView(bookModel: bookModel)
 }

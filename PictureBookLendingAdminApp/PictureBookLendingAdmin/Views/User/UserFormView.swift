@@ -117,15 +117,7 @@ struct UserFormView: View {
 }
 
 #Preview {
-    let userModel = UserModel(repository: MockUserRepository())
+    let mockFactory = MockRepositoryFactory()
+    let userModel = UserModel(repository: mockFactory.userRepository)
     return UserFormView(userModel: userModel, mode: .add)
-}
-
-// プレビュー用のモックリポジトリ
-private class MockUserRepository: UserRepository {
-    func save(_ user: User) throws -> User { return user }
-    func fetchAll() throws -> [User] { return [] }
-    func findById(_ id: UUID) throws -> User? { return nil }
-    func update(_ user: User) throws -> User { return user }
-    func delete(_ id: UUID) throws -> Bool { return true }
 }

@@ -54,41 +54,14 @@ struct ContentView: View {
 
 #Preview {
     // デモ用のモックモデル
-    let bookModel = BookModel(repository: MockBookRepository())
-    let userModel = UserModel(repository: MockUserRepository())
+    let mockFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let userModel = UserModel(repository: mockFactory.userRepository)
     let lendingModel = LendingModel(
         bookModel: bookModel,
         userModel: userModel,
-        repository: MockLoanRepository()
+        repository: mockFactory.loanRepository
     )
     
     ContentView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
-}
-
-// プレビュー用のモックリポジトリ
-private class MockBookRepository: BookRepository {
-    func save(_ book: Book) throws -> Book { return book }
-    func fetchAll() throws -> [Book] { return [] }
-    func findById(_ id: UUID) throws -> Book? { return nil }
-    func update(_ book: Book) throws -> Book { return book }
-    func delete(_ id: UUID) throws -> Bool { return true }
-}
-
-private class MockUserRepository: UserRepository {
-    func save(_ user: User) throws -> User { return user }
-    func fetchAll() throws -> [User] { return [] }
-    func findById(_ id: UUID) throws -> User? { return nil }
-    func update(_ user: User) throws -> User { return user }
-    func delete(_ id: UUID) throws -> Bool { return true }
-}
-
-private class MockLoanRepository: LoanRepository {
-    func save(_ loan: Loan) throws -> Loan { return loan }
-    func fetchAll() throws -> [Loan] { return [] }
-    func findById(_ id: UUID) throws -> Loan? { return nil }
-    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
-    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
-    func fetchActiveLoans() throws -> [Loan] { return [] }
-    func update(_ loan: Loan) throws -> Loan { return loan }
-    func delete(_ id: UUID) throws -> Bool { return true }
 }

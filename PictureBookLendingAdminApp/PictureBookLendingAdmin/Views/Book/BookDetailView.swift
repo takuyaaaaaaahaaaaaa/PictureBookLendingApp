@@ -100,18 +100,10 @@ struct DetailRow: View {
 }
 
 #Preview {
-    let bookModel = BookModel(repository: MockBookRepository())
+    let mockFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
     let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
     return NavigationStack {
         BookDetailView(bookModel: bookModel, book: book)
     }
-}
-
-// プレビュー用のモックリポジトリ
-private class MockBookRepository: BookRepository {
-    func save(_ book: Book) throws -> Book { return book }
-    func fetchAll() throws -> [Book] { return [] }
-    func findById(_ id: UUID) throws -> Book? { return nil }
-    func update(_ book: Book) throws -> Book { return book }
-    func delete(_ id: UUID) throws -> Bool { return true }
 }

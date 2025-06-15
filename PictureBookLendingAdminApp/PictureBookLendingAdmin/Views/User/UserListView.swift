@@ -117,46 +117,20 @@ struct UserRowView: View {
 }
 
 #Preview {
-    let bookModel = BookModel(repository: MockBookRepository())
-    let userModel = UserModel(repository: MockUserRepository())
+    let mockFactory = MockRepositoryFactory()
+    
+    // プレビュー用のサンプルデータを追加
+    let user1 = User(name: "山田太郎", group: "1年2組")
+    let user2 = User(name: "鈴木花子", group: "2年1組")
+    try? mockFactory.userRepository.save(user1)
+    try? mockFactory.userRepository.save(user2)
+    
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let userModel = UserModel(repository: mockFactory.userRepository)
     let lendingModel = LendingModel(
         bookModel: bookModel,
         userModel: userModel,
-        repository: MockLoanRepository()
+        repository: mockFactory.loanRepository
     )
     return UserListView(userModel: userModel, lendingModel: lendingModel, bookModel: bookModel)
-}
-
-// プレビュー用のモックリポジトリ
-private class MockBookRepository: BookRepository {
-    func save(_ book: Book) throws -> Book { return book }
-    func fetchAll() throws -> [Book] { return [] }
-    func findById(_ id: UUID) throws -> Book? { return nil }
-    func update(_ book: Book) throws -> Book { return book }
-    func delete(_ id: UUID) throws -> Bool { return true }
-}
-
-private class MockLoanRepository: LoanRepository {
-    func save(_ loan: Loan) throws -> Loan { return loan }
-    func fetchAll() throws -> [Loan] { return [] }
-    func findById(_ id: UUID) throws -> Loan? { return nil }
-    func findByBookId(_ bookId: UUID) throws -> [Loan] { return [] }
-    func findByUserId(_ userId: UUID) throws -> [Loan] { return [] }
-    func fetchActiveLoans() throws -> [Loan] { return [] }
-    func update(_ loan: Loan) throws -> Loan { return loan }
-    func delete(_ id: UUID) throws -> Bool { return true }
-}
-
-// プレビュー用のモックリポジトリ
-private class MockUserRepository: UserRepository {
-    private var users: [User] = [
-        User(name: "山田太郎", group: "1年2組"),
-        User(name: "鈴木花子", group: "2年1組")
-    ]
-    
-    func save(_ user: User) throws -> User { return user }
-    func fetchAll() throws -> [User] { return users }
-    func findById(_ id: UUID) throws -> User? { return users.first }
-    func update(_ user: User) throws -> User { return user }
-    func delete(_ id: UUID) throws -> Bool { return true }
 }
