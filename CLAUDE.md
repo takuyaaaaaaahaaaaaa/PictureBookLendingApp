@@ -1,129 +1,236 @@
 # PictureBookLendingApp
 
+## 概要
+
+**PictureBookLendingApp** は、保育園・幼稚園向けに *絵本の貸し出し業務を iPad だけで完結* させる QR コード連携型の貸し出し管理システムです。Web サーバやクラウドを利用しない完全オフライン運用を前提とします。
+
+| アプリ                                | 主な利用者 | 主要機能                                |
+| ---------------------------------- | ----- | ----------------------------------- |
+| **PictureBookLendingAdmin (iPad)** | 教員・職員 | 絵本・園児ユーザ登録／貸出フローガイド／QR コード生成／返却期限管理 |
+
+**特徴**
+
+* **オフライン完結** : QR コードでデータ連携し、インターネット接続不要
+* **無料配布想定** : 維持費ゼロで導入可能
+* **5000 冊 / 200 ユーザ規模** を想定したローカル性能設計
+* SwiftUIを使った MV ／Container–Presentation 分離による中〜大規模アプリ向けアーキテクチャ
+* **Liquid Glass (iOS 26)** : 最新 HIG 準拠の透明感あるデザイン
+* **デザインガイドライン** : Apple Human Interface Guidelines (HIG) 全般に準拠
+* **主な機能** : 絵本登録／園児登録／貸出フロー／返却期限管理
+* **技術仕様** : 完全オフラインで動作
+* **非機能要件** : 最大 5000 冊・200 ユーザで 1 秒以内レスポンス、ローカル暗号化ストレージ、iPad 最適化 UI
+
+---
+
 ## プロジェクト構成
 
-SwiftUIとSwiftDataで構築されたiOS/macOSアプリケーションで、複数のプロジェクトを含むワークスペースとして構成されています:
-
-- **PictureBookLendingApp.xcworkspace**: すべてのプロジェクトを含むメインワークスペース
-  - **PictureBookLendingAdmin**: 管理者アプリケーション
-  - **PictureBookLendingDomain**: モデルとリポジトリプロトコルを含むドメインモジュール
+```
+PictureBookLendingAdminApp
+├─ PictureBookLendingAdmin    (アプリケーション層)
+├─ PictureBookLendingDomain   (ドメイン層 : Swift Package)
+└─ PictureBookLendingUI   (UI コンポーネント : Swift Package)
+```
 
 ### 前提条件
-- Xcode (最新バージョン)
-- macOS (最新バージョン)
+
+* Xcode (最新バージョン)
+* macOS (最新バージョン)
+* **iOS 26 以上**
 
 ### 開発コマンド
 
-#### プロジェクトを開く
 ```bash
-open PictureBookLendingApp.xcworkspace
+# プロジェクト全体ビルド
+swift build
+# 全テスト実行
+swift test
+# 特定モジュールのみビルド
+swift build --target PictureBookLendingDomain
 ```
-
-#### ビルドと実行
-1. Xcodeでワークスペースを開く
-2. PictureBookLendingAdminスキームを選択
-3. ターゲットデバイス/シミュレーターを選択
-4. ⌘+Rを押してビルドと実行
-
-#### テスト
-1. 希望するスキームを選択
-2. ⌘+Uを押してテストを実行
-
-## アーキテクチャ
-
-アプリケーションはマルチモジュールMV (Model-View) アーキテクチャに従います:
-
-- **PictureBookLendingAdmin**: 管理者クライアントアプリケーション
-- **PictureBookLendingDomain**: 次を含むドメインモジュール:
-  - Observableモデル (BookModel, UserModel, LendingModel)
-  - ドメインエンティティ (Book, User, Loan)
-  - リポジトリプロトコル
 
 ### 技術スタック
 
-- **SwiftUI**: UIフレームワーク
-- **SwiftData**: 永続化フレームワーク
-- **Swift Package Manager**: 依存関係管理
-- **Observation**: リアクティブモデル用
+* **SwiftUI / Observation** : UI & リアクティブバインディング
+* **SwiftData** : 永続化 (Core Data ラッパー)
+* **Swift Package Manager** : 依存管理・モジュール分割
 
-### データモデル
+---
 
-ドメインレイヤーには次が含まれます:
-- **エンティティ**: Book, User, Loan
-- **Observableモデル**: BookModel, UserModel, LendingModel
-- **リポジトリプロトコル**: BookRepository, UserRepository, LoanRepository
+## 作業手順
 
-## 開発メモ
+1. **コード修正後は必ずビルドとテストを実行する**
 
-- プロジェクトはAppleのFood TruckサンプルにインスパイアされたMVアーキテクチャパターンに従います
-- PictureBookLendingUserは管理機能に集中するため削除されました
-- Observableモデルはアプリレイヤーではなく、ドメインモジュールに配置されています
-- RepositoryFactoryは実装の詳細であるため、アプリレイヤーに残されています
-- SwiftDataの実装は管理アプリに保持されています
+   * `swift build` で **プロジェクト全体** がビルドできることを確認
+   * `swift test` で **全テスト** が成功することを確認
+2. **影響範囲が限定的な場合**
 
-## 要件定義
+   * `swift build --target <ModuleName>` で **そのモジュールのみビルド**
+   * `swift test --filter <ModuleName>` で **関連テストのみ実行**
+3. **swift-format 警告** がビルド時に発生した場合は可能な限り対応し、難しい場合は相談する。
 
-### 1. 概要
+---
 
-- 管理アプリはiPad想定だが、利用者アプリはAndroid/iOS両方対応を視野に入れる。ただし、今回はiOSのみで進める。
-- 保育園の絵本を管理するアプリ。
-- 保育園から依頼されたものではなく、自己発案で無料提供予定。
-- 維持費をかけたくないため、Webサーバ等は使用せず、アプリ内で完結させる。
+## 🏗 アーキテクチャ概要（SwiftUI 共通指針）
 
-### 2. 機能要件
+### 採用パターン
 
-#### 2.1 管理アプリ（保育園用）
+* **Container / Presentation** パターン
+* **3 モジュール構成** : Domain / Application / UI
+* **Observation + SwiftData** によるリアクティブ & 永続化
 
-- 絵本の登録
-  - 手動登録（タイトル、著者、ジャンル、対象年齢）
-  - 将来的には画像認識による自動登録機能も検討
-- ユーザー登録
-  - 組と名前の登録
-- 貸し出しフローの統一化
-  - 貸し出し完了までのフローを管理アプリ内で完結させる。
-  - 絵本を選択 → ユーザーを選択 → 貸し出し完了 → QRコード生成
-  - QRコードには貸し出し情報（bookId, loanDate, dueDate）を含める。
-- 貸し出し完了後のQRコード生成
-  - 利用者アプリ側でスキャンするためのQRコードを生成。
-- 返却期限の管理
-  - 返却期限を設定し、貸し出し時点で利用者アプリ側でローカルプッシュ通知が設定されるようにする。
+### モジュール依存関係
 
-#### 2.2 利用者アプリ（保護者用）
+```
+ApplicationModule ─┬─▶ DomainModule
+                   └─▶ UIModule
+DesignModule ──────▶ DomainModule
+※上記以外の依存は禁⽌
+```
 
-- QRコードスキャン機能
-  - 管理アプリで生成したQRコードをスキャンして貸し出し情報を取得。
-- 貸し出し履歴の確認
-  - 現在借りている絵本の一覧表示。
-  - 過去の貸し出し履歴も確認可能。
-- ローカルプッシュ通知
-  - 返却期限前日と当日に通知。
-  - 通知内容は設定から変更可能。
-- お気に入り機能
-  - 借りた絵本をお気に入り登録。
-  - お気に入り一覧から再度借りたい絵本を確認。
+| モジュール                 | 主な責務                            |   |
+| --------------------- | ------------------------------- | - |
+| **DomainModule**      | ドメインエンティティ & ビジネスロジック (純 Swift) |   |
+| **ApplicationModule** | グローバル状態管理・ContainerView・リポジトリ実装 |   |
+| **DesignModule**      | ピュア UI コンポーネント & Preview 用モック   |   |
 
-### 3. 技術仕様
+### サンプル実装
 
-#### 3.1 データ同期
+```swift
+public struct Book: Identifiable, Equatable, Sendable, Codable {
+    public let id: UUID
+    public let title: String
+    public let author: String
+    public let targetAge: Int
+    public let publishedAt: Date
+    /// 年齢の適合判定
+    public func isSuitable(for age: Int) -> Bool { age >= targetAge }
+}
+```
 
-- QRコードによるデータ連携
-  - 管理アプリで生成したQRコードに貸し出し情報を含める。
-  - 利用者アプリでスキャンしてローカルに保存。
-- オフライン対応
-  - 全機能がオフラインで動作。
-  - インターネット接続は不要。
+```swift
+@MainActor
+public final class BooksModel: ObservableObject {
+    @Published var books: [Book] = []
+    private let repository: BookRepository
+    public init(repository: BookRepository) { self.repository = repository }
+    /// データ取得
+    func load() async throws {
+        books = try await repository.fetchAll()
+    }
+}
+```
 
-### 4. 非機能要件
+```swift
+struct BookListContainerView: View {
+    @StateObject private var booksModel = BooksModel(repository: .live)
+    @State private var alertState = AlertState()
+    @State private var searchText = ""
 
-- パフォーマンス
-  - 絵本登録数: 最大5000冊を想定
-  - ユーザー数: 最大200人を想定
-  - レスポンス: 全画面1秒以内の表示
-  
-- セキュリティ
-  - アプリ内データは端末のローカルストレージに保存
-  - 管理アプリと利用者アプリ間のデータ連携はQRコードのみ
-  
-- 使いやすさ
-  - 直感的なUI/UX
-  - iPad向けに最適化された画面レイアウト
+    var body: some View {
+        BookListView(
+            books: filteredBooks,
+            searchText: $searchText,
+            onSelect: handleSelect(_:)
+        )
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .task { await load() }
+    }
+
+    private var filteredBooks: [Book] {
+        searchText.isEmpty ? booksModel.books : booksModel.books.filter { $0.title.contains(searchText) }
+    }
+
+    private func handleSelect(_ book: Book) {
+        // 画面固有ロジック
+    }
+
+    private func load() async {
+        do { try await booksModel.load() }
+        catch { alertState = .error("読込に失敗しました") }
+    }
+}
+```
+
+---
+
+## 状態管理の分類
+
+* **個別プロパティ** : `searchText`, `selectedIDs` など画面限定の一時状態
+* **共通 State 型** : `AlertState`, `NavigationState`, `LoadingState` など複数画面で再利用
+* **Model** : アプリ横断で共有するビジネスロジック状態 (`BooksModel`, `UsersModel`)
+
+---
+
+## 🎯 責任分離（Separation of Concerns）
+
+| 責任                   | Model | State | Container | Presentation |
+| -------------------- | ----- | ----- | --------- | ------------ |
+| データ永続化・API 通信        | ✅     | ❌     | ❌         | ❌            |
+| 直接 API 呼び出し          | ✅     | ❌     | ❌         | ❌            |
+| アプリ全体状態              | ✅     | ❌     | ❌         | ❌            |
+| 複雑なビジネスロジック          | ✅     | ❌     | ❌         | ❌            |
+| 画面固有状態               | ❌     | ✅     | ✅         | ❌            |
+| 共通 State 調整          | ❌     | ✅     | ✅         | ❌            |
+| Presentation へのデータ供給 | ❌     | ❌     | ✅         | ❌            |
+| UI 詳細実装              | ❌     | ❌     | ❌         | ✅            |
+| 純粋 UI 表示             | ❌     | ❌     | ❌         | ✅            |
+
+---
+
+## 🛠️ コードガイドライン
+
+### SwiftUI 実装指針
+
+* クロージャをプロパティに持つ View は **Equatable** 準拠を検討
+* `let` プロパティのライフサイクルが異なる場合は **View 分割** を検討
+* `body` 内で重い計算／副作用を持つ **computed property** を避ける
+* Model では `Task` の使用を避け、**async 関数** 使用し、単体テストしやすい形にする
+* Model は Repository **Protocol への依存** に留める
+
+### コードスタイルガイドライン
+
+* Foundation の型を使わない場合は `import Foundation` を書かない
+* **Swift 6.0** の機能を使用する (`swift-tools-version: 6.0`)
+* UI は **SwiftUI** を使用
+* 色指定は `foregroundStyle` を優先 (`foregroundColor` は極力避ける)
+* `overlay` を優先し、`ZStack` は必要時のみ
+* 間隔調整は `spacing` を優先し、`padding` は必要最小限に
+* 命名は **Swift API Design Guidelines**／標準ライブラリに従う
+* 値型 (`struct` / `enum`) エンティティは **Sendable + Codable** 準拠
+* Associated value を持たない `enum` は **Hashable** 準拠
+* インスタンス状態に依存しないメソッドは **static** で定義し、呼び出しには `Self.` を付ける
+* 単一式の場合は `return` を省略し、`
+  if`／`switch` 式を活用
+
+```swift
+// switch 式の例
+enum Bar { case a, b, c }
+func foo(bar: Bar) -> Int {
+    switch bar {
+    case .a: 2
+    case .b: 3
+    case .c: 5
+    }
+}
+```
+
+* 名前空間を意識し、**nested type** を活用
+* 関連関数では **引数の順序を一貫** させる
+* Unit Test には **Swift Testing** を使用し、`Suite` struct をネストして整理
+
+---
+
+## 📊 プレゼンテーションロジック
+
+* 表示用データ整形・入力値バリデーションなどは **`ApplicationModule/Presentation`** 配下に配置
+* フォーマットが必要な表示はDomain オブジェクトごとに `+Formatter.swift` を用意する。
+
+---
+
+## 🧪 単体テスト方針
+
+1. **Domain / Model / State / Formatter** は必ず単体テストを作成する。
