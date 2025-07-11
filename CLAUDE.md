@@ -1,64 +1,129 @@
 # PictureBookLendingApp
 
-## Project Structure
+## プロジェクト構成
 
-This is an iOS/macOS application built with SwiftUI and SwiftData, structured as a workspace with multiple projects:
+SwiftUIとSwiftDataで構築されたiOS/macOSアプリケーションで、複数のプロジェクトを含むワークスペースとして構成されています:
 
-- **PictureBookLendingApp.xcworkspace**: Main workspace containing all projects
-  - **PictureBookLendingAdmin**: Admin application
-  - **PictureBookLendingDomain**: Domain module containing models and repository protocols
+- **PictureBookLendingApp.xcworkspace**: すべてのプロジェクトを含むメインワークスペース
+  - **PictureBookLendingAdmin**: 管理者アプリケーション
+  - **PictureBookLendingDomain**: モデルとリポジトリプロトコルを含むドメインモジュール
 
-## Building and Running
+### 前提条件
+- Xcode (最新バージョン)
+- macOS (最新バージョン)
 
-### Prerequisites
-- Xcode (latest version)
-- macOS (latest version)
+### 開発コマンド
 
-### Development Commands
-
-#### Opening the Project
+#### プロジェクトを開く
 ```bash
 open PictureBookLendingApp.xcworkspace
 ```
 
-#### Building and Running
-1. Open the workspace in Xcode
-2. Select the PictureBookLendingAdmin scheme
-3. Choose the target device/simulator
-4. Press ⌘+R to build and run
+#### ビルドと実行
+1. Xcodeでワークスペースを開く
+2. PictureBookLendingAdminスキームを選択
+3. ターゲットデバイス/シミュレーターを選択
+4. ⌘+Rを押してビルドと実行
 
-#### Testing
-1. Select the desired scheme
-2. Press ⌘+U to run tests
+#### テスト
+1. 希望するスキームを選択
+2. ⌘+Uを押してテストを実行
 
-## Architecture
+## アーキテクチャ
 
-The application follows a multi-module MV (Model-View) architecture:
+アプリケーションはマルチモジュールMV (Model-View) アーキテクチャに従います:
 
-- **PictureBookLendingAdmin**: Administrator client application
-- **PictureBookLendingDomain**: Domain module with:
-  - Observable models (BookModel, UserModel, LendingModel)
-  - Domain entities (Book, User, Loan)
-  - Repository protocols
+- **PictureBookLendingAdmin**: 管理者クライアントアプリケーション
+- **PictureBookLendingDomain**: 次を含むドメインモジュール:
+  - Observableモデル (BookModel, UserModel, LendingModel)
+  - ドメインエンティティ (Book, User, Loan)
+  - リポジトリプロトコル
 
-### Technology Stack
+### 技術スタック
 
-- **SwiftUI**: UI framework
-- **SwiftData**: Persistence framework
-- **Swift Package Manager**: Dependency management
-- **Observation**: For reactive models
+- **SwiftUI**: UIフレームワーク
+- **SwiftData**: 永続化フレームワーク
+- **Swift Package Manager**: 依存関係管理
+- **Observation**: リアクティブモデル用
 
-### Data Model
+### データモデル
 
-The domain layer contains:
-- **Entities**: Book, User, Loan
-- **Observable Models**: BookModel, UserModel, LendingModel
-- **Repository Protocols**: BookRepository, UserRepository, LoanRepository
+ドメインレイヤーには次が含まれます:
+- **エンティティ**: Book, User, Loan
+- **Observableモデル**: BookModel, UserModel, LendingModel
+- **リポジトリプロトコル**: BookRepository, UserRepository, LoanRepository
 
-## Development Notes
+## 開発メモ
 
-- The project follows MV architecture pattern inspired by Apple's Food Truck sample
-- PictureBookLendingUser has been removed to focus on admin functionality
-- Observable models are located in the Domain module, not the app layer
-- RepositoryFactory remains in the app layer as it's an implementation detail
-- SwiftData implementations are kept in the Admin app
+- プロジェクトはAppleのFood TruckサンプルにインスパイアされたMVアーキテクチャパターンに従います
+- PictureBookLendingUserは管理機能に集中するため削除されました
+- Observableモデルはアプリレイヤーではなく、ドメインモジュールに配置されています
+- RepositoryFactoryは実装の詳細であるため、アプリレイヤーに残されています
+- SwiftDataの実装は管理アプリに保持されています
+
+## 要件定義
+
+### 1. 概要
+
+- 管理アプリはiPad想定だが、利用者アプリはAndroid/iOS両方対応を視野に入れる。ただし、今回はiOSのみで進める。
+- 保育園の絵本を管理するアプリ。
+- 保育園から依頼されたものではなく、自己発案で無料提供予定。
+- 維持費をかけたくないため、Webサーバ等は使用せず、アプリ内で完結させる。
+
+### 2. 機能要件
+
+#### 2.1 管理アプリ（保育園用）
+
+- 絵本の登録
+  - 手動登録（タイトル、著者、ジャンル、対象年齢）
+  - 将来的には画像認識による自動登録機能も検討
+- ユーザー登録
+  - 組と名前の登録
+- 貸し出しフローの統一化
+  - 貸し出し完了までのフローを管理アプリ内で完結させる。
+  - 絵本を選択 → ユーザーを選択 → 貸し出し完了 → QRコード生成
+  - QRコードには貸し出し情報（bookId, loanDate, dueDate）を含める。
+- 貸し出し完了後のQRコード生成
+  - 利用者アプリ側でスキャンするためのQRコードを生成。
+- 返却期限の管理
+  - 返却期限を設定し、貸し出し時点で利用者アプリ側でローカルプッシュ通知が設定されるようにする。
+
+#### 2.2 利用者アプリ（保護者用）
+
+- QRコードスキャン機能
+  - 管理アプリで生成したQRコードをスキャンして貸し出し情報を取得。
+- 貸し出し履歴の確認
+  - 現在借りている絵本の一覧表示。
+  - 過去の貸し出し履歴も確認可能。
+- ローカルプッシュ通知
+  - 返却期限前日と当日に通知。
+  - 通知内容は設定から変更可能。
+- お気に入り機能
+  - 借りた絵本をお気に入り登録。
+  - お気に入り一覧から再度借りたい絵本を確認。
+
+### 3. 技術仕様
+
+#### 3.1 データ同期
+
+- QRコードによるデータ連携
+  - 管理アプリで生成したQRコードに貸し出し情報を含める。
+  - 利用者アプリでスキャンしてローカルに保存。
+- オフライン対応
+  - 全機能がオフラインで動作。
+  - インターネット接続は不要。
+
+### 4. 非機能要件
+
+- パフォーマンス
+  - 絵本登録数: 最大5000冊を想定
+  - ユーザー数: 最大200人を想定
+  - レスポンス: 全画面1秒以内の表示
+  
+- セキュリティ
+  - アプリ内データは端末のローカルストレージに保存
+  - 管理アプリと利用者アプリ間のデータ連携はQRコードのみ
+  
+- 使いやすさ
+  - 直感的なUI/UX
+  - iPad向けに最適化された画面レイアウト
