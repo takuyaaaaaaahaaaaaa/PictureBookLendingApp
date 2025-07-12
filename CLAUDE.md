@@ -14,7 +14,7 @@
 * **無料配布想定** : 維持費ゼロで導入可能
 * **5000 冊 / 200 ユーザ規模** を想定したローカル性能設計
 * SwiftUIを使った MV ／Container–Presentation 分離による中〜大規模アプリ向けアーキテクチャ
-* **Liquid Glass (iOS 26)** : 最新 HIG 準拠の透明感あるデザイン
+* **Liquid Glass (iOS 26)** : 最新 HIG 準拠の透明感あるデザイン
 * **デザインガイドライン** : Apple Human Interface Guidelines (HIG) 全般に準拠
 * **主な機能** : 絵本登録／園児登録／貸出フロー／返却期限管理
 * **技術仕様** : 完全オフラインで動作
@@ -26,32 +26,42 @@
 
 ```
 PictureBookLendingAdminApp
-├─ PictureBookLendingAdmin    (アプリケーション層)
-├─ PictureBookLendingDomain   (ドメイン層 : Swift Package)
-└─ PictureBookLendingUI   (UI コンポーネント : Swift Package)
+├─ PictureBookLendingAdmin          (App層 : アプリケーション層)
+├─ PictureBookLendingModel          (Model層 : Swift Package)
+├─ PictureBookLendingDomain         (Domain層 : Swift Package)
+├─ PictureBookLendingInfrastructure (Infrastructure層 : Swift Package)
+└─ PictureBookLendingUI             (UI層 : Swift Package)
 ```
 
 ### 前提条件
 
 * Xcode (最新バージョン)
 * macOS (最新バージョン)
-* **iOS 26 以上**
+* **iOS 26 以上**
 
 ### 開発コマンド
 
 ```bash
-# プロジェクト全体ビルド
-swift build
+# Xcodeプロジェクト経由でプロジェクト全体ビルド
+cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build
+
 # 全テスト実行
-swift test
+cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test
+
 # 特定モジュールのみビルド
 swift build --target PictureBookLendingDomain
+swift build --target PictureBookLendingModel
+swift build --target PictureBookLendingInfrastructure
+swift build --target PictureBookLendingUI
+
+# 特定モジュールのテスト実行
+swift test --filter PictureBookLendingModelTests
 ```
 
 ### 技術スタック
 
 * **SwiftUI / Observation** : UI & リアクティブバインディング
-* **SwiftData** : 永続化 (Core Data ラッパー)
+* **SwiftData** : 永続化 (Core Data ラッパー)
 * **Swift Package Manager** : 依存管理・モジュール分割
 
 ---
@@ -60,12 +70,12 @@ swift build --target PictureBookLendingDomain
 
 1. **コード修正後は必ずビルドとテストを実行する**
 
-   * `swift build` で **プロジェクト全体** がビルドできることを確認
-   * `swift test` で **全テスト** が成功することを確認
+   * `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build` で **プロジェクト全体** がビルドできることを確認
+   * `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test` で **全テスト** が成功することを確認
 2. **影響範囲が限定的な場合**
 
    * `swift build --target <ModuleName>` で **そのモジュールのみビルド**
-   * `swift test --filter <ModuleName>` で **関連テストのみ実行**
+   * `swift test --filter <ModuleNameTests>` で **関連テストのみ実行**
 3. **swift-format 警告** がビルド時に発生した場合は可能な限り対応し、難しい場合は相談する。
 
 ---
@@ -75,23 +85,30 @@ swift build --target PictureBookLendingDomain
 ### 採用パターン
 
 * **Container / Presentation** パターン
-* **3 モジュール構成** : Domain / Application / UI
-* **Observation + SwiftData** によるリアクティブ & 永続化
+* **5 モジュール構成** : App / Model / Domain / Infrastructure / UI
+* **Observation + SwiftData** によるリアクティブ & 永続化
 
 ### モジュール依存関係
 
 ```
-ApplicationModule ─┬─▶ DomainModule
-                   └─▶ UIModule
-DesignModule ──────▶ DomainModule
+App層 ──┬──▶ Model層
+        ├──▶ Domain層  
+        ├──▶ Infrastructure層
+        └──▶ UI層
+        
+Model層 ────▶ Domain層
+Infrastructure層 ──▶ Domain層
+UI層 ─────────▶ Domain層
 ※上記以外の依存は禁⽌
 ```
 
-| モジュール                 | 主な責務                            |   |
-| --------------------- | ------------------------------- | - |
-| **DomainModule**      | ドメインエンティティ & ビジネスロジック (純 Swift) |   |
-| **ApplicationModule** | グローバル状態管理・ContainerView・リポジトリ実装 |   |
-| **DesignModule**      | ピュア UI コンポーネント & Preview 用モック   |   |
+| モジュール                            | 主な責務                          |
+| -------------------------------- | ----------------------------- |
+| **App層** (PictureBookLendingAdmin)    | アプリエントリーポイント・ContainerView   |
+| **Model層** (PictureBookLendingModel)  | ビジネスロジック・状態管理・Observable   |
+| **Domain層** (PictureBookLendingDomain) | ドメインエンティティ・Repository プロトコル (純 Swift) |
+| **Infrastructure層** (PictureBookLendingInfrastructure) | Repository 実装・永続化・外部 API   |
+| **UI層** (PictureBookLendingUI)        | ピュア UI コンポーネント・Preview 用モック |
 
 ### サンプル実装
 
@@ -165,7 +182,7 @@ struct BookListContainerView: View {
 
 ---
 
-## 🎯 責任分離（Separation of Concerns）
+## 🎯 責任分離（Separation of Concerns）
 
 | 責任                   | Model | State | Container | Presentation |
 | -------------------- | ----- | ----- | --------- | ------------ |
@@ -188,13 +205,13 @@ struct BookListContainerView: View {
 * クロージャをプロパティに持つ View は **Equatable** 準拠を検討
 * `let` プロパティのライフサイクルが異なる場合は **View 分割** を検討
 * `body` 内で重い計算／副作用を持つ **computed property** を避ける
-* Model では `Task` の使用を避け、**async 関数** 使用し、単体テストしやすい形にする
+* Model では `Task` の使用を避け、**async 関数** 使用し、単体テストしやすい形にする
 * Model は Repository **Protocol への依存** に留める
 
 ### コードスタイルガイドライン
 
 * Foundation の型を使わない場合は `import Foundation` を書かない
-* **Swift 6.0** の機能を使用する (`swift-tools-version: 6.0`)
+* **Swift 6.0** の機能を使用する (`swift-tools-version: 6.0`)
 * UI は **SwiftUI** を使用
 * 色指定は `foregroundStyle` を優先 (`foregroundColor` は極力避ける)
 * `overlay` を優先し、`ZStack` は必要時のみ
@@ -220,13 +237,13 @@ func foo(bar: Bar) -> Int {
 
 * 名前空間を意識し、**nested type** を活用
 * 関連関数では **引数の順序を一貫** させる
-* Unit Test には **Swift Testing** を使用し、`Suite` struct をネストして整理
+* Unit Test には **XCTest** を使用し、テストクラスで整理
 
 ---
 
 ## 📊 プレゼンテーションロジック
 
-* 表示用データ整形・入力値バリデーションなどは **`ApplicationModule/Presentation`** 配下に配置
+* 表示用データ整形・入力値バリデーションなどは **`App層/Presentation`** 配下に配置
 * フォーマットが必要な表示はDomain オブジェクトごとに `+Formatter.swift` を用意する。
 
 ---
