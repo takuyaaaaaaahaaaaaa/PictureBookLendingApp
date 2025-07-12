@@ -1,7 +1,7 @@
 import SwiftUI
 import PictureBookLendingInfrastructure
 import PictureBookLendingDomain
-import PictureBookLendingInfrastructure
+import PictureBookLendingModel
 
 /**
  * 絵本一覧表示ビュー

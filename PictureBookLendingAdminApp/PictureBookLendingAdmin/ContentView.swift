@@ -1,6 +1,7 @@
 import SwiftUI
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
+import PictureBookLendingModel
 
 /**
  * 絵本貸出管理アプリのメインコンテンツビュー

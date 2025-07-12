@@ -1,6 +1,7 @@
 import SwiftUI
 import PictureBookLendingInfrastructure
 import PictureBookLendingDomain
+import PictureBookLendingModel
 import Observation
 
 /// 絵本フォームの操作モード
