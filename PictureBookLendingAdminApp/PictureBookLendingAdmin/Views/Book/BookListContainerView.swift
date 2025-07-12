@@ -41,7 +41,12 @@ struct BookListContainerView: View {
                 }
             }
             .sheet(isPresented: $isAddSheetPresented) {
-                Text("絵本追加フォーム")
+                BookFormContainerView(
+                    mode: .add,
+                    onSave: { _ in
+                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
+                    }
+                )
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}

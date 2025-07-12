@@ -63,8 +63,7 @@ struct BookDetailView: View {
             }
         }
         .sheet(isPresented: $showingEditSheet) {
-            BookFormView(
-                bookModel: bookModel,
+            BookFormContainerView(
                 mode: .edit(updatedBook),
                 onSave: { savedBook in
                     updatedBook = savedBook
