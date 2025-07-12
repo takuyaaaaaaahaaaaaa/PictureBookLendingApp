@@ -32,7 +32,7 @@ public struct UserListView: View {
         } else {
             List {
                 ForEach(users) { user in
-                    NavigationLink(destination: Text("詳細画面: \(user.name)")) {
+                    NavigationLink(value: user) {
                         UserRowView(user: user)
                     }
                 }

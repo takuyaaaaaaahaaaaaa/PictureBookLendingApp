@@ -11,7 +11,6 @@ import PictureBookLendingInfrastructure
  * Presentation ViewにデータとアクションHookを提供します。
  */
 struct BookDetailContainerView: View {
-    @Environment(BookModel.self) private var bookModel
     @Environment(LendingModel.self) private var lendingModel
     
     let initialBook: Book
@@ -32,6 +31,7 @@ struct BookDetailContainerView: View {
             onEdit: handleEdit
         )
         .navigationTitle(book.title)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button("編集") {
@@ -68,7 +68,6 @@ struct BookDetailContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
     let lendingModel = LendingModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
@@ -79,7 +78,6 @@ struct BookDetailContainerView: View {
     
     return NavigationStack {
         BookDetailContainerView(book: sampleBook)
-            .environment(bookModel)
             .environment(lendingModel)
     }
 }

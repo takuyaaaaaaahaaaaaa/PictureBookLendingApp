@@ -16,6 +16,7 @@ struct UserListContainerView: View {
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
+    @State private var navigationPath = NavigationPath()
     
     private var filteredUsers: [User] {
         if searchText.isEmpty {
@@ -29,13 +30,16 @@ struct UserListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             UserListView(
                 users: filteredUsers,
                 searchText: $searchText,
                 onDelete: handleDeleteUsers
             )
             .navigationTitle("利用者一覧")
+            .navigationDestination(for: User.self) { user in
+                UserDetailContainerView(user: user)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
@@ -46,7 +50,13 @@ struct UserListContainerView: View {
                 }
             }
             .sheet(isPresented: $isAddSheetPresented) {
-                Text("利用者追加フォーム")
+                UserFormView(
+                    userModel: userModel,
+                    mode: .add,
+                    onSave: { _ in
+                        // 追加成功時にシートを閉じる処理は既にUserFormView内で実行される
+                    }
+                )
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
