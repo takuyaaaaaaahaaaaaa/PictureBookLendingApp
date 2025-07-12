@@ -91,9 +91,9 @@ struct UserListContainerView: View {
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let lendingModel = LendingModel(
-        bookModel: bookModel,
-        userModel: userModel,
-        repository: mockFactory.loanRepository
+        repository: mockFactory.loanRepository,
+        bookRepository: mockFactory.bookRepository,
+        userRepository: mockFactory.userRepository
     )
     
     return UserListContainerView()

@@ -18,9 +18,9 @@ struct LendingModelTests {
         let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
         let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
         let lendingModel = LendingModel(
-            bookModel: bookModel,
-            userModel: userModel,
-            repository: mockRepositoryFactory.loanRepository
+            repository: mockRepositoryFactory.loanRepository,
+            bookRepository: mockRepositoryFactory.bookRepository,
+            userRepository: mockRepositoryFactory.userRepository
         )
         
         // テスト用データのセットアップ

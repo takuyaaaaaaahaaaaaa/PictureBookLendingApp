@@ -35,14 +35,14 @@ public enum LendingModelError: Error, Equatable {
 @Observable
 public class LendingModel {
     
-    /// 書籍管理モデル
-    private let bookModel: BookModel
-    
-    /// 利用者管理モデル
-    private let userModel: UserModel
-    
     /// 貸出リポジトリ
     private let repository: LoanRepository
+    
+    /// 書籍リポジトリ
+    private let bookRepository: BookRepository
+    
+    /// 利用者リポジトリ
+    private let userRepository: UserRepository
     
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
@@ -51,14 +51,14 @@ public class LendingModel {
      * イニシャライザ
      *
      * - Parameters:
-     *   - bookModel: 書籍管理モデル
-     *   - userModel: 利用者管理モデル
      *   - repository: 貸出リポジトリ
+     *   - bookRepository: 書籍リポジトリ
+     *   - userRepository: 利用者リポジトリ
      */
-    public init(bookModel: BookModel, userModel: UserModel, repository: LoanRepository) {
-        self.bookModel = bookModel
-        self.userModel = userModel
+    public init(repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository) {
         self.repository = repository
+        self.bookRepository = bookRepository
+        self.userRepository = userRepository
         
         // 初期データのロード
         do {
@@ -81,12 +81,16 @@ public class LendingModel {
      */
     public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
-        guard let _ = bookModel.findBookById(bookId) else {
+        do {
+            _ = try bookRepository.findById(bookId)
+        } catch {
             throw LendingModelError.bookNotFound
         }
         
         // 利用者の存在確認
-        guard let _ = userModel.findUserById(userId) else {
+        do {
+            _ = try userRepository.findById(userId)
+        } catch {
             throw LendingModelError.userNotFound
         }
         

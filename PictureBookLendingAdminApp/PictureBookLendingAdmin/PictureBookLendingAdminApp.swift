@@ -46,7 +46,11 @@ struct PictureBookLendingAdminApp: App {
             
             bookModel = BookModel(repository: bookRepository)
             userModel = UserModel(repository: userRepository)
-            lendingModel = LendingModel(bookModel: bookModel, userModel: userModel, repository: loanRepository)
+            lendingModel = LendingModel(
+                repository: loanRepository,
+                bookRepository: bookRepository,
+                userRepository: userRepository
+            )
             
         } catch {
             fatalError("モデルコンテナの初期化に失敗しました: \(error)")

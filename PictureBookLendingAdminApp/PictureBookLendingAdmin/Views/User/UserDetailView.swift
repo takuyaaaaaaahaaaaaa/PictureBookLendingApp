@@ -155,9 +155,9 @@ struct UserLoanHistoryRow: View {
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let lendingModel = LendingModel(
-        bookModel: bookModel,
-        userModel: userModel,
-        repository: mockFactory.loanRepository
+        repository: mockFactory.loanRepository,
+        bookRepository: mockFactory.bookRepository,
+        userRepository: mockFactory.userRepository
     )
     let user = User(name: "山田太郎", group: "1年2組")
     
