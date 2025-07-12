@@ -6,7 +6,8 @@
       "Bash(afplay:*)",
       "Bash(swift test)",
       "Bash(rm:*)",
-      "Bash(xcodebuild test:*)"
+      "Bash(xcodebuild test:*)",
+      "Bash(xcodebuild:*)"
     ],
     "deny": []
   }

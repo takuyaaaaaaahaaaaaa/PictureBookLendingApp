@@ -17,18 +17,32 @@
   },
   "testTargets" : [
     {
-      "target" : {
-        "containerPath" : "container:PictureBookLendingDomain",
-        "identifier" : "PictureBookLendingDomainTests",
-        "name" : "PictureBookLendingDomainTests"
-      }
-    },
-    {
       "parallelizable" : true,
       "target" : {
         "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
         "identifier" : "EFF77EFF2DD66AAD009BD213",
         "name" : "PictureBookLendingAdminTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:PictureBookLendingInfrastructure",
+        "identifier" : "PictureBookLendingInfrastructureTests",
+        "name" : "PictureBookLendingInfrastructureTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:PictureBookLendingUI",
+        "identifier" : "PictureBookLendingUITests",
+        "name" : "PictureBookLendingUITests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:PictureBookLendingModel",
+        "identifier" : "PictureBookLendingModelTests",
+        "name" : "PictureBookLendingModelTests"
       }
     }
   ],
