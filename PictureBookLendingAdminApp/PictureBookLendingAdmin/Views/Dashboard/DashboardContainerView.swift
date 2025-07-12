@@ -28,8 +28,8 @@ struct DashboardContainerView: View {
                 userCount: userCount,
                 activeLoansCount: activeLoansCount,
                 overdueLoans: overdueLoans,
-                bookModel: bookModel,
-                userModel: userModel
+                getBookTitle: { bookModel.findBookById($0)?.title ?? "不明な書籍" },
+                getUserName: { userModel.findUserById($0)?.name ?? "不明な利用者" }
             )
             .navigationTitle("ダッシュボード")
             .onAppear {

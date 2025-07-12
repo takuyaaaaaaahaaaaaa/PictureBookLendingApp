@@ -12,23 +12,23 @@ public struct DashboardView: View {
     let userCount: Int
     let activeLoansCount: Int
     let overdueLoans: [Loan]
-    let bookModel: any BookModelProtocol
-    let userModel: any UserModelProtocol
+    let getBookTitle: (UUID) -> String
+    let getUserName: (UUID) -> String
     
     public init(
         bookCount: Int,
         userCount: Int,
         activeLoansCount: Int,
         overdueLoans: [Loan],
-        bookModel: any BookModelProtocol,
-        userModel: any UserModelProtocol
+        getBookTitle: @escaping (UUID) -> String,
+        getUserName: @escaping (UUID) -> String
     ) {
         self.bookCount = bookCount
         self.userCount = userCount
         self.activeLoansCount = activeLoansCount
         self.overdueLoans = overdueLoans
-        self.bookModel = bookModel
-        self.userModel = userModel
+        self.getBookTitle = getBookTitle
+        self.getUserName = getUserName
     }
     
     public var body: some View {
@@ -44,9 +44,9 @@ public struct DashboardView: View {
                 // 期限切れ貸出の警告
                 if !overdueLoans.isEmpty {
                     OverdueWarningView(
-                        bookModel: bookModel,
-                        userModel: userModel,
-                        loans: overdueLoans
+                        loans: overdueLoans,
+                        getBookTitle: getBookTitle,
+                        getUserName: getUserName
                     )
                 }
                 
@@ -148,18 +148,18 @@ public struct StatItem: View {
  * 返却期限切れ警告ビュー
  */
 public struct OverdueWarningView: View {
-    let bookModel: any BookModelProtocol
-    let userModel: any UserModelProtocol
     let loans: [Loan]
+    let getBookTitle: (UUID) -> String
+    let getUserName: (UUID) -> String
     
     public init(
-        bookModel: any BookModelProtocol,
-        userModel: any UserModelProtocol,
-        loans: [Loan]
+        loans: [Loan],
+        getBookTitle: @escaping (UUID) -> String,
+        getUserName: @escaping (UUID) -> String
     ) {
-        self.bookModel = bookModel
-        self.userModel = userModel
         self.loans = loans
+        self.getBookTitle = getBookTitle
+        self.getUserName = getUserName
     }
     
     public var body: some View {
@@ -188,11 +188,11 @@ public struct OverdueWarningView: View {
             ForEach(loans) { loan in
                 HStack {
                     VStack(alignment: .leading) {
-                        Text(getBookTitle(for: loan.bookId))
+                        Text(getBookTitle(loan.bookId))
                             .font(.subheadline)
                             .bold()
                         
-                        Text(getUserName(for: loan.userId))
+                        Text(getUserName(loan.userId))
                             .font(.caption)
                     }
                     
@@ -220,22 +220,6 @@ public struct OverdueWarningView: View {
                 .fill(Color(.systemBackground))
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
-    }
-    
-    // 書籍名の取得
-    private func getBookTitle(for id: UUID) -> String {
-        if let book = bookModel.findBookById(id) {
-            return book.title
-        }
-        return "不明な書籍"
-    }
-    
-    // 利用者名の取得
-    private func getUserName(for id: UUID) -> String {
-        if let user = userModel.findUserById(id) {
-            return user.name
-        }
-        return "不明な利用者"
     }
     
     // 日付のフォーマット
@@ -335,32 +319,16 @@ public struct InfoCardView: View {
         returnedDate: nil
     )
     
-    let mockBookModel = MockBookModel()
-    let mockUserModel = MockUserModel()
-    
     NavigationStack {
         DashboardView(
             bookCount: 150,
             userCount: 45,
             activeLoansCount: 12,
             overdueLoans: [loan1],
-            bookModel: mockBookModel,
-            userModel: mockUserModel
+            getBookTitle: { _ in "サンプル本" },
+            getUserName: { _ in "山田太郎" }
         )
         .navigationTitle("ダッシュボード")
     }
 }
 
-// MARK: - Mock Models for Preview
-
-private class MockBookModel: BookModelProtocol {
-    func findBookById(_ id: UUID) -> Book? {
-        Book(title: "サンプル本", author: "著者名")
-    }
-}
-
-private class MockUserModel: UserModelProtocol {
-    func findUserById(_ id: UUID) -> User? {
-        User(name: "山田太郎", group: "1年2組")
-    }
-}

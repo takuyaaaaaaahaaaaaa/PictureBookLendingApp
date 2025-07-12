@@ -11,24 +11,21 @@ public struct LendingView: View {
     let loans: [Loan]
     let filterSelection: Binding<Int>
     let onReturn: (UUID) -> Void
-    let bookModel: any BookModelProtocol
-    let userModel: any UserModelProtocol
-    let lendingModel: any LendingModelProtocol
+    let getBookTitle: (UUID) -> String
+    let getUserName: (UUID) -> String
     
     public init(
         loans: [Loan],
         filterSelection: Binding<Int>,
         onReturn: @escaping (UUID) -> Void,
-        bookModel: any BookModelProtocol,
-        userModel: any UserModelProtocol,
-        lendingModel: any LendingModelProtocol
+        getBookTitle: @escaping (UUID) -> String,
+        getUserName: @escaping (UUID) -> String
     ) {
         self.loans = loans
         self.filterSelection = filterSelection
         self.onReturn = onReturn
-        self.bookModel = bookModel
-        self.userModel = userModel
-        self.lendingModel = lendingModel
+        self.getBookTitle = getBookTitle
+        self.getUserName = getUserName
     }
     
     public var body: some View {
@@ -53,9 +50,8 @@ public struct LendingView: View {
                     ForEach(loans) { loan in
                         LoanRowView(
                             loan: loan,
-                            bookModel: bookModel,
-                            userModel: userModel,
-                            lendingModel: lendingModel,
+                            bookTitle: getBookTitle(loan.bookId),
+                            userName: getUserName(loan.userId),
                             onReturn: onReturn
                         )
                     }
@@ -72,9 +68,8 @@ public struct LendingView: View {
  */
 public struct LoanRowView: View {
     let loan: Loan
-    let bookModel: any BookModelProtocol
-    let userModel: any UserModelProtocol
-    let lendingModel: any LendingModelProtocol
+    let bookTitle: String
+    let userName: String
     let onReturn: (UUID) -> Void
     
     @State private var isReturnConfirmationPresented = false
@@ -83,15 +78,13 @@ public struct LoanRowView: View {
     
     public init(
         loan: Loan,
-        bookModel: any BookModelProtocol,
-        userModel: any UserModelProtocol,
-        lendingModel: any LendingModelProtocol,
+        bookTitle: String,
+        userName: String,
         onReturn: @escaping (UUID) -> Void
     ) {
         self.loan = loan
-        self.bookModel = bookModel
-        self.userModel = userModel
-        self.lendingModel = lendingModel
+        self.bookTitle = bookTitle
+        self.userName = userName
         self.onReturn = onReturn
     }
     
@@ -154,22 +147,6 @@ public struct LoanRowView: View {
         }
     }
     
-    // 書籍名の取得
-    private var bookTitle: String {
-        if let book = bookModel.findBookById(loan.bookId) {
-            return book.title
-        }
-        return "不明な書籍"
-    }
-    
-    // 利用者名の取得
-    private var userName: String {
-        if let user = userModel.findUserById(loan.userId) {
-            return user.name
-        }
-        return "不明な利用者"
-    }
-    
     // 返却期限切れかどうかのチェック
     private var isOverdue: Bool {
         !loan.isReturned && Date() > loan.dueDate
@@ -195,36 +172,15 @@ public struct LoanRowView: View {
         returnedDate: nil
     )
     
-    let mockBookModel = MockBookModel()
-    let mockUserModel = MockUserModel()
-    let mockLendingModel = MockLendingModel()
-    
     NavigationStack {
         LendingView(
             loans: [loan1],
             filterSelection: .constant(0),
             onReturn: { _ in },
-            bookModel: mockBookModel,
-            userModel: mockUserModel,
-            lendingModel: mockLendingModel
+            getBookTitle: { _ in "サンプル本" },
+            getUserName: { _ in "山田太郎" }
         )
         .navigationTitle("貸出・返却管理")
     }
 }
 
-// MARK: - Mock Models for Preview
-
-private class MockBookModel: BookModelProtocol {
-    func findBookById(_ id: UUID) -> Book? {
-        Book(title: "サンプル本", author: "著者名")
-    }
-}
-
-private class MockUserModel: UserModelProtocol {
-    func findUserById(_ id: UUID) -> User? {
-        User(name: "山田太郎", group: "1年2組")
-    }
-}
-
-private class MockLendingModel: LendingModelProtocol {
-}

@@ -38,9 +38,8 @@ struct LendingContainerView: View {
                 loans: filteredLoans,
                 filterSelection: $filterSelection,
                 onReturn: handleReturn,
-                bookModel: bookModel,
-                userModel: userModel,
-                lendingModel: lendingModel
+                getBookTitle: { bookModel.findBookById($0)?.title ?? "不明な書籍" },
+                getUserName: { userModel.findUserById($0)?.name ?? "不明な利用者" }
             )
             .navigationTitle("貸出・返却管理")
             .toolbar {
