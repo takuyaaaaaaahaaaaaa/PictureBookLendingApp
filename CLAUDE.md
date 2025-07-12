@@ -178,6 +178,7 @@ struct BookListContainerView: View {
 
 * **個別プロパティ** : `searchText`, `selectedIDs` など画面限定の一時状態
 * **共通 State 型** : `AlertState`, `NavigationState`, `LoadingState` など複数画面で再利用
+  * **重要**: State型はApp層（ContainerViewと同じモジュール）に定義する
 * **Model** : アプリ横断で共有するビジネスロジック状態 (`BooksModel`, `UsersModel`)
 
 ---
@@ -193,6 +194,9 @@ struct BookListContainerView: View {
 | 画面固有状態               | ❌     | ✅     | ✅         | ❌            |
 | 共通 State 調整          | ❌     | ✅     | ✅         | ❌            |
 | Presentation へのデータ供給 | ❌     | ❌     | ✅         | ❌            |
+| NavigationStack       | ❌     | ❌     | ✅         | ❌            |
+| alert/sheet/popover   | ❌     | ❌     | ✅         | ❌            |
+| onAppear/task/refreshable | ❌     | ❌     | ✅         | ❌            |
 | UI 詳細実装              | ❌     | ❌     | ❌         | ✅            |
 | 純粋 UI 表示             | ❌     | ❌     | ❌         | ✅            |
 

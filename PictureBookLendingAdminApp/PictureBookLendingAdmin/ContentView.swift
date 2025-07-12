@@ -23,7 +23,7 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // 絵本管理タブ
-            BookListView(bookModel: bookModel)
+            BookListContainerView(bookModel: bookModel)
                 .tabItem {
                     Label("絵本管理", systemImage: "book")
                 }
