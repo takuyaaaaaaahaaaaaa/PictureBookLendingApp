@@ -7,7 +7,7 @@ import SwiftData
  *
  * SwiftDataを使用して貸出情報の永続化を担当するリポジトリ
  */
-class SwiftDataLoanRepository: LoanRepository {
+public class SwiftDataLoanRepository: LoanRepository {
     private let modelContext: ModelContext
     
     /**
@@ -15,7 +15,7 @@ class SwiftDataLoanRepository: LoanRepository {
      *
      * - Parameter modelContext: SwiftData用のモデルコンテキスト
      */
-    init(modelContext: ModelContext) {
+    public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
@@ -26,7 +26,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 保存された貸出情報
      * - Throws: 保存に失敗した場合はエラーを投げる
      */
-    func save(_ loan: Loan) throws -> Loan {
+    public func save(_ loan: Loan) throws -> Loan {
         let swiftDataLoan = SwiftDataLoan(
             id: loan.id,
             bookId: loan.bookId,
@@ -52,7 +52,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 全ての貸出情報のリスト
      * - Throws: 取得に失敗した場合はエラーを投げる
      */
-    func fetchAll() throws -> [Loan] {
+    public func fetchAll() throws -> [Loan] {
         do {
             let descriptor = FetchDescriptor<SwiftDataLoan>()
             let swiftDataLoans = try modelContext.fetch(descriptor)
@@ -79,7 +79,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 見つかった貸出情報（見つからない場合はnil）
      * - Throws: 検索に失敗した場合はエラーを投げる
      */
-    func findById(_ id: UUID) throws -> Loan? {
+    public func findById(_ id: UUID) throws -> Loan? {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -109,7 +109,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 関連する貸出情報のリスト
      * - Throws: 検索に失敗した場合はエラーを投げる
      */
-    func findByBookId(_ bookId: UUID) throws -> [Loan] {
+    public func findByBookId(_ bookId: UUID) throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.bookId == bookId }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -137,7 +137,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 関連する貸出情報のリスト
      * - Throws: 検索に失敗した場合はエラーを投げる
      */
-    func findByUserId(_ userId: UUID) throws -> [Loan] {
+    public func findByUserId(_ userId: UUID) throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.userId == userId }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -164,7 +164,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 貸出中の貸出情報のリスト
      * - Throws: 取得に失敗した場合はエラーを投げる
      */
-    func fetchActiveLoans() throws -> [Loan] {
+    public func fetchActiveLoans() throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.returnedDate == nil }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -192,7 +192,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 更新された貸出情報
      * - Throws: 更新に失敗した場合はエラーを投げる
      */
-    func update(_ loan: Loan) throws -> Loan {
+    public func update(_ loan: Loan) throws -> Loan {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == loan.id }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -226,7 +226,7 @@ class SwiftDataLoanRepository: LoanRepository {
      * - Returns: 削除に成功したかどうか
      * - Throws: 削除に失敗した場合はエラーを投げる
      */
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
@@ -254,15 +254,15 @@ class SwiftDataLoanRepository: LoanRepository {
  * SwiftDataで永続化するための貸出モデル
  */
 @Model
-final class SwiftDataLoan {
-    var id: UUID
-    var bookId: UUID
-    var userId: UUID
-    var loanDate: Date
-    var dueDate: Date
-    var returnedDate: Date?
+final public class SwiftDataLoan {
+    public var id: UUID
+    public var bookId: UUID
+    public var userId: UUID
+    public var loanDate: Date
+    public var dueDate: Date
+    public var returnedDate: Date?
     
-    init(id: UUID, bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date, returnedDate: Date? = nil) {
+    public init(id: UUID, bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date, returnedDate: Date? = nil) {
         self.id = id
         self.bookId = bookId
         self.userId = userId

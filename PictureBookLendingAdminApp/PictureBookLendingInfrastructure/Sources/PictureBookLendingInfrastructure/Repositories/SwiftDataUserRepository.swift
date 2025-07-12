@@ -7,7 +7,7 @@ import SwiftData
  *
  * SwiftDataを使用して利用者の永続化を担当するリポジトリ
  */
-class SwiftDataUserRepository: UserRepository {
+public class SwiftDataUserRepository: UserRepository {
     private let modelContext: ModelContext
     
     /**
@@ -15,7 +15,7 @@ class SwiftDataUserRepository: UserRepository {
      *
      * - Parameter modelContext: SwiftData用のモデルコンテキスト
      */
-    init(modelContext: ModelContext) {
+    public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
@@ -26,7 +26,7 @@ class SwiftDataUserRepository: UserRepository {
      * - Returns: 保存された利用者
      * - Throws: 保存に失敗した場合はエラーを投げる
      */
-    func save(_ user: User) throws -> User {
+    public func save(_ user: User) throws -> User {
         // SwiftDataでは、オブジェクトをモデルコンテキストに挿入してSwiftDataモデルに変換
         let swiftDataUser = SwiftDataUser(
             id: user.id,
@@ -50,7 +50,7 @@ class SwiftDataUserRepository: UserRepository {
      * - Returns: 全ての利用者のリスト
      * - Throws: 取得に失敗した場合はエラーを投げる
      */
-    func fetchAll() throws -> [User] {
+    public func fetchAll() throws -> [User] {
         do {
             let descriptor = FetchDescriptor<SwiftDataUser>()
             let swiftDataUsers = try modelContext.fetch(descriptor)
@@ -75,7 +75,7 @@ class SwiftDataUserRepository: UserRepository {
      * - Returns: 見つかった利用者（見つからない場合はnil）
      * - Throws: 検索に失敗した場合はエラーを投げる
      */
-    func findById(_ id: UUID) throws -> User? {
+    public func findById(_ id: UUID) throws -> User? {
         do {
             let predicate = #Predicate<SwiftDataUser> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataUser>(predicate: predicate)
@@ -102,7 +102,7 @@ class SwiftDataUserRepository: UserRepository {
      * - Returns: 更新された利用者
      * - Throws: 更新に失敗した場合はエラーを投げる
      */
-    func update(_ user: User) throws -> User {
+    public func update(_ user: User) throws -> User {
         do {
             let predicate = #Predicate<SwiftDataUser> { $0.id == user.id }
             let descriptor = FetchDescriptor<SwiftDataUser>(predicate: predicate)
@@ -133,7 +133,7 @@ class SwiftDataUserRepository: UserRepository {
      * - Returns: 削除に成功したかどうか
      * - Throws: 削除に失敗した場合はエラーを投げる
      */
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         do {
             let predicate = #Predicate<SwiftDataUser> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataUser>(predicate: predicate)
@@ -161,12 +161,12 @@ class SwiftDataUserRepository: UserRepository {
  * SwiftDataで永続化するための利用者モデル
  */
 @Model
-final class SwiftDataUser {
-    var id: UUID
-    var name: String
-    var group: String
+final public class SwiftDataUser {
+    public var id: UUID
+    public var name: String
+    public var group: String
     
-    init(id: UUID, name: String, group: String) {
+    public init(id: UUID, name: String, group: String) {
         self.id = id
         self.name = name
         self.group = group

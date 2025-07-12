@@ -1,13 +1,15 @@
 import Foundation
-@testable import PictureBookLendingDomain
+import PictureBookLendingDomain
 
 /**
  * テスト用のモックブックリポジトリ
  */
-class MockBookRepository: BookRepository {
+public class MockBookRepository: BookRepository {
     private var books: [Book] = []
     
-    func save(_ book: Book) throws -> Book {
+    public init() {}
+    
+    public func save(_ book: Book) throws -> Book {
         if books.contains(where: { $0.id == book.id }) {
             throw RepositoryError.saveFailed
         }
@@ -15,15 +17,15 @@ class MockBookRepository: BookRepository {
         return book
     }
     
-    func fetchAll() throws -> [Book] {
+    public func fetchAll() throws -> [Book] {
         return books
     }
     
-    func findById(_ id: UUID) throws -> Book? {
+    public func findById(_ id: UUID) throws -> Book? {
         return books.first { $0.id == id }
     }
     
-    func update(_ book: Book) throws -> Book {
+    public func update(_ book: Book) throws -> Book {
         guard let index = books.firstIndex(where: { $0.id == book.id }) else {
             throw RepositoryError.notFound
         }
@@ -31,7 +33,7 @@ class MockBookRepository: BookRepository {
         return book
     }
     
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         guard let index = books.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -43,10 +45,12 @@ class MockBookRepository: BookRepository {
 /**
  * テスト用のモックユーザーリポジトリ
  */
-class MockUserRepository: UserRepository {
+public class MockUserRepository: UserRepository {
     private var users: [User] = []
     
-    func save(_ user: User) throws -> User {
+    public init() {}
+    
+    public func save(_ user: User) throws -> User {
         if users.contains(where: { $0.id == user.id }) {
             throw RepositoryError.saveFailed
         }
@@ -54,15 +58,15 @@ class MockUserRepository: UserRepository {
         return user
     }
     
-    func fetchAll() throws -> [User] {
+    public func fetchAll() throws -> [User] {
         return users
     }
     
-    func findById(_ id: UUID) throws -> User? {
+    public func findById(_ id: UUID) throws -> User? {
         return users.first { $0.id == id }
     }
     
-    func update(_ user: User) throws -> User {
+    public func update(_ user: User) throws -> User {
         guard let index = users.firstIndex(where: { $0.id == user.id }) else {
             throw RepositoryError.notFound
         }
@@ -70,7 +74,7 @@ class MockUserRepository: UserRepository {
         return user
     }
     
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         guard let index = users.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -82,10 +86,12 @@ class MockUserRepository: UserRepository {
 /**
  * テスト用のモック貸出リポジトリ
  */
-class MockLoanRepository: LoanRepository {
+public class MockLoanRepository: LoanRepository {
     private var loans: [Loan] = []
     
-    func save(_ loan: Loan) throws -> Loan {
+    public init() {}
+    
+    public func save(_ loan: Loan) throws -> Loan {
         if loans.contains(where: { $0.id == loan.id }) {
             throw RepositoryError.saveFailed
         }
@@ -93,27 +99,27 @@ class MockLoanRepository: LoanRepository {
         return loan
     }
     
-    func fetchAll() throws -> [Loan] {
+    public func fetchAll() throws -> [Loan] {
         return loans
     }
     
-    func findById(_ id: UUID) throws -> Loan? {
+    public func findById(_ id: UUID) throws -> Loan? {
         return loans.first { $0.id == id }
     }
     
-    func findByBookId(_ bookId: UUID) throws -> [Loan] {
+    public func findByBookId(_ bookId: UUID) throws -> [Loan] {
         return loans.filter { $0.bookId == bookId }
     }
     
-    func findByUserId(_ userId: UUID) throws -> [Loan] {
+    public func findByUserId(_ userId: UUID) throws -> [Loan] {
         return loans.filter { $0.userId == userId }
     }
     
-    func fetchActiveLoans() throws -> [Loan] {
+    public func fetchActiveLoans() throws -> [Loan] {
         return loans.filter { $0.returnedDate == nil }
     }
     
-    func update(_ loan: Loan) throws -> Loan {
+    public func update(_ loan: Loan) throws -> Loan {
         guard let index = loans.firstIndex(where: { $0.id == loan.id }) else {
             throw RepositoryError.notFound
         }
@@ -121,7 +127,7 @@ class MockLoanRepository: LoanRepository {
         return loan
     }
     
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         guard let index = loans.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -133,8 +139,22 @@ class MockLoanRepository: LoanRepository {
 /**
  * テスト用のモックリポジトリファクトリ
  */
-class MockRepositoryFactory {
-    let bookRepository = MockBookRepository()
-    let userRepository = MockUserRepository()
-    let loanRepository = MockLoanRepository()
+public class MockRepositoryFactory: RepositoryFactory {
+    public let bookRepository = MockBookRepository()
+    public let userRepository = MockUserRepository()
+    public let loanRepository = MockLoanRepository()
+    
+    public init() {}
+    
+    public func makeBookRepository() -> BookRepository {
+        return bookRepository
+    }
+    
+    public func makeUserRepository() -> UserRepository {
+        return userRepository
+    }
+    
+    public func makeLoanRepository() -> LoanRepository {
+        return loanRepository
+    }
 }

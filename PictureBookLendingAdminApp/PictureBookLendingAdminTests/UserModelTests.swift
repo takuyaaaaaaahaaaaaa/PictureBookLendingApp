@@ -1,6 +1,8 @@
-import Testing
+import XCTest
 import Foundation
-@testable import PictureBookLendingDomain
+@testable import PictureBookLendingAdmin
+import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 
 /**
  * UserModelテストケース
@@ -13,12 +15,13 @@ import Foundation
  * - 利用者の削除
  * などの機能をテストします。
  */
-struct UserModelTests {
+final class UserModelTests: XCTestCase {
     
-    private let mockRepository: MockUserRepository
-    private let userModel: UserModel
+    private var mockRepository: MockUserRepository!
+    private var userModel: UserModel!
     
-    init() {
+    override func setUp() {
+        super.setUp()
         mockRepository = MockUserRepository()
         userModel = UserModel(repository: mockRepository)
     }
@@ -28,8 +31,7 @@ struct UserModelTests {
      *
      * 新しい利用者を登録し、正しく登録されることを確認します。
      */
-    @Test
-    func registerUser() throws {
+    func testRegisterUser() throws {
         // 1. Arrange - 準備
         let user = User(name: "山田太郎", group: "1年2組")
         
@@ -37,10 +39,10 @@ struct UserModelTests {
         let registeredUser = try userModel.registerUser(user)
         
         // 3. Assert - 検証
-        #expect(registeredUser.name == "山田太郎")
-        #expect(registeredUser.group == "1年2組")
-        #expect(!registeredUser.id.uuidString.isEmpty)
-        #expect(userModel.users.count == 1)
+        XCTAssertEqual(registeredUser.name, "山田太郎")
+        XCTAssertEqual(registeredUser.group, "1年2組")
+        XCTAssertFalse(registeredUser.id.uuidString.isEmpty)
+        XCTAssertEqual(userModel.users.count, 1)
     }
     
     /**
@@ -48,8 +50,7 @@ struct UserModelTests {
      *
      * 複数の利用者を登録し、全ての利用者が取得できることを確認します。
      */
-    @Test
-    func getAllUsers() throws {
+    func testGetAllUsers() throws {
         // 1. Arrange - 準備
         let user1 = User(name: "山田太郎", group: "1年2組")
         let user2 = User(name: "鈴木花子", group: "2年1組")
@@ -60,8 +61,8 @@ struct UserModelTests {
         let users = userModel.getAllUsers()
         
         // 3. Assert - 検証
-        #expect(users.count == 2)
-        #expect(Set(users.map { $0.name }) == Set(["山田太郎", "鈴木花子"]))
+        XCTAssertEqual(users.count, 2)
+        XCTAssertEqual(Set(users.map { $0.name }), Set(["山田太郎", "鈴木花子"]))
     }
     
     /**
@@ -69,8 +70,7 @@ struct UserModelTests {
      *
      * IDを指定して利用者を検索し、正しい利用者が取得できることを確認します。
      */
-    @Test
-    func findUserById() throws {
+    func testFindUserById() throws {
         // 1. Arrange - 準備
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
@@ -80,8 +80,8 @@ struct UserModelTests {
         let foundUser = userModel.findUserById(id)
         
         // 3. Assert - 検証
-        #expect(foundUser != nil)
-        #expect(foundUser?.name == "山田太郎")
+        XCTAssertNotNil(foundUser)
+        XCTAssertEqual(foundUser?.name, "山田太郎")
     }
     
     /**
@@ -89,8 +89,7 @@ struct UserModelTests {
      *
      * 登録済みの利用者情報を更新し、正しく更新されることを確認します。
      */
-    @Test
-    func updateUser() throws {
+    func testUpdateUser() throws {
         // 1. Arrange - 準備
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
@@ -102,10 +101,10 @@ struct UserModelTests {
         let updatedUser = try userModel.updateUser(updatedUserInfo)
         
         // 3. Assert - 検証
-        #expect(updatedUser.name == "山田次郎")
-        #expect(updatedUser.group == "1年2組")
-        #expect(userModel.users.count == 1) // 数は変わらない
-        #expect(userModel.findUserById(id)?.name == "山田次郎")
+        XCTAssertEqual(updatedUser.name, "山田次郎")
+        XCTAssertEqual(updatedUser.group, "1年2組")
+        XCTAssertEqual(userModel.users.count, 1) // 数は変わらない
+        XCTAssertEqual(userModel.findUserById(id)?.name, "山田次郎")
     }
     
     /**
@@ -113,8 +112,7 @@ struct UserModelTests {
      *
      * 登録済みの利用者を削除し、正しく削除されることを確認します。
      */
-    @Test
-    func deleteUser() throws {
+    func testDeleteUser() throws {
         // 1. Arrange - 準備
         let user = User(name: "山田太郎", group: "1年2組")
         let registeredUser = try userModel.registerUser(user)
@@ -124,9 +122,9 @@ struct UserModelTests {
         let result = try userModel.deleteUser(id)
         
         // 3. Assert - 検証
-        #expect(result == true)
-        #expect(userModel.users.count == 0)
-        #expect(userModel.findUserById(id) == nil)
+        XCTAssertTrue(result)
+        XCTAssertEqual(userModel.users.count, 0)
+        XCTAssertNil(userModel.findUserById(id))
     }
     
     /**
@@ -134,14 +132,14 @@ struct UserModelTests {
      *
      * 存在しない利用者IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
      */
-    @Test
-    func deleteNonExistingUser() throws {
+    func testDeleteNonExistingUser() throws {
         // 1. Arrange - 準備
         let nonExistingId = UUID()
         
         // 2. Act & Assert - 実行と検証
-        #expect(throws: UserModelError.userNotFound) {
-            try userModel.deleteUser(nonExistingId)
+        XCTAssertThrowsError(try userModel.deleteUser(nonExistingId)) { error in
+            XCTAssertTrue(error is UserModelError)
+            XCTAssertEqual(error as? UserModelError, UserModelError.userNotFound)
         }
     }
 }

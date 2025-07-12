@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 
 @main
 struct PictureBookLendingAdminApp: App {

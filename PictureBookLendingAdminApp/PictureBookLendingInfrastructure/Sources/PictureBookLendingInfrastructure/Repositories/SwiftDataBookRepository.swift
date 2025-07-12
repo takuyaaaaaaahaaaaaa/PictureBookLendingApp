@@ -7,7 +7,7 @@ import SwiftData
  *
  * SwiftDataを使用して絵本の永続化を担当するリポジトリ
  */
-class SwiftDataBookRepository: BookRepository {
+public class SwiftDataBookRepository: BookRepository {
     private let modelContext: ModelContext
     
     /**
@@ -15,7 +15,7 @@ class SwiftDataBookRepository: BookRepository {
      *
      * - Parameter modelContext: SwiftData用のモデルコンテキスト
      */
-    init(modelContext: ModelContext) {
+    public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
@@ -26,7 +26,7 @@ class SwiftDataBookRepository: BookRepository {
      * - Returns: 保存された絵本
      * - Throws: 保存に失敗した場合はエラーを投げる
      */
-    func save(_ book: Book) throws -> Book {
+    public func save(_ book: Book) throws -> Book {
         // SwiftDataでは、オブジェクトをモデルコンテキストに挿入してSwiftDataモデルに変換
         let swiftDataBook = SwiftDataBook(
             id: book.id,
@@ -50,7 +50,7 @@ class SwiftDataBookRepository: BookRepository {
      * - Returns: 全ての絵本のリスト
      * - Throws: 取得に失敗した場合はエラーを投げる
      */
-    func fetchAll() throws -> [Book] {
+    public func fetchAll() throws -> [Book] {
         do {
             let descriptor = FetchDescriptor<SwiftDataBook>()
             let swiftDataBooks = try modelContext.fetch(descriptor)
@@ -75,7 +75,7 @@ class SwiftDataBookRepository: BookRepository {
      * - Returns: 見つかった絵本（見つからない場合はnil）
      * - Throws: 検索に失敗した場合はエラーを投げる
      */
-    func findById(_ id: UUID) throws -> Book? {
+    public func findById(_ id: UUID) throws -> Book? {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
@@ -102,7 +102,7 @@ class SwiftDataBookRepository: BookRepository {
      * - Returns: 更新された絵本
      * - Throws: 更新に失敗した場合はエラーを投げる
      */
-    func update(_ book: Book) throws -> Book {
+    public func update(_ book: Book) throws -> Book {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == book.id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
@@ -133,7 +133,7 @@ class SwiftDataBookRepository: BookRepository {
      * - Returns: 削除に成功したかどうか
      * - Throws: 削除に失敗した場合はエラーを投げる
      */
-    func delete(_ id: UUID) throws -> Bool {
+    public func delete(_ id: UUID) throws -> Bool {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
@@ -161,12 +161,12 @@ class SwiftDataBookRepository: BookRepository {
  * SwiftDataで永続化するための書籍モデル
  */
 @Model
-final class SwiftDataBook {
-    var id: UUID
-    var title: String
-    var author: String
+final public class SwiftDataBook {
+    public var id: UUID
+    public var title: String
+    public var author: String
     
-    init(id: UUID, title: String, author: String) {
+    public init(id: UUID, title: String, author: String) {
         self.id = id
         self.title = title
         self.author = author

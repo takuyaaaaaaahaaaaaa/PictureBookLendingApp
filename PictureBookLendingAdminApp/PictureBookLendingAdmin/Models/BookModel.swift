@@ -1,10 +1,11 @@
 import Foundation
 import Observation
+import PictureBookLendingDomain
 
 /**
  * 絵本管理に関するエラー
  */
-public enum BookModelError: Error, Equatable {
+enum BookModelError: Error, Equatable {
     /// 指定された絵本が見つからない場合のエラー
     case bookNotFound
     /// 絵本登録に失敗した場合のエラー
@@ -24,20 +25,20 @@ public enum BookModelError: Error, Equatable {
  * - 絵本の削除
  * などの機能を提供します。
  */
-@Observable public class BookModel {
+@Observable class BookModel {
     
     /// 書籍リポジトリ
     private let repository: BookRepository
     
     /// キャッシュ用の絵本リスト
-    public private(set) var books: [Book] = []
+    private(set) var books: [Book] = []
     
     /**
      * イニシャライザ
      *
      * - Parameter repository: 書籍リポジトリ
      */
-    public init(repository: BookRepository) {
+    init(repository: BookRepository) {
         self.repository = repository
         
         // 初期データのロード
@@ -58,7 +59,7 @@ public enum BookModelError: Error, Equatable {
      * - Returns: 登録された絵本（IDが割り当てられます）
      * - Throws: 登録に失敗した場合は `BookModelError.registrationFailed` を投げます
      */
-    public func registerBook(_ book: Book) throws -> Book {
+    func registerBook(_ book: Book) throws -> Book {
         do {
             // リポジトリに保存
             let savedBook = try repository.save(book)
@@ -79,7 +80,7 @@ public enum BookModelError: Error, Equatable {
      *
      * - Returns: 全ての絵本の配列
      */
-    public func getAllBooks() -> [Book] {
+    func getAllBooks() -> [Book] {
         return books
     }
     
@@ -88,7 +89,7 @@ public enum BookModelError: Error, Equatable {
      * 
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
-    public func refreshBooks() {
+    func refreshBooks() {
         do {
             books = try repository.fetchAll()
         } catch {
@@ -104,7 +105,7 @@ public enum BookModelError: Error, Equatable {
      * - Parameter id: 検索する絵本のID
      * - Returns: 見つかった絵本（見つからない場合はnil）
      */
-    public func findBookById(_ id: UUID) -> Book? {
+    func findBookById(_ id: UUID) -> Book? {
         // キャッシュから検索
         if let cachedBook = books.first(where: { $0.id == id }) {
             return cachedBook
@@ -128,7 +129,7 @@ public enum BookModelError: Error, Equatable {
      * - Returns: 更新された絵本
      * - Throws: 更新に失敗した場合は `BookModelError` を投げます
      */
-    public func updateBook(_ book: Book) throws -> Book {
+    func updateBook(_ book: Book) throws -> Book {
         do {
             // リポジトリで更新
             let updatedBook = try repository.update(book)
@@ -158,7 +159,7 @@ public enum BookModelError: Error, Equatable {
      * - Returns: 削除に成功したかどうか
      * - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
      */
-    public func deleteBook(_ id: UUID) throws -> Bool {
+    func deleteBook(_ id: UUID) throws -> Bool {
         do {
             // リポジトリから削除
             let result = try repository.delete(id)
