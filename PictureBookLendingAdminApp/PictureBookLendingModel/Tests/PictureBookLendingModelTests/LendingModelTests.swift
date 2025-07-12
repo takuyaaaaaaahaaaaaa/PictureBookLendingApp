@@ -1,4 +1,4 @@
-import XCTest
+import Testing
 import Foundation
 @testable import PictureBookLendingModel
 import PictureBookLendingDomain
@@ -8,32 +8,16 @@ import PictureBookLendingDomain
  *
  * 絵本の貸出・返却を管理するモデルの基本機能をテストします。
  */
-final class LendingModelTests: XCTestCase {
+@Suite("LendingModel Tests")
+struct LendingModelTests {
     
-    private var mockRepositoryFactory: MockRepositoryFactory!
-    private var bookModel: BookModel!
-    private var userModel: UserModel!
-    private var lendingModel: LendingModel!
-    
-    private var testBook: Book!
-    private var testUser: User!
-    
-    override func setUp() {
-        super.setUp()
-        do {
-            try setUpModels()
-        } catch {
-            XCTFail("Failed to set up models: \(error)")
-        }
-    }
-    
-    private func setUpModels() throws {
+    private func createLendingModel() throws -> (mockRepositoryFactory: MockRepositoryFactory, bookModel: BookModel, userModel: UserModel, lendingModel: LendingModel, testBook: Book, testUser: User) {
         // テスト用に各モデルを初期化
-        mockRepositoryFactory = MockRepositoryFactory()
+        let mockRepositoryFactory = MockRepositoryFactory()
         
-        bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
-        userModel = UserModel(repository: mockRepositoryFactory.userRepository)
-        lendingModel = LendingModel(
+        let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+        let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
+        let lendingModel = LendingModel(
             bookModel: bookModel,
             userModel: userModel,
             repository: mockRepositoryFactory.loanRepository
@@ -44,35 +28,43 @@ final class LendingModelTests: XCTestCase {
         let initialUser = User(name: "山田太郎", group: "1年2組")
         
         // 本とユーザーを登録
-        testBook = try bookModel.registerBook(initialBook)
-        testUser = try userModel.registerUser(initialUser)
+        let testBook = try bookModel.registerBook(initialBook)
+        let testUser = try userModel.registerUser(initialUser)
+        
+        return (mockRepositoryFactory, bookModel, userModel, lendingModel, testBook, testUser)
     }
     
     /**
      * 書籍貸出機能のテスト
      */
-    func testLendBook() throws {
+    @Test("書籍貸出機能のテスト")
+    func lendBook() throws {
+        let (_, _, _, lendingModel, testBook, testUser) = try createLendingModel()
+        
         let bookId = testBook.id
         let userId = testUser.id
         
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
         let loan = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
-        XCTAssertEqual(loan.bookId, bookId)
-        XCTAssertEqual(loan.userId, userId)
-        XCTAssertEqual(loan.dueDate, dueDate)
-        XCTAssertNil(loan.returnedDate)
-        XCTAssertFalse(loan.isReturned)
+        #expect(loan.bookId == bookId)
+        #expect(loan.userId == userId)
+        #expect(loan.dueDate == dueDate)
+        #expect(loan.returnedDate == nil)
+        #expect(loan.isReturned == false)
         
         let activeLoans = lendingModel.getActiveLoans()
-        XCTAssertEqual(activeLoans.count, 1)
-        XCTAssertEqual(activeLoans.first?.bookId, bookId)
+        #expect(activeLoans.count == 1)
+        #expect(activeLoans.first?.bookId == bookId)
     }
     
     /**
      * 書籍返却機能のテスト
      */
-    func testReturnBook() throws {
+    @Test("書籍返却機能のテスト")
+    func returnBook() throws {
+        let (_, _, _, lendingModel, testBook, testUser) = try createLendingModel()
+        
         let bookId = testBook.id
         let userId = testUser.id
         
@@ -82,14 +74,14 @@ final class LendingModelTests: XCTestCase {
         
         let returnedLoan = try lendingModel.returnBook(loanId: loanId)
         
-        XCTAssertNotNil(returnedLoan.returnedDate)
-        XCTAssertTrue(returnedLoan.isReturned)
+        #expect(returnedLoan.returnedDate != nil)
+        #expect(returnedLoan.isReturned == true)
         
         let activeLoans = lendingModel.getActiveLoans()
-        XCTAssertEqual(activeLoans.count, 0)
+        #expect(activeLoans.count == 0)
         
         let allLoans = lendingModel.getAllLoans()
-        XCTAssertEqual(allLoans.count, 1)
-        XCTAssertTrue(allLoans.first?.isReturned ?? false)
+        #expect(allLoans.count == 1)
+        #expect(allLoans.first?.isReturned == true)
     }
 }

@@ -1,4 +1,4 @@
-import XCTest
+import Testing
 import Foundation
 @testable import PictureBookLendingModel
 import PictureBookLendingDomain
@@ -14,15 +14,13 @@ import PictureBookLendingDomain
  * - 絵本の削除
  * などの機能をテストします。
  */
-final class BookModelTests: XCTestCase {
+@Suite("BookModel Tests")
+struct BookModelTests {
     
-    private var mockRepository: MockBookRepository!
-    private var bookModel: BookModel!
-    
-    override func setUp() {
-        super.setUp()
-        mockRepository = MockBookRepository()
-        bookModel = BookModel(repository: mockRepository)
+    private func createBookModel() -> (BookModel, MockBookRepository) {
+        let mockRepository = MockBookRepository()
+        let bookModel = BookModel(repository: mockRepository)
+        return (bookModel, mockRepository)
     }
     
     /**
@@ -30,18 +28,20 @@ final class BookModelTests: XCTestCase {
      *
      * 新しい絵本を登録し、正しく登録されることを確認します。
      */
-    func testRegisterBook() throws {
+    @Test("書籍登録機能")
+    func registerBook() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         
         // 2. Act - 実行
         let registeredBook = try bookModel.registerBook(book)
         
         // 3. Assert - 検証
-        XCTAssertEqual(registeredBook.title, "はらぺこあおむし")
-        XCTAssertEqual(registeredBook.author, "エリック・カール")
-        XCTAssertFalse(registeredBook.id.uuidString.isEmpty)
-        XCTAssertEqual(bookModel.books.count, 1)
+        #expect(registeredBook.title == "はらぺこあおむし")
+        #expect(registeredBook.author == "エリック・カール")
+        #expect(!registeredBook.id.uuidString.isEmpty)
+        #expect(bookModel.books.count == 1)
     }
     
     /**
@@ -49,8 +49,10 @@ final class BookModelTests: XCTestCase {
      *
      * 複数の絵本を登録し、全ての絵本が取得できることを確認します。
      */
-    func testGetAllBooks() throws {
+    @Test("全書籍取得機能")
+    func getAllBooks() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
         
@@ -60,8 +62,8 @@ final class BookModelTests: XCTestCase {
         let books = bookModel.getAllBooks()
         
         // 3. Assert - 検証
-        XCTAssertEqual(books.count, 2)
-        XCTAssertEqual(Set(books.map { $0.title }), Set(["はらぺこあおむし", "ぐりとぐら"]))
+        #expect(books.count == 2)
+        #expect(Set(books.map { $0.title }) == Set(["はらぺこあおむし", "ぐりとぐら"]))
     }
     
     /**
@@ -69,8 +71,10 @@ final class BookModelTests: XCTestCase {
      *
      * IDを指定して絵本を検索し、正しい絵本が取得できることを確認します。
      */
-    func testFindBookById() throws {
+    @Test("書籍ID検索機能")
+    func findBookById() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -79,8 +83,8 @@ final class BookModelTests: XCTestCase {
         let foundBook = bookModel.findBookById(id)
         
         // 3. Assert - 検証
-        XCTAssertNotNil(foundBook)
-        XCTAssertEqual(foundBook?.title, "はらぺこあおむし")
+        #expect(foundBook != nil)
+        #expect(foundBook?.title == "はらぺこあおむし")
     }
     
     /**
@@ -88,8 +92,10 @@ final class BookModelTests: XCTestCase {
      *
      * 登録済みの絵本情報を更新し、正しく更新されることを確認します。
      */
-    func testUpdateBook() throws {
+    @Test("書籍更新機能")
+    func updateBook() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -100,10 +106,10 @@ final class BookModelTests: XCTestCase {
         let updatedBook = try bookModel.updateBook(updatedBookInfo)
         
         // 3. Assert - 検証
-        XCTAssertEqual(updatedBook.title, "The Very Hungry Caterpillar")
-        XCTAssertEqual(updatedBook.author, "Eric Carle")
-        XCTAssertEqual(bookModel.books.count, 1) // 数は変わらない
-        XCTAssertEqual(bookModel.findBookById(id)?.title, "The Very Hungry Caterpillar")
+        #expect(updatedBook.title == "The Very Hungry Caterpillar")
+        #expect(updatedBook.author == "Eric Carle")
+        #expect(bookModel.books.count == 1) // 数は変わらない
+        #expect(bookModel.findBookById(id)?.title == "The Very Hungry Caterpillar")
     }
     
     /**
@@ -111,8 +117,10 @@ final class BookModelTests: XCTestCase {
      *
      * 登録済みの絵本を削除し、正しく削除されることを確認します。
      */
-    func testDeleteBook() throws {
+    @Test("書籍削除機能")
+    func deleteBook() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
@@ -121,9 +129,9 @@ final class BookModelTests: XCTestCase {
         let result = try bookModel.deleteBook(id)
         
         // 3. Assert - 検証
-        XCTAssertTrue(result)
-        XCTAssertEqual(bookModel.books.count, 0)
-        XCTAssertNil(bookModel.findBookById(id))
+        #expect(result == true)
+        #expect(bookModel.books.count == 0)
+        #expect(bookModel.findBookById(id) == nil)
     }
     
     /**
@@ -131,14 +139,15 @@ final class BookModelTests: XCTestCase {
      *
      * 存在しない絵本IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
      */
-    func testDeleteNonExistingBook() throws {
+    @Test("存在しない書籍削除時のエラー")
+    func deleteNonExistingBook() throws {
         // 1. Arrange - 準備
+        let (bookModel, _) = createBookModel()
         let nonExistingId = UUID()
         
         // 2. Act & Assert - 実行と検証
-        XCTAssertThrowsError(try bookModel.deleteBook(nonExistingId)) { error in
-            XCTAssertTrue(error is BookModelError)
-            XCTAssertEqual(error as? BookModelError, BookModelError.bookNotFound)
+        #expect(throws: BookModelError.bookNotFound) {
+            try bookModel.deleteBook(nonExistingId)
         }
     }
 }

@@ -1,4 +1,4 @@
-// swift-tools-version: 6.1
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -17,6 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../PictureBookLendingDomain"),
+        .package(url: "https://github.com/swiftlang/swift-testing.git", from: "0.10.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -29,7 +30,10 @@ let package = Package(
         ),
         .testTarget(
             name: "PictureBookLendingModelTests",
-            dependencies: ["PictureBookLendingModel"]
+            dependencies: [
+                "PictureBookLendingModel",
+                .product(name: "Testing", package: "swift-testing")
+            ]
         ),
     ]
 )
