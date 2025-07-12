@@ -221,6 +221,54 @@ struct BookListContainerView: View {
 * `overlay` を優先し、`ZStack` は必要時のみ
 * 間隔調整は `spacing` を優先し、`padding` は必要最小限に
 * 命名は **Swift API Design Guidelines**／標準ライブラリに従う
+
+### Boolean変数の命名規則
+
+* **sheet/alert/popover表示状態**: `isXXPresented` (例: `isAddSheetPresented`, `isDeleteAlertPresented`)
+* **一般的な状態**: `isXX` (例: `isLoading`, `isSelected`, `isEmpty`)
+* **能力**: `canXX` (例: `canEdit`, `canDelete`, `canSave`)
+* **断言として読める**: Swift API Design Guidelinesに従い「〜である」と自然に読める形
+
+### SwiftUIプロパティの順序
+
+SwiftUI Viewのプロパティは以下の順序で定義する：
+
+1. **@Environment** - システム・環境レベルの依存関係
+2. **@EnvironmentObject** - アプリレベルの共有状態  
+3. **@StateObject** - View所有の参照型
+4. **@ObservedObject** - 外部所有の参照型
+5. **@State** - View所有の値型
+6. **@Binding** - 外部所有の値型
+7. **通常プロパティ** - `let`/`var`（ラッパーなし）
+8. **computed properties** - 計算プロパティ
+9. **body** - Viewの本体
+10. **メソッド** - 関数定義
+
+**例**:
+```swift
+struct ExampleView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @StateObject private var viewModel = ExampleViewModel()
+    @State private var isSheetPresented = false
+    @Binding var selectedItem: Item
+    
+    let title: String
+    
+    private var filteredItems: [Item] { ... }
+    
+    var body: some View { ... }
+    
+    private func handleAction() { ... }
+}
+```
+
+### プロパティ命名規則
+
+* **@State変数**: `private var` でキャメルケース
+* **@Environment変数**: `private var` でキャメルケース  
+* **通常プロパティ**: 用途に応じて`let`/`var`、キャメルケース
+* **computed properties**: `private var` でキャメルケース
+* **メソッド**: `private func` で動詞から始まる（`handle*`, `perform*`, `update*`等）
 * 値型 (`struct` / `enum`) エンティティは **Sendable + Codable** 準拠
 * Associated value を持たない `enum` は **Hashable** 準拠
 * インスタンス状態に依存しないメソッドは **static** で定義し、呼び出しには `Self.` を付ける

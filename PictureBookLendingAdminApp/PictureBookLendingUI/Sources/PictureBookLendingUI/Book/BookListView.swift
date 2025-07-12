@@ -1,5 +1,5 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
 /**
  * 絵本一覧のPresentation View
@@ -11,7 +11,7 @@ public struct BookListView: View {
     let books: [Book]
     let searchText: Binding<String>
     let onDelete: (IndexSet) -> Void
-    
+
     public init(
         books: [Book],
         searchText: Binding<String>,
@@ -21,7 +21,7 @@ public struct BookListView: View {
         self.searchText = searchText
         self.onDelete = onDelete
     }
-    
+
     public var body: some View {
         if books.isEmpty {
             ContentUnavailableView(
@@ -50,11 +50,7 @@ public struct BookListView: View {
  */
 public struct BookRowView: View {
     let book: Book
-    
-    public init(book: Book) {
-        self.book = book
-    }
-    
+
     public var body: some View {
         VStack(alignment: .leading) {
             Text(book.title)
@@ -70,7 +66,7 @@ public struct BookRowView: View {
 #Preview {
     let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
     let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
-    
+
     NavigationStack {
         BookListView(
             books: [book1, book2],
