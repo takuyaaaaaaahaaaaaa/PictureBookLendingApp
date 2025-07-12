@@ -1,6 +1,8 @@
-import Testing
+import XCTest
 @testable import PictureBookLendingInfrastructure
 
-@Test func example() async throws {
-    // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+final class PictureBookLendingInfrastructureTests: XCTestCase {
+    func testExample() throws {
+        // Write your test here and use APIs like `XCTAssert(...)` to check expected conditions.
+    }
 }
