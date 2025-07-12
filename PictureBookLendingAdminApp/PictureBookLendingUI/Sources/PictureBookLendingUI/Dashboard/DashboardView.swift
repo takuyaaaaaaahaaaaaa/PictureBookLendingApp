@@ -1,75 +1,59 @@
 import SwiftUI
-import PictureBookLendingInfrastructure
 import PictureBookLendingDomain
-import PictureBookLendingModel
-import Observation
 
 /**
- * ダッシュボードビュー
+ * ダッシュボードのPresentation View
  *
- * アプリの概要情報を表示する画面です。
- * - 登録された絵本・利用者の数
- * - 現在の貸出状況
- * - 返却期限が近い貸出の警告
- * などを表示します。
+ * 純粋なUI表示のみを担当し、NavigationStack、onAppear等の
+ * 画面制御はContainer Viewに委譲します。
  */
-struct DashboardView: View {
-    let bookModel: BookModel
-    let userModel: UserModel
-    let lendingModel: LendingModel
+public struct DashboardView: View {
+    let bookCount: Int
+    let userCount: Int
+    let activeLoansCount: Int
+    let overdueLoans: [Loan]
+    let bookModel: any BookModelProtocol
+    let userModel: any UserModelProtocol
     
-    // 統計情報
-    @State private var bookCount: Int = 0
-    @State private var userCount: Int = 0
-    @State private var activeLoansCount: Int = 0
-    @State private var overdueLoans: [Loan] = []
-    
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 16) {
-                    // 統計情報カード
-                    StatisticsCardView(
-                        bookCount: bookCount,
-                        userCount: userCount,
-                        activeLoansCount: activeLoansCount
-                    )
-                    
-                    // 期限切れ貸出の警告
-                    if !overdueLoans.isEmpty {
-                        OverdueWarningView(
-                            bookModel: bookModel,
-                            userModel: userModel,
-                            loans: overdueLoans
-                        )
-                    }
-                    
-                    // 概要情報
-                    SummaryCardsView()
-                }
-                .padding()
-            }
-            .navigationTitle("ダッシュボード")
-            .onAppear {
-                refreshData()
-            }
-            .refreshable {
-                refreshData()
-            }
-        }
+    public init(
+        bookCount: Int,
+        userCount: Int,
+        activeLoansCount: Int,
+        overdueLoans: [Loan],
+        bookModel: any BookModelProtocol,
+        userModel: any UserModelProtocol
+    ) {
+        self.bookCount = bookCount
+        self.userCount = userCount
+        self.activeLoansCount = activeLoansCount
+        self.overdueLoans = overdueLoans
+        self.bookModel = bookModel
+        self.userModel = userModel
     }
     
-    // データの更新
-    private func refreshData() {
-        bookCount = bookModel.getAllBooks().count
-        userCount = userModel.getAllUsers().count
-        
-        let activeLoans = lendingModel.getActiveLoans()
-        activeLoansCount = activeLoans.count
-        
-        let today = Date()
-        overdueLoans = activeLoans.filter { loan in
-            loan.dueDate < today
+    public var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                // 統計情報カード
+                StatisticsCardView(
+                    bookCount: bookCount,
+                    userCount: userCount,
+                    activeLoansCount: activeLoansCount
+                )
+                
+                // 期限切れ貸出の警告
+                if !overdueLoans.isEmpty {
+                    OverdueWarningView(
+                        bookModel: bookModel,
+                        userModel: userModel,
+                        loans: overdueLoans
+                    )
+                }
+                
+                // 概要情報
+                SummaryCardsView()
+            }
+            .padding()
         }
     }
 }
@@ -77,12 +61,18 @@ struct DashboardView: View {
 /**
  * 統計情報カードビュー
  */
-struct StatisticsCardView: View {
+public struct StatisticsCardView: View {
     let bookCount: Int
     let userCount: Int
     let activeLoansCount: Int
     
-    var body: some View {
+    public init(bookCount: Int, userCount: Int, activeLoansCount: Int) {
+        self.bookCount = bookCount
+        self.userCount = userCount
+        self.activeLoansCount = activeLoansCount
+    }
+    
+    public var body: some View {
         VStack(spacing: 16) {
             Text("統計情報")
                 .font(.headline)
@@ -123,17 +113,24 @@ struct StatisticsCardView: View {
 /**
  * 統計アイテムビュー
  */
-struct StatItem: View {
+public struct StatItem: View {
     let title: String
     let count: Int
     let iconName: String
     let color: Color
     
-    var body: some View {
+    public init(title: String, count: Int, iconName: String, color: Color) {
+        self.title = title
+        self.count = count
+        self.iconName = iconName
+        self.color = color
+    }
+    
+    public var body: some View {
         VStack {
             Image(systemName: iconName)
                 .font(.system(size: 24))
-                .foregroundColor(color)
+                .foregroundStyle(color)
             
             Text("\(count)")
                 .font(.title)
@@ -141,7 +138,7 @@ struct StatItem: View {
             
             Text(title)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -150,16 +147,26 @@ struct StatItem: View {
 /**
  * 返却期限切れ警告ビュー
  */
-struct OverdueWarningView: View {
-    let bookModel: BookModel
-    let userModel: UserModel
+public struct OverdueWarningView: View {
+    let bookModel: any BookModelProtocol
+    let userModel: any UserModelProtocol
     let loans: [Loan]
     
-    var body: some View {
+    public init(
+        bookModel: any BookModelProtocol,
+        userModel: any UserModelProtocol,
+        loans: [Loan]
+    ) {
+        self.bookModel = bookModel
+        self.userModel = userModel
+        self.loans = loans
+    }
+    
+    public var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
                 
                 Text("返却期限切れ")
                     .font(.headline)
@@ -197,7 +204,7 @@ struct OverdueWarningView: View {
                         
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
                     }
                 }
                 .padding(.vertical, 4)
@@ -251,8 +258,10 @@ struct OverdueWarningView: View {
 /**
  * 概要カードビュー
  */
-struct SummaryCardsView: View {
-    var body: some View {
+public struct SummaryCardsView: View {
+    public init() {}
+    
+    public var body: some View {
         VStack(spacing: 16) {
             Text("概要")
                 .font(.headline)
@@ -278,17 +287,24 @@ struct SummaryCardsView: View {
 /**
  * 情報カードビュー
  */
-struct InfoCardView: View {
+public struct InfoCardView: View {
     let title: String
     let description: String
     let iconName: String
     let color: Color
     
-    var body: some View {
+    public init(title: String, description: String, iconName: String, color: Color) {
+        self.title = title
+        self.description = description
+        self.iconName = iconName
+        self.color = color
+    }
+    
+    public var body: some View {
         HStack(spacing: 16) {
             Image(systemName: iconName)
                 .font(.system(size: 30))
-                .foregroundColor(color)
+                .foregroundStyle(color)
                 .frame(width: 40, height: 40)
             
             VStack(alignment: .leading, spacing: 4) {
@@ -297,7 +313,7 @@ struct InfoCardView: View {
                 
                 Text(description)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding()
@@ -311,13 +327,40 @@ struct InfoCardView: View {
 }
 
 #Preview {
-    let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
-    let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
-        bookModel: bookModel,
-        userModel: userModel,
-        repository: mockFactory.loanRepository
+    let loan1 = Loan(
+        bookId: UUID(),
+        userId: UUID(),
+        loanDate: Date(),
+        dueDate: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date(),
+        returnedDate: nil
     )
-    return DashboardView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+    
+    let mockBookModel = MockBookModel()
+    let mockUserModel = MockUserModel()
+    
+    NavigationStack {
+        DashboardView(
+            bookCount: 150,
+            userCount: 45,
+            activeLoansCount: 12,
+            overdueLoans: [loan1],
+            bookModel: mockBookModel,
+            userModel: mockUserModel
+        )
+        .navigationTitle("ダッシュボード")
+    }
+}
+
+// MARK: - Mock Models for Preview
+
+private class MockBookModel: BookModelProtocol {
+    func findBookById(_ id: UUID) -> Book? {
+        Book(title: "サンプル本", author: "著者名")
+    }
+}
+
+private class MockUserModel: UserModelProtocol {
+    func findUserById(_ id: UUID) -> User? {
+        User(name: "山田太郎", group: "1年2組")
+    }
 }

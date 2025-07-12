@@ -30,21 +30,21 @@ struct ContentView: View {
                 .tag(0)
             
             // 利用者管理タブ
-            UserListView(userModel: userModel, lendingModel: lendingModel, bookModel: bookModel)
+            UserListContainerView()
                 .tabItem {
                     Label("利用者管理", systemImage: "person.2")
                 }
                 .tag(1)
             
             // 貸出・返却タブ
-            LendingView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+            LendingContainerView()
                 .tabItem {
                     Label("貸出・返却", systemImage: "arrow.left.arrow.right")
                 }
                 .tag(2)
             
             // ダッシュボードタブ
-            DashboardView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+            DashboardContainerView()
                 .tabItem {
                     Label("ダッシュボード", systemImage: "chart.pie")
                 }
