@@ -2,7 +2,7 @@ import Foundation
 
 /// 絵本モデル
 /// 貸し出しシステムで管理される絵本の情報を表します
-public struct Book: Identifiable, Codable {
+public struct Book: Identifiable, Codable, Hashable {
     /// 絵本の一意識別子
     public var id: UUID
     /// 絵本のタイトル

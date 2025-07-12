@@ -32,7 +32,7 @@ public struct BookListView: View {
         } else {
             List {
                 ForEach(books) { book in
-                    NavigationLink(destination: Text("詳細画面: \(book.title)")) {
+                    NavigationLink(value: book) {
                         BookRowView(book: book)
                     }
                 }

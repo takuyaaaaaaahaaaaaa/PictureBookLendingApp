@@ -11,6 +11,7 @@ struct BookListContainerView: View {
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
+    @State private var navigationPath = NavigationPath()
     
     private var filteredBooks: [Book] {
         if searchText.isEmpty {
@@ -24,13 +25,16 @@ struct BookListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             BookListView(
                 books: filteredBooks,
                 searchText: $searchText,
                 onDelete: handleDeleteBooks
             )
             .navigationTitle("絵本一覧")
+            .navigationDestination(for: Book.self) { book in
+                BookDetailContainerView(book: book)
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
