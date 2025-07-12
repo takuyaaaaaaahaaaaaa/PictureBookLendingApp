@@ -12,8 +12,6 @@ import PictureBookLendingInfrastructure
  */
 struct UserListContainerView: View {
     @Environment(UserModel.self) private var userModel
-    @Environment(LendingModel.self) private var lendingModel
-    @Environment(BookModel.self) private var bookModel
     
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
@@ -88,16 +86,8 @@ struct UserListContainerView: View {
     _ = try? mockFactory.userRepository.save(user1)
     _ = try? mockFactory.userRepository.save(user2)
     
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
-        repository: mockFactory.loanRepository,
-        bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
-    )
     
     return UserListContainerView()
         .environment(userModel)
-        .environment(lendingModel)
-        .environment(bookModel)
 }
