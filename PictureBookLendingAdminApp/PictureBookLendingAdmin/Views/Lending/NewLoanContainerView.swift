@@ -72,10 +72,10 @@ struct NewLoanContainerView: View {
     private var filteredBooks: [Book] {
         let books = bookModel.getAllBooks()
         
-        if bookSearchText.isEmpty {
-            return books
+        return if bookSearchText.isEmpty {
+            books
         } else {
-            return books.filter { book in
+            books.filter { book in
                 book.title.localizedCaseInsensitiveContains(bookSearchText) ||
                 book.author.localizedCaseInsensitiveContains(bookSearchText)
             }
@@ -85,10 +85,10 @@ struct NewLoanContainerView: View {
     private var filteredUsers: [User] {
         let users = userModel.getAllUsers()
         
-        if userSearchText.isEmpty {
-            return users
+        return if userSearchText.isEmpty {
+            users
         } else {
-            return users.filter { user in
+            users.filter { user in
                 user.name.localizedCaseInsensitiveContains(userSearchText) ||
                 user.group.localizedCaseInsensitiveContains(userSearchText)
             }

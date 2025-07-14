@@ -66,9 +66,10 @@ struct UserFormContainerView: View {
     
     private var isEditMode: Bool {
         if case .edit = mode {
-            return true
+            true
+        } else {
+            false
         }
-        return false
     }
     
     private var isValidInput: Bool {

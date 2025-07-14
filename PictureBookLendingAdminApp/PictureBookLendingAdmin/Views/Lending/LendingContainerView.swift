@@ -12,23 +12,39 @@ import PictureBookLendingInfrastructure
  * Presentation ViewにデータとアクションHookを提供します。
  */
 struct LendingContainerView: View {
+    
+    /// 貸出フィルタの種類
+    private enum FilterType: Int, CaseIterable {
+        case all = 0
+        case lent = 1
+        case returned = 2
+        
+        var title: String {
+            switch self {
+            case .all: "全て"
+            case .lent: "貸出中"
+            case .returned: "返却済み"
+            }
+        }
+    }
+    
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
     @Environment(LendingModel.self) private var lendingModel
     
-    @State private var filterSelection = 0 // 0: 全て, 1: 貸出中, 2: 返却済み
+    @State private var filterSelection = FilterType.all
     @State private var isNewLoanSheetPresented = false
     @State private var alertState = AlertState()
     
     private var filteredLoans: [Loan] {
         let allLoans = lendingModel.getAllLoans()
-        switch filterSelection {
-        case 1: // 貸出中
-            return allLoans.filter { !$0.isReturned }
-        case 2: // 返却済み
-            return allLoans.filter { $0.isReturned }
-        default: // 全て
-            return allLoans
+        return switch filterSelection {
+        case .lent:
+            allLoans.filter { !$0.isReturned }
+        case .returned:
+            allLoans.filter { $0.isReturned }
+        case .all:
+            allLoans
         }
     }
     
@@ -36,7 +52,10 @@ struct LendingContainerView: View {
         NavigationStack {
             LendingView(
                 loans: filteredLoans,
-                filterSelection: $filterSelection,
+                filterSelection: Binding(
+                    get: { filterSelection.rawValue },
+                    set: { filterSelection = FilterType(rawValue: $0) ?? .all }
+                ),
                 onReturn: handleReturn,
                 getBookTitle: { bookModel.findBookById($0)?.title ?? "不明な書籍" },
                 getUserName: { userModel.findUserById($0)?.name ?? "不明な利用者" }

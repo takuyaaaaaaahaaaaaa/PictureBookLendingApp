@@ -14,10 +14,10 @@ struct BookListContainerView: View {
     @State private var navigationPath = NavigationPath()
     
     private var filteredBooks: [Book] {
-        if searchText.isEmpty {
-            return bookModel.books
+        return if searchText.isEmpty {
+            bookModel.books
         } else {
-            return bookModel.books.filter { book in
+            bookModel.books.filter { book in
                 book.title.localizedCaseInsensitiveContains(searchText) ||
                     book.author.localizedCaseInsensitiveContains(searchText)
             }

@@ -19,10 +19,10 @@ struct UserListContainerView: View {
     @State private var navigationPath = NavigationPath()
     
     private var filteredUsers: [User] {
-        if searchText.isEmpty {
-            return userModel.users
+        return if searchText.isEmpty {
+            userModel.users
         } else {
-            return userModel.users.filter { user in
+            userModel.users.filter { user in
                 user.name.localizedCaseInsensitiveContains(searchText) ||
                 user.group.localizedCaseInsensitiveContains(searchText)
             }

@@ -1,4 +1,3 @@
-import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
@@ -42,7 +41,7 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
      * - Returns: BookRepositoryのインスタンス
      */
     public func makeBookRepository() -> BookRepository {
-        return SwiftDataBookRepository(modelContext: modelContext)
+        SwiftDataBookRepository(modelContext: modelContext)
     }
     
     /**
@@ -51,7 +50,7 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
      * - Returns: UserRepositoryのインスタンス
      */
     public func makeUserRepository() -> UserRepository {
-        return SwiftDataUserRepository(modelContext: modelContext)
+        SwiftDataUserRepository(modelContext: modelContext)
     }
     
     /**
@@ -60,6 +59,6 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
      * - Returns: LoanRepositoryのインスタンス
      */
     public func makeLoanRepository() -> LoanRepository {
-        return SwiftDataLoanRepository(modelContext: modelContext)
+        SwiftDataLoanRepository(modelContext: modelContext)
     }
 }

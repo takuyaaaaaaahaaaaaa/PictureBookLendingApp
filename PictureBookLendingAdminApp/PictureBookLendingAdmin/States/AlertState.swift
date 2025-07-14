@@ -1,4 +1,3 @@
-import Foundation
 
 /**
  * アラート表示状態を管理する共通State
