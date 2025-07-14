@@ -136,6 +136,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = EFF77F142DD66AAD009BD213 /* Build configuration list for PBXNativeTarget "PictureBookLendingAdmin" */;
 			buildPhases = (
+				EF195E402E254E2800CD470E /*  Run swift-format */,
 				EFF77EEC2DD66AAB009BD213 /* Sources */,
 				EFF77EED2DD66AAB009BD213 /* Frameworks */,
 				EFF77EEE2DD66AAB009BD213 /* Resources */,
@@ -279,6 +280,28 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		EF195E402E254E2800CD470E /*  Run swift-format */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = " Run swift-format";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# Skip in CI/CD environments\nif [ \"$CI\" = \"true\" ] || [ \"$GITHUB_ACTIONS\" = \"true\" ] || [ \"$BUILD_FOR_TESTING\" = \"YES\" ]; then\n  echo \"Skipping Swift Format/Lint in CI/CD environment\"\n  exit 0\nfi\n\necho \"Running Swift Format and Lint...\"\n\n# Check if swift format is available\nif ! command -v swift >/dev/null 2>&1; then\n  echo \"Warning: Swift toolchain not found, skipping format\"\n  exit 0\nfi\n\n# Change to project directory\ncd \"$PROJECT_DIR\"\n\n# Format Swift files in main app\necho \"Formatting PictureBookLendingAdmin...\"\nswift format --configuration .swift-format --in-place --recursive PictureBookLendingAdmin/ 2>/dev/null || echo \"Warning: Could not format some files in PictureBookLendingAdmin\"\n\n# Format Swift files in modules\necho \"Formatting modules...\"\nfor MODULE in PictureBookLendingModel PictureBookLendingDomain PictureBookLendingInfrastructure PictureBookLendingUI; do\n  if [ -d \"$MODULE/Sources\" ]; then\n    swift format --configuration .swift-format --in-place --recursive \"$MODULE/Sources/\" 2>/dev/null || echo \"Warning: Could not format $MODULE\"\n  fi\ndone\n\necho \"Swift Format and Lint completed!\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		EFF77EEC2DD66AAB009BD213 /* Sources */ = {
@@ -448,6 +471,7 @@
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -489,6 +513,7 @@
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

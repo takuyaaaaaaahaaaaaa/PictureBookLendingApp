@@ -1,7 +1,4 @@
-
-/**
- * アラート表示状態を管理する共通State
- */
+/// アラート表示状態を管理する共通State
 struct AlertState {
     var isPresented: Bool = false
     var title: String = ""

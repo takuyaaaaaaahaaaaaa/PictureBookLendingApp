@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 絵本フォームのPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、alert等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 絵本フォームのPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、alert等の
+/// 画面制御はContainer Viewに委譲します。
 public struct BookFormView: View {
     @Binding var title: String
     @Binding var author: String
@@ -61,8 +59,8 @@ public struct BookFormView: View {
     }
     
     private var isValidInput: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !author.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !author.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 

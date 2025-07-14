@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 新規貸出登録のPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 新規貸出登録のPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct NewLoanView: View {
     let books: [Book]
     let users: [User]
@@ -107,9 +105,7 @@ public struct NewLoanView: View {
     }
 }
 
-/**
- * 絵本選択行ビュー
- */
+/// 絵本選択行ビュー
 public struct BookSelectionRow: View {
     let book: Book
     let isSelected: Bool
@@ -167,9 +163,7 @@ public struct BookSelectionRow: View {
     }
 }
 
-/**
- * 利用者選択行ビュー
- */
+/// 利用者選択行ビュー
 public struct UserSelectionRow: View {
     let user: User
     let isSelected: Bool
@@ -214,11 +208,11 @@ public struct UserSelectionRow: View {
 #Preview {
     let sampleBooks = [
         Book(title: "はらぺこあおむし", author: "エリック・カール"),
-        Book(title: "ぐりとぐら", author: "中川李枝子")
+        Book(title: "ぐりとぐら", author: "中川李枝子"),
     ]
     let sampleUsers = [
         User(name: "山田太郎", group: "1年2組"),
-        User(name: "鈴木花子", group: "2年1組")
+        User(name: "鈴木花子", group: "2年1組"),
     ]
     
     NavigationStack {

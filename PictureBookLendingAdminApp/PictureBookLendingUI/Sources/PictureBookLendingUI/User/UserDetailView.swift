@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 利用者詳細のPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 利用者詳細のPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct UserDetailView: View {
     let user: User
     let activeLoansCount: Int
@@ -64,9 +62,7 @@ public struct UserDetailView: View {
     }
 }
 
-/**
- * 利用者の貸出履歴表示用の行コンポーネント
- */
+/// 利用者の貸出履歴表示用の行コンポーネント
 public struct UserLoanHistoryRow: View {
     let loan: Loan
     let getBookTitle: (UUID) -> String

@@ -12,6 +12,7 @@
   "lineBreakBeforeEachGenericRequirement" : false,
   "prioritizeKeepingFunctionOutputTogether" : false,
   "indentConditionalCompilationBlocks" : true,
+  "indentBlankLines" : true,
   "lineBreakAroundMultilineExpressionChainComponents" : false,
   "rules" : {
     "AllPublicDeclarationsHaveDocumentation" : false,
@@ -25,7 +26,6 @@
     "GroupNumericLiterals" : true,
     "IdentifiersMustBeASCII" : true,
     "NeverForceUnwrap" : false,
-    "NeverUseForceTryOperator" : false,
     "NeverUseImplicitlyUnwrappedOptionals" : false,
     "NoAccessLevelOnExtensionDeclaration" : true,
     "NoBlockComments" : true,

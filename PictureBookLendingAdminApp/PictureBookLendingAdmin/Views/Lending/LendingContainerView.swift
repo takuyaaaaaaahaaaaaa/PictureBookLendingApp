@@ -14,7 +14,7 @@ struct LendingContainerView: View {
         case all = 0
         case lent = 1
         case returned = 2
-
+        
         var title: String {
             switch self {
             case .all: "全て"
@@ -23,15 +23,15 @@ struct LendingContainerView: View {
             }
         }
     }
-
+    
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
     @Environment(LendingModel.self) private var lendingModel
-
+    
     @State private var filterSelection = FilterType.all
     @State private var isNewLoanSheetPresented = false
     @State private var alertState = AlertState()
-
+    
     private var filteredLoans: [Loan] {
         let allLoans = lendingModel.getAllLoans()
         return switch filterSelection {
@@ -43,7 +43,7 @@ struct LendingContainerView: View {
             allLoans
         }
     }
-
+    
     var body: some View {
         NavigationStack {
             LendingView(
@@ -82,15 +82,15 @@ struct LendingContainerView: View {
             }
         }
     }
-
+    
     // MARK: - Actions
-
+    
     private func refreshData() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
         lendingModel.refreshLoans()
     }
-
+    
     private func handleReturn(loanId: UUID) {
         do {
             _ = try lendingModel.returnBook(loanId: loanId)
@@ -109,7 +109,7 @@ struct LendingContainerView: View {
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
     )
-
+    
     return LendingContainerView()
         .environment(bookModel)
         .environment(userModel)

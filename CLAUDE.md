@@ -58,8 +58,7 @@ swift build --target PictureBookLendingUI
 swift test --filter PictureBookLendingModelTests
 
 # コードフォーマット（swift-format）
-cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift run swift-format --configuration ../.swift-format --in-place ../PictureBookLendingAdmin/**/*.swift
-cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift run swift-format --configuration ../.swift-format --in-place Sources/**/*.swift
+cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive **/*.swift
 ```
 
 ### 技術スタック

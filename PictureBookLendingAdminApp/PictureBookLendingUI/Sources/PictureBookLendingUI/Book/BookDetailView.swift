@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 絵本詳細のPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 絵本詳細のPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct BookDetailView: View {
     let book: Book
     let isCurrentlyLent: Bool
@@ -32,8 +30,11 @@ public struct BookDetailView: View {
             
             Section("貸出状況") {
                 HStack {
-                    Image(systemName: isCurrentlyLent ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                        .foregroundStyle(isCurrentlyLent ? .orange : .green)
+                    Image(
+                        systemName: isCurrentlyLent
+                            ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
+                    )
+                    .foregroundStyle(isCurrentlyLent ? .orange : .green)
                     
                     Text(isCurrentlyLent ? "現在貸出中" : "貸出可能")
                         .foregroundStyle(isCurrentlyLent ? .orange : .green)
@@ -48,7 +49,6 @@ public struct BookDetailView: View {
         }
     }
 }
-
 
 #Preview {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")

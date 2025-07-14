@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 利用者フォームのPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 利用者フォームのPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct UserFormView: View {
     let mode: UserFormMode
     let name: Binding<String>

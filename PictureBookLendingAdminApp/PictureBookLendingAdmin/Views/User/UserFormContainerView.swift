@@ -1,15 +1,13 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-/**
- * 利用者フォームのContainer View
- *
- * ビジネスロジック、状態管理、データ保存を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// 利用者フォームのContainer View
+///
+/// ビジネスロジック、状態管理、データ保存を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(\.dismiss) private var dismiss
@@ -73,8 +71,8 @@ struct UserFormContainerView: View {
     }
     
     private var isValidInput: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
-        !group.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !group.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     // MARK: - Actions
@@ -91,7 +89,7 @@ struct UserFormContainerView: View {
             case .add:
                 let newUser = User(name: name, group: group)
                 savedUser = try userModel.registerUser(newUser)
-                
+
             case .edit(let user):
                 let updatedUser = User(
                     id: user.id,

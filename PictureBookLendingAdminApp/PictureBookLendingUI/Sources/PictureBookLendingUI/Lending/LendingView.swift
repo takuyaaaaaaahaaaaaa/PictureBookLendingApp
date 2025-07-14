@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 貸出・返却管理のPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 貸出・返却管理のPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct LendingView: View {
     let loans: [Loan]
     let filterSelection: Binding<Int>
@@ -61,11 +59,9 @@ public struct LendingView: View {
     }
 }
 
-/**
- * 貸出情報行ビュー
- *
- * 一覧の各行に表示する貸出情報のレイアウトを定義します。
- */
+/// 貸出情報行ビュー
+///
+/// 一覧の各行に表示する貸出情報のレイアウトを定義します。
 public struct LoanRowView: View {
     let loan: Loan
     let bookTitle: String
@@ -141,7 +137,7 @@ public struct LoanRowView: View {
             Text("\(bookTitle) の返却を記録しますか？")
         }
         .alert("エラー", isPresented: $isErrorAlertPresented) {
-            Button("OK", role: .cancel) { }
+            Button("OK", role: .cancel) {}
         } message: {
             Text(errorMessage)
         }
@@ -161,7 +157,6 @@ public struct LoanRowView: View {
         return formatter.string(from: date)
     }
 }
-
 
 #Preview {
     let loan1 = Loan(
@@ -183,4 +178,3 @@ public struct LoanRowView: View {
         .navigationTitle("貸出・返却管理")
     }
 }
-

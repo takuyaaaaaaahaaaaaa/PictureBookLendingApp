@@ -1,15 +1,13 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-/**
- * 新規貸出登録のContainer View
- *
- * ビジネスロジック、状態管理、データ取得を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// 新規貸出登録のContainer View
+///
+/// ビジネスロジック、状態管理、データ取得を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct NewLoanContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
@@ -18,7 +16,8 @@ struct NewLoanContainerView: View {
     
     @State private var selectedBookId: UUID?
     @State private var selectedUserId: UUID?
-    @State private var dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
+    @State private var dueDate =
+        Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     @State private var bookSearchText = ""
     @State private var userSearchText = ""
     @State private var alertState = AlertState()
@@ -76,8 +75,8 @@ struct NewLoanContainerView: View {
             books
         } else {
             books.filter { book in
-                book.title.localizedCaseInsensitiveContains(bookSearchText) ||
-                book.author.localizedCaseInsensitiveContains(bookSearchText)
+                book.title.localizedCaseInsensitiveContains(bookSearchText)
+                    || book.author.localizedCaseInsensitiveContains(bookSearchText)
             }
         }
     }
@@ -89,8 +88,8 @@ struct NewLoanContainerView: View {
             users
         } else {
             users.filter { user in
-                user.name.localizedCaseInsensitiveContains(userSearchText) ||
-                user.group.localizedCaseInsensitiveContains(userSearchText)
+                user.name.localizedCaseInsensitiveContains(userSearchText)
+                    || user.group.localizedCaseInsensitiveContains(userSearchText)
             }
         }
     }
@@ -115,7 +114,8 @@ struct NewLoanContainerView: View {
     
     private func handleRegister() {
         guard let bookId = selectedBookId,
-              let userId = selectedUserId else {
+            let userId = selectedUserId
+        else {
             alertState = .error("必要な情報が選択されていません")
             return
         }

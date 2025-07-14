@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * 利用者一覧のPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// 利用者一覧のPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
+/// 画面制御はContainer Viewに委譲します。
 public struct UserListView: View {
     let users: [User]
     let searchText: Binding<String>
@@ -43,11 +41,9 @@ public struct UserListView: View {
     }
 }
 
-/**
- * 利用者リスト行ビュー
- *
- * 一覧の各行に表示する利用者情報のレイアウトを定義します。
- */
+/// 利用者リスト行ビュー
+///
+/// 一覧の各行に表示する利用者情報のレイアウトを定義します。
 public struct UserRowView: View {
     let user: User
     

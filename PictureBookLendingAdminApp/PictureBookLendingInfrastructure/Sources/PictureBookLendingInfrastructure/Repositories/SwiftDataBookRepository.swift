@@ -2,11 +2,9 @@ import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
-/**
- * SwiftData用書籍リポジトリ実装
- *
- * SwiftDataを使用して絵本の永続化を担当するリポジトリ
- */
+/// SwiftData用書籍リポジトリ実装
+///
+/// SwiftDataを使用して絵本の永続化を担当するリポジトリ
 public class SwiftDataBookRepository: BookRepository {
     private let modelContext: ModelContext
     
@@ -155,11 +153,9 @@ public class SwiftDataBookRepository: BookRepository {
     }
 }
 
-/**
- * SwiftData用の書籍モデル
- *
- * SwiftDataで永続化するための書籍モデル
- */
+/// SwiftData用の書籍モデル
+///
+/// SwiftDataで永続化するための書籍モデル
 @Model
 final public class SwiftDataBook {
     public var id: UUID

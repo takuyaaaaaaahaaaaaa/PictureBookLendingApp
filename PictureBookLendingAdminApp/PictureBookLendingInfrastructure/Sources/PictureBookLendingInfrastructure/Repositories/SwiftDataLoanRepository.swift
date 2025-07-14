@@ -2,11 +2,9 @@ import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
-/**
- * SwiftData用貸出リポジトリ実装
- *
- * SwiftDataを使用して貸出情報の永続化を担当するリポジトリ
- */
+/// SwiftData用貸出リポジトリ実装
+///
+/// SwiftDataを使用して貸出情報の永続化を担当するリポジトリ
 public class SwiftDataLoanRepository: LoanRepository {
     private let modelContext: ModelContext
     
@@ -248,11 +246,9 @@ public class SwiftDataLoanRepository: LoanRepository {
     }
 }
 
-/**
- * SwiftData用の貸出モデル
- *
- * SwiftDataで永続化するための貸出モデル
- */
+/// SwiftData用の貸出モデル
+///
+/// SwiftDataで永続化するための貸出モデル
 @Model
 final public class SwiftDataLoan {
     public var id: UUID
@@ -262,7 +258,10 @@ final public class SwiftDataLoan {
     public var dueDate: Date
     public var returnedDate: Date?
     
-    public init(id: UUID, bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date, returnedDate: Date? = nil) {
+    public init(
+        id: UUID, bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date,
+        returnedDate: Date? = nil
+    ) {
         self.id = id
         self.bookId = bookId
         self.userId = userId

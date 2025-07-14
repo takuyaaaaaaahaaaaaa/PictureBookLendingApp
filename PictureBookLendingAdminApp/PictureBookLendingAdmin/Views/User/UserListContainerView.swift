@@ -1,15 +1,13 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-/**
- * 利用者一覧のContainer View
- *
- * ビジネスロジック、状態管理、データ取得、画面制御を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// 利用者一覧のContainer View
+///
+/// ビジネスロジック、状態管理、データ取得、画面制御を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct UserListContainerView: View {
     @Environment(UserModel.self) private var userModel
     
@@ -23,8 +21,8 @@ struct UserListContainerView: View {
             userModel.users
         } else {
             userModel.users.filter { user in
-                user.name.localizedCaseInsensitiveContains(searchText) ||
-                user.group.localizedCaseInsensitiveContains(searchText)
+                user.name.localizedCaseInsensitiveContains(searchText)
+                    || user.group.localizedCaseInsensitiveContains(searchText)
             }
         }
     }

@@ -1,16 +1,13 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-
-/**
- * ダッシュボードのContainer View
- *
- * ビジネスロジック、状態管理、データ取得を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// ダッシュボードのContainer View
+///
+/// ビジネスロジック、状態管理、データ取得を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct DashboardContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel

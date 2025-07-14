@@ -11,14 +11,14 @@ import SwiftUI
 struct BookFormContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(\.dismiss) private var dismiss
-
+    
     let mode: BookFormMode
     var onSave: ((Book) -> Void)? = nil
-
+    
     @State private var title = ""
     @State private var author = ""
     @State private var alertState = AlertState()
-
+    
     var body: some View {
         NavigationStack {
             BookFormView(
@@ -43,9 +43,9 @@ struct BookFormContainerView: View {
             }
         }
     }
-
+    
     // MARK: - Computed Properties
-
+    
     private var isEditMode: Bool {
         if case .edit = mode {
             true
@@ -53,9 +53,9 @@ struct BookFormContainerView: View {
             false
         }
     }
-
+    
     // MARK: - Actions
-
+    
     private func handleSave() {
         do {
             switch mode {
@@ -73,13 +73,13 @@ struct BookFormContainerView: View {
                 let savedBook = try bookModel.updateBook(updatedBook)
                 onSave?(savedBook)
             }
-
+            
             dismiss()
         } catch {
             alertState = .error("保存に失敗しました: \(error.localizedDescription)")
         }
     }
-
+    
     private func handleCancel() {
         dismiss()
     }
@@ -88,7 +88,7 @@ struct BookFormContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
-
+    
     return BookFormContainerView(mode: .add)
         .environment(bookModel)
 }

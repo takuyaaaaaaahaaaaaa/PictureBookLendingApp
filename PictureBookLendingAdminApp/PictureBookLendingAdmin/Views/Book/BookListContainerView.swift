@@ -18,8 +18,8 @@ struct BookListContainerView: View {
             bookModel.books
         } else {
             bookModel.books.filter { book in
-                book.title.localizedCaseInsensitiveContains(searchText) ||
-                    book.author.localizedCaseInsensitiveContains(searchText)
+                book.title.localizedCaseInsensitiveContains(searchText)
+                    || book.author.localizedCaseInsensitiveContains(searchText)
             }
         }
     }

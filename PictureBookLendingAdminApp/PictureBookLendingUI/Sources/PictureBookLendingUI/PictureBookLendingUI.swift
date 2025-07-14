@@ -1,5 +1,5 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
 /// 絵本フォームの操作モード
 public enum BookFormMode {
@@ -13,9 +13,7 @@ public enum UserFormMode {
     case edit(User)
 }
 
-/**
- * 詳細表示用の行コンポーネント
- */
+/// 詳細表示用の行コンポーネント
 public struct DetailRow: View {
     let label: String
     let value: String

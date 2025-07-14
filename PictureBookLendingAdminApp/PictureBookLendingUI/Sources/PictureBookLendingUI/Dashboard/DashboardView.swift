@@ -1,12 +1,10 @@
-import SwiftUI
 import PictureBookLendingDomain
+import SwiftUI
 
-/**
- * ダッシュボードのPresentation View
- *
- * 純粋なUI表示のみを担当し、NavigationStack、onAppear等の
- * 画面制御はContainer Viewに委譲します。
- */
+/// ダッシュボードのPresentation View
+///
+/// 純粋なUI表示のみを担当し、NavigationStack、onAppear等の
+/// 画面制御はContainer Viewに委譲します。
 public struct DashboardView: View {
     let bookCount: Int
     let userCount: Int
@@ -58,9 +56,7 @@ public struct DashboardView: View {
     }
 }
 
-/**
- * 統計情報カードビュー
- */
+/// 統計情報カードビュー
 public struct StatisticsCardView: View {
     let bookCount: Int
     let userCount: Int
@@ -110,9 +106,7 @@ public struct StatisticsCardView: View {
     }
 }
 
-/**
- * 統計アイテムビュー
- */
+/// 統計アイテムビュー
 public struct StatItem: View {
     let title: String
     let count: Int
@@ -144,9 +138,7 @@ public struct StatItem: View {
     }
 }
 
-/**
- * 返却期限切れ警告ビュー
- */
+/// 返却期限切れ警告ビュー
 public struct OverdueWarningView: View {
     let loans: [Loan]
     let getBookTitle: (UUID) -> String
@@ -239,9 +231,7 @@ public struct OverdueWarningView: View {
     }
 }
 
-/**
- * 概要カードビュー
- */
+/// 概要カードビュー
 public struct SummaryCardsView: View {
     public init() {}
     
@@ -268,9 +258,7 @@ public struct SummaryCardsView: View {
     }
 }
 
-/**
- * 情報カードビュー
- */
+/// 情報カードビュー
 public struct InfoCardView: View {
     let title: String
     let description: String
@@ -331,4 +319,3 @@ public struct InfoCardView: View {
         .navigationTitle("ダッシュボード")
     }
 }
-

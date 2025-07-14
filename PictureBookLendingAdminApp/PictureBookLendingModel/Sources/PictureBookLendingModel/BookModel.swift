@@ -2,9 +2,7 @@ import Foundation
 import Observation
 import PictureBookLendingDomain
 
-/**
- * 絵本管理に関するエラー
- */
+/// 絵本管理に関するエラー
 public enum BookModelError: Error, Equatable {
     /// 指定された絵本が見つからない場合のエラー
     case bookNotFound
@@ -14,17 +12,15 @@ public enum BookModelError: Error, Equatable {
     case updateFailed
 }
 
-/**
- * 絵本管理モデル
- *
- * 絵本のCRUD操作を管理するモデルクラスです。
- * - 絵本の登録
- * - 絵本の一覧取得
- * - 絵本のID検索
- * - 絵本情報の更新
- * - 絵本の削除
- * などの機能を提供します。
- */
+/// 絵本管理モデル
+///
+/// 絵本のCRUD操作を管理するモデルクラスです。
+/// - 絵本の登録
+/// - 絵本の一覧取得
+/// - 絵本のID検索
+/// - 絵本情報の更新
+/// - 絵本の削除
+/// などの機能を提供します。
 @Observable
 public class BookModel {
     
@@ -53,7 +49,7 @@ public class BookModel {
     
     /**
      * 絵本を登録する
-     * 
+     *
      * 新しい絵本を管理リストに追加します。
      *
      * - Parameter book: 登録する絵本の情報
@@ -87,7 +83,7 @@ public class BookModel {
     
     /**
      * 絵本リストを最新の状態に更新する
-     * 
+     *
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
     public func refreshBooks() {

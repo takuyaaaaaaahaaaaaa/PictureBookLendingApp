@@ -1,11 +1,9 @@
 import PictureBookLendingDomain
 import SwiftData
 
-/**
- * リポジトリファクトリプロトコル
- *
- * リポジトリのインスタンスを生成するためのファクトリのインターフェース
- */
+/// リポジトリファクトリプロトコル
+///
+/// リポジトリのインスタンスを生成するためのファクトリのインターフェース
 public protocol RepositoryFactory {
     /// 書籍リポジトリを生成
     /// - Returns: <#description#>
@@ -18,11 +16,9 @@ public protocol RepositoryFactory {
     func makeLoanRepository() -> LoanRepository
 }
 
-/**
- * SwiftData用リポジトリファクトリ実装
- *
- * SwiftDataを使用してリポジトリのインスタンスを生成するファクトリ
- */
+/// SwiftData用リポジトリファクトリ実装
+///
+/// SwiftDataを使用してリポジトリのインスタンスを生成するファクトリ
 public class SwiftDataRepositoryFactory: RepositoryFactory {
     private let modelContext: ModelContext
     

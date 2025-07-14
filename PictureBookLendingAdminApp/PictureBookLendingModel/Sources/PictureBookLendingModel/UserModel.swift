@@ -2,9 +2,7 @@ import Foundation
 import Observation
 import PictureBookLendingDomain
 
-/**
- * 利用者管理に関するエラー
- */
+/// 利用者管理に関するエラー
 public enum UserModelError: Error, Equatable {
     /// 指定された利用者が見つからない場合のエラー
     case userNotFound
@@ -14,17 +12,15 @@ public enum UserModelError: Error, Equatable {
     case updateFailed
 }
 
-/**
- * 利用者管理モデル
- *
- * 利用者のCRUD操作を管理するモデルクラスです。
- * - 利用者の登録
- * - 利用者の一覧取得
- * - 利用者のID検索
- * - 利用者情報の更新
- * - 利用者の削除
- * などの機能を提供します。
- */
+/// 利用者管理モデル
+///
+/// 利用者のCRUD操作を管理するモデルクラスです。
+/// - 利用者の登録
+/// - 利用者の一覧取得
+/// - 利用者のID検索
+/// - 利用者情報の更新
+/// - 利用者の削除
+/// などの機能を提供します。
 @Observable
 public class UserModel {
     
@@ -53,7 +49,7 @@ public class UserModel {
     
     /**
      * 利用者を登録する
-     * 
+     *
      * 新しい利用者を管理リストに追加します。
      *
      * - Parameter user: 登録する利用者の情報
@@ -87,7 +83,7 @@ public class UserModel {
     
     /**
      * 利用者リストを最新の状態に更新する
-     * 
+     *
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
     public func refreshUsers() {

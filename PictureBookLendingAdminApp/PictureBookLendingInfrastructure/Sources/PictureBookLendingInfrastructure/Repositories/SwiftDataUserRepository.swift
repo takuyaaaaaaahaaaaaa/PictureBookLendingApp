@@ -2,11 +2,9 @@ import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
-/**
- * SwiftData用利用者リポジトリ実装
- *
- * SwiftDataを使用して利用者の永続化を担当するリポジトリ
- */
+/// SwiftData用利用者リポジトリ実装
+///
+/// SwiftDataを使用して利用者の永続化を担当するリポジトリ
 public class SwiftDataUserRepository: UserRepository {
     private let modelContext: ModelContext
     
@@ -155,11 +153,9 @@ public class SwiftDataUserRepository: UserRepository {
     }
 }
 
-/**
- * SwiftData用の利用者モデル
- *
- * SwiftDataで永続化するための利用者モデル
- */
+/// SwiftData用の利用者モデル
+///
+/// SwiftDataで永続化するための利用者モデル
 @Model
 final public class SwiftDataUser {
     public var id: UUID

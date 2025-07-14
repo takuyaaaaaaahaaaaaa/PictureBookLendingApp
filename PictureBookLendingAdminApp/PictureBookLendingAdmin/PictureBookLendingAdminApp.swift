@@ -1,8 +1,8 @@
-import SwiftUI
-import SwiftData
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
+import SwiftData
+import SwiftUI
 
 @main
 struct PictureBookLendingAdminApp: App {
@@ -26,14 +26,15 @@ struct PictureBookLendingAdminApp: App {
         let schema = Schema([
             SwiftDataBook.self,
             SwiftDataUser.self,
-            SwiftDataLoan.self
+            SwiftDataLoan.self,
         ])
         
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         
         do {
             // モデルコンテナを作成
-            sharedModelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            sharedModelContainer = try ModelContainer(
+                for: schema, configurations: [modelConfiguration])
             
             // リポジトリファクトリを作成
             let modelContext = sharedModelContainer.mainContext
@@ -64,4 +65,3 @@ struct PictureBookLendingAdminApp: App {
         .modelContainer(sharedModelContainer)
     }
 }
-

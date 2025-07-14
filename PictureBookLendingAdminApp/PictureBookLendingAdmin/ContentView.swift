@@ -1,17 +1,15 @@
-import SwiftUI
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
+import SwiftUI
 
-/**
- * 絵本貸出管理アプリのメインコンテンツビュー
- *
- * タブベースのナビゲーション構造を提供し、以下の主要機能へのアクセスを提供します：
- * - 絵本管理（一覧表示、追加、編集、削除）
- * - 利用者管理（一覧表示、追加、編集、削除）
- * - 貸出・返却管理（貸出、返却、履歴確認）
- * - ダッシュボード（概要情報の表示）
- */
+/// 絵本貸出管理アプリのメインコンテンツビュー
+///
+/// タブベースのナビゲーション構造を提供し、以下の主要機能へのアクセスを提供します：
+/// - 絵本管理（一覧表示、追加、編集、削除）
+/// - 利用者管理（一覧表示、追加、編集、削除）
+/// - 貸出・返却管理（貸出、返却、履歴確認）
+/// - ダッシュボード（概要情報の表示）
 struct ContentView: View {
     let bookModel: BookModel
     let userModel: UserModel

@@ -1,15 +1,13 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-/**
- * 利用者詳細のContainer View
- *
- * ビジネスロジック、状態管理、データ取得を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// 利用者詳細のContainer View
+///
+/// ビジネスロジック、状態管理、データ取得を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct UserDetailContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LendingModel.self) private var lendingModel

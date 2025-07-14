@@ -2,9 +2,7 @@ import Foundation
 import Observation
 import PictureBookLendingDomain
 
-/**
- * 貸出管理に関するエラー
- */
+/// 貸出管理に関するエラー
 public enum LendingModelError: Error, Equatable {
     /// 指定された貸出情報が見つからない場合のエラー
     case loanNotFound
@@ -20,18 +18,16 @@ public enum LendingModelError: Error, Equatable {
     case returnFailed
 }
 
-/**
- * 貸出管理モデル
- *
- * 絵本の貸出・返却を管理するモデルクラスです。
- * - 絵本の貸出
- * - 絵本の返却
- * - 貸出中の絵本の一覧取得
- * - 全貸出履歴の取得
- * - 特定の絵本の貸出履歴
- * - 特定の利用者の貸出履歴
- * などの機能を提供します。
- */
+/// 貸出管理モデル
+///
+/// 絵本の貸出・返却を管理するモデルクラスです。
+/// - 絵本の貸出
+/// - 絵本の返却
+/// - 貸出中の絵本の一覧取得
+/// - 全貸出履歴の取得
+/// - 特定の絵本の貸出履歴
+/// - 特定の利用者の貸出履歴
+/// などの機能を提供します。
 @Observable
 public class LendingModel {
     
@@ -55,7 +51,9 @@ public class LendingModel {
      *   - bookRepository: 書籍リポジトリ
      *   - userRepository: 利用者リポジトリ
      */
-    public init(repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository) {
+    public init(
+        repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository
+    ) {
         self.repository = repository
         self.bookRepository = bookRepository
         self.userRepository = userRepository
@@ -188,7 +186,7 @@ public class LendingModel {
     
     /**
      * 貸出情報を最新の状態に更新する
-     * 
+     *
      * リポジトリから最新のデータを取得して内部キャッシュを更新します。
      */
     public func refreshLoans() {
