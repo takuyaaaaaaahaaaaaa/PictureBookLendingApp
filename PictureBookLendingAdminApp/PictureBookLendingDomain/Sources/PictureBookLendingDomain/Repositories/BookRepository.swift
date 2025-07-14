@@ -3,7 +3,7 @@ import Foundation
 /// 書籍リポジトリプロトコル
 ///
 /// 絵本の永続化を担当するリポジトリのインターフェース
-public protocol BookRepository {
+public protocol BookRepositoryProtocol {
     /// 絵本を保存する
     ///
     /// - Parameter book: 保存する絵本

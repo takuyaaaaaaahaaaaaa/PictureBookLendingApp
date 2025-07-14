@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用書籍リポジトリ実装
 ///
 /// SwiftDataを使用して絵本の永続化を担当するリポジトリ
-public class SwiftDataBookRepository: BookRepository {
+public class SwiftDataBookRepository: BookRepositoryProtocol {
     private let modelContext: ModelContext
     
     /// イニシャライザ
