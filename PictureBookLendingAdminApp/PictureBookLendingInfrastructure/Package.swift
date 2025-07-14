@@ -17,6 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../PictureBookLendingDomain"),
+        .package(url: "https://github.com/swiftlang/swift-format", from: "600.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

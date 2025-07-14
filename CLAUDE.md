@@ -56,6 +56,10 @@ swift build --target PictureBookLendingUI
 
 # 特定モジュールのテスト実行
 swift test --filter PictureBookLendingModelTests
+
+# コードフォーマット（swift-format）
+cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift run swift-format --configuration ../.swift-format --in-place ../PictureBookLendingAdmin/**/*.swift
+cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift run swift-format --configuration ../.swift-format --in-place Sources/**/*.swift
 ```
 
 ### 技術スタック

@@ -1,24 +1,20 @@
-import SwiftUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
-import PictureBookLendingInfrastructure
+import SwiftUI
 
-
-/**
- * 貸出・返却管理のContainer View
- *
- * ビジネスロジック、状態管理、データ取得、画面制御を担当し、
- * Presentation ViewにデータとアクションHookを提供します。
- */
+/// 貸出・返却管理のContainer View
+///
+/// ビジネスロジック、状態管理、データ取得、画面制御を担当し、
+/// Presentation ViewにデータとアクションHookを提供します。
 struct LendingContainerView: View {
-    
     /// 貸出フィルタの種類
     private enum FilterType: Int, CaseIterable {
         case all = 0
         case lent = 1
         case returned = 2
-        
+
         var title: String {
             switch self {
             case .all: "全て"
@@ -27,15 +23,15 @@ struct LendingContainerView: View {
             }
         }
     }
-    
+
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
     @Environment(LendingModel.self) private var lendingModel
-    
+
     @State private var filterSelection = FilterType.all
     @State private var isNewLoanSheetPresented = false
     @State private var alertState = AlertState()
-    
+
     private var filteredLoans: [Loan] {
         let allLoans = lendingModel.getAllLoans()
         return switch filterSelection {
@@ -47,7 +43,7 @@ struct LendingContainerView: View {
             allLoans
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             LendingView(
@@ -86,15 +82,15 @@ struct LendingContainerView: View {
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func refreshData() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
         lendingModel.refreshLoans()
     }
-    
+
     private func handleReturn(loanId: UUID) {
         do {
             _ = try lendingModel.returnBook(loanId: loanId)
@@ -113,7 +109,7 @@ struct LendingContainerView: View {
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
     )
-    
+
     return LendingContainerView()
         .environment(bookModel)
         .environment(userModel)
