@@ -22,38 +22,30 @@ public protocol RepositoryFactory {
 public class SwiftDataRepositoryFactory: RepositoryFactory {
     private let modelContext: ModelContext
     
-    /**
-     * イニシャライザ
-     *
-     * - Parameter modelContext: SwiftData用のモデルコンテキスト
-     */
+    /// イニシャライザ
+    ///
+    /// - Parameter modelContext: SwiftData用のモデルコンテキスト
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
-    /**
-     * 書籍リポジトリのインスタンスを生成
-     *
-     * - Returns: BookRepositoryのインスタンス
-     */
+    /// 書籍リポジトリのインスタンスを生成
+    ///
+    /// - Returns: BookRepositoryのインスタンス
     public func makeBookRepository() -> BookRepository {
         SwiftDataBookRepository(modelContext: modelContext)
     }
     
-    /**
-     * 利用者リポジトリのインスタンスを生成
-     *
-     * - Returns: UserRepositoryのインスタンス
-     */
+    /// 利用者リポジトリのインスタンスを生成
+    ///
+    /// - Returns: UserRepositoryのインスタンス
     public func makeUserRepository() -> UserRepository {
         SwiftDataUserRepository(modelContext: modelContext)
     }
     
-    /**
-     * 貸出リポジトリのインスタンスを生成
-     *
-     * - Returns: LoanRepositoryのインスタンス
-     */
+    /// 貸出リポジトリのインスタンスを生成
+    ///
+    /// - Returns: LoanRepositoryのインスタンス
     public func makeLoanRepository() -> LoanRepository {
         SwiftDataLoanRepository(modelContext: modelContext)
     }

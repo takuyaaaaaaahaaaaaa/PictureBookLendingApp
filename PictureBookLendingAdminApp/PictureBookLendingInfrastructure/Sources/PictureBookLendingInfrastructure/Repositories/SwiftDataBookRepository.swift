@@ -8,22 +8,18 @@ import SwiftData
 public class SwiftDataBookRepository: BookRepository {
     private let modelContext: ModelContext
     
-    /**
-     * イニシャライザ
-     *
-     * - Parameter modelContext: SwiftData用のモデルコンテキスト
-     */
+    /// イニシャライザ
+    ///
+    /// - Parameter modelContext: SwiftData用のモデルコンテキスト
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
-    /**
-     * 絵本を保存する
-     *
-     * - Parameter book: 保存する絵本
-     * - Returns: 保存された絵本
-     * - Throws: 保存に失敗した場合はエラーを投げる
-     */
+    /// 絵本を保存する
+    ///
+    /// - Parameter book: 保存する絵本
+    /// - Returns: 保存された絵本
+    /// - Throws: 保存に失敗した場合はエラーを投げる
     public func save(_ book: Book) throws -> Book {
         // SwiftDataでは、オブジェクトをモデルコンテキストに挿入してSwiftDataモデルに変換
         let swiftDataBook = SwiftDataBook(
@@ -42,12 +38,10 @@ public class SwiftDataBookRepository: BookRepository {
         }
     }
     
-    /**
-     * 全ての絵本を取得する
-     *
-     * - Returns: 全ての絵本のリスト
-     * - Throws: 取得に失敗した場合はエラーを投げる
-     */
+    /// 全ての絵本を取得する
+    ///
+    /// - Returns: 全ての絵本のリスト
+    /// - Throws: 取得に失敗した場合はエラーを投げる
     public func fetchAll() throws -> [Book] {
         do {
             let descriptor = FetchDescriptor<SwiftDataBook>()
@@ -66,13 +60,11 @@ public class SwiftDataBookRepository: BookRepository {
         }
     }
     
-    /**
-     * IDで絵本を検索する
-     *
-     * - Parameter id: 検索する絵本のID
-     * - Returns: 見つかった絵本（見つからない場合はnil）
-     * - Throws: 検索に失敗した場合はエラーを投げる
-     */
+    /// IDで絵本を検索する
+    ///
+    /// - Parameter id: 検索する絵本のID
+    /// - Returns: 見つかった絵本（見つからない場合はnil）
+    /// - Throws: 検索に失敗した場合はエラーを投げる
     public func findById(_ id: UUID) throws -> Book? {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }
@@ -93,13 +85,11 @@ public class SwiftDataBookRepository: BookRepository {
         }
     }
     
-    /**
-     * 絵本を更新する
-     *
-     * - Parameter book: 更新する絵本
-     * - Returns: 更新された絵本
-     * - Throws: 更新に失敗した場合はエラーを投げる
-     */
+    /// 絵本を更新する
+    ///
+    /// - Parameter book: 更新する絵本
+    /// - Returns: 更新された絵本
+    /// - Throws: 更新に失敗した場合はエラーを投げる
     public func update(_ book: Book) throws -> Book {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == book.id }
@@ -124,13 +114,11 @@ public class SwiftDataBookRepository: BookRepository {
         }
     }
     
-    /**
-     * 絵本を削除する
-     *
-     * - Parameter id: 削除する絵本のID
-     * - Returns: 削除に成功したかどうか
-     * - Throws: 削除に失敗した場合はエラーを投げる
-     */
+    /// 絵本を削除する
+    ///
+    /// - Parameter id: 削除する絵本のID
+    /// - Returns: 削除に成功したかどうか
+    /// - Throws: 削除に失敗した場合はエラーを投げる
     public func delete(_ id: UUID) throws -> Bool {
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }

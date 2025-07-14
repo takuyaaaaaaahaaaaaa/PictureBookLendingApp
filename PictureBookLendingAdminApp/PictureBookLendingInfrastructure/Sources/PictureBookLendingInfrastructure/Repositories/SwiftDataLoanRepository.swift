@@ -8,22 +8,20 @@ import SwiftData
 public class SwiftDataLoanRepository: LoanRepository {
     private let modelContext: ModelContext
     
-    /**
-     * イニシャライザ
-     *
-     * - Parameter modelContext: SwiftData用のモデルコンテキスト
-     */
+    ///
+    /// イニシャライザ
+    /// - Parameter modelContext: SwiftData用のモデルコンテキスト
+    
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
     
-    /**
-     * 貸出情報を保存する
-     *
-     * - Parameter loan: 保存する貸出情報
-     * - Returns: 保存された貸出情報
-     * - Throws: 保存に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 貸出情報を保存する
+    /// - Parameter loan: 保存する貸出情報
+    /// - Returns: 保存された貸出情報
+    /// - Throws: 保存に失敗した場合はエラーを投げる
+    
     public func save(_ loan: Loan) throws -> Loan {
         let swiftDataLoan = SwiftDataLoan(
             id: loan.id,
@@ -44,12 +42,11 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 全ての貸出情報を取得する
-     *
-     * - Returns: 全ての貸出情報のリスト
-     * - Throws: 取得に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 全ての貸出情報を取得する
+    /// - Returns: 全ての貸出情報のリスト
+    /// - Throws: 取得に失敗した場合はエラーを投げる
+    
     public func fetchAll() throws -> [Loan] {
         do {
             let descriptor = FetchDescriptor<SwiftDataLoan>()
@@ -70,13 +67,12 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * IDで貸出情報を検索する
-     *
-     * - Parameter id: 検索する貸出情報のID
-     * - Returns: 見つかった貸出情報（見つからない場合はnil）
-     * - Throws: 検索に失敗した場合はエラーを投げる
-     */
+    ///
+    /// IDで貸出情報を検索する
+    /// - Parameter id: 検索する貸出情報のID
+    /// - Returns: 見つかった貸出情報（見つからない場合はnil）
+    /// - Throws: 検索に失敗した場合はエラーを投げる
+    
     public func findById(_ id: UUID) throws -> Loan? {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == id }
@@ -100,13 +96,12 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 特定の絵本に関連する貸出情報を検索する
-     *
-     * - Parameter bookId: 検索する絵本のID
-     * - Returns: 関連する貸出情報のリスト
-     * - Throws: 検索に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 特定の絵本に関連する貸出情報を検索する
+    /// - Parameter bookId: 検索する絵本のID
+    /// - Returns: 関連する貸出情報のリスト
+    /// - Throws: 検索に失敗した場合はエラーを投げる
+    
     public func findByBookId(_ bookId: UUID) throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.bookId == bookId }
@@ -128,13 +123,12 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 特定の利用者に関連する貸出情報を検索する
-     *
-     * - Parameter userId: 検索する利用者のID
-     * - Returns: 関連する貸出情報のリスト
-     * - Throws: 検索に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 特定の利用者に関連する貸出情報を検索する
+    /// - Parameter userId: 検索する利用者のID
+    /// - Returns: 関連する貸出情報のリスト
+    /// - Throws: 検索に失敗した場合はエラーを投げる
+    
     public func findByUserId(_ userId: UUID) throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.userId == userId }
@@ -156,12 +150,11 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 現在貸出中の貸出情報を取得する
-     *
-     * - Returns: 貸出中の貸出情報のリスト
-     * - Throws: 取得に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 現在貸出中の貸出情報を取得する
+    /// - Returns: 貸出中の貸出情報のリスト
+    /// - Throws: 取得に失敗した場合はエラーを投げる
+    
     public func fetchActiveLoans() throws -> [Loan] {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.returnedDate == nil }
@@ -183,13 +176,12 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 貸出情報を更新する
-     *
-     * - Parameter loan: 更新する貸出情報
-     * - Returns: 更新された貸出情報
-     * - Throws: 更新に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 貸出情報を更新する
+    /// - Parameter loan: 更新する貸出情報
+    /// - Returns: 更新された貸出情報
+    /// - Throws: 更新に失敗した場合はエラーを投げる
+    
     public func update(_ loan: Loan) throws -> Loan {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == loan.id }
@@ -217,13 +209,12 @@ public class SwiftDataLoanRepository: LoanRepository {
         }
     }
     
-    /**
-     * 貸出情報を削除する
-     *
-     * - Parameter id: 削除する貸出情報のID
-     * - Returns: 削除に成功したかどうか
-     * - Throws: 削除に失敗した場合はエラーを投げる
-     */
+    ///
+    /// 貸出情報を削除する
+    /// - Parameter id: 削除する貸出情報のID
+    /// - Returns: 削除に成功したかどうか
+    /// - Throws: 削除に失敗した場合はエラーを投げる
+    
     public func delete(_ id: UUID) throws -> Bool {
         do {
             let predicate = #Predicate<SwiftDataLoan> { $0.id == id }

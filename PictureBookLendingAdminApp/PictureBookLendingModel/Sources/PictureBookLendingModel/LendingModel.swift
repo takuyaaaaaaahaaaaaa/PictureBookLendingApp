@@ -43,14 +43,12 @@ public class LendingModel {
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
     
-    /**
-     * イニシャライザ
-     *
-     * - Parameters:
-     *   - repository: 貸出リポジトリ
-     *   - bookRepository: 書籍リポジトリ
-     *   - userRepository: 利用者リポジトリ
-     */
+    /// イニシャライザ
+    ///
+    /// - Parameters:
+    ///   - repository: 貸出リポジトリ
+    ///   - bookRepository: 書籍リポジトリ
+    ///   - userRepository: 利用者リポジトリ
     public init(
         repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository
     ) {
@@ -67,16 +65,14 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 絵本を貸し出す
-     *
-     * - Parameters:
-     *   - bookId: 貸し出す絵本のID
-     *   - userId: 借りる利用者のID
-     *   - dueDate: 返却期限日
-     * - Returns: 作成された貸出情報
-     * - Throws: 貸出処理に失敗した場合は `LendingModelError` を投げます
-     */
+    /// 絵本を貸し出す
+    ///
+    /// - Parameters:
+    ///   - bookId: 貸し出す絵本のID
+    ///   - userId: 借りる利用者のID
+    ///   - dueDate: 返却期限日
+    /// - Returns: 作成された貸出情報
+    /// - Throws: 貸出処理に失敗した場合は `LendingModelError` を投げます
     public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
         do {
@@ -120,13 +116,11 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 絵本を返却する
-     *
-     * - Parameter loanId: 返却する貸出情報のID
-     * - Returns: 更新された貸出情報
-     * - Throws: 返却処理に失敗した場合は `LendingModelError` を投げます
-     */
+    /// 絵本を返却する
+    ///
+    /// - Parameter loanId: 返却する貸出情報のID
+    /// - Returns: 更新された貸出情報
+    /// - Throws: 返却処理に失敗した場合は `LendingModelError` を投げます
     public func returnBook(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
@@ -171,12 +165,10 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 絵本が現在貸出中かどうかを確認する
-     *
-     * - Parameter bookId: 確認する絵本のID
-     * - Returns: 貸出中の場合はtrue、そうでなければfalse
-     */
+    /// 絵本が現在貸出中かどうかを確認する
+    ///
+    /// - Parameter bookId: 確認する絵本のID
+    /// - Returns: 貸出中の場合はtrue、そうでなければfalse
     public func isBookLent(bookId: UUID) -> Bool {
         // 現在のloansから貸出中かどうかを確認
         return loans.contains { loan in
@@ -184,18 +176,14 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 貸出情報を最新の状態に更新する
-     *
-     * リポジトリから最新のデータを取得して内部キャッシュを更新します。
-     */
+    /// 貸出情報を最新の状態に更新する
+    ///
+    /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
     public func refreshLoans() {
         refreshActiveLoans()
     }
     
-    /**
-     * 貸出中の貸出情報を最新の状態に更新
-     */
+    /// 貸出中の貸出情報を最新の状態に更新
     private func refreshActiveLoans() {
         do {
             let activeLoans = try repository.fetchActiveLoans()
@@ -223,31 +211,25 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 現在貸出中の全貸出情報を取得する
-     *
-     * - Returns: 貸出中の貸出情報リスト
-     */
+    /// 現在貸出中の全貸出情報を取得する
+    ///
+    /// - Returns: 貸出中の貸出情報リスト
     public func getActiveLoans() -> [Loan] {
         refreshActiveLoans()
         return loans.filter { !$0.isReturned }
     }
     
-    /**
-     * 全ての貸出履歴を取得する
-     *
-     * - Returns: 全ての貸出情報リスト
-     */
+    /// 全ての貸出履歴を取得する
+    ///
+    /// - Returns: 全ての貸出情報リスト
     public func getAllLoans() -> [Loan] {
         return loans
     }
     
-    /**
-     * 指定された利用者の貸出履歴を取得する
-     *
-     * - Parameter userId: 取得したい利用者のID
-     * - Returns: 指定された利用者の貸出情報リスト
-     */
+    /// 指定された利用者の貸出履歴を取得する
+    ///
+    /// - Parameter userId: 取得したい利用者のID
+    /// - Returns: 指定された利用者の貸出情報リスト
     public func getLoansByUser(userId: UUID) -> [Loan] {
         do {
             return try repository.findByUserId(userId)
@@ -257,12 +239,10 @@ public class LendingModel {
         }
     }
     
-    /**
-     * 指定された絵本の貸出履歴を取得する
-     *
-     * - Parameter bookId: 取得したい絵本のID
-     * - Returns: 指定された絵本の貸出情報リスト
-     */
+    /// 指定された絵本の貸出履歴を取得する
+    ///
+    /// - Parameter bookId: 取得したい絵本のID
+    /// - Returns: 指定された絵本の貸出情報リスト
     public func getLoansByBook(bookId: UUID) -> [Loan] {
         do {
             return try repository.findByBookId(bookId)

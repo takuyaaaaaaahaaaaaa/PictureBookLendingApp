@@ -100,7 +100,7 @@ public struct StatisticsCardView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+                .fill(.background)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -209,7 +209,7 @@ public struct OverdueWarningView: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+                .fill(.background)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
@@ -292,7 +292,7 @@ public struct InfoCardView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+                .fill(.background)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }

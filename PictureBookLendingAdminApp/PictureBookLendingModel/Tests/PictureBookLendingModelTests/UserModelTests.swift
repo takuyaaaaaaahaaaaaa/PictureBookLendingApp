@@ -22,11 +22,9 @@ struct UserModelTests {
         return (userModel, mockRepository)
     }
     
-    /**
-     * 利用者登録機能のテスト
-     *
-     * 新しい利用者を登録し、正しく登録されることを確認します。
-     */
+    /// 利用者登録機能のテスト
+    ///
+    /// 新しい利用者を登録し、正しく登録されることを確認します。
     @Test("利用者登録機能のテスト")
     func registerUser() throws {
         // 1. Arrange - 準備
@@ -43,11 +41,9 @@ struct UserModelTests {
         #expect(userModel.users.count == 1)
     }
     
-    /**
-     * 全利用者取得機能のテスト
-     *
-     * 複数の利用者を登録し、全ての利用者が取得できることを確認します。
-     */
+    /// 全利用者取得機能のテスト
+    ///
+    /// 複数の利用者を登録し、全ての利用者が取得できることを確認します。
     @Test("全利用者取得機能のテスト")
     func getAllUsers() throws {
         // 1. Arrange - 準備
@@ -65,11 +61,9 @@ struct UserModelTests {
         #expect(Set(users.map { $0.name }) == Set(["山田太郎", "鈴木花子"]))
     }
     
-    /**
-     * 利用者ID検索機能のテスト
-     *
-     * IDを指定して利用者を検索し、正しい利用者が取得できることを確認します。
-     */
+    /// 利用者ID検索機能のテスト
+    ///
+    /// IDを指定して利用者を検索し、正しい利用者が取得できることを確認します。
     @Test("利用者ID検索機能のテスト")
     func findUserById() throws {
         // 1. Arrange - 準備
@@ -86,11 +80,9 @@ struct UserModelTests {
         #expect(foundUser?.name == "山田太郎")
     }
     
-    /**
-     * 利用者更新機能のテスト
-     *
-     * 登録済みの利用者情報を更新し、正しく更新されることを確認します。
-     */
+    /// 利用者更新機能のテスト
+    ///
+    /// 登録済みの利用者情報を更新し、正しく更新されることを確認します。
     @Test("利用者更新機能のテスト")
     func updateUser() throws {
         // 1. Arrange - 準備
@@ -111,11 +103,9 @@ struct UserModelTests {
         #expect(userModel.findUserById(id)?.name == "山田次郎")
     }
     
-    /**
-     * 利用者削除機能のテスト
-     *
-     * 登録済みの利用者を削除し、正しく削除されることを確認します。
-     */
+    /// 利用者削除機能のテスト
+    ///
+    /// 登録済みの利用者を削除し、正しく削除されることを確認します。
     @Test("利用者削除機能のテスト")
     func deleteUser() throws {
         // 1. Arrange - 準備
@@ -133,11 +123,9 @@ struct UserModelTests {
         #expect(userModel.findUserById(id) == nil)
     }
     
-    /**
-     * 存在しない利用者削除時のエラーテスト
-     *
-     * 存在しない利用者IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
-     */
+    /// 存在しない利用者削除時のエラーテスト
+    ///
+    /// 存在しない利用者IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
     @Test("存在しない利用者削除時のエラーテスト")
     func deleteNonExistingUser() throws {
         // 1. Arrange - 準備

@@ -30,11 +30,9 @@ public class BookModel {
     /// キャッシュ用の絵本リスト
     public private(set) var books: [Book] = []
     
-    /**
-     * イニシャライザ
-     *
-     * - Parameter repository: 書籍リポジトリ
-     */
+    /// イニシャライザ
+    ///
+    /// - Parameter repository: 書籍リポジトリ
     public init(repository: BookRepository) {
         self.repository = repository
         
@@ -47,15 +45,13 @@ public class BookModel {
         }
     }
     
-    /**
-     * 絵本を登録する
-     *
-     * 新しい絵本を管理リストに追加します。
-     *
-     * - Parameter book: 登録する絵本の情報
-     * - Returns: 登録された絵本（IDが割り当てられます）
-     * - Throws: 登録に失敗した場合は `BookModelError.registrationFailed` を投げます
-     */
+    /// 絵本を登録する
+    ///
+    /// 新しい絵本を管理リストに追加します。
+    ///
+    /// - Parameter book: 登録する絵本の情報
+    /// - Returns: 登録された絵本（IDが割り当てられます）
+    /// - Throws: 登録に失敗した場合は `BookModelError.registrationFailed` を投げます
     public func registerBook(_ book: Book) throws -> Book {
         do {
             // リポジトリに保存
@@ -70,22 +66,18 @@ public class BookModel {
         }
     }
     
-    /**
-     * 全ての絵本を取得する
-     *
-     * 管理中の全絵本リストを返します。
-     *
-     * - Returns: 全ての絵本の配列
-     */
+    /// 全ての絵本を取得する
+    ///
+    /// 管理中の全絵本リストを返します。
+    ///
+    /// - Returns: 全ての絵本の配列
     public func getAllBooks() -> [Book] {
         return books
     }
     
-    /**
-     * 絵本リストを最新の状態に更新する
-     *
-     * リポジトリから最新のデータを取得して内部キャッシュを更新します。
-     */
+    /// 絵本リストを最新の状態に更新する
+    ///
+    /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
     public func refreshBooks() {
         do {
             books = try repository.fetchAll()
@@ -94,14 +86,12 @@ public class BookModel {
         }
     }
     
-    /**
-     * 指定IDの絵本を検索する
-     *
-     * IDを指定して絵本を検索します。
-     *
-     * - Parameter id: 検索する絵本のID
-     * - Returns: 見つかった絵本（見つからない場合はnil）
-     */
+    /// 指定IDの絵本を検索する
+    ///
+    /// IDを指定して絵本を検索します。
+    ///
+    /// - Parameter id: 検索する絵本のID
+    /// - Returns: 見つかった絵本（見つからない場合はnil）
     public func findBookById(_ id: UUID) -> Book? {
         // キャッシュから検索
         if let cachedBook = books.first(where: { $0.id == id }) {
@@ -117,15 +107,13 @@ public class BookModel {
         }
     }
     
-    /**
-     * 絵本情報を更新する
-     *
-     * 指定された絵本の情報を更新します。
-     *
-     * - Parameter book: 更新する絵本情報（IDで既存の絵本を特定）
-     * - Returns: 更新された絵本
-     * - Throws: 更新に失敗した場合は `BookModelError` を投げます
-     */
+    /// 絵本情報を更新する
+    ///
+    /// 指定された絵本の情報を更新します。
+    ///
+    /// - Parameter book: 更新する絵本情報（IDで既存の絵本を特定）
+    /// - Returns: 更新された絵本
+    /// - Throws: 更新に失敗した場合は `BookModelError` を投げます
     public func updateBook(_ book: Book) throws -> Book {
         do {
             // リポジトリで更新
@@ -147,15 +135,13 @@ public class BookModel {
         }
     }
     
-    /**
-     * 絵本を削除する
-     *
-     * 指定されたIDの絵本を削除します。
-     *
-     * - Parameter id: 削除する絵本のID
-     * - Returns: 削除に成功したかどうか
-     * - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
-     */
+    /// 絵本を削除する
+    ///
+    /// 指定されたIDの絵本を削除します。
+    ///
+    /// - Parameter id: 削除する絵本のID
+    /// - Returns: 削除に成功したかどうか
+    /// - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
     public func deleteBook(_ id: UUID) throws -> Bool {
         do {
             // リポジトリから削除
