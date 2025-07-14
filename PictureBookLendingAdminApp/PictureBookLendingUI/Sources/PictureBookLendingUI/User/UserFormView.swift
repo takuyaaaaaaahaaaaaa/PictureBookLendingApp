@@ -33,7 +33,7 @@ public struct UserFormView: View {
         Form {
             Section(header: Text("利用者情報")) {
                 TextField("名前", text: name)
-                TextField("グループ（クラスなど）", text: group)
+                TextField("グループ", text: group)
             }
         }
     }

@@ -7,14 +7,14 @@ public struct User: Identifiable, Codable, Hashable {
     public var id: UUID
     /// 利用者の名前
     public var name: String
-    /// 所属するクラス/組
+    /// 所属するグループ
     public var group: String
     
     /// 利用者モデルの初期化
     /// - Parameters:
     ///   - id: 利用者の一意識別子（デフォルトでは新しいUUIDが生成されます）
     ///   - name: 利用者の名前
-    ///   - group: 所属するクラス/組
+    ///   - group: 所属するグループ
     public init(id: UUID = UUID(), name: String, group: String) {
         self.id = id
         self.name = name
