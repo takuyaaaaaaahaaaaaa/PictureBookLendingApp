@@ -9,7 +9,8 @@
       "Bash(xcodebuild test:*)",
       "Bash(xcodebuild:*)",
       "Bash(swift test:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   }

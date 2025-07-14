@@ -52,7 +52,7 @@ struct LendingContainerView: View {
                 }
             }
             .sheet(isPresented: $isNewLoanSheetPresented) {
-                Text("新規貸出フォーム")
+                NewLoanContainerView()
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}

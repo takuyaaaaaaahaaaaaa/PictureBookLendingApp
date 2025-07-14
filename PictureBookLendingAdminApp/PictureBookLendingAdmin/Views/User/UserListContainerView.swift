@@ -50,11 +50,10 @@ struct UserListContainerView: View {
                 }
             }
             .sheet(isPresented: $isAddSheetPresented) {
-                UserFormView(
-                    userModel: userModel,
+                UserFormContainerView(
                     mode: .add,
                     onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にUserFormView内で実行される
+                        // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
                     }
                 )
             }

@@ -44,8 +44,7 @@ struct UserDetailContainerView: View {
             }
         }
         .sheet(isPresented: $isEditSheetPresented) {
-            UserFormView(
-                userModel: userModel,
+            UserFormContainerView(
                 mode: .edit(user),
                 onSave: handleUserSaved
             )
