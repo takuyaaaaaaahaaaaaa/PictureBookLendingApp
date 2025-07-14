@@ -1,9 +1,7 @@
 import Foundation
 import PictureBookLendingDomain
 
-/**
- * テスト用のモックブックリポジトリ
- */
+/// テスト用のモックブックリポジトリ
 class MockBookRepository: BookRepository {
     private var books: [Book] = []
     
@@ -40,9 +38,7 @@ class MockBookRepository: BookRepository {
     }
 }
 
-/**
- * テスト用のモックユーザーリポジトリ
- */
+/// テスト用のモックユーザーリポジトリ
 class MockUserRepository: UserRepository {
     private var users: [User] = []
     
@@ -79,9 +75,7 @@ class MockUserRepository: UserRepository {
     }
 }
 
-/**
- * テスト用のモック貸出リポジトリ
- */
+/// テスト用のモック貸出リポジトリ
 class MockLoanRepository: LoanRepository {
     private var loans: [Loan] = []
     
@@ -130,9 +124,7 @@ class MockLoanRepository: LoanRepository {
     }
 }
 
-/**
- * テスト用のモックリポジトリファクトリ
- */
+/// テスト用のモックリポジトリファクトリ
 class MockRepositoryFactory {
     let bookRepository = MockBookRepository()
     let userRepository = MockUserRepository()

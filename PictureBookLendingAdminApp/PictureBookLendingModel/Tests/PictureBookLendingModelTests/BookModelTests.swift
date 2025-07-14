@@ -1,19 +1,18 @@
-import Testing
 import Foundation
-@testable import PictureBookLendingModel
 import PictureBookLendingDomain
+import Testing
 
-/**
- * BookModelテストケース
- *
- * 絵本管理モデルの各機能をテストするためのケース集です。
- * - 絵本の登録
- * - 絵本の一覧取得
- * - 絵本のID検索
- * - 絵本情報の更新
- * - 絵本の削除
- * などの機能をテストします。
- */
+@testable import PictureBookLendingModel
+
+/// BookModelテストケース
+///
+/// 絵本管理モデルの各機能をテストするためのケース集です。
+/// - 絵本の登録
+/// - 絵本の一覧取得
+/// - 絵本のID検索
+/// - 絵本情報の更新
+/// - 絵本の削除
+/// などの機能をテストします。
 @Suite("BookModel Tests")
 struct BookModelTests {
     
@@ -100,7 +99,8 @@ struct BookModelTests {
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
         
-        let updatedBookInfo = Book(id: id, title: "The Very Hungry Caterpillar", author: "Eric Carle")
+        let updatedBookInfo = Book(
+            id: id, title: "The Very Hungry Caterpillar", author: "Eric Carle")
         
         // 2. Act - 実行
         let updatedBook = try bookModel.updateBook(updatedBookInfo)
@@ -108,7 +108,7 @@ struct BookModelTests {
         // 3. Assert - 検証
         #expect(updatedBook.title == "The Very Hungry Caterpillar")
         #expect(updatedBook.author == "Eric Carle")
-        #expect(bookModel.books.count == 1) // 数は変わらない
+        #expect(bookModel.books.count == 1)  // 数は変わらない
         #expect(bookModel.findBookById(id)?.title == "The Very Hungry Caterpillar")
     }
     

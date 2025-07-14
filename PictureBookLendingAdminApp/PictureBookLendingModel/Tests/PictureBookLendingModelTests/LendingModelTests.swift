@@ -1,17 +1,19 @@
-import Testing
 import Foundation
-@testable import PictureBookLendingModel
 import PictureBookLendingDomain
+import Testing
 
-/**
- * LendingModelテストケース
- *
- * 絵本の貸出・返却を管理するモデルの基本機能をテストします。
- */
+@testable import PictureBookLendingModel
+
+/// LendingModelテストケース
+///
+/// 絵本の貸出・返却を管理するモデルの基本機能をテストします。
 @Suite("LendingModel Tests")
 struct LendingModelTests {
     
-    private func createLendingModel() throws -> (mockRepositoryFactory: MockRepositoryFactory, bookModel: BookModel, userModel: UserModel, lendingModel: LendingModel, testBook: Book, testUser: User) {
+    private func createLendingModel() throws -> (
+        mockRepositoryFactory: MockRepositoryFactory, bookModel: BookModel, userModel: UserModel,
+        lendingModel: LendingModel, testBook: Book, testUser: User
+    ) {
         // テスト用に各モデルを初期化
         let mockRepositoryFactory = MockRepositoryFactory()
         

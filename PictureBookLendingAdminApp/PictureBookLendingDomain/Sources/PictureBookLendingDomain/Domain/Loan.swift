@@ -29,7 +29,10 @@ public struct Loan: Identifiable, Codable {
     ///   - loanDate: 貸出日
     ///   - dueDate: 返却期限日
     ///   - returnedDate: 返却日（デフォルトはnil）
-    public init(id: UUID = UUID(), bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date, returnedDate: Date? = nil) {
+    public init(
+        id: UUID = UUID(), bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date,
+        returnedDate: Date? = nil
+    ) {
         self.id = id
         self.bookId = bookId
         self.userId = userId

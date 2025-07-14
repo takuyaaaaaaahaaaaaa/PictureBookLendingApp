@@ -13,7 +13,7 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "PictureBookLendingModel",
-            targets: ["PictureBookLendingModel"]),
+            targets: ["PictureBookLendingModel"])
     ],
     dependencies: [
         .package(path: "../PictureBookLendingDomain"),
@@ -25,14 +25,14 @@ let package = Package(
         .target(
             name: "PictureBookLendingModel",
             dependencies: [
-                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
+                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain")
             ]
         ),
         .testTarget(
             name: "PictureBookLendingModelTests",
             dependencies: [
                 "PictureBookLendingModel",
-                .product(name: "Testing", package: "swift-testing")
+                .product(name: "Testing", package: "swift-testing"),
             ]
         ),
     ]

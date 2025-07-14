@@ -1,19 +1,18 @@
-import Testing
 import Foundation
-@testable import PictureBookLendingModel
 import PictureBookLendingDomain
+import Testing
 
-/**
- * UserModelテストケース
- *
- * 利用者管理モデルの各機能をテストするためのケース集です。
- * - 利用者の登録
- * - 利用者の一覧取得
- * - 利用者のID検索
- * - 利用者情報の更新
- * - 利用者の削除
- * などの機能をテストします。
- */
+@testable import PictureBookLendingModel
+
+/// UserModelテストケース
+///
+/// 利用者管理モデルの各機能をテストするためのケース集です。
+/// - 利用者の登録
+/// - 利用者の一覧取得
+/// - 利用者のID検索
+/// - 利用者情報の更新
+/// - 利用者の削除
+/// などの機能をテストします。
 @Suite("UserModel Tests")
 struct UserModelTests {
     
@@ -108,7 +107,7 @@ struct UserModelTests {
         // 3. Assert - 検証
         #expect(updatedUser.name == "山田次郎")
         #expect(updatedUser.group == "1年2組")
-        #expect(userModel.users.count == 1) // 数は変わらない
+        #expect(userModel.users.count == 1)  // 数は変わらない
         #expect(userModel.findUserById(id)?.name == "山田次郎")
     }
     

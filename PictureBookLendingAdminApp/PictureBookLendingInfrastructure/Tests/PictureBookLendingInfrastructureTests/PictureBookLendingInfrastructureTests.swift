@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import PictureBookLendingInfrastructure
 
 final class PictureBookLendingInfrastructureTests: XCTestCase {
