@@ -1,10 +1,8 @@
 import Foundation
 
-/**
- * リポジトリ操作に関するエラー
- *
- * データの永続化や取得に関する各種エラーを定義します
- */
+/// リポジトリ操作に関するエラー
+///
+/// データの永続化や取得に関する各種エラーを定義します
 public enum RepositoryError: Error, Equatable {
     /// データが見つからない場合のエラー
     case notFound
