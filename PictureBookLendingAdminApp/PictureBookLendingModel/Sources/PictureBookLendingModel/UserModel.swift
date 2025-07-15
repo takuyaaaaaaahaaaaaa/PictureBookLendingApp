@@ -45,6 +45,11 @@ public class UserModel {
         }
     }
     
+    /// データを非同期で読み込む（UIバインディング用）
+    public func load() async throws {
+        users = try repository.fetchAll()
+    }
+    
     /// 利用者を登録する
     ///
     /// 新しい利用者を管理リストに追加します。

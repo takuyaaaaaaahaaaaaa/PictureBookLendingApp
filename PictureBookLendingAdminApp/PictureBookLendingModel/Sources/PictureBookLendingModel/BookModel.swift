@@ -45,6 +45,11 @@ public class BookModel {
         }
     }
     
+    /// データを非同期で読み込む（UIバインディング用）
+    public func load() async throws {
+        books = try repository.fetchAll()
+    }
+    
     /// 絵本を登録する
     ///
     /// 新しい絵本を管理リストに追加します。

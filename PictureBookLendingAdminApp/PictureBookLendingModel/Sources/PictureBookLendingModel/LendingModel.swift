@@ -43,6 +43,16 @@ public class LendingModel {
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
     
+    /// 現在貸出中の貸出情報リスト（UIバインディング用）
+    public var currentLoans: [Loan] {
+        loans.filter { !$0.isReturned }
+    }
+    
+    /// 全貸出履歴（UIバインディング用）
+    public var loanHistory: [Loan] {
+        loans
+    }
+    
     /// イニシャライザ
     ///
     /// - Parameters:
@@ -66,7 +76,27 @@ public class LendingModel {
         }
     }
     
-    /// 絵本を貸し出す
+    /// データを非同期で読み込む（UIバインディング用）
+    public func load() async throws {
+        loans = try repository.fetchAll()
+    }
+    
+    /// 絵本が現在貸出中かどうかを確認する（UIバインディング用）
+    public func isBookCurrentlyLoaned(_ bookId: UUID) -> Bool {
+        return isBookLent(bookId: bookId)
+    }
+    
+    /// 絵本を非同期で貸し出す（UIバインディング用）
+    public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) async throws {
+        _ = try lendBookSync(bookId: bookId, userId: userId, dueDate: dueDate)
+    }
+    
+    /// 絵本を非同期で返却する（UIバインディング用）
+    public func returnBook(loanId: UUID) async throws {
+        _ = try returnBookSync(loanId: loanId)
+    }
+    
+    /// 絵本を貸し出す（同期版）
     ///
     /// - Parameters:
     ///   - bookId: 貸し出す絵本のID
@@ -74,7 +104,7 @@ public class LendingModel {
     ///   - dueDate: 返却期限日
     /// - Returns: 作成された貸出情報
     /// - Throws: 貸出処理に失敗した場合は `LendingModelError` を投げます
-    public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
+    public func lendBookSync(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
         do {
             _ = try bookRepository.findById(bookId)
@@ -117,12 +147,12 @@ public class LendingModel {
         }
     }
     
-    /// 絵本を返却する
+    /// 絵本を返却する（同期版）
     ///
     /// - Parameter loanId: 返却する貸出情報のID
     /// - Returns: 更新された貸出情報
     /// - Throws: 返却処理に失敗した場合は `LendingModelError` を投げます
-    public func returnBook(loanId: UUID) throws -> Loan {
+    public func returnBookSync(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
             // リポジトリからも検索
