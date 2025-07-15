@@ -40,6 +40,26 @@ public class ClassGroupModel {
         self.repository = repository
     }
     
+    /// データを非同期で読み込む（UIバインディング用）
+    public func load() async throws {
+        try await loadAllClassGroups()
+    }
+    
+    /// 組を追加する（UIバインディング用）
+    public func add(_ classGroup: ClassGroup) async throws {
+        try await registerClassGroup(classGroup)
+    }
+    
+    /// 組を更新する（UIバインディング用）
+    public func update(_ classGroup: ClassGroup) async throws {
+        try await updateClassGroup(classGroup)
+    }
+    
+    /// 組を削除する（UIバインディング用）
+    public func delete(_ id: UUID) async throws {
+        try await deleteClassGroup(id)
+    }
+    
     /// すべてのクラスをロードする
     ///
     /// リポジトリからすべてのクラス情報を取得してキャッシュに保存します。

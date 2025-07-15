@@ -5,52 +5,46 @@ import SwiftUI
 
 /// 絵本貸出管理アプリのメインコンテンツビュー
 ///
-/// タブベースのナビゲーション構造を提供し、以下の主要機能へのアクセスを提供します：
-/// - 絵本管理（一覧表示、追加、編集、削除）
-/// - 利用者管理（一覧表示、追加、編集、削除）
-/// - 貸出・返却管理（貸出、返却、履歴確認）
-/// - ダッシュボード（概要情報の表示）
+/// iPad横向き利用に最適化された3タブ構成で、ワークフロー中心の操作体験を提供します：
+/// - 📚 貸出（絵本から）: 絵本を選んで園児に貸出するワークフロー
+/// - 👦 返却・履歴（園児から）: 園児を選んで返却や履歴確認するワークフロー
+/// - ⚙️ 設定（管理者用）: データ管理・統計・アプリ設定
 struct ContentView: View {
     let bookModel: BookModel
     let userModel: UserModel
     let lendingModel: LendingModel
+    let classGroupModel: ClassGroupModel
     
-    // 選択中のタブを管理
+    // 選択中のタブを管理（デフォルトは貸出タブ）
     @State private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            // 絵本管理タブ
-            BookListContainerView()
+            // 📚 貸出（絵本から）タブ
+            BookLendingWorkflowContainerView()
                 .tabItem {
-                    Label("絵本管理", systemImage: "book")
+                    Label("貸出", systemImage: "book.and.wrench")
                 }
                 .tag(0)
             
-            // 利用者管理タブ
-            UserListContainerView()
+            // 👦 返却・履歴（園児から）タブ
+            UserReturnWorkflowContainerView()
                 .tabItem {
-                    Label("利用者管理", systemImage: "person.2")
+                    Label("返却・履歴", systemImage: "person.badge.clock")
                 }
                 .tag(1)
             
-            // 貸出・返却タブ
-            LendingContainerView()
+            // ⚙️ 設定（管理者用）タブ
+            AdminSettingsContainerView()
                 .tabItem {
-                    Label("貸出・返却", systemImage: "arrow.left.arrow.right")
+                    Label("設定", systemImage: "gearshape")
                 }
                 .tag(2)
-            
-            // ダッシュボードタブ
-            DashboardContainerView()
-                .tabItem {
-                    Label("ダッシュボード", systemImage: "chart.pie")
-                }
-                .tag(3)
         }
         .environment(bookModel)
         .environment(userModel)
         .environment(lendingModel)
+        .environment(classGroupModel)
     }
 }
 
@@ -59,11 +53,17 @@ struct ContentView: View {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
+    let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     let lendingModel = LendingModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
     )
     
-    ContentView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+    ContentView(
+        bookModel: bookModel,
+        userModel: userModel,
+        lendingModel: lendingModel,
+        classGroupModel: classGroupModel
+    )
 }
