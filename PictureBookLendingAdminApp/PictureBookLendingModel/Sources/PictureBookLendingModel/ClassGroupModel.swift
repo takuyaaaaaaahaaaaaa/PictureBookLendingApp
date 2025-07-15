@@ -28,7 +28,7 @@ public enum ClassGroupModelError: Error, Equatable {
 public class ClassGroupModel {
     
     /// クラスリポジトリ
-    private let repository: ClassGroupRepository
+    private let repository: ClassGroupRepositoryProtocol
     
     /// キャッシュ用のクラスリスト
     public private(set) var classGroups: [ClassGroup] = []
@@ -36,7 +36,7 @@ public class ClassGroupModel {
     /// イニシャライザ
     ///
     /// - Parameter repository: クラスリポジトリ
-    public init(repository: ClassGroupRepository) {
+    public init(repository: ClassGroupRepositoryProtocol) {
         self.repository = repository
     }
     

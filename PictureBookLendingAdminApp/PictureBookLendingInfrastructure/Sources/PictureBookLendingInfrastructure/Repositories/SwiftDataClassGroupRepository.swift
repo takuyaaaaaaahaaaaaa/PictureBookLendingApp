@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用クラス（組）リポジトリ実装
 ///
 /// SwiftDataを使用してクラス（組）の永続化を担当するリポジトリ
-public class SwiftDataClassGroupRepository: ClassGroupRepository {
+public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     private let modelContext: ModelContext
     
     /// イニシャライザ

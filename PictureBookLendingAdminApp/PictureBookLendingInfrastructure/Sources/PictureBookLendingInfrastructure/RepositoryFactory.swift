@@ -6,17 +6,17 @@ import SwiftData
 /// リポジトリのインスタンスを生成するためのファクトリのインターフェース
 public protocol RepositoryFactory {
     /// 書籍リポジトリを生成
-    /// - Returns: BookRepositoryのインスタンス
-    func makeBookRepository() -> BookRepository
+    /// - Returns: BookRepositoryProtocolのインスタンス
+    func makeBookRepository() -> BookRepositoryProtocol
     
     /// 利用者リポジトリを生成
-    func makeUserRepository() -> UserRepository
+    func makeUserRepository() -> UserRepositoryProtocol
     
     /// 貸出リポジトリを生成
-    func makeLoanRepository() -> LoanRepository
+    func makeLoanRepository() -> LoanRepositoryProtocol
     
     /// クラス（組）リポジトリを生成
-    func makeClassGroupRepository() -> ClassGroupRepository
+    func makeClassGroupRepository() -> ClassGroupRepositoryProtocol
 }
 
 /// SwiftData用リポジトリファクトリ実装
@@ -34,29 +34,29 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
     
     /// 書籍リポジトリのインスタンスを生成
     ///
-    /// - Returns: BookRepositoryのインスタンス
-    public func makeBookRepository() -> BookRepository {
+    /// - Returns: BookRepositoryProtocolのインスタンス
+    public func makeBookRepository() -> BookRepositoryProtocol {
         SwiftDataBookRepository(modelContext: modelContext)
     }
     
     /// 利用者リポジトリのインスタンスを生成
     ///
-    /// - Returns: UserRepositoryのインスタンス
-    public func makeUserRepository() -> UserRepository {
+    /// - Returns: UserRepositoryProtocolのインスタンス
+    public func makeUserRepository() -> UserRepositoryProtocol {
         SwiftDataUserRepository(modelContext: modelContext)
     }
     
     /// 貸出リポジトリのインスタンスを生成
     ///
-    /// - Returns: LoanRepositoryのインスタンス
-    public func makeLoanRepository() -> LoanRepository {
+    /// - Returns: LoanRepositoryProtocolのインスタンス
+    public func makeLoanRepository() -> LoanRepositoryProtocol {
         SwiftDataLoanRepository(modelContext: modelContext)
     }
     
     /// クラス（組）リポジトリのインスタンスを生成
     ///
-    /// - Returns: ClassGroupRepositoryのインスタンス
-    public func makeClassGroupRepository() -> ClassGroupRepository {
+    /// - Returns: ClassGroupRepositoryProtocolのインスタンス
+    public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
         SwiftDataClassGroupRepository(modelContext: modelContext)
     }
 }

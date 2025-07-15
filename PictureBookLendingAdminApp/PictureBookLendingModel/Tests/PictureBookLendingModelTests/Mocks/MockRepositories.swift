@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 
 /// テスト用のモックブックリポジトリ
-class MockBookRepository: BookRepository {
+class MockBookRepository: BookRepositoryProtocol {
     private var books: [Book] = []
     
     func save(_ book: Book) throws -> Book {
@@ -39,7 +39,7 @@ class MockBookRepository: BookRepository {
 }
 
 /// テスト用のモックユーザーリポジトリ
-class MockUserRepository: UserRepository {
+class MockUserRepository: UserRepositoryProtocol {
     private var users: [User] = []
     
     func save(_ user: User) throws -> User {
@@ -76,7 +76,7 @@ class MockUserRepository: UserRepository {
 }
 
 /// テスト用のモック貸出リポジトリ
-class MockLoanRepository: LoanRepository {
+class MockLoanRepository: LoanRepositoryProtocol {
     private var loans: [Loan] = []
     
     func save(_ loan: Loan) throws -> Loan {

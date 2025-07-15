@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用利用者リポジトリ実装
 ///
 /// SwiftDataを使用して利用者の永続化を担当するリポジトリ
-public class SwiftDataUserRepository: UserRepository {
+public class SwiftDataUserRepository: UserRepositoryProtocol {
     private let modelContext: ModelContext
     
     ///
