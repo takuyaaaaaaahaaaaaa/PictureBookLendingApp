@@ -5,7 +5,7 @@ import SwiftData
 ///
 /// リポジトリのインスタンスを生成するためのファクトリのインターフェース
 public protocol RepositoryFactory {
-    /// 書籍リポジトリを生成
+    /// 絵本リポジトリを生成
     /// - Returns: <#description#>
     func makeBookRepository() -> BookRepository
     
@@ -29,7 +29,7 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
         self.modelContext = modelContext
     }
     
-    /// 書籍リポジトリのインスタンスを生成
+    /// 絵本リポジトリのインスタンスを生成
     ///
     /// - Returns: BookRepositoryのインスタンス
     public func makeBookRepository() -> BookRepository {

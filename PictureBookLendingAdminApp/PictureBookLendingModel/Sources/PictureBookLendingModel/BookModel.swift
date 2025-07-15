@@ -24,7 +24,7 @@ public enum BookModelError: Error, Equatable {
 @Observable
 public class BookModel {
     
-    /// 書籍リポジトリ
+    /// 絵本リポジトリ
     private let repository: BookRepository
     
     /// キャッシュ用の絵本リスト
@@ -32,7 +32,7 @@ public class BookModel {
     
     /// イニシャライザ
     ///
-    /// - Parameter repository: 書籍リポジトリ
+    /// - Parameter repository: 絵本リポジトリ
     public init(repository: BookRepository) {
         self.repository = repository
         

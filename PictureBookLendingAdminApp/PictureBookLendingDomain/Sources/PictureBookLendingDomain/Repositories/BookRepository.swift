@@ -1,6 +1,6 @@
 import Foundation
 
-/// 書籍リポジトリプロトコル
+/// 絵本リポジトリプロトコル
 ///
 /// 絵本の永続化を担当するリポジトリのインターフェース
 public protocol BookRepository {

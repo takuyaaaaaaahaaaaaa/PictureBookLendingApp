@@ -36,8 +36,8 @@ struct LendingModelTests {
         return (mockRepositoryFactory, bookModel, userModel, lendingModel, testBook, testUser)
     }
     
-    /// 書籍貸出機能のテスト
-    @Test("書籍貸出機能のテスト")
+    /// 絵本貸出機能のテスト
+    @Test("絵本貸出機能のテスト")
     func lendBook() throws {
         let (_, _, _, lendingModel, testBook, testUser) = try createLendingModel()
         
@@ -58,8 +58,8 @@ struct LendingModelTests {
         #expect(activeLoans.first?.bookId == bookId)
     }
     
-    /// 書籍返却機能のテスト
-    @Test("書籍返却機能のテスト")
+    /// 絵本返却機能のテスト
+    @Test("絵本返却機能のテスト")
     func returnBook() throws {
         let (_, _, _, lendingModel, testBook, testUser) = try createLendingModel()
         

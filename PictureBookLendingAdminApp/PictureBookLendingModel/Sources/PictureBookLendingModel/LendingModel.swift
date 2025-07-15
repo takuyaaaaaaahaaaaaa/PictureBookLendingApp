@@ -34,7 +34,7 @@ public class LendingModel {
     /// 貸出リポジトリ
     private let repository: LoanRepository
     
-    /// 書籍リポジトリ
+    /// 絵本リポジトリ
     private let bookRepository: BookRepository
     
     /// 利用者リポジトリ
@@ -47,7 +47,7 @@ public class LendingModel {
     ///
     /// - Parameters:
     ///   - repository: 貸出リポジトリ
-    ///   - bookRepository: 書籍リポジトリ
+    ///   - bookRepository: 絵本リポジトリ
     ///   - userRepository: 利用者リポジトリ
     public init(
         repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository

@@ -65,7 +65,7 @@ struct UserDetailContainerView: View {
     
     private func getBookTitle(for bookId: UUID) -> String {
         guard let book = bookModel.findBookById(bookId) else {
-            return "不明な書籍"
+            return "不明な絵本"
         }
         return book.title
     }

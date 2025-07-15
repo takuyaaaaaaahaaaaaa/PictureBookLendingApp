@@ -53,7 +53,7 @@ struct LendingContainerView: View {
                     set: { filterSelection = FilterType(rawValue: $0) ?? .all }
                 ),
                 onReturn: handleReturn,
-                getBookTitle: { bookModel.findBookById($0)?.title ?? "不明な書籍" },
+                getBookTitle: { bookModel.findBookById($0)?.title ?? "不明な絵本" },
                 getUserName: { userModel.findUserById($0)?.name ?? "不明な利用者" }
             )
             .navigationTitle("貸出・返却管理")
