@@ -10,11 +10,6 @@ import SwiftUI
 /// - 返却・履歴（園児から）- 園児を選択して返却・履歴確認を行う
 /// - 設定（管理者用）- 絵本・園児・組の管理を行う
 struct ContentView: View {
-    let bookModel: BookModel
-    let userModel: UserModel
-    let lendingModel: LendingModel
-    let classGroupModel: ClassGroupModel
-    
     // 選択中のタブを管理
     @State private var selectedTab = 0
     
@@ -43,10 +38,6 @@ struct ContentView: View {
                 }
                 .tag(2)
         }
-        .environment(bookModel)
-        .environment(userModel)
-        .environment(lendingModel)
-        .environment(classGroupModel)
     }
 }
 
@@ -62,10 +53,9 @@ struct ContentView: View {
     )
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     
-    ContentView(
-        bookModel: bookModel,
-        userModel: userModel,
-        lendingModel: lendingModel,
-        classGroupModel: classGroupModel
-    )
+    ContentView()
+        .environment(bookModel)
+        .environment(userModel)
+        .environment(lendingModel)
+        .environment(classGroupModel)
 }

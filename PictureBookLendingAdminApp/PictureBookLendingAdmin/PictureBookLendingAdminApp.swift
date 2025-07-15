@@ -9,20 +9,17 @@ struct PictureBookLendingAdminApp: App {
     /// アプリで使用するSwiftDataモデルコンテナ
     var sharedModelContainer: ModelContainer
     
-    /// リポジトリファクトリ
-    private let repositoryFactory: RepositoryFactory
-    
     /// 絵本モデル
-    private let bookModel: BookModel
+    @State private var bookModel: BookModel
     
     /// 利用者モデル
-    private let userModel: UserModel
+    @State private var userModel: UserModel
     
     /// 貸出モデル
-    private let lendingModel: LendingModel
+    @State private var lendingModel: LendingModel
     
     /// クラス（組）モデル
-    private let classGroupModel: ClassGroupModel
+    @State private var classGroupModel: ClassGroupModel
     
     init() {
         // SwiftDataモデルコンテナの設定
@@ -42,7 +39,7 @@ struct PictureBookLendingAdminApp: App {
             
             // リポジトリファクトリを作成
             let modelContext = sharedModelContainer.mainContext
-            repositoryFactory = SwiftDataRepositoryFactory(modelContext: modelContext)
+            let repositoryFactory = SwiftDataRepositoryFactory(modelContext: modelContext)
             
             // 各モデルを作成してDI
             let bookRepository = repositoryFactory.makeBookRepository()
@@ -50,14 +47,17 @@ struct PictureBookLendingAdminApp: App {
             let loanRepository = repositoryFactory.makeLoanRepository()
             let classGroupRepository = repositoryFactory.makeClassGroupRepository()
             
-            bookModel = BookModel(repository: bookRepository)
-            userModel = UserModel(repository: userRepository)
-            lendingModel = LendingModel(
-                repository: loanRepository,
-                bookRepository: bookRepository,
-                userRepository: userRepository
-            )
-            classGroupModel = ClassGroupModel(repository: classGroupRepository)
+            // @StateのwrappedValueを使用して初期化
+            _bookModel = State(wrappedValue: BookModel(repository: bookRepository))
+            _userModel = State(wrappedValue: UserModel(repository: userRepository))
+            _lendingModel = State(
+                wrappedValue: LendingModel(
+                    repository: loanRepository,
+                    bookRepository: bookRepository,
+                    userRepository: userRepository
+                ))
+            _classGroupModel = State(
+                wrappedValue: ClassGroupModel(repository: classGroupRepository))
             
         } catch {
             fatalError("モデルコンテナの初期化に失敗しました: \(error)")
@@ -66,12 +66,11 @@ struct PictureBookLendingAdminApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(
-                bookModel: bookModel,
-                userModel: userModel,
-                lendingModel: lendingModel,
-                classGroupModel: classGroupModel
-            )
+            ContentView()
+                .environment(bookModel)
+                .environment(userModel)
+                .environment(lendingModel)
+                .environment(classGroupModel)
         }
         .modelContainer(sharedModelContainer)
     }

@@ -92,8 +92,8 @@ struct UserListContainerView: View {
     let user2 = User(name: "鈴木花子", classGroupId: UUID())
     
     // リポジトリにサンプルデータを追加
-    try? mockFactory.userRepository.save(user1)
-    try? mockFactory.userRepository.save(user2)
+    _ = try? mockFactory.userRepository.save(user1)
+    _ = try? mockFactory.userRepository.save(user2)
     
     let userModel = UserModel(repository: mockFactory.userRepository)
     
