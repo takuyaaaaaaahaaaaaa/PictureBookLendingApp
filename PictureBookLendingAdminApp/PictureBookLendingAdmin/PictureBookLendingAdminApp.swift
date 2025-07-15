@@ -18,6 +18,9 @@ struct PictureBookLendingAdminApp: App {
     /// 利用者モデル
     private let userModel: UserModel
     
+    /// クラス（組）モデル
+    private let classGroupModel: ClassGroupModel
+    
     /// 貸出モデル
     private let lendingModel: LendingModel
     
@@ -26,6 +29,7 @@ struct PictureBookLendingAdminApp: App {
         let schema = Schema([
             SwiftDataBook.self,
             SwiftDataUser.self,
+            SwiftDataClassGroup.self,
             SwiftDataLoan.self,
         ])
         
@@ -43,10 +47,12 @@ struct PictureBookLendingAdminApp: App {
             // 各モデルを作成してDI
             let bookRepository = repositoryFactory.makeBookRepository()
             let userRepository = repositoryFactory.makeUserRepository()
+            let classGroupRepository = repositoryFactory.makeClassGroupRepository()
             let loanRepository = repositoryFactory.makeLoanRepository()
             
             bookModel = BookModel(repository: bookRepository)
             userModel = UserModel(repository: userRepository)
+            classGroupModel = ClassGroupModel(repository: classGroupRepository)
             lendingModel = LendingModel(
                 repository: loanRepository,
                 bookRepository: bookRepository,
@@ -60,7 +66,12 @@ struct PictureBookLendingAdminApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView(bookModel: bookModel, userModel: userModel, lendingModel: lendingModel)
+            ContentView(
+                bookModel: bookModel,
+                userModel: userModel,
+                lendingModel: lendingModel,
+                classGroupModel: classGroupModel
+            )
         }
         .modelContainer(sharedModelContainer)
     }

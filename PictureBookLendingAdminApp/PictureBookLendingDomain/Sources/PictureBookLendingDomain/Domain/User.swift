@@ -9,15 +9,19 @@ public struct User: Identifiable, Codable, Hashable {
     public var name: String
     /// 所属する組
     public var group: String
+    /// 所属するクラス（組）のID
+    public var classGroupId: UUID
     
     /// 利用者モデルの初期化
     /// - Parameters:
     ///   - id: 利用者の一意識別子（デフォルトでは新しいUUIDが生成されます）
     ///   - name: 利用者の名前
     ///   - group: 所属する組
-    public init(id: UUID = UUID(), name: String, group: String) {
+    ///   - classGroupId: 所属するクラス（組）のID
+    public init(id: UUID = UUID(), name: String, group: String, classGroupId: UUID) {
         self.id = id
         self.name = name
         self.group = group
+        self.classGroupId = classGroupId
     }
 }

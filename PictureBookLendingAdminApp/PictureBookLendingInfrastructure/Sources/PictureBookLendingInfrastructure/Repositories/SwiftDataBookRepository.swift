@@ -25,7 +25,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
         let swiftDataBook = SwiftDataBook(
             id: book.id,
             title: book.title,
-            author: book.author
+            author: book.author,
+            targetAge: book.targetAge
         )
         
         modelContext.insert(swiftDataBook)
@@ -52,7 +53,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
                 Book(
                     id: swiftDataBook.id,
                     title: swiftDataBook.title,
-                    author: swiftDataBook.author
+                    author: swiftDataBook.author,
+                    targetAge: swiftDataBook.targetAge
                 )
             }
         } catch {
@@ -78,7 +80,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             return Book(
                 id: swiftDataBook.id,
                 title: swiftDataBook.title,
-                author: swiftDataBook.author
+                author: swiftDataBook.author,
+                targetAge: swiftDataBook.targetAge
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -103,6 +106,7 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             // プロパティを更新
             swiftDataBook.title = book.title
             swiftDataBook.author = book.author
+            swiftDataBook.targetAge = book.targetAge
             
             try modelContext.save()
             
@@ -149,10 +153,12 @@ final public class SwiftDataBook {
     public var id: UUID
     public var title: String
     public var author: String
+    public var targetAge: Int
     
-    public init(id: UUID, title: String, author: String) {
+    public init(id: UUID, title: String, author: String, targetAge: Int) {
         self.id = id
         self.title = title
         self.author = author
+        self.targetAge = targetAge
     }
 }

@@ -27,7 +27,8 @@ public class SwiftDataUserRepository: UserRepositoryProtocol {
         let swiftDataUser = SwiftDataUser(
             id: user.id,
             name: user.name,
-            group: user.group
+            group: user.group,
+            classGroupId: user.classGroupId
         )
         
         modelContext.insert(swiftDataUser)
@@ -55,7 +56,8 @@ public class SwiftDataUserRepository: UserRepositoryProtocol {
                 User(
                     id: swiftDataUser.id,
                     name: swiftDataUser.name,
-                    group: swiftDataUser.group
+                    group: swiftDataUser.group,
+                    classGroupId: swiftDataUser.classGroupId
                 )
             }
         } catch {
@@ -82,7 +84,8 @@ public class SwiftDataUserRepository: UserRepositoryProtocol {
             return User(
                 id: swiftDataUser.id,
                 name: swiftDataUser.name,
-                group: swiftDataUser.group
+                group: swiftDataUser.group,
+                classGroupId: swiftDataUser.classGroupId
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -108,6 +111,7 @@ public class SwiftDataUserRepository: UserRepositoryProtocol {
             // プロパティを更新
             swiftDataUser.name = user.name
             swiftDataUser.group = user.group
+            swiftDataUser.classGroupId = user.classGroupId
             
             try modelContext.save()
             
@@ -155,10 +159,12 @@ final public class SwiftDataUser {
     public var id: UUID
     public var name: String
     public var group: String
+    public var classGroupId: UUID
     
-    public init(id: UUID, name: String, group: String) {
+    public init(id: UUID, name: String, group: String, classGroupId: UUID) {
         self.id = id
         self.name = name
         self.group = group
+        self.classGroupId = classGroupId
     }
 }

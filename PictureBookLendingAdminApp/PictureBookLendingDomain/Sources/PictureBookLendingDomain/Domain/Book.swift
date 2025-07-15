@@ -9,15 +9,19 @@ public struct Book: Identifiable, Codable, Hashable {
     public var title: String
     /// 絵本の著者名
     public var author: String
+    /// 対象年齢
+    public var targetAge: Int
     
     /// 絵本モデルの初期化
     /// - Parameters:
     ///   - id: 絵本の一意識別子（デフォルトでは新しいUUIDが生成されます）
     ///   - title: 絵本のタイトル
     ///   - author: 絵本の著者名
-    public init(id: UUID = UUID(), title: String, author: String) {
+    ///   - targetAge: 対象年齢
+    public init(id: UUID = UUID(), title: String, author: String, targetAge: Int) {
         self.id = id
         self.title = title
         self.author = author
+        self.targetAge = targetAge
     }
 }

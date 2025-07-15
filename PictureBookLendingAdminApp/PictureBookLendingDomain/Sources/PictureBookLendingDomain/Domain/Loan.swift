@@ -21,6 +21,11 @@ public struct Loan: Identifiable, Codable {
         returnedDate != nil
     }
     
+    /// 期限切れかどうかを示す計算プロパティ
+    public var isOverdue: Bool {
+        returnedDate == nil && Date() > dueDate
+    }
+    
     /// 貸出モデルの初期化
     /// - Parameters:
     ///   - id: 貸出の一意識別子（デフォルトでは新しいUUIDが生成されます）
