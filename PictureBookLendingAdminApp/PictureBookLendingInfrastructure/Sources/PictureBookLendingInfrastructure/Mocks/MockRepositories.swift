@@ -152,25 +152,11 @@ public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
         }
     }
     
-    public func saveBatch(_ classGroups: [ClassGroup]) async throws {
-        for classGroup in classGroups {
-            try await save(classGroup)
-        }
-    }
-    
     public func delete(by id: UUID) async throws {
         guard let index = classGroups.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
         classGroups.remove(at: index)
-    }
-    
-    public func fetchByYear(_ year: Int) async throws -> [ClassGroup] {
-        return classGroups.filter { $0.year == year }
-    }
-    
-    public func fetchByAgeGroup(_ ageGroup: Int) async throws -> [ClassGroup] {
-        return classGroups.filter { $0.ageGroup == ageGroup }
     }
 }
 

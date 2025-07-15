@@ -11,15 +11,6 @@ public protocol ClassGroupRepositoryProtocol {
     /// クラスを保存する（新規作成または更新）
     func save(_ classGroup: ClassGroup) async throws
     
-    /// 複数のクラスを一括保存する
-    func saveBatch(_ classGroups: [ClassGroup]) async throws
-    
     /// 指定されたIDのクラスを削除する
     func delete(by id: UUID) async throws
-    
-    /// 指定された年度のクラスを取得する
-    func fetchByYear(_ year: Int) async throws -> [ClassGroup]
-    
-    /// 指定された年齢グループのクラスを取得する
-    func fetchByAgeGroup(_ ageGroup: Int) async throws -> [ClassGroup]
 }

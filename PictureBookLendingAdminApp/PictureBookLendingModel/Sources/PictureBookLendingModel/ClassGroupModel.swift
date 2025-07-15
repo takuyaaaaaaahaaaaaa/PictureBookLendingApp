@@ -96,22 +96,6 @@ public class ClassGroupModel {
         }
     }
     
-    /// 指定された年度のクラスを取得する
-    ///
-    /// - Parameter year: 年度
-    /// - Returns: 指定年度のクラス配列
-    public func getClassGroupsByYear(_ year: Int) async throws -> [ClassGroup] {
-        return try await repository.fetchByYear(year)
-    }
-    
-    /// 指定された年齢グループのクラスを取得する
-    ///
-    /// - Parameter ageGroup: 年齢グループ
-    /// - Returns: 指定年齢グループのクラス配列
-    public func getClassGroupsByAgeGroup(_ ageGroup: Int) async throws -> [ClassGroup] {
-        return try await repository.fetchByAgeGroup(ageGroup)
-    }
-    
     /// クラス情報を更新する
     ///
     /// 指定されたクラスの情報を更新します。
@@ -148,27 +132,6 @@ public class ClassGroupModel {
             classGroups.removeAll(where: { $0.id == id })
         } catch {
             throw ClassGroupModelError.deletionFailed
-        }
-    }
-    
-    /// 複数のクラスを一括保存する
-    ///
-    /// - Parameter classGroups: 保存するクラスの配列
-    /// - Throws: 保存に失敗した場合は `ClassGroupModelError.registrationFailed` を投げます
-    public func saveBatchClassGroups(_ classGroups: [ClassGroup]) async throws {
-        do {
-            try await repository.saveBatch(classGroups)
-            
-            // キャッシュを更新
-            for classGroup in classGroups {
-                if let index = self.classGroups.firstIndex(where: { $0.id == classGroup.id }) {
-                    self.classGroups[index] = classGroup
-                } else {
-                    self.classGroups.append(classGroup)
-                }
-            }
-        } catch {
-            throw ClassGroupModelError.registrationFailed
         }
     }
     

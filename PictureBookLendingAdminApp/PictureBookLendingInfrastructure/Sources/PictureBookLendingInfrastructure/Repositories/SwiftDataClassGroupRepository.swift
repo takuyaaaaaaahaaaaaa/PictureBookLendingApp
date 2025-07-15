@@ -97,41 +97,6 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
         }
     }
     
-    /// 複数のクラスを一括保存する
-    ///
-    /// - Parameter classGroups: 保存するクラスの配列
-    /// - Throws: 保存に失敗した場合はエラーを投げる
-    public func saveBatch(_ classGroups: [ClassGroup]) async throws {
-        do {
-            for classGroup in classGroups {
-                // 既存のクラスを検索
-                let predicate = #Predicate<SwiftDataClassGroup> { $0.id == classGroup.id }
-                let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
-                let existingClassGroups = try modelContext.fetch(descriptor)
-                
-                if let existingClassGroup = existingClassGroups.first {
-                    // 更新
-                    existingClassGroup.name = classGroup.name
-                    existingClassGroup.ageGroup = classGroup.ageGroup
-                    existingClassGroup.year = classGroup.year
-                } else {
-                    // 新規作成
-                    let swiftDataClassGroup = SwiftDataClassGroup(
-                        id: classGroup.id,
-                        name: classGroup.name,
-                        ageGroup: classGroup.ageGroup,
-                        year: classGroup.year
-                    )
-                    modelContext.insert(swiftDataClassGroup)
-                }
-            }
-            
-            try modelContext.save()
-        } catch {
-            throw RepositoryError.saveFailed
-        }
-    }
-    
     /// 指定されたIDのクラスを削除する
     ///
     /// - Parameter id: 削除するクラスのID
@@ -155,53 +120,6 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
         }
     }
     
-    /// 指定された年度のクラスを取得する
-    ///
-    /// - Parameter year: 年度
-    /// - Returns: 指定年度のクラス配列
-    /// - Throws: 取得に失敗した場合はエラーを投げる
-    public func fetchByYear(_ year: Int) async throws -> [ClassGroup] {
-        do {
-            let predicate = #Predicate<SwiftDataClassGroup> { $0.year == year }
-            let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
-            let swiftDataClassGroups = try modelContext.fetch(descriptor)
-            
-            return swiftDataClassGroups.map { swiftDataClassGroup in
-                ClassGroup(
-                    id: swiftDataClassGroup.id,
-                    name: swiftDataClassGroup.name,
-                    ageGroup: swiftDataClassGroup.ageGroup,
-                    year: swiftDataClassGroup.year
-                )
-            }
-        } catch {
-            throw RepositoryError.fetchFailed
-        }
-    }
-    
-    /// 指定された年齢グループのクラスを取得する
-    ///
-    /// - Parameter ageGroup: 年齢グループ
-    /// - Returns: 指定年齢グループのクラス配列
-    /// - Throws: 取得に失敗した場合はエラーを投げる
-    public func fetchByAgeGroup(_ ageGroup: Int) async throws -> [ClassGroup] {
-        do {
-            let predicate = #Predicate<SwiftDataClassGroup> { $0.ageGroup == ageGroup }
-            let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
-            let swiftDataClassGroups = try modelContext.fetch(descriptor)
-            
-            return swiftDataClassGroups.map { swiftDataClassGroup in
-                ClassGroup(
-                    id: swiftDataClassGroup.id,
-                    name: swiftDataClassGroup.name,
-                    ageGroup: swiftDataClassGroup.ageGroup,
-                    year: swiftDataClassGroup.year
-                )
-            }
-        } catch {
-            throw RepositoryError.fetchFailed
-        }
-    }
 }
 
 /// SwiftData用のクラス（組）モデル
