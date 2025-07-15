@@ -6,7 +6,7 @@ import SwiftData
 /// リポジトリのインスタンスを生成するためのファクトリのインターフェース
 public protocol RepositoryFactory {
     /// 書籍リポジトリを生成
-    /// - Returns: <#description#>
+    /// - Returns: BookRepositoryのインスタンス
     func makeBookRepository() -> BookRepository
     
     /// 利用者リポジトリを生成
@@ -14,6 +14,9 @@ public protocol RepositoryFactory {
     
     /// 貸出リポジトリを生成
     func makeLoanRepository() -> LoanRepository
+    
+    /// クラス（組）リポジトリを生成
+    func makeClassGroupRepository() -> ClassGroupRepository
 }
 
 /// SwiftData用リポジトリファクトリ実装
@@ -48,5 +51,12 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
     /// - Returns: LoanRepositoryのインスタンス
     public func makeLoanRepository() -> LoanRepository {
         SwiftDataLoanRepository(modelContext: modelContext)
+    }
+    
+    /// クラス（組）リポジトリのインスタンスを生成
+    ///
+    /// - Returns: ClassGroupRepositoryのインスタンス
+    public func makeClassGroupRepository() -> ClassGroupRepository {
+        SwiftDataClassGroupRepository(modelContext: modelContext)
     }
 }
