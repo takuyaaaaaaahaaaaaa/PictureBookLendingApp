@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 
 /// テスト用のモックブックリポジトリ
-public class MockBookRepository: BookRepository {
+public class MockBookRepository: BookRepositoryProtocol {
     private var books: [Book] = []
     
     public init() {}
@@ -41,7 +41,7 @@ public class MockBookRepository: BookRepository {
 }
 
 /// テスト用のモックユーザーリポジトリ
-public class MockUserRepository: UserRepository {
+public class MockUserRepository: UserRepositoryProtocol {
     private var users: [User] = []
     
     public init() {}
@@ -80,7 +80,7 @@ public class MockUserRepository: UserRepository {
 }
 
 /// テスト用のモック貸出リポジトリ
-public class MockLoanRepository: LoanRepository {
+public class MockLoanRepository: LoanRepositoryProtocol {
     private var loans: [Loan] = []
     
     public init() {}
@@ -138,15 +138,15 @@ public class MockRepositoryFactory: RepositoryFactory {
     
     public init() {}
     
-    public func makeBookRepository() -> BookRepository {
+    public func makeBookRepository() -> BookRepositoryProtocol {
         return bookRepository
     }
     
-    public func makeUserRepository() -> UserRepository {
+    public func makeUserRepository() -> UserRepositoryProtocol {
         return userRepository
     }
     
-    public func makeLoanRepository() -> LoanRepository {
+    public func makeLoanRepository() -> LoanRepositoryProtocol {
         return loanRepository
     }
 }

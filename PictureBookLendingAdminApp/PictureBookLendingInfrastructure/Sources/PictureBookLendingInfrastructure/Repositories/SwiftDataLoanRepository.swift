@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用貸出リポジトリ実装
 ///
 /// SwiftDataを使用して貸出情報の永続化を担当するリポジトリ
-public class SwiftDataLoanRepository: LoanRepository {
+public class SwiftDataLoanRepository: LoanRepositoryProtocol {
     private let modelContext: ModelContext
     
     ///

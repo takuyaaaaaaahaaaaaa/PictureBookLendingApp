@@ -3,7 +3,7 @@ import Foundation
 /// 利用者リポジトリプロトコル
 ///
 /// 利用者の永続化を担当するリポジトリのインターフェース
-public protocol UserRepository {
+public protocol UserRepositoryProtocol {
     /// 利用者を保存する
     ///
     /// - Parameter user: 保存する利用者

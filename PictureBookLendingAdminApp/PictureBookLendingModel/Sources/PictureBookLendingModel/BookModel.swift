@@ -25,7 +25,7 @@ public enum BookModelError: Error, Equatable {
 public class BookModel {
     
     /// 書籍リポジトリ
-    private let repository: BookRepository
+    private let repository: BookRepositoryProtocol
     
     /// キャッシュ用の絵本リスト
     public private(set) var books: [Book] = []
@@ -33,7 +33,7 @@ public class BookModel {
     /// イニシャライザ
     ///
     /// - Parameter repository: 書籍リポジトリ
-    public init(repository: BookRepository) {
+    public init(repository: BookRepositoryProtocol) {
         self.repository = repository
         
         // 初期データのロード

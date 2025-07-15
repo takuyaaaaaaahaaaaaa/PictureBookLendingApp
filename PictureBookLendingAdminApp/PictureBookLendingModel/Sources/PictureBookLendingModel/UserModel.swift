@@ -25,7 +25,7 @@ public enum UserModelError: Error, Equatable {
 public class UserModel {
     
     /// 利用者リポジトリ
-    private let repository: UserRepository
+    private let repository: UserRepositoryProtocol
     
     /// キャッシュ用の利用者リスト
     public private(set) var users: [User] = []
@@ -33,7 +33,7 @@ public class UserModel {
     /// イニシャライザ
     ///
     /// - Parameter repository: 利用者リポジトリ
-    public init(repository: UserRepository) {
+    public init(repository: UserRepositoryProtocol) {
         self.repository = repository
         
         // 初期データのロード
