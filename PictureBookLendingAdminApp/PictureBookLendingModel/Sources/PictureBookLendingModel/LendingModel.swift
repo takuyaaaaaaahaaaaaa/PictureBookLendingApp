@@ -32,13 +32,13 @@ public enum LendingModelError: Error, Equatable {
 public class LendingModel {
     
     /// 貸出リポジトリ
-    private let repository: LoanRepository
+    private let repository: LoanRepositoryProtocol
     
     /// 絵本リポジトリ
-    private let bookRepository: BookRepository
+    private let bookRepository: BookRepositoryProtocol
     
     /// 利用者リポジトリ
-    private let userRepository: UserRepository
+    private let userRepository: UserRepositoryProtocol
     
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
@@ -50,7 +50,8 @@ public class LendingModel {
     ///   - bookRepository: 絵本リポジトリ
     ///   - userRepository: 利用者リポジトリ
     public init(
-        repository: LoanRepository, bookRepository: BookRepository, userRepository: UserRepository
+        repository: LoanRepositoryProtocol, bookRepository: BookRepositoryProtocol,
+        userRepository: UserRepositoryProtocol
     ) {
         self.repository = repository
         self.bookRepository = bookRepository

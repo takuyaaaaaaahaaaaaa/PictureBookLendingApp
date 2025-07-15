@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 
 /// テスト用のモックブックリポジトリ
-public class MockBookRepository: BookRepository {
+public class MockBookRepository: BookRepositoryProtocol {
     private var books: [Book] = []
     
     public init() {}
@@ -41,7 +41,7 @@ public class MockBookRepository: BookRepository {
 }
 
 /// テスト用のモックユーザーリポジトリ
-public class MockUserRepository: UserRepository {
+public class MockUserRepository: UserRepositoryProtocol {
     private var users: [User] = []
     
     public init() {}
@@ -80,7 +80,7 @@ public class MockUserRepository: UserRepository {
 }
 
 /// テスト用のモック貸出リポジトリ
-public class MockLoanRepository: LoanRepository {
+public class MockLoanRepository: LoanRepositoryProtocol {
     private var loans: [Loan] = []
     
     public init() {}
@@ -130,23 +130,58 @@ public class MockLoanRepository: LoanRepository {
     }
 }
 
+/// テスト用のモッククラス（組）リポジトリ
+public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
+    private var classGroups: [ClassGroup] = []
+    
+    public init() {}
+    
+    public func fetchAll() async throws -> [ClassGroup] {
+        return classGroups
+    }
+    
+    public func fetch(by id: UUID) async throws -> ClassGroup? {
+        return classGroups.first { $0.id == id }
+    }
+    
+    public func save(_ classGroup: ClassGroup) async throws {
+        if let index = classGroups.firstIndex(where: { $0.id == classGroup.id }) {
+            classGroups[index] = classGroup
+        } else {
+            classGroups.append(classGroup)
+        }
+    }
+    
+    public func delete(by id: UUID) async throws {
+        guard let index = classGroups.firstIndex(where: { $0.id == id }) else {
+            throw RepositoryError.notFound
+        }
+        classGroups.remove(at: index)
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 public class MockRepositoryFactory: RepositoryFactory {
     public let bookRepository = MockBookRepository()
     public let userRepository = MockUserRepository()
     public let loanRepository = MockLoanRepository()
+    public let classGroupRepository = MockClassGroupRepository()
     
     public init() {}
     
-    public func makeBookRepository() -> BookRepository {
+    public func makeBookRepository() -> BookRepositoryProtocol {
         return bookRepository
     }
     
-    public func makeUserRepository() -> UserRepository {
+    public func makeUserRepository() -> UserRepositoryProtocol {
         return userRepository
     }
     
-    public func makeLoanRepository() -> LoanRepository {
+    public func makeLoanRepository() -> LoanRepositoryProtocol {
         return loanRepository
+    }
+    
+    public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
+        return classGroupRepository
     }
 }
