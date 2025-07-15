@@ -58,7 +58,7 @@ struct LendingContainerView: View {
             )
             .navigationTitle("貸出・返却管理")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: {
                         isNewLoanSheetPresented = true
                     }) {

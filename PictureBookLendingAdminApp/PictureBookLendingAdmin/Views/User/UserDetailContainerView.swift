@@ -35,7 +35,7 @@ struct UserDetailContainerView: View {
         )
         .navigationTitle(user.name)
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button("編集") {
                     isEditSheetPresented = true
                 }
@@ -88,7 +88,7 @@ struct UserDetailContainerView: View {
         userRepository: mockFactory.userRepository
     )
     
-    let sampleUser = User(name: "山田太郎", group: "1年2組")
+    let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     
     return NavigationStack {
         UserDetailContainerView(user: sampleUser)

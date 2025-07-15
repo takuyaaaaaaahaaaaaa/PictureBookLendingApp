@@ -185,7 +185,7 @@ public struct UserSelectionRow: View {
                 Text(user.name)
                     .font(.headline)
                 
-                Text(user.group)
+                Text("組情報")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -211,8 +211,8 @@ public struct UserSelectionRow: View {
         Book(title: "ぐりとぐら", author: "中川李枝子"),
     ]
     let sampleUsers = [
-        User(name: "山田太郎", group: "1年2組"),
-        User(name: "鈴木花子", group: "2年1組"),
+        User(name: "山田太郎", classGroupId: UUID()),
+        User(name: "鈴木花子", classGroupId: UUID()),
     ]
     
     NavigationStack {

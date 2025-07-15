@@ -89,7 +89,6 @@ struct NewLoanContainerView: View {
         } else {
             users.filter { user in
                 user.name.localizedCaseInsensitiveContains(userSearchText)
-                    || user.group.localizedCaseInsensitiveContains(userSearchText)
             }
         }
     }

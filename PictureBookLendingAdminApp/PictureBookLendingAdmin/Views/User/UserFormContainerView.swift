@@ -16,7 +16,8 @@ struct UserFormContainerView: View {
     var onSave: ((User) -> Void)? = nil
     
     @State private var name = ""
-    @State private var group = ""
+    @State private var classGroupId = UUID()
+    @State private var classGroupName = ""
     @State private var alertState = AlertState()
     
     init(mode: UserFormMode, onSave: ((User) -> Void)? = nil) {
@@ -29,7 +30,7 @@ struct UserFormContainerView: View {
             UserFormView(
                 mode: mode,
                 name: $name,
-                group: $group,
+                group: $classGroupName,
                 isValidInput: isValidInput,
                 onSave: handleSave,
                 onCancel: handleCancel
@@ -72,7 +73,7 @@ struct UserFormContainerView: View {
     
     private var isValidInput: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !group.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !classGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     // MARK: - Actions
@@ -87,14 +88,14 @@ struct UserFormContainerView: View {
             
             switch mode {
             case .add:
-                let newUser = User(name: name, group: group)
+                let newUser = User(name: name, classGroupId: classGroupId)
                 savedUser = try userModel.registerUser(newUser)
 
             case .edit(let user):
                 let updatedUser = User(
                     id: user.id,
                     name: name,
-                    group: group
+                    classGroupId: classGroupId
                 )
                 savedUser = try userModel.updateUser(updatedUser)
             }
@@ -109,7 +110,8 @@ struct UserFormContainerView: View {
     private func loadInitialData() {
         if case .edit(let user) = mode {
             name = user.name
-            group = user.group
+            classGroupId = user.classGroupId
+            classGroupName = "組情報"  // 一時的な実装
         }
     }
 }

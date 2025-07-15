@@ -30,7 +30,7 @@ public struct UserDetailView: View {
         List {
             Section("基本情報") {
                 DetailRow(label: "名前", value: user.name)
-                DetailRow(label: "グループ", value: user.group)
+                DetailRow(label: "グループ", value: "組情報")
                 DetailRow(label: "管理ID", value: user.id.uuidString)
             }
             
@@ -116,7 +116,7 @@ public struct UserLoanHistoryRow: View {
 }
 
 #Preview {
-    let sampleUser = User(name: "山田太郎", group: "1年2組")
+    let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     let sampleLoan = Loan(
         bookId: UUID(),
         userId: sampleUser.id,

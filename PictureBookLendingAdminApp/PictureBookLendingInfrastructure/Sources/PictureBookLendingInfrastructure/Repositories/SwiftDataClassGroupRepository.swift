@@ -19,7 +19,7 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     ///
     /// - Returns: すべてのクラスの配列
     /// - Throws: 取得に失敗した場合はエラーを投げる
-    public func fetchAll() async throws -> [ClassGroup] {
+    public func fetchAll() throws -> [ClassGroup] {
         do {
             let descriptor = FetchDescriptor<SwiftDataClassGroup>()
             let swiftDataClassGroups = try modelContext.fetch(descriptor)
@@ -43,7 +43,7 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     /// - Parameter id: 検索するクラスのID
     /// - Returns: 見つかったクラス（見つからない場合はnil）
     /// - Throws: 検索に失敗した場合はエラーを投げる
-    public func fetch(by id: UUID) async throws -> ClassGroup? {
+    public func fetch(by id: UUID) throws -> ClassGroup? {
         do {
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
@@ -68,7 +68,7 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     ///
     /// - Parameter classGroup: 保存するクラス
     /// - Throws: 保存に失敗した場合はエラーを投げる
-    public func save(_ classGroup: ClassGroup) async throws {
+    public func save(_ classGroup: ClassGroup) throws {
         do {
             // 既存のクラスを検索
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == classGroup.id }
@@ -101,7 +101,7 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     ///
     /// - Parameter id: 削除するクラスのID
     /// - Throws: 削除に失敗した場合はエラーを投げる
-    public func delete(by id: UUID) async throws {
+    public func delete(by id: UUID) throws {
         do {
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)

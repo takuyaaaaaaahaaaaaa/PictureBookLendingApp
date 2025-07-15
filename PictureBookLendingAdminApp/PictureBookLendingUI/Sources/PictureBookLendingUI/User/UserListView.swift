@@ -55,7 +55,7 @@ public struct UserRowView: View {
         VStack(alignment: .leading) {
             Text(user.name)
                 .font(.headline)
-            Text(user.group)
+            Text("組情報")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -64,8 +64,8 @@ public struct UserRowView: View {
 }
 
 #Preview {
-    let user1 = User(name: "山田太郎", group: "1年2組")
-    let user2 = User(name: "鈴木花子", group: "2年1組")
+    let user1 = User(name: "山田太郎", classGroupId: UUID())
+    let user2 = User(name: "鈴木花子", classGroupId: UUID())
     
     NavigationStack {
         UserListView(

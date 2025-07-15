@@ -29,9 +29,11 @@ struct BookDetailContainerView: View {
             onEdit: handleEdit
         )
         .navigationTitle(book.title)
-        .navigationBarTitleDisplayMode(.large)
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+        #endif
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Button("編集") {
                     isEditSheetPresented = true
                 }

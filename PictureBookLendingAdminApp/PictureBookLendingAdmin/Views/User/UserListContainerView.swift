@@ -17,12 +17,13 @@ struct UserListContainerView: View {
     @State private var navigationPath = NavigationPath()
     
     private var filteredUsers: [User] {
-        return if searchText.isEmpty {
+        if searchText.isEmpty {
             userModel.users
         } else {
             userModel.users.filter { user in
                 user.name.localizedCaseInsensitiveContains(searchText)
-                    || user.group.localizedCaseInsensitiveContains(searchText)
+                // TODO: 組名検索機能は後で実装（classGroupIdから組名を取得する仕組みが必要）
+                // || user.group.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
@@ -39,7 +40,7 @@ struct UserListContainerView: View {
                 UserDetailContainerView(user: user)
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: {
                         isAddSheetPresented = true
                     }) {
@@ -85,13 +86,14 @@ struct UserListContainerView: View {
 }
 
 #Preview {
-    let mockFactory = MockRepositoryFactory()
-    
     // プレビュー用のサンプルデータを追加
-    let user1 = User(name: "山田太郎", group: "1年2組")
-    let user2 = User(name: "鈴木花子", group: "2年1組")
-    _ = try? mockFactory.userRepository.save(user1)
-    _ = try? mockFactory.userRepository.save(user2)
+    let mockFactory = MockRepositoryFactory()
+    let user1 = User(name: "山田太郎", classGroupId: UUID())
+    let user2 = User(name: "鈴木花子", classGroupId: UUID())
+    
+    // リポジトリにサンプルデータを追加
+    try? mockFactory.userRepository.save(user1)
+    try? mockFactory.userRepository.save(user2)
     
     let userModel = UserModel(repository: mockFactory.userRepository)
     

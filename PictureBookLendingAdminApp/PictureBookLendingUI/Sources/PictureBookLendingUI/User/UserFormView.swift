@@ -47,7 +47,7 @@ public struct UserFormView: View {
 }
 
 #Preview {
-    let sampleUser = User(name: "山田太郎", group: "1年2組")
+    let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     
     NavigationStack {
         UserFormView(
