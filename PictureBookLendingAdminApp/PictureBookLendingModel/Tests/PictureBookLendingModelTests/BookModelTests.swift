@@ -22,10 +22,10 @@ struct BookModelTests {
         return (bookModel, mockRepository)
     }
     
-    /// 書籍登録機能のテスト
+    /// 絵本登録機能のテスト
     ///
     /// 新しい絵本を登録し、正しく登録されることを確認します。
-    @Test("書籍登録機能")
+    @Test("絵本登録機能")
     func registerBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -41,10 +41,10 @@ struct BookModelTests {
         #expect(bookModel.books.count == 1)
     }
     
-    /// 全書籍取得機能のテスト
+    /// 全絵本取得機能のテスト
     ///
     /// 複数の絵本を登録し、全ての絵本が取得できることを確認します。
-    @Test("全書籍取得機能")
+    @Test("全絵本取得機能")
     func getAllBooks() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -61,10 +61,10 @@ struct BookModelTests {
         #expect(Set(books.map { $0.title }) == Set(["はらぺこあおむし", "ぐりとぐら"]))
     }
     
-    /// 書籍ID検索機能のテスト
+    /// 絵本ID検索機能のテスト
     ///
     /// IDを指定して絵本を検索し、正しい絵本が取得できることを確認します。
-    @Test("書籍ID検索機能")
+    @Test("絵本ID検索機能")
     func findBookById() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -80,10 +80,10 @@ struct BookModelTests {
         #expect(foundBook?.title == "はらぺこあおむし")
     }
     
-    /// 書籍更新機能のテスト
+    /// 絵本更新機能のテスト
     ///
     /// 登録済みの絵本情報を更新し、正しく更新されることを確認します。
-    @Test("書籍更新機能")
+    @Test("絵本更新機能")
     func updateBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -104,10 +104,10 @@ struct BookModelTests {
         #expect(bookModel.findBookById(id)?.title == "The Very Hungry Caterpillar")
     }
     
-    /// 書籍削除機能のテスト
+    /// 絵本削除機能のテスト
     ///
     /// 登録済みの絵本を削除し、正しく削除されることを確認します。
-    @Test("書籍削除機能")
+    @Test("絵本削除機能")
     func deleteBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -124,10 +124,10 @@ struct BookModelTests {
         #expect(bookModel.findBookById(id) == nil)
     }
     
-    /// 存在しない書籍削除時のエラーテスト
+    /// 存在しない絵本削除時のエラーテスト
     ///
     /// 存在しない絵本IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
-    @Test("存在しない書籍削除時のエラー")
+    @Test("存在しない絵本削除時のエラー")
     func deleteNonExistingBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()

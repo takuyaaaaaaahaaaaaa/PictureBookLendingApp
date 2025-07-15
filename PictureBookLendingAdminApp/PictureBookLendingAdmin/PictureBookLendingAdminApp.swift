@@ -12,7 +12,7 @@ struct PictureBookLendingAdminApp: App {
     /// リポジトリファクトリ
     private let repositoryFactory: RepositoryFactory
     
-    /// 書籍モデル
+    /// 絵本モデル
     private let bookModel: BookModel
     
     /// 利用者モデル
