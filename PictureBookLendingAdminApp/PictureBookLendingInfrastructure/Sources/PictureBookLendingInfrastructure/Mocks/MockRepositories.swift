@@ -131,8 +131,7 @@ public class MockLoanRepository: LoanRepositoryProtocol {
 }
 
 /// テスト用のモッククラス（組）リポジトリ
-public final class MockClassGroupRepository: ClassGroupRepositoryProtocol {
-    @MainActor
+public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
     private var classGroups: [ClassGroup] = []
     
     public init() {}

@@ -5,14 +5,12 @@ import SwiftData
 /// SwiftData用クラス（組）リポジトリ実装
 ///
 /// SwiftDataを使用してクラス（組）の永続化を担当するリポジトリ
-public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
-    @MainActor
+public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     private let modelContext: ModelContext
     
     /// イニシャライザ
     ///
     /// - Parameter modelContext: SwiftData用のモデルコンテキスト
-    @MainActor
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
