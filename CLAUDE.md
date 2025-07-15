@@ -83,6 +83,8 @@ swift build --target PictureBookLendingModel
 
 ## 作業手順
 
+0. Modelを実装する際はt-wadaの推奨する進め方に従いTDDで開発を進める
+
 1. **コード修正後は必ずビルドとテストを実行する**
 
    * `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build` で **プロジェクト全体** がビルドできることを確認
