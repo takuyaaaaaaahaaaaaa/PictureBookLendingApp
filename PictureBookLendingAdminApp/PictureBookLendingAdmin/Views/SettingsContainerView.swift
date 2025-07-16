@@ -7,74 +7,39 @@ import SwiftUI
 /// 設定画面のコンテナビュー
 /// 管理者用の絵本・園児・組管理機能を提供します
 struct SettingsContainerView: View {
+    @State private var navigationPath = NavigationPath()
+    
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
-                NavigationLink {
-                    ClassGroupListContainerView()
-                } label: {
-                    HStack {
-                        Image(systemName: "person.3")
-                            .font(.title2)
-                            .frame(width: 30)
-                        Text("組管理")
-                            .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .cornerRadius(12)
+        NavigationStack(path: $navigationPath) {
+            SettingsView(
+                onSelectClassGroup: {
+                    navigationPath.append(SettingsDestination.classGroup)
+                },
+                onSelectUser: {
+                    navigationPath.append(SettingsDestination.user)
+                },
+                onSelectBook: {
+                    navigationPath.append(SettingsDestination.book)
                 }
-                .buttonStyle(.plain)
-                
-                NavigationLink {
-                    UserListContainerView()
-                } label: {
-                    HStack {
-                        Image(systemName: "person.2")
-                            .font(.title2)
-                            .frame(width: 30)
-                        Text("園児管理")
-                            .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .cornerRadius(12)
-                }
-                .buttonStyle(.plain)
-                
-                NavigationLink {
-                    BookListContainerView()
-                } label: {
-                    HStack {
-                        Image(systemName: "book")
-                            .font(.title2)
-                            .frame(width: 30)
-                        Text("絵本管理")
-                            .font(.headline)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding()
-                    .background(Color(uiColor: .secondarySystemBackground))
-                    .cornerRadius(12)
-                }
-                .buttonStyle(.plain)
-                
-                Spacer()
-            }
-            .padding()
+            )
             .navigationTitle("設定")
+            .navigationDestination(for: SettingsDestination.self) { destination in
+                switch destination {
+                case .classGroup:
+                    ClassGroupListContainerView()
+                case .user:
+                    UserListContainerView()
+                case .book:
+                    BookListContainerView()
+                }
+            }
         }
+    }
+    
+    private enum SettingsDestination: Hashable {
+        case classGroup
+        case user
+        case book
     }
 }
 
