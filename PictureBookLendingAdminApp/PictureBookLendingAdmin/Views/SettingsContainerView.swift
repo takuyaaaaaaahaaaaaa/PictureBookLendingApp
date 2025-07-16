@@ -7,42 +7,73 @@ import SwiftUI
 /// 設定画面のコンテナビュー
 /// 管理者用の絵本・園児・組管理機能を提供します
 struct SettingsContainerView: View {
-    @State private var selectedTab = 0
-    
     var body: some View {
-        NavigationView {
-            TabView(selection: $selectedTab) {
-                // 組管理
-                NavigationView {
+        NavigationStack {
+            VStack(spacing: 16) {
+                NavigationLink {
                     ClassGroupListContainerView()
+                } label: {
+                    HStack {
+                        Image(systemName: "person.3")
+                            .font(.title2)
+                            .frame(width: 30)
+                        Text("組管理")
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .cornerRadius(12)
                 }
-                .tabItem {
-                    Label("組管理", systemImage: "person.3")
-                }
-                .tag(0)
+                .buttonStyle(.plain)
                 
-                // 園児管理
-                NavigationView {
+                NavigationLink {
                     UserListContainerView()
+                } label: {
+                    HStack {
+                        Image(systemName: "person.2")
+                            .font(.title2)
+                            .frame(width: 30)
+                        Text("園児管理")
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .cornerRadius(12)
                 }
-                .tabItem {
-                    Label("園児管理", systemImage: "person.2")
-                }
-                .tag(1)
+                .buttonStyle(.plain)
                 
-                // 絵本管理
-                NavigationView {
+                NavigationLink {
                     BookListContainerView()
+                } label: {
+                    HStack {
+                        Image(systemName: "book")
+                            .font(.title2)
+                            .frame(width: 30)
+                        Text("絵本管理")
+                            .font(.headline)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(Color(uiColor: .secondarySystemBackground))
+                    .cornerRadius(12)
                 }
-                .tabItem {
-                    Label("絵本管理", systemImage: "book")
-                }
-                .tag(2)
+                .buttonStyle(.plain)
+                
+                Spacer()
             }
+            .padding()
             .navigationTitle("設定")
-            #if os(iOS)
-                .navigationBarTitleDisplayMode(.large)
-            #endif
         }
     }
 }
@@ -134,7 +165,7 @@ private struct ClassGroupFormView: View {
     @State private var year = Calendar.current.component(.year, from: Date())
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("組情報") {
                     TextField("組名", text: $name)
