@@ -50,13 +50,13 @@ cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin buil
 cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test
 
 # 特定モジュールのみビルド
-swift build --target PictureBookLendingDomain
-swift build --target PictureBookLendingModel
-swift build --target PictureBookLendingInfrastructure
-swift build --target PictureBookLendingUI
+cd PictureBookLendingDomain swift build
+cd PictureBookLendingModel swift build
+cd PictureBookLendingInfrastructure swift build
+cd PictureBookLendingUI swift build
 
 # 特定モジュールのテスト実行
-swift test --filter PictureBookLendingModelTests
+cd PictureBookLendingModelTests swift test
 
 # コードフォーマット（swift-format）
 cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive **/*.swift
