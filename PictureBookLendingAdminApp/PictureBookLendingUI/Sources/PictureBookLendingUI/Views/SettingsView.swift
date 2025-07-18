@@ -79,7 +79,7 @@ private struct SettingsMenuItem: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing:20) {
+            HStack(spacing: 20) {
                 Image(systemName: iconName)
                     .font(.title2)
                     .frame(width: 30)
