@@ -29,11 +29,14 @@ struct UserDetailContainerView: View {
     
     var body: some View {
         UserDetailView(
-            user: user,
-            classGroupName: getClassGroupName(for: user.classGroupId),
+            userName: $user.name,
+            userClassGroupId: $user.classGroupId,
+            userId: user.id,
+            availableClassGroups: classGroupModel.classGroups,
             activeLoansCount: activeLoansCount,
             loanHistory: loanHistory,
             getBookTitle: getBookTitle,
+            getClassGroupName: getClassGroupName,
             onEdit: handleEdit
         )
         .navigationTitle(user.name)
