@@ -11,7 +11,6 @@ struct BookListContainerView: View {
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
-    @State private var navigationPath = NavigationPath()
     
     private var filteredBooks: [Book] {
         return if searchText.isEmpty {
@@ -25,44 +24,42 @@ struct BookListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            BookListView(
-                books: filteredBooks,
-                searchText: $searchText,
-                onDelete: handleDeleteBooks
-            )
-            .navigationTitle("絵本一覧")
-            .navigationDestination(for: Book.self) { book in
-                BookDetailContainerView(book: book)
-            }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        isAddSheetPresented = true
-                    }) {
-                        Label("絵本を追加", systemImage: "plus")
-                    }
+        BookListView(
+            books: filteredBooks,
+            searchText: $searchText,
+            onDelete: handleDeleteBooks
+        )
+        .navigationTitle("絵本一覧")
+        .navigationDestination(for: Book.self) { book in
+            BookDetailContainerView(book: book)
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    isAddSheetPresented = true
+                }) {
+                    Label("絵本を追加", systemImage: "plus")
                 }
             }
-            .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
-            }
-            .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(alertState.message)
-            }
-            .onAppear {
-                bookModel.refreshBooks()
-            }
-            .refreshable {
-                bookModel.refreshBooks()
-            }
+        }
+        .sheet(isPresented: $isAddSheetPresented) {
+            BookFormContainerView(
+                mode: .add,
+                onSave: { _ in
+                    // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
+                }
+            )
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .onAppear {
+            bookModel.refreshBooks()
+        }
+        .refreshable {
+            bookModel.refreshBooks()
         }
     }
     
