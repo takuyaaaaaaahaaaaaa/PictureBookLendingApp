@@ -53,6 +53,8 @@ public struct EditableDetailRow: View {
             Spacer()
             HStack {
                 TextField("", text: $value)
+                    .multilineTextAlignment(.trailing)
+                    .fixedSize()
                     .foregroundStyle(value.isEmpty ? .secondary : .primary)
                 Image(systemName: "pencil")
                     .font(.caption)
