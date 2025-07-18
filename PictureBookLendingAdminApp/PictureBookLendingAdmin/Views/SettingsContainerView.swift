@@ -7,12 +7,21 @@ import SwiftUI
 /// 設定画面のコンテナビュー
 /// 管理者用の絵本・利用者・組管理機能を提供します
 struct SettingsContainerView: View {
+    @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(UserModel.self) private var userModel
+    @Environment(BookModel.self) private var bookModel
+    @Environment(LoanSettingsModel.self) private var loanSettingsModel
+    
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
             SettingsView(
+                classGroupCount: classGroupModel.classGroups.count,
+                userCount: userModel.users.count,
+                bookCount: bookModel.books.count,
+                loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
                 onSelectClassGroup: {
                     navigationPath.append(SettingsDestination.classGroup)
                 },
@@ -57,4 +66,5 @@ struct SettingsContainerView: View {
         .environment(ClassGroupModel(repository: MockClassGroupRepository()))
         .environment(UserModel(repository: MockUserRepository()))
         .environment(BookModel(repository: MockBookRepository()))
+        .environment(LoanSettingsModel(repository: MockLoanSettingsRepository()))
 }
