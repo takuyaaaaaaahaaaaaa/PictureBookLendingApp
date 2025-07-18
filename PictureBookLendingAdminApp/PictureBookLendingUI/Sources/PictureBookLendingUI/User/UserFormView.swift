@@ -28,8 +28,9 @@ public struct UserFormView: View {
             Section(header: Text("利用者情報")) {
                 TextField("名前", text: name)
                 Picker("組", selection: classGroup) {
+                    Text("組を選択してください").tag(nil as ClassGroup?)
                     ForEach(classGroups) { group in
-                        Text(group.name).tag(group)
+                        Text(group.name).tag(group as ClassGroup?)
                     }
                 }
             }

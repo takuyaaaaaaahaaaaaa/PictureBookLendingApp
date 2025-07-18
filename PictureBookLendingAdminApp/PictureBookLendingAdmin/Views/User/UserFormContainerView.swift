@@ -74,7 +74,7 @@ struct UserFormContainerView: View {
     }
     
     private var isValidInput: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && classGroup != nil
     }
     
     // MARK: - Actions
@@ -84,19 +84,24 @@ struct UserFormContainerView: View {
     }
     
     private func handleSave() {
+        guard let selectedClassGroup = classGroup else {
+            alertState = .error("組を選択してください")
+            return
+        }
+        
         do {
             let savedUser: User
             
             switch mode {
             case .add:
-                let newUser = User(name: name, classGroupId: classGroup?.id ?? UUID())
+                let newUser = User(name: name, classGroupId: selectedClassGroup.id)
                 savedUser = try userModel.registerUser(newUser)
 
             case .edit(let user):
                 let updatedUser = User(
                     id: user.id,
                     name: name,
-                    classGroupId: classGroup?.id ?? UUID()
+                    classGroupId: selectedClassGroup.id
                 )
                 savedUser = try userModel.updateUser(updatedUser)
             }
@@ -109,10 +114,11 @@ struct UserFormContainerView: View {
     }
     
     private func loadInitialData() {
+        classGroups = classGroupModel.getAllClassGroups()
+        
         if case .edit(let user) = mode {
             name = user.name
             classGroup = classGroupModel.findClassGroupById(user.classGroupId)
-            classGroups = classGroupModel.getAllClassGroups()
         }
     }
 }
@@ -120,7 +126,9 @@ struct UserFormContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
+    let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     
     return UserFormContainerView(mode: .add)
         .environment(userModel)
+        .environment(classGroupModel)
 }
