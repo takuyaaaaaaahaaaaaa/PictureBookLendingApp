@@ -1,35 +1,28 @@
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
+import PictureBookLendingUI
 import SwiftUI
 
 /// 貸出ボタンのContainer View
 ///
 /// 貸出ボタンのタップ処理とフロー開始を担当します。
+/// Presentation ViewにUI表示を委譲し、ビジネスロジックのみを処理します。
 struct LoanContainerButton: View {
     let book: Book
     @State private var isLoanSheetPresented = false
     
     var body: some View {
-        Button(action: {
-            isLoanSheetPresented = true
-        }) {
-            HStack(spacing: 4) {
-                Image(systemName: "plus.circle")
-                    .font(.caption)
-                Text("貸出")
-                    .font(.caption)
+        LoanButtonView(onTap: handleTap)
+            .sheet(isPresented: $isLoanSheetPresented) {
+                LoanFormContainerView(selectedBook: book)
             }
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(Color.blue)
-            .cornerRadius(8)
-        }
-        .buttonStyle(.plain)
-        .sheet(isPresented: $isLoanSheetPresented) {
-            LoanFormContainerView(selectedBook: book)
-        }
+    }
+    
+    // MARK: - Actions
+    
+    private func handleTap() {
+        isLoanSheetPresented = true
     }
 }
 

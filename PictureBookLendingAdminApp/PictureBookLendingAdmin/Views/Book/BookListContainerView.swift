@@ -28,7 +28,9 @@ struct BookListContainerView: View {
             books: filteredBooks,
             searchText: $searchText,
             onDelete: handleDeleteBooks
-        )
+        ) { book in
+            LoanContainerButton(book: book)
+        }
         .navigationTitle("絵本一覧")
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
