@@ -27,6 +27,7 @@ struct LendingContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
     
     @State private var filterSelection = FilterType.all
     @State private var isNewLoanSheetPresented = false
@@ -67,7 +68,7 @@ struct LendingContainerView: View {
                 }
             }
             .sheet(isPresented: $isNewLoanSheetPresented) {
-                NewLoanContainerView()
+                LoanFormContainerView(preselectedBookId: nil)
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
@@ -89,6 +90,7 @@ struct LendingContainerView: View {
         bookModel.refreshBooks()
         userModel.refreshUsers()
         loanModel.refreshLoans()
+        classGroupModel.refreshClassGroups()
     }
     
     private func handleReturn(loanId: UUID) {
@@ -101,18 +103,5 @@ struct LendingContainerView: View {
 }
 
 #Preview {
-    let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
-    let userModel = UserModel(repository: mockFactory.userRepository)
-    let loanModel = LoanModel(
-        repository: mockFactory.loanRepository,
-        bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository,
-        loanSettingsRepository: mockFactory.loanSettingsRepository
-    )
-    
     LendingContainerView()
-        .environment(bookModel)
-        .environment(userModel)
-        .environment(loanModel)
 }

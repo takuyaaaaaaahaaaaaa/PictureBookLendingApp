@@ -1,4 +1,5 @@
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import SwiftUI
 
@@ -26,10 +27,24 @@ struct LoanButtonContainerView: View {
             .cornerRadius(8)
         }
         .buttonStyle(.plain)
+        .sheet(isPresented: $isLoanSheetPresented) {
+            LoanFormContainerView(preselectedBookId: book.id)
+        }
     }
 }
 
 #Preview {
+    let mockRepositoryFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+    let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
+    let loanModel = LoanModel(
+        repository: mockRepositoryFactory.loanRepository,
+        bookRepository: mockRepositoryFactory.bookRepository,
+        userRepository: mockRepositoryFactory.userRepository,
+        loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
+    )
+    let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
+    
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
     VStack(spacing: 16) {
@@ -54,4 +69,8 @@ struct LoanButtonContainerView: View {
         }
     }
     .padding()
+    .environment(bookModel)
+    .environment(userModel)
+    .environment(loanModel)
+    .environment(classGroupModel)
 }

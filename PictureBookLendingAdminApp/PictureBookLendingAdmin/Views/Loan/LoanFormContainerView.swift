@@ -4,37 +4,34 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 新規貸出登録のContainer View
+/// 貸出フォームのContainer View
 ///
 /// ビジネスロジック、状態管理、データ取得を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
-struct NewLoanContainerView: View {
+struct LoanFormContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.dismiss) private var dismiss
     
-    @State private var selectedBookId: UUID?
+    let preselectedBookId: UUID?
+    
+    @State private var selectedClassGroup: ClassGroup?
     @State private var selectedUserId: UUID?
     @State private var dueDate =
         Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
-    @State private var bookSearchText = ""
-    @State private var userSearchText = ""
     @State private var alertState = AlertState()
     
     var body: some View {
         NavigationStack {
-            NewLoanView(
-                books: filteredBooks,
-                users: filteredUsers,
-                selectedBookId: selectedBookId,
+            LoanFormView(
+                book: selectedBook,
+                classGroups: classGroupModel.getAllClassGroups(),
+                users: filteredUsersForSelectedClassGroup,
+                selectedClassGroup: $selectedClassGroup,
                 selectedUserId: selectedUserId,
                 dueDate: dueDate,
-                bookSearchText: $bookSearchText,
-                userSearchText: $userSearchText,
-                dueDateBinding: $dueDate,
-                isBookLent: { bookModel in loanModel.isBookLent(bookId: bookModel) },
-                onBookSelect: handleBookSelect,
                 onUserSelect: handleUserSelect,
                 onCancel: handleCancel,
                 onRegister: handleRegister,
@@ -68,40 +65,31 @@ struct NewLoanContainerView: View {
     
     // MARK: - Computed Properties
     
-    private var filteredBooks: [Book] {
-        let books = bookModel.getAllBooks()
-        
-        return if bookSearchText.isEmpty {
-            books
-        } else {
-            books.filter { book in
-                book.title.localizedCaseInsensitiveContains(bookSearchText)
-                    || book.author.localizedCaseInsensitiveContains(bookSearchText)
-            }
+    private var selectedBook: Book {
+        guard let preselectedBookId = preselectedBookId,
+            let book = bookModel.findBookById(preselectedBookId)
+        else {
+            // デフォルトとして最初の絵本を返す（実際の使用では事前選択が前提）
+            return bookModel.getAllBooks().first ?? Book(title: "絵本が選択されていません", author: "")
         }
+        return book
     }
     
-    private var filteredUsers: [User] {
-        let users = userModel.getAllUsers()
+    private var filteredUsersForSelectedClassGroup: [User] {
+        guard let selectedClassGroup = selectedClassGroup else {
+            return []
+        }
         
-        return if userSearchText.isEmpty {
-            users
-        } else {
-            users.filter { user in
-                user.name.localizedCaseInsensitiveContains(userSearchText)
-            }
+        return userModel.getAllUsers().filter { user in
+            user.classGroupId == selectedClassGroup.id
         }
     }
     
     private var isValidInput: Bool {
-        selectedBookId != nil && selectedUserId != nil && dueDate > Date()
+        preselectedBookId != nil && selectedUserId != nil && dueDate > Date()
     }
     
     // MARK: - Actions
-    
-    private func handleBookSelect(_ bookId: UUID) {
-        selectedBookId = bookId
-    }
     
     private func handleUserSelect(_ userId: UUID) {
         selectedUserId = userId
@@ -112,7 +100,7 @@ struct NewLoanContainerView: View {
     }
     
     private func handleRegister() {
-        guard let bookId = selectedBookId,
+        guard let bookId = preselectedBookId,
             let userId = selectedUserId
         else {
             alertState = .error("必要な情報が選択されていません")
@@ -146,22 +134,25 @@ struct NewLoanContainerView: View {
         bookModel.refreshBooks()
         userModel.refreshUsers()
         loanModel.refreshLoans()
+        classGroupModel.refreshClassGroups()
     }
 }
 
 #Preview {
-    let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
-    let userModel = UserModel(repository: mockFactory.userRepository)
+    let mockRepositoryFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+    let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
     let loanModel = LoanModel(
-        repository: mockFactory.loanRepository,
-        bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository,
-        loanSettingsRepository: mockFactory.loanSettingsRepository
+        repository: mockRepositoryFactory.loanRepository,
+        bookRepository: mockRepositoryFactory.bookRepository,
+        userRepository: mockRepositoryFactory.userRepository,
+        loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
     )
+    let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
     
-    NewLoanContainerView()
+    LoanFormContainerView(preselectedBookId: nil)
         .environment(bookModel)
         .environment(userModel)
         .environment(loanModel)
+        .environment(classGroupModel)
 }
