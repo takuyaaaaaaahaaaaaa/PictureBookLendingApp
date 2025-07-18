@@ -4,6 +4,25 @@ import Testing
 
 @testable import PictureBookLendingModel
 
+// テスト用のモック貸出設定リポジトリ
+private final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable
+{
+    private let lock = NSLock()
+    private var settings: LoanSettings = LoanSettings.default
+    
+    func fetch() -> LoanSettings {
+        lock.lock()
+        defer { lock.unlock() }
+        return settings
+    }
+    
+    func save(_ newSettings: LoanSettings) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        self.settings = newSettings
+    }
+}
+
 /// LoanModelテストケース
 ///
 /// 絵本の貸出・返却を管理するモデルの基本機能をテストします。
@@ -19,16 +38,21 @@ struct LoanModelTests {
         
         let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
         let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
+        let loanSettingsRepository = MockLoanSettingsRepository()
         let loanModel = LoanModel(
             repository: mockRepositoryFactory.loanRepository,
             bookRepository: mockRepositoryFactory.bookRepository,
             userRepository: mockRepositoryFactory.userRepository,
-            loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
+            loanSettingsRepository: loanSettingsRepository
         )
         
         // テスト用データのセットアップ
+        // まずクラスグループを作成
+        let classGroup = ClassGroup(name: "1年2組", ageGroup: 6, year: 2025)
+        try mockRepositoryFactory.classGroupRepository.save(classGroup)
+        
         let initialBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
-        let initialUser = User(name: "山田太郎", group: "1年2組")
+        let initialUser = User(name: "山田太郎", classGroupId: classGroup.id)
         
         // 本とユーザーを登録
         let testBook = try bookModel.registerBook(initialBook)

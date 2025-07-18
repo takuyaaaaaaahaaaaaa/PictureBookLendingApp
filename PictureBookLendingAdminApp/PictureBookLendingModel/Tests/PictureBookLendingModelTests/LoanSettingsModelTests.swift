@@ -5,7 +5,7 @@ import XCTest
 
 final class LoanSettingsModelTests: XCTestCase {
     
-    var mockRepository: MockLoanSettingsRepository!
+    fileprivate var mockRepository: MockLoanSettingsRepository!
     var model: LoanSettingsModel!
     
     override func setUp() {
@@ -66,7 +66,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(model.settings.defaultLoanPeriodDays, 14)
         
         // リポジトリにも保存されていることを確認
-        XCTAssertEqual(mockRepository.fetch(), .default)
+        XCTAssertEqual(mockRepository.fetch(), LoanSettings.default)
     }
     
     func testRepositoryError() {
@@ -86,7 +86,9 @@ final class LoanSettingsModelTests: XCTestCase {
 
 // MARK: - Test Helpers
 
-private class ErrorThrowingMockLoanSettingsRepository: LoanSettingsRepositoryProtocol {
+private final class ErrorThrowingMockLoanSettingsRepository: LoanSettingsRepositoryProtocol,
+    @unchecked Sendable
+{
     func fetch() -> LoanSettings {
         return .default
     }

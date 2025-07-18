@@ -5,7 +5,7 @@ import PictureBookLendingDomain
 class MockBookRepository: BookRepositoryProtocol {
     private var books: [Book] = []
     
-    func save(_ book: Book) async throws -> Book {
+    func save(_ book: Book) throws -> Book {
         if books.contains(where: { $0.id == book.id }) {
             throw RepositoryError.saveFailed
         }
@@ -13,15 +13,15 @@ class MockBookRepository: BookRepositoryProtocol {
         return book
     }
     
-    func fetchAll() async throws -> [Book] {
+    func fetchAll() throws -> [Book] {
         return books
     }
     
-    func findById(_ id: UUID) async throws -> Book? {
+    func findById(_ id: UUID) throws -> Book? {
         return books.first { $0.id == id }
     }
     
-    func update(_ book: Book) async throws -> Book {
+    func update(_ book: Book) throws -> Book {
         guard let index = books.firstIndex(where: { $0.id == book.id }) else {
             throw RepositoryError.notFound
         }
@@ -29,7 +29,7 @@ class MockBookRepository: BookRepositoryProtocol {
         return book
     }
     
-    func delete(_ id: UUID) async throws -> Bool {
+    func delete(_ id: UUID) throws -> Bool {
         guard let index = books.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -42,7 +42,7 @@ class MockBookRepository: BookRepositoryProtocol {
 class MockUserRepository: UserRepositoryProtocol {
     private var users: [User] = []
     
-    func save(_ user: User) async throws -> User {
+    func save(_ user: User) throws -> User {
         if users.contains(where: { $0.id == user.id }) {
             throw RepositoryError.saveFailed
         }
@@ -50,15 +50,15 @@ class MockUserRepository: UserRepositoryProtocol {
         return user
     }
     
-    func fetchAll() async throws -> [User] {
+    func fetchAll() throws -> [User] {
         return users
     }
     
-    func findById(_ id: UUID) async throws -> User? {
+    func findById(_ id: UUID) throws -> User? {
         return users.first { $0.id == id }
     }
     
-    func update(_ user: User) async throws -> User {
+    func update(_ user: User) throws -> User {
         guard let index = users.firstIndex(where: { $0.id == user.id }) else {
             throw RepositoryError.notFound
         }
@@ -66,7 +66,7 @@ class MockUserRepository: UserRepositoryProtocol {
         return user
     }
     
-    func delete(_ id: UUID) async throws -> Bool {
+    func delete(_ id: UUID) throws -> Bool {
         guard let index = users.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -79,7 +79,7 @@ class MockUserRepository: UserRepositoryProtocol {
 class MockLoanRepository: LoanRepositoryProtocol {
     private var loans: [Loan] = []
     
-    func save(_ loan: Loan) async throws -> Loan {
+    func save(_ loan: Loan) throws -> Loan {
         if loans.contains(where: { $0.id == loan.id }) {
             throw RepositoryError.saveFailed
         }
@@ -87,27 +87,27 @@ class MockLoanRepository: LoanRepositoryProtocol {
         return loan
     }
     
-    func fetchAll() async throws -> [Loan] {
+    func fetchAll() throws -> [Loan] {
         return loans
     }
     
-    func findById(_ id: UUID) async throws -> Loan? {
+    func findById(_ id: UUID) throws -> Loan? {
         return loans.first { $0.id == id }
     }
     
-    func findByBookId(_ bookId: UUID) async throws -> [Loan] {
+    func findByBookId(_ bookId: UUID) throws -> [Loan] {
         return loans.filter { $0.bookId == bookId }
     }
     
-    func findByUserId(_ userId: UUID) async throws -> [Loan] {
+    func findByUserId(_ userId: UUID) throws -> [Loan] {
         return loans.filter { $0.userId == userId }
     }
     
-    func fetchActiveLoans() async throws -> [Loan] {
+    func fetchActiveLoans() throws -> [Loan] {
         return loans.filter { $0.returnedDate == nil }
     }
     
-    func update(_ loan: Loan) async throws -> Loan {
+    func update(_ loan: Loan) throws -> Loan {
         guard let index = loans.firstIndex(where: { $0.id == loan.id }) else {
             throw RepositoryError.notFound
         }
@@ -115,7 +115,7 @@ class MockLoanRepository: LoanRepositoryProtocol {
         return loan
     }
     
-    func delete(_ id: UUID) async throws -> Bool {
+    func delete(_ id: UUID) throws -> Bool {
         guard let index = loans.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
@@ -158,4 +158,5 @@ class MockRepositoryFactory {
     let userRepository = MockUserRepository()
     let loanRepository = MockLoanRepository()
     let classGroupRepository = MockClassGroupRepository()
+    // LoanSettingsRepositoryは各テストファイル内で定義
 }

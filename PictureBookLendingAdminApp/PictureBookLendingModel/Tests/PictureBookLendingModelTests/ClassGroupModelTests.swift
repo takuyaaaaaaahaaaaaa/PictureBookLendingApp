@@ -1,6 +1,5 @@
 import Foundation
 import PictureBookLendingDomain
-import PictureBookLendingInfrastructure
 import Testing
 
 @testable import PictureBookLendingModel
@@ -28,13 +27,13 @@ struct ClassGroupModelTests {
     ///
     /// 新しいクラスを登録し、正しく登録されることを確認します。
     @Test("クラス登録機能")
-    func registerClassGroup() async throws {
+    func registerClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
         
         // 2. Act - 実行
-        try await classGroupModel.registerClassGroup(classGroup)
+        try classGroupModel.registerClassGroup(classGroup)
         
         // 3. Assert - 検証
         let classGroups = classGroupModel.getAllClassGroups()
@@ -48,15 +47,15 @@ struct ClassGroupModelTests {
     ///
     /// 複数のクラスを登録し、全てのクラスが取得できることを確認します。
     @Test("全クラス取得機能")
-    func getAllClassGroups() async throws {
+    func getAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
         let classGroup1 = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
         let classGroup2 = ClassGroup(name: "りす組", ageGroup: 1, year: 2025)
         
         // 2. Act - 実行
-        try await classGroupModel.registerClassGroup(classGroup1)
-        try await classGroupModel.registerClassGroup(classGroup2)
+        try classGroupModel.registerClassGroup(classGroup1)
+        try classGroupModel.registerClassGroup(classGroup2)
         let classGroups = classGroupModel.getAllClassGroups()
         
         // 3. Assert - 検証
@@ -68,15 +67,15 @@ struct ClassGroupModelTests {
     ///
     /// IDを指定してクラスを検索し、正しいクラスが取得できることを確認します。
     @Test("クラスID検索機能")
-    func findClassGroupById() async throws {
+    func findClassGroupById() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        try await classGroupModel.registerClassGroup(classGroup)
+        try classGroupModel.registerClassGroup(classGroup)
         let id = classGroup.id
         
         // 2. Act - 実行
-        let foundClassGroup = await classGroupModel.findClassGroupById(id)
+        let foundClassGroup = classGroupModel.findClassGroupById(id)
         
         // 3. Assert - 検証
         #expect(foundClassGroup != nil)
@@ -89,22 +88,22 @@ struct ClassGroupModelTests {
     ///
     /// 登録済みのクラス情報を更新し、正しく更新されることを確認します。
     @Test("クラス更新機能")
-    func updateClassGroup() async throws {
+    func updateClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        try await classGroupModel.registerClassGroup(classGroup)
+        try classGroupModel.registerClassGroup(classGroup)
         
         var updatedClassGroup = classGroup
         updatedClassGroup.name = "ひよこ組改名版"
         
         // 2. Act - 実行
-        try await classGroupModel.updateClassGroup(updatedClassGroup)
+        try classGroupModel.updateClassGroup(updatedClassGroup)
         
         // 3. Assert - 検証
         let classGroups = classGroupModel.getAllClassGroups()
         #expect(classGroups.count == 1)
-        let foundClassGroup = await classGroupModel.findClassGroupById(classGroup.id)
+        let foundClassGroup = classGroupModel.findClassGroupById(classGroup.id)
         #expect(foundClassGroup?.name == "ひよこ組改名版")
     }
     
@@ -112,20 +111,20 @@ struct ClassGroupModelTests {
     ///
     /// 登録済みのクラスを削除し、正しく削除されることを確認します。
     @Test("クラス削除機能")
-    func deleteClassGroup() async throws {
+    func deleteClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        try await classGroupModel.registerClassGroup(classGroup)
+        try classGroupModel.registerClassGroup(classGroup)
         let id = classGroup.id
         
         // 2. Act - 実行
-        try await classGroupModel.deleteClassGroup(id)
+        try classGroupModel.deleteClassGroup(id)
         
         // 3. Assert - 検証
         let classGroups = classGroupModel.getAllClassGroups()
         #expect(classGroups.count == 0)
-        let foundClassGroup = await classGroupModel.findClassGroupById(id)
+        let foundClassGroup = classGroupModel.findClassGroupById(id)
         #expect(foundClassGroup == nil)
     }
     
@@ -133,14 +132,15 @@ struct ClassGroupModelTests {
     ///
     /// リポジトリからクラス一覧をロードし、正しくキャッシュされることを確認します。
     @Test("クラス一覧ロード機能")
-    func loadAllClassGroups() async throws {
+    func loadAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, repository) = createClassGroupModel()
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        try await repository.save(classGroup)
+        try repository.save(classGroup)
         
         // 2. Act - 実行
-        try await classGroupModel.loadAllClassGroups()
+        // loadAllClassGroups メソッドがないため、refreshClassGroups を使用
+        classGroupModel.refreshClassGroups()
         
         // 3. Assert - 検証
         let classGroups = classGroupModel.getAllClassGroups()
@@ -152,7 +152,7 @@ struct ClassGroupModelTests {
     ///
     /// キャッシュをリフレッシュし、最新データが取得されることを確認します。
     @Test("クラス一覧リフレッシュ機能")
-    func refreshClassGroups() async throws {
+    func refreshClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, repository) = createClassGroupModel()
         
@@ -161,10 +161,10 @@ struct ClassGroupModelTests {
         
         // リポジトリに直接データを追加
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        try await repository.save(classGroup)
+        try repository.save(classGroup)
         
         // 2. Act - 実行
-        await classGroupModel.refreshClassGroups()
+        classGroupModel.refreshClassGroups()
         
         // 3. Assert - 検証
         let classGroups = classGroupModel.getAllClassGroups()
