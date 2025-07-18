@@ -156,10 +156,11 @@ struct NewLoanContainerView: View {
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
-    return NewLoanContainerView()
+    NewLoanContainerView()
         .environment(bookModel)
         .environment(userModel)
         .environment(loanModel)

@@ -8,15 +8,18 @@ public struct SettingsView: View {
     let onSelectClassGroup: () -> Void
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
+    let onSelectLoanSettings: () -> Void
     
     public init(
         onSelectClassGroup: @escaping () -> Void,
         onSelectUser: @escaping () -> Void,
-        onSelectBook: @escaping () -> Void
+        onSelectBook: @escaping () -> Void,
+        onSelectLoanSettings: @escaping () -> Void
     ) {
         self.onSelectClassGroup = onSelectClassGroup
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
+        self.onSelectLoanSettings = onSelectLoanSettings
     }
     
     public var body: some View {
@@ -34,7 +37,7 @@ public struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(.gray.opacity(0.1))
                 .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -52,7 +55,7 @@ public struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(.gray.opacity(0.1))
                 .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -70,7 +73,25 @@ public struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding()
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(.gray.opacity(0.1))
+                .cornerRadius(12)
+            }
+            .buttonStyle(.plain)
+            
+            Button(action: onSelectLoanSettings) {
+                HStack {
+                    Image(systemName: "clock")
+                        .font(.title2)
+                        .frame(width: 30)
+                    Text("貸出設定")
+                        .font(.headline)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.gray.opacity(0.1))
                 .cornerRadius(12)
             }
             .buttonStyle(.plain)
@@ -86,7 +107,8 @@ public struct SettingsView: View {
         SettingsView(
             onSelectClassGroup: {},
             onSelectUser: {},
-            onSelectBook: {}
+            onSelectBook: {},
+            onSelectLoanSettings: {}
         )
         .navigationTitle("設定")
     }

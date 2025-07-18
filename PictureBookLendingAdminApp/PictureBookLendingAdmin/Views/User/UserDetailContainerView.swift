@@ -102,7 +102,8 @@ struct UserDetailContainerView: View {
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())

@@ -21,6 +21,9 @@ struct PictureBookLendingAdminApp: App {
     /// クラス（組）モデル
     @State private var classGroupModel: ClassGroupModel
     
+    /// 貸出設定モデル
+    @State private var loanSettingsModel: LoanSettingsModel
+    
     init() {
         // SwiftDataモデルコンテナの設定
         let schema = Schema([
@@ -46,6 +49,7 @@ struct PictureBookLendingAdminApp: App {
             let userRepository = repositoryFactory.makeUserRepository()
             let loanRepository = repositoryFactory.makeLoanRepository()
             let classGroupRepository = repositoryFactory.makeClassGroupRepository()
+            let loanSettingsRepository = repositoryFactory.makeLoanSettingsRepository()
             
             // @StateのwrappedValueを使用して初期化
             _bookModel = State(wrappedValue: BookModel(repository: bookRepository))
@@ -54,10 +58,13 @@ struct PictureBookLendingAdminApp: App {
                 wrappedValue: LoanModel(
                     repository: loanRepository,
                     bookRepository: bookRepository,
-                    userRepository: userRepository
+                    userRepository: userRepository,
+                    loanSettingsRepository: loanSettingsRepository
                 ))
             _classGroupModel = State(
                 wrappedValue: ClassGroupModel(repository: classGroupRepository))
+            _loanSettingsModel = State(
+                wrappedValue: LoanSettingsModel(repository: loanSettingsRepository))
             
         } catch {
             fatalError("モデルコンテナの初期化に失敗しました: \(error)")
@@ -71,6 +78,7 @@ struct PictureBookLendingAdminApp: App {
                 .environment(userModel)
                 .environment(loanModel)
                 .environment(classGroupModel)
+                .environment(loanSettingsModel)
         }
         .modelContainer(sharedModelContainer)
     }

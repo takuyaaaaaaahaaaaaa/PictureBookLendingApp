@@ -22,7 +22,8 @@ struct LoanModelTests {
         let loanModel = LoanModel(
             repository: mockRepositoryFactory.loanRepository,
             bookRepository: mockRepositoryFactory.bookRepository,
-            userRepository: mockRepositoryFactory.userRepository
+            userRepository: mockRepositoryFactory.userRepository,
+            loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
         )
         
         // テスト用データのセットアップ

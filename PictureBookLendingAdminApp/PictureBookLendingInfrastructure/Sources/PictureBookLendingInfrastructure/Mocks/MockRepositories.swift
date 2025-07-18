@@ -160,12 +160,33 @@ public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
     }
 }
 
+/// テスト用のモック貸出設定リポジトリ
+public final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _settings: LoanSettings = .default
+    
+    public init() {}
+    
+    public func fetch() -> LoanSettings {
+        lock.lock()
+        defer { lock.unlock() }
+        return _settings
+    }
+    
+    public func save(_ newSettings: LoanSettings) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        _settings = newSettings
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 public class MockRepositoryFactory: RepositoryFactory {
     public let bookRepository = MockBookRepository()
     public let userRepository = MockUserRepository()
     public let loanRepository = MockLoanRepository()
     public let classGroupRepository = MockClassGroupRepository()
+    public let loanSettingsRepository = MockLoanSettingsRepository()
     
     public init() {}
     
@@ -183,5 +204,9 @@ public class MockRepositoryFactory: RepositoryFactory {
     
     public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
         return classGroupRepository
+    }
+    
+    public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
+        return loanSettingsRepository
     }
 }

@@ -40,6 +40,9 @@ public class LoanModel {
     /// 利用者リポジトリ
     private let userRepository: UserRepositoryProtocol
     
+    /// 貸出設定リポジトリ
+    private let loanSettingsRepository: LoanSettingsRepositoryProtocol
+    
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
     
@@ -49,13 +52,17 @@ public class LoanModel {
     ///   - repository: 貸出リポジトリ
     ///   - bookRepository: 絵本リポジトリ
     ///   - userRepository: 利用者リポジトリ
+    ///   - loanSettingsRepository: 貸出設定リポジトリ
     public init(
-        repository: LoanRepositoryProtocol, bookRepository: BookRepositoryProtocol,
-        userRepository: UserRepositoryProtocol
+        repository: LoanRepositoryProtocol,
+        bookRepository: BookRepositoryProtocol,
+        userRepository: UserRepositoryProtocol,
+        loanSettingsRepository: LoanSettingsRepositoryProtocol
     ) {
         self.repository = repository
         self.bookRepository = bookRepository
         self.userRepository = userRepository
+        self.loanSettingsRepository = loanSettingsRepository
         
         // 初期データのロード
         do {
@@ -64,6 +71,19 @@ public class LoanModel {
             print("初期データのロードに失敗しました: \(error)")
             self.loans = []
         }
+    }
+    
+    /// 絵本を貸し出す（設定値から返却期限を自動計算）
+    ///
+    /// - Parameters:
+    ///   - bookId: 貸し出す絵本のID
+    ///   - userId: 借りる利用者のID
+    /// - Returns: 作成された貸出情報
+    /// - Throws: 貸出処理に失敗した場合は `LoanModelError` を投げます
+    public func lendBook(bookId: UUID, userId: UUID) throws -> Loan {
+        let settings = loanSettingsRepository.fetch()
+        let dueDate = settings.calculateDueDate(from: Date())
+        return try lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
     }
     
     /// 絵本を貸し出す

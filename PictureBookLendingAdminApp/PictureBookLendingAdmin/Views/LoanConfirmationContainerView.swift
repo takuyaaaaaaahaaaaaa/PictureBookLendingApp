@@ -79,7 +79,8 @@ struct LoanConfirmationContainerView: View {
         LoanModel(
             repository: MockLoanRepository(),
             bookRepository: MockBookRepository(),
-            userRepository: MockUserRepository()
+            userRepository: MockUserRepository(),
+            loanSettingsRepository: MockLoanSettingsRepository()
         )
     )
     .environment(ClassGroupModel(repository: MockClassGroupRepository()))

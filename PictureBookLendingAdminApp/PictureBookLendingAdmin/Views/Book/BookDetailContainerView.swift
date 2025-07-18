@@ -71,12 +71,13 @@ struct BookDetailContainerView: View {
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
-    return NavigationStack {
+    NavigationStack {
         BookDetailContainerView(book: sampleBook)
             .environment(loanModel)
     }

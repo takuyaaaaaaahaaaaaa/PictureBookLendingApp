@@ -8,6 +8,7 @@ import SwiftUI
 /// 管理者用の絵本・利用者・組管理機能を提供します
 struct SettingsContainerView: View {
     @State private var navigationPath = NavigationPath()
+    @State private var isLoanSettingsSheetPresented = false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -20,6 +21,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectBook: {
                     navigationPath.append(SettingsDestination.book)
+                },
+                onSelectLoanSettings: {
+                    isLoanSettingsSheetPresented = true
                 }
             )
             .navigationTitle("設定")
@@ -31,6 +35,11 @@ struct SettingsContainerView: View {
                     UserListContainerView()
                 case .book:
                     BookListContainerView()
+                }
+            }
+            .sheet(isPresented: $isLoanSettingsSheetPresented) {
+                NavigationStack {
+                    LoanSettingsContainerView()
                 }
             }
         }
