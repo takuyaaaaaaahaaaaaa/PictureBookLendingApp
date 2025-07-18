@@ -5,19 +5,22 @@ import SwiftUI
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-public struct UserListView: View {
+public struct UserListView<RowContent: View>: View {
     let users: [User]
     let searchText: Binding<String>
     let onDelete: (IndexSet) -> Void
+    let rowContent: (User) -> RowContent
     
     public init(
         users: [User],
         searchText: Binding<String>,
-        onDelete: @escaping (IndexSet) -> Void
+        onDelete: @escaping (IndexSet) -> Void,
+        @ViewBuilder rowContent: @escaping (User) -> RowContent
     ) {
         self.users = users
         self.searchText = searchText
         self.onDelete = onDelete
+        self.rowContent = rowContent
     }
     
     public var body: some View {
@@ -31,7 +34,7 @@ public struct UserListView: View {
             List {
                 ForEach(users) { user in
                     NavigationLink(value: user) {
-                        UserRowView(user: user)
+                        rowContent(user)
                     }
                 }
                 .onDelete(perform: onDelete)
@@ -46,16 +49,18 @@ public struct UserListView: View {
 /// 一覧の各行に表示する利用者情報のレイアウトを定義します。
 public struct UserRowView: View {
     let user: User
+    let classGroupName: String
     
-    public init(user: User) {
+    public init(user: User, classGroupName: String) {
         self.user = user
+        self.classGroupName = classGroupName
     }
     
     public var body: some View {
         VStack(alignment: .leading) {
             Text(user.name)
                 .font(.headline)
-            Text("組情報")
+            Text(classGroupName)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -72,7 +77,9 @@ public struct UserRowView: View {
             users: [user1, user2],
             searchText: .constant(""),
             onDelete: { _ in }
-        )
+        ) { user in
+            UserRowView(user: user, classGroupName: "ひまわり組")
+        }
         .navigationTitle("利用者一覧")
     }
 }

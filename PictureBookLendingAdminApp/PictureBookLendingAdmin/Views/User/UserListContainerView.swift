@@ -33,7 +33,9 @@ struct UserListContainerView: View {
             users: filteredUsers,
             searchText: $searchText,
             onDelete: handleDeleteUsers
-        )
+        ) { user in
+            UserRowContainerView(user: user)
+        }
         .navigationTitle("利用者一覧")
         .navigationDestination(for: User.self) { user in
             UserDetailContainerView(user: user)
