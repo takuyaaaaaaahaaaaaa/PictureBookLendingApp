@@ -44,40 +44,47 @@ PictureBookLendingAdminApp
 
 ### 開発コマンド
 
+**重要**: コマンド実行時は適切なディレクトリにいることを確認してください
+
 ```bash
+# プロジェクトルートディレクトリから（推奨）
 # Xcodeプロジェクト経由でプロジェクト全体ビルド
 cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build
 
 # 全テスト実行
 cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test
 
-# 特定モジュールのみビルド
-cd PictureBookLendingDomain swift build
-cd PictureBookLendingModel swift build
-cd PictureBookLendingInfrastructure swift build
-cd PictureBookLendingUI swift build
+# 特定モジュールのみビルド（各モジュールディレクトリから）
+cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift build
+cd PictureBookLendingAdminApp/PictureBookLendingModel && swift build  
+cd PictureBookLendingAdminApp/PictureBookLendingInfrastructure && swift build
+cd PictureBookLendingAdminApp/PictureBookLendingUI && swift build
 
-# 特定モジュールのテスト実行
-cd PictureBookLendingModelTests swift test
+# 特定モジュールのテスト実行（各モジュールディレクトリから）
+cd PictureBookLendingAdminApp/PictureBookLendingModel && swift test
+cd PictureBookLendingAdminApp/PictureBookLendingDomain && swift test
+cd PictureBookLendingAdminApp/PictureBookLendingInfrastructure && swift test
 
-# コードフォーマット（swift-format）
+# コードフォーマット（swift-format）- ルートディレクトリから
 cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive **/*.swift
 
-# 特定モジュールのみフォーマットとリント
+# 特定モジュールのみフォーマットとリント（ルートディレクトリから）
 # 修正範囲が限定的な場合は、該当モジュールのみ処理することを推奨
 
-# メインアプリのフォーマット・リント
-swift format lint --configuration .swift-format --recursive PictureBookLendingAdmin/
-swift format --configuration .swift-format --in-place --recursive PictureBookLendingAdmin/
+# メインアプリのフォーマット・リント（ルートディレクトリから）
+cd PictureBookLendingAdminApp && swift format lint --configuration .swift-format --recursive PictureBookLendingAdmin/
+cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive PictureBookLendingAdmin/
 
-# 各モジュールのフォーマット・リント（MODULE_NAMEを対象モジュール名に置換）
-swift format lint --configuration .swift-format --recursive ${MODULE_NAME}/Sources/
-swift format --configuration .swift-format --in-place --recursive ${MODULE_NAME}/Sources/
+# 各モジュールのフォーマット・リント（ルートディレクトリから）
+cd PictureBookLendingAdminApp && swift format lint --configuration .swift-format --recursive ${MODULE_NAME}/Sources/
+cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive ${MODULE_NAME}/Sources/
 
-# 具体例：PictureBookLendingModelモジュールの場合
-swift format lint --configuration .swift-format --recursive PictureBookLendingModel/Sources/
-swift format --configuration .swift-format --in-place --recursive PictureBookLendingModel/Sources/
-swift build --target PictureBookLendingModel
+# 具体例：PictureBookLendingModelモジュールの場合（ルートディレクトリから）
+cd PictureBookLendingAdminApp && swift format lint --configuration .swift-format --recursive PictureBookLendingModel/Sources/
+cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive PictureBookLendingModel/Sources/
+
+# または、モジュールディレクトリから直接ビルド
+cd PictureBookLendingAdminApp/PictureBookLendingModel && swift build
 ```
 
 ### 技術スタック
@@ -94,15 +101,16 @@ swift build --target PictureBookLendingModel
 
 1. **コード修正後は必ずビルドとテストを実行する**
 
-   * `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build` で **プロジェクト全体** がビルドできることを確認
-   * `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test` で **全テスト** が成功することを確認
+   * プロジェクトルートから: `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin build` で **プロジェクト全体** がビルドできることを確認
+   * プロジェクトルートから: `cd PictureBookLendingAdminApp && xcodebuild -scheme PictureBookLendingAdmin test` で **全テスト** が成功することを確認
+
 2. **影響範囲が限定的な場合**
 
-   * 修正前に対象モジュールのフォーマット・リントを実行:
-     * `swift format lint --configuration .swift-format --recursive <ModuleName>/Sources/`
-     * `swift format --configuration .swift-format --in-place --recursive <ModuleName>/Sources/`
-   * `swift build --target <ModuleName>` で **そのモジュールのみビルド**
-   * `swift test --filter <ModuleNameTests>` で **関連テストのみ実行**
+   * 修正前に対象モジュールのフォーマット・リントを実行（プロジェクトルートから）:
+     * `cd PictureBookLendingAdminApp && swift format lint --configuration .swift-format --recursive <ModuleName>/Sources/`
+     * `cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive <ModuleName>/Sources/`
+   * モジュールディレクトリから: `cd PictureBookLendingAdminApp/<ModuleName> && swift build` で **そのモジュールのみビルド**
+   * モジュールディレクトリから: `cd PictureBookLendingAdminApp/<ModuleName> && swift test` で **関連テストのみ実行**
 3. **swift-format 警告** がビルド時に発生した場合は可能な限り対応し、難しい場合は相談する。
 
 ---
