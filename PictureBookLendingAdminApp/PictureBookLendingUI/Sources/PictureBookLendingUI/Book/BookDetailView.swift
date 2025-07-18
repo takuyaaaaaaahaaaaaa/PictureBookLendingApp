@@ -6,16 +6,22 @@ import SwiftUI
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
 public struct BookDetailView: View {
-    let book: Book
+    @Binding var bookTitle: String
+    @Binding var bookAuthor: String
+    let bookId: UUID
     let isCurrentlyLent: Bool
     let onEdit: () -> Void
     
     public init(
-        book: Book,
+        bookTitle: Binding<String>,
+        bookAuthor: Binding<String>,
+        bookId: UUID,
         isCurrentlyLent: Bool,
         onEdit: @escaping () -> Void
     ) {
-        self.book = book
+        self._bookTitle = bookTitle
+        self._bookAuthor = bookAuthor
+        self.bookId = bookId
         self.isCurrentlyLent = isCurrentlyLent
         self.onEdit = onEdit
     }
@@ -23,9 +29,9 @@ public struct BookDetailView: View {
     public var body: some View {
         List {
             Section("基本情報") {
-                DetailRow(label: "タイトル", value: book.title)
-                DetailRow(label: "著者", value: book.author)
-                DetailRow(label: "管理ID", value: book.id.uuidString)
+                EditableDetailRow(label: "タイトル", value: $bookTitle)
+                EditableDetailRow(label: "著者", value: $bookAuthor)
+                DetailRow(label: "管理ID", value: bookId.uuidString)
             }
             
             Section("貸出状況") {
@@ -51,14 +57,18 @@ public struct BookDetailView: View {
 }
 
 #Preview {
-    let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+    @Previewable @State var bookTitle = "はらぺこあおむし"
+    @Previewable @State var bookAuthor = "エリック・カール"
+    let sampleBookId = UUID()
     
     NavigationStack {
         BookDetailView(
-            book: sampleBook,
+            bookTitle: $bookTitle,
+            bookAuthor: $bookAuthor,
+            bookId: sampleBookId,
             isCurrentlyLent: false,
             onEdit: {}
         )
-        .navigationTitle(sampleBook.title)
+        .navigationTitle(bookTitle)
     }
 }
