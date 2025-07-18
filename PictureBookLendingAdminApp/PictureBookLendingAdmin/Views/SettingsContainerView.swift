@@ -5,7 +5,7 @@ import PictureBookLendingUI
 import SwiftUI
 
 /// 設定画面のコンテナビュー
-/// 管理者用の絵本・園児・組管理機能を提供します
+/// 管理者用の絵本・利用者・組管理機能を提供します
 struct SettingsContainerView: View {
     @State private var navigationPath = NavigationPath()
     

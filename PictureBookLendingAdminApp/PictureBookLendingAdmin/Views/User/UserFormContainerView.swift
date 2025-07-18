@@ -16,7 +16,7 @@ struct UserFormContainerView: View {
     let mode: UserFormMode
     var onSave: ((User) -> Void)? = nil
     
-    /// 園児名
+    /// 利用者名
     @State private var name = ""
     /// 所属している組
     @State private var classGroup: ClassGroup?

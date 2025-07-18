@@ -14,7 +14,7 @@ struct UserDetailContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
-    /// 園児
+    /// 利用者
     @State private var user: User
     /// 編集表示
     @State private var isEditSheetPresented = false

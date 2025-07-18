@@ -44,7 +44,7 @@ public struct SettingsView: View {
                     Image(systemName: "person.2")
                         .font(.title2)
                         .frame(width: 30)
-                    Text("園児管理")
+                    Text("利用者管理")
                         .font(.headline)
                     Spacer()
                     Image(systemName: "chevron.right")
