@@ -16,11 +16,13 @@ struct ContentView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             // 貸出（絵本から）タブ
-            BookListContainerView()
-                .tabItem {
-                    Label("貸出", systemImage: "book")
-                }
-                .tag(0)
+            NavigationStack {
+                BookListContainerView()
+            }
+            .tabItem {
+                Label("貸出", systemImage: "book")
+            }
+            .tag(0)
             
             // 返却・履歴（利用者から）タブ
             ClassGroupSelectionContainerView { _ in
