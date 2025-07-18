@@ -15,10 +15,13 @@ struct LoanFormContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.dismiss) private var dismiss
     
-    let preselectedBookId: UUID?
-    
+    /// 選択した絵本
+    let selectedBook: Book
+    /// 選択したクラス（組）
     @State private var selectedClassGroup: ClassGroup?
-    @State private var selectedUserId: UUID?
+    /// 選択した利用者
+    @State private var selectedUser: User?
+    /// 返却期限
     @State private var dueDate =
         Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     @State private var alertState = AlertState()
@@ -30,13 +33,14 @@ struct LoanFormContainerView: View {
                 classGroups: classGroupModel.getAllClassGroups(),
                 users: filteredUsersForSelectedClassGroup,
                 selectedClassGroup: $selectedClassGroup,
-                selectedUserId: selectedUserId,
+                selectedUser: $selectedUser,
                 dueDate: dueDate,
-                onUserSelect: handleUserSelect,
-                onCancel: handleCancel,
-                onRegister: handleRegister,
                 isValidInput: isValidInput
             )
+            // 選択中の組が変化した場合、選択中の利用者情報を初期化
+            .onChange(of: selectedClassGroup) { _, _ in
+                selectedUser = nil
+            }
             .navigationTitle("貸出登録")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -65,16 +69,6 @@ struct LoanFormContainerView: View {
     
     // MARK: - Computed Properties
     
-    private var selectedBook: Book {
-        guard let preselectedBookId = preselectedBookId,
-            let book = bookModel.findBookById(preselectedBookId)
-        else {
-            // デフォルトとして最初の絵本を返す（実際の使用では事前選択が前提）
-            return bookModel.getAllBooks().first ?? Book(title: "絵本が選択されていません", author: "")
-        }
-        return book
-    }
-    
     private var filteredUsersForSelectedClassGroup: [User] {
         guard let selectedClassGroup = selectedClassGroup else {
             return []
@@ -86,23 +80,17 @@ struct LoanFormContainerView: View {
     }
     
     private var isValidInput: Bool {
-        preselectedBookId != nil && selectedUserId != nil && dueDate > Date()
+        selectedUser != nil && dueDate > Date()
     }
     
     // MARK: - Actions
-    
-    private func handleUserSelect(_ userId: UUID) {
-        selectedUserId = userId
-    }
     
     private func handleCancel() {
         dismiss()
     }
     
     private func handleRegister() {
-        guard let bookId = preselectedBookId,
-            let userId = selectedUserId
-        else {
+        guard let user = selectedUser else {
             alertState = .error("必要な情報が選択されていません")
             return
         }
@@ -112,12 +100,12 @@ struct LoanFormContainerView: View {
             loanModel.refreshLoans()
             
             // すでに貸出中かどうか再確認
-            if loanModel.isBookLent(bookId: bookId) {
+            if loanModel.isBookLent(bookId: selectedBook.id) {
                 alertState = .error("この絵本はすでに貸出中です")
                 return
             }
             
-            _ = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+            _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id, dueDate: dueDate)
             dismiss()
         } catch LoanModelError.bookAlreadyLent {
             alertState = .error("この絵本はすでに貸出中です")
@@ -131,7 +119,6 @@ struct LoanFormContainerView: View {
     }
     
     private func refreshData() {
-        bookModel.refreshBooks()
         userModel.refreshUsers()
         loanModel.refreshLoans()
         classGroupModel.refreshClassGroups()
@@ -140,7 +127,6 @@ struct LoanFormContainerView: View {
 
 #Preview {
     let mockRepositoryFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
     let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockRepositoryFactory.loanRepository,
@@ -150,8 +136,9 @@ struct LoanFormContainerView: View {
     )
     let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
     
-    LoanFormContainerView(preselectedBookId: nil)
-        .environment(bookModel)
+    let selectedBook = Book(title: "りんごかもしれない", author: "ヨシタケ・シンスケ")
+    
+    LoanFormContainerView(selectedBook: selectedBook)
         .environment(userModel)
         .environment(loanModel)
         .environment(classGroupModel)

@@ -6,7 +6,7 @@ import SwiftUI
 /// 貸出ボタンのContainer View
 ///
 /// 貸出ボタンのタップ処理とフロー開始を担当します。
-struct LoanButtonContainerView: View {
+struct LoanContainerButton: View {
     let book: Book
     @State private var isLoanSheetPresented = false
     
@@ -28,7 +28,7 @@ struct LoanButtonContainerView: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $isLoanSheetPresented) {
-            LoanFormContainerView(preselectedBookId: book.id)
+            LoanFormContainerView(selectedBook: book)
         }
     }
 }
@@ -48,7 +48,7 @@ struct LoanButtonContainerView: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
     VStack(spacing: 16) {
-        LoanButtonContainerView(book: sampleBook)
+        LoanContainerButton(book: sampleBook)
         
         // リスト内での表示例
         List {
@@ -63,7 +63,7 @@ struct LoanButtonContainerView: View {
                 
                 Spacer()
                 
-                LoanButtonContainerView(book: sampleBook)
+                LoanContainerButton(book: sampleBook)
             }
             .padding(.vertical, 4)
         }

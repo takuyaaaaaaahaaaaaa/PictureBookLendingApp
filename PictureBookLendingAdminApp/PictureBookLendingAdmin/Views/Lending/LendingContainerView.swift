@@ -68,7 +68,8 @@ struct LendingContainerView: View {
                 }
             }
             .sheet(isPresented: $isNewLoanSheetPresented) {
-                LoanFormContainerView(preselectedBookId: nil)
+                // TODO: 絵本を事前選択せずに貸出フォームを開く場合の実装が必要
+                EmptyView()
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
