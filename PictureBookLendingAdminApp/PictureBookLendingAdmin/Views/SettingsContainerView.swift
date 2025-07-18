@@ -43,7 +43,7 @@ struct SettingsContainerView: View {
                 case .user:
                     UserListContainerView()
                 case .book:
-                    BookListContainerView()
+                    SettingsBookListContainerView()
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -62,9 +62,19 @@ struct SettingsContainerView: View {
 }
 
 #Preview {
+    let mockFactory = MockRepositoryFactory()
+    
     SettingsContainerView()
-        .environment(ClassGroupModel(repository: MockClassGroupRepository()))
-        .environment(UserModel(repository: MockUserRepository()))
-        .environment(BookModel(repository: MockBookRepository()))
-        .environment(LoanSettingsModel(repository: MockLoanSettingsRepository()))
+        .environment(ClassGroupModel(repository: mockFactory.classGroupRepository))
+        .environment(UserModel(repository: mockFactory.userRepository))
+        .environment(BookModel(repository: mockFactory.bookRepository))
+        .environment(
+            LoanModel(
+                repository: mockFactory.loanRepository,
+                bookRepository: mockFactory.bookRepository,
+                userRepository: mockFactory.userRepository,
+                loanSettingsRepository: mockFactory.loanSettingsRepository
+            )
+        )
+        .environment(LoanSettingsModel(repository: mockFactory.loanSettingsRepository))
 }
