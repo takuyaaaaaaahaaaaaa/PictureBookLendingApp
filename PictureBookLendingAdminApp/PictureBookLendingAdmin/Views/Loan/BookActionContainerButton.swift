@@ -4,25 +4,53 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 貸出ボタンのContainer View
+/// 絵本のアクションボタンContainer View
 ///
-/// 貸出ボタンのタップ処理とフロー開始を担当します。
+/// 貸出中かどうかに応じて貸出ボタンまたは返却ボタンを表示します。
 /// Presentation ViewにUI表示を委譲し、ビジネスロジックのみを処理します。
-struct LoanContainerButton: View {
+struct BookActionContainerButton: View {
     let book: Book
+    @Environment(LoanModel.self) private var loanModel
     @State private var isLoanSheetPresented = false
+    @State private var alertState = AlertState()
+    
+    private var isBookLent: Bool {
+        loanModel.isBookLent(bookId: book.id)
+    }
     
     var body: some View {
-        LoanButtonView(onTap: handleTap)
-            .sheet(isPresented: $isLoanSheetPresented) {
-                LoanFormContainerView(selectedBook: book)
+        VStack {
+            if isBookLent {
+                ReturnButtonView(onTap: handleReturnTap)
+            } else {
+                LoanButtonView(onTap: handleLoanTap)
             }
+        }
+        .sheet(isPresented: $isLoanSheetPresented) {
+            LoanFormContainerView(selectedBook: book)
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
     }
     
     // MARK: - Actions
     
-    private func handleTap() {
+    private func handleLoanTap() {
         isLoanSheetPresented = true
+    }
+    
+    private func handleReturnTap() {
+        Task {
+            do {
+                try loanModel.returnBook(bookId: book.id)
+                alertState = .success("返却が完了しました")
+            } catch {
+                alertState = .error("返却に失敗しました: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
@@ -41,7 +69,7 @@ struct LoanContainerButton: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
     VStack(spacing: 16) {
-        LoanContainerButton(book: sampleBook)
+        BookActionContainerButton(book: sampleBook)
         
         // リスト内での表示例
         List {
@@ -56,7 +84,7 @@ struct LoanContainerButton: View {
                 
                 Spacer()
                 
-                LoanContainerButton(book: sampleBook)
+                BookActionContainerButton(book: sampleBook)
             }
             .padding(.vertical, 4)
         }

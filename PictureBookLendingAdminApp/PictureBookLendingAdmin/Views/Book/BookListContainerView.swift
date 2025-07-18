@@ -7,6 +7,7 @@ import SwiftUI
 /// 絵本一覧のContainer View
 struct BookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
+    @Environment(LoanModel.self) private var loanModel
     
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
@@ -29,7 +30,7 @@ struct BookListContainerView: View {
             searchText: $searchText,
             onDelete: handleDeleteBooks
         ) { book in
-            LoanContainerButton(book: book)
+            BookActionContainerButton(book: book)
         }
         .navigationTitle("絵本一覧")
         .navigationDestination(for: Book.self) { book in
@@ -89,7 +90,14 @@ struct BookListContainerView: View {
     _ = try? mockFactory.bookRepository.save(book2)
     
     let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let loanModel = LoanModel(
+        repository: mockFactory.loanRepository,
+        bookRepository: mockFactory.bookRepository,
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
+    )
     
     return BookListContainerView()
         .environment(bookModel)
+        .environment(loanModel)
 }

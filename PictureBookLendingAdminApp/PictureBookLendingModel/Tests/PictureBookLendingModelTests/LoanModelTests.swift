@@ -107,4 +107,52 @@ struct LoanModelTests {
         #expect(allLoans.count == 1)
         #expect(allLoans.first?.isReturned == true)
     }
+    
+    /// 絵本IDから返却機能のテスト
+    @Test("絵本IDから返却機能のテスト")
+    func returnBookByBookId() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        
+        // 貸出中であることを確認
+        #expect(loanModel.isBookLent(bookId: bookId) == true)
+        
+        // 絵本IDで返却処理を実行
+        let returnedLoan = try loanModel.returnBook(bookId: bookId)
+        
+        #expect(returnedLoan.id == loan.id)
+        #expect(returnedLoan.returnedDate != nil)
+        #expect(returnedLoan.isReturned == true)
+        
+        // 返却後は貸出中でないことを確認
+        #expect(loanModel.isBookLent(bookId: bookId) == false)
+        
+        let activeLoans = loanModel.getActiveLoans()
+        #expect(activeLoans.count == 0)
+        
+        let allLoans = loanModel.getAllLoans()
+        #expect(allLoans.count == 1)
+        #expect(allLoans.first?.isReturned == true)
+    }
+    
+    /// 貸出中でない絵本を返却しようとするとエラーが発生することのテスト
+    @Test("貸出中でない絵本を返却しようとするとエラーが発生することのテスト")
+    func returnBookNotLent() throws {
+        let (_, _, _, loanModel, testBook, _) = try createLoanModel()
+        
+        let bookId = testBook.id
+        
+        // 貸出中でないことを確認
+        #expect(loanModel.isBookLent(bookId: bookId) == false)
+        
+        // 貸出中でない絵本を返却しようとするとエラーが発生することを確認
+        #expect(throws: LoanModelError.loanNotFound) {
+            try loanModel.returnBook(bookId: bookId)
+        }
+    }
 }

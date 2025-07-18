@@ -186,6 +186,35 @@ public class LoanModel {
         }
     }
     
+    /// 絵本IDから絵本を返却する
+    ///
+    /// - Parameter bookId: 返却する絵本のID
+    /// - Returns: 更新された貸出情報
+    /// - Throws: 返却処理に失敗した場合は `LoanModelError` を投げます
+    public func returnBook(bookId: UUID) throws -> Loan {
+        // 指定された絵本の現在の貸出情報を検索
+        guard let currentLoan = loans.first(where: { $0.bookId == bookId && !$0.isReturned }) else {
+            // キャッシュにない場合はリポジトリから検索
+            do {
+                let allLoans = try repository.fetchActiveLoans()
+                if let repositoryLoan = allLoans.first(where: {
+                    $0.bookId == bookId && !$0.isReturned
+                }) {
+                    // 見つかった場合はキャッシュを更新してから返却処理
+                    loans = allLoans
+                    return try returnBook(loanId: repositoryLoan.id)
+                }
+            } catch {
+                throw LoanModelError.loanNotFound
+            }
+            
+            throw LoanModelError.loanNotFound
+        }
+        
+        // 見つかった貸出情報のIDで返却処理を実行
+        return try returnBook(loanId: currentLoan.id)
+    }
+    
     /// 絵本が現在貸出中かどうかを確認する
     ///
     /// - Parameter bookId: 確認する絵本のID
