@@ -12,22 +12,25 @@ struct UserDetailContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LendingModel.self) private var lendingModel
     @Environment(BookModel.self) private var bookModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
     
-    let initialUser: User
-    
+    /// 園児
     @State private var user: User
+    /// 編集表示
     @State private var isEditSheetPresented = false
+    /// 貸出数
     @State private var activeLoansCount = 0
+    /// 貸出履歴
     @State private var loanHistory: [Loan] = []
     
     init(user: User) {
-        self.initialUser = user
         self._user = State(initialValue: user)
     }
     
     var body: some View {
         UserDetailView(
             user: user,
+            classGroupName: getClassGroupName(for: user.classGroupId),
             activeLoansCount: activeLoansCount,
             loanHistory: loanHistory,
             getBookTitle: getBookTitle,
@@ -63,6 +66,9 @@ struct UserDetailContainerView: View {
         loadUserData()
     }
     
+    /// 絵本タイトル取得
+    /// - Parameter bookId: 絵本ID
+    /// - Returns: 絵本タイトル
     private func getBookTitle(for bookId: UUID) -> String {
         guard let book = bookModel.findBookById(bookId) else {
             return "不明な絵本"
@@ -70,6 +76,17 @@ struct UserDetailContainerView: View {
         return book.title
     }
     
+    /// 組名取得
+    /// - Parameter classGroupId: 組ID
+    /// - Returns: 組名
+    private func getClassGroupName(for classGroupId: UUID) -> String {
+        guard let classGroup = classGroupModel.findClassGroupById(classGroupId) else {
+            return "不明な組"
+        }
+        return classGroup.name
+    }
+    
+    /// 貸出情報取得
     private func loadUserData() {
         let activeLoans = lendingModel.getActiveLoans()
         activeLoansCount = activeLoans.filter { $0.userId == user.id }.count

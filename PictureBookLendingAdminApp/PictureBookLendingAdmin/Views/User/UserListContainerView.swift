@@ -29,44 +29,42 @@ struct UserListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            UserListView(
-                users: filteredUsers,
-                searchText: $searchText,
-                onDelete: handleDeleteUsers
-            )
-            .navigationTitle("利用者一覧")
-            .navigationDestination(for: User.self) { user in
-                UserDetailContainerView(user: user)
-            }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        isAddSheetPresented = true
-                    }) {
-                        Label("利用者を追加", systemImage: "plus")
-                    }
+        UserListView(
+            users: filteredUsers,
+            searchText: $searchText,
+            onDelete: handleDeleteUsers
+        )
+        .navigationTitle("利用者一覧")
+        .navigationDestination(for: User.self) { user in
+            UserDetailContainerView(user: user)
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    isAddSheetPresented = true
+                }) {
+                    Label("利用者を追加", systemImage: "plus")
                 }
             }
-            .sheet(isPresented: $isAddSheetPresented) {
-                UserFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
-                    }
-                )
-            }
-            .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(alertState.message)
-            }
-            .onAppear {
-                userModel.refreshUsers()
-            }
-            .refreshable {
-                userModel.refreshUsers()
-            }
+        }
+        .sheet(isPresented: $isAddSheetPresented) {
+            UserFormContainerView(
+                mode: .add,
+                onSave: { _ in
+                    // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
+                }
+            )
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .onAppear {
+            userModel.refreshUsers()
+        }
+        .refreshable {
+            userModel.refreshUsers()
         }
     }
     
@@ -82,7 +80,6 @@ struct UserListContainerView: View {
             }
         }
     }
-    
 }
 
 #Preview {

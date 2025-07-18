@@ -10,14 +10,18 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.dismiss) private var dismiss
     
     let mode: UserFormMode
     var onSave: ((User) -> Void)? = nil
     
+    /// 園児名
     @State private var name = ""
-    @State private var classGroupId = UUID()
-    @State private var classGroupName = ""
+    /// 所属している組
+    @State private var classGroup: ClassGroup?
+    /// 組一覧
+    @State private var classGroups: [ClassGroup] = []
     @State private var alertState = AlertState()
     
     init(mode: UserFormMode, onSave: ((User) -> Void)? = nil) {
@@ -30,10 +34,8 @@ struct UserFormContainerView: View {
             UserFormView(
                 mode: mode,
                 name: $name,
-                group: $classGroupName,
-                isValidInput: isValidInput,
-                onSave: handleSave,
-                onCancel: handleCancel
+                classGroup: $classGroup,
+                classGroups: classGroups
             )
             .navigationTitle(isEditMode ? "利用者情報を編集" : "利用者を登録")
             .toolbar {
@@ -73,7 +75,6 @@ struct UserFormContainerView: View {
     
     private var isValidInput: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !classGroupName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     // MARK: - Actions
@@ -88,14 +89,14 @@ struct UserFormContainerView: View {
             
             switch mode {
             case .add:
-                let newUser = User(name: name, classGroupId: classGroupId)
+                let newUser = User(name: name, classGroupId: classGroup?.id ?? UUID())
                 savedUser = try userModel.registerUser(newUser)
 
             case .edit(let user):
                 let updatedUser = User(
                     id: user.id,
                     name: name,
-                    classGroupId: classGroupId
+                    classGroupId: classGroup?.id ?? UUID()
                 )
                 savedUser = try userModel.updateUser(updatedUser)
             }
@@ -110,8 +111,8 @@ struct UserFormContainerView: View {
     private func loadInitialData() {
         if case .edit(let user) = mode {
             name = user.name
-            classGroupId = user.classGroupId
-            classGroupName = "組情報"  // 一時的な実装
+            classGroup = classGroupModel.findClassGroupById(user.classGroupId)
+            classGroups = classGroupModel.getAllClassGroups()
         }
     }
 }

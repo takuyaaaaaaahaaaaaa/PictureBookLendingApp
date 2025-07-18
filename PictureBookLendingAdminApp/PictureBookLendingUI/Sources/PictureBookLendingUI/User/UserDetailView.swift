@@ -7,6 +7,7 @@ import SwiftUI
 /// 画面制御はContainer Viewに委譲します。
 public struct UserDetailView: View {
     let user: User
+    let classGroupName: String
     let activeLoansCount: Int
     let loanHistory: [Loan]
     let getBookTitle: (UUID) -> String
@@ -14,12 +15,14 @@ public struct UserDetailView: View {
     
     public init(
         user: User,
+        classGroupName: String,
         activeLoansCount: Int,
         loanHistory: [Loan],
         getBookTitle: @escaping (UUID) -> String,
         onEdit: @escaping () -> Void
     ) {
         self.user = user
+        self.classGroupName = classGroupName
         self.activeLoansCount = activeLoansCount
         self.loanHistory = loanHistory
         self.getBookTitle = getBookTitle
@@ -30,7 +33,7 @@ public struct UserDetailView: View {
         List {
             Section("基本情報") {
                 DetailRow(label: "名前", value: user.name)
-                DetailRow(label: "グループ", value: "組情報")
+                DetailRow(label: "グループ", value: classGroupName)
                 DetailRow(label: "管理ID", value: user.id.uuidString)
             }
             
@@ -127,6 +130,7 @@ public struct UserLoanHistoryRow: View {
     NavigationStack {
         UserDetailView(
             user: sampleUser,
+            classGroupName: "きく",
             activeLoansCount: 1,
             loanHistory: [sampleLoan],
             getBookTitle: { _ in "はらぺこあおむし" },
