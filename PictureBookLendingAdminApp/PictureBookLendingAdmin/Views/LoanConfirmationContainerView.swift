@@ -7,7 +7,7 @@ import SwiftUI
 /// 貸出確認画面のコンテナビュー
 struct LoanConfirmationContainerView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
     let book: Book
@@ -52,7 +52,7 @@ struct LoanConfirmationContainerView: View {
     
     private func confirmLoan() {
         do {
-            let _ = try lendingModel.lendBook(
+            let _ = try loanModel.lendBook(
                 bookId: book.id,
                 userId: user.id,
                 dueDate: dueDate
@@ -76,7 +76,7 @@ struct LoanConfirmationContainerView: View {
         onComplete: {}
     )
     .environment(
-        LendingModel(
+        LoanModel(
             repository: MockLoanRepository(),
             bookRepository: MockBookRepository(),
             userRepository: MockUserRepository()

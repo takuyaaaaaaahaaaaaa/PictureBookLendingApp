@@ -7,16 +7,17 @@
 └ 絵本一覧画面 (BookListContainerView)
   ├ 検索バー・フィルタボタン（統一UI）
   ├ ソート・絞り込みオプション
-  ├ 各行に「貸出」ボタン → 貸出フローへ [Sheet遷移]
+  ├ 各行に「貸出」ボタン → 貸出画面へ [Sheet遷移]
   └ 絵本詳細画面 (BookDetailContainerView) [Navigation遷移]
-    └ 「貸出」ボタン → 貸出フローへ [Sheet遷移]
+    └ 「貸出」ボタン → 貸出画面へ [Sheet遷移]
 
-貸出フロー（共通）:
-└ 貸出フロー画面 (LoanFlowContainerView) [Sheet遷移]
-  └ 組選択画面 (ClassGroupSelectionContainerView) [Navigation遷移]
-    └ 利用者選択画面 (UserSelectionContainerView) [Navigation遷移]
-      └ 貸出確認画面 (LoanConfirmationContainerView) [Navigation遷移]
-        └ 貸出完了 [Dialog表示]
+貸出画面（共通）:
+└ 貸出画面 (LoanFormContainerView) [Sheet遷移]
+  ├ 絵本情報（タイトル・管理ID）- 固定表示
+  ├ 組選択 - Picker
+  ├ 利用者選択 - Picker（組選択に応じてフィルタリング）
+  ├ 返却期限 - 自動計算表示
+  └ 貸出実行 → 完了 [Dialog表示]
 ```
 
 ### 👦 返却・履歴（利用者から）

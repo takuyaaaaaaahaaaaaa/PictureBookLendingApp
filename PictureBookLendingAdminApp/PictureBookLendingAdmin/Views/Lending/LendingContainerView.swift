@@ -26,14 +26,14 @@ struct LendingContainerView: View {
     
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     
     @State private var filterSelection = FilterType.all
     @State private var isNewLoanSheetPresented = false
     @State private var alertState = AlertState()
     
     private var filteredLoans: [Loan] {
-        let allLoans = lendingModel.getAllLoans()
+        let allLoans = loanModel.getAllLoans()
         return switch filterSelection {
         case .lent:
             allLoans.filter { !$0.isReturned }
@@ -88,12 +88,12 @@ struct LendingContainerView: View {
     private func refreshData() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
-        lendingModel.refreshLoans()
+        loanModel.refreshLoans()
     }
     
     private func handleReturn(loanId: UUID) {
         do {
-            _ = try lendingModel.returnBook(loanId: loanId)
+            _ = try loanModel.returnBook(loanId: loanId)
         } catch {
             alertState = .error("返却処理に失敗しました: \(error.localizedDescription)")
         }
@@ -104,7 +104,7 @@ struct LendingContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
@@ -113,5 +113,5 @@ struct LendingContainerView: View {
     return LendingContainerView()
         .environment(bookModel)
         .environment(userModel)
-        .environment(lendingModel)
+        .environment(loanModel)
 }

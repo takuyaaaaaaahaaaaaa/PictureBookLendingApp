@@ -9,7 +9,7 @@ import SwiftUI
 /// ビジネスロジック、状態管理、データ取得を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
 struct BookDetailContainerView: View {
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     
     let initialBook: Book
     
@@ -46,7 +46,7 @@ struct BookDetailContainerView: View {
             )
         }
         .onAppear {
-            checkLendingStatus()
+            checkLoanStatus()
         }
     }
     
@@ -58,17 +58,17 @@ struct BookDetailContainerView: View {
     
     private func handleBookSaved(_ savedBook: Book) {
         book = savedBook
-        checkLendingStatus()
+        checkLoanStatus()
     }
     
-    private func checkLendingStatus() {
-        isCurrentlyLent = lendingModel.isBookLent(bookId: book.id)
+    private func checkLoanStatus() {
+        isCurrentlyLent = loanModel.isBookLent(bookId: book.id)
     }
 }
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
@@ -78,6 +78,6 @@ struct BookDetailContainerView: View {
     
     return NavigationStack {
         BookDetailContainerView(book: sampleBook)
-            .environment(lendingModel)
+            .environment(loanModel)
     }
 }

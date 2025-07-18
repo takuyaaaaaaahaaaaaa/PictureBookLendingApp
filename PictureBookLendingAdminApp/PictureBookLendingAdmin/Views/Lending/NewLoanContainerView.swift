@@ -11,7 +11,7 @@ import SwiftUI
 struct NewLoanContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedBookId: UUID?
@@ -33,7 +33,7 @@ struct NewLoanContainerView: View {
                 bookSearchText: $bookSearchText,
                 userSearchText: $userSearchText,
                 dueDateBinding: $dueDate,
-                isBookLent: { bookModel in lendingModel.isBookLent(bookId: bookModel) },
+                isBookLent: { bookModel in loanModel.isBookLent(bookId: bookModel) },
                 onBookSelect: handleBookSelect,
                 onUserSelect: handleUserSelect,
                 onCancel: handleCancel,
@@ -121,21 +121,21 @@ struct NewLoanContainerView: View {
         
         do {
             // 最新データで状態を更新してから貸出処理
-            lendingModel.refreshLoans()
+            loanModel.refreshLoans()
             
             // すでに貸出中かどうか再確認
-            if lendingModel.isBookLent(bookId: bookId) {
+            if loanModel.isBookLent(bookId: bookId) {
                 alertState = .error("この絵本はすでに貸出中です")
                 return
             }
             
-            _ = try lendingModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+            _ = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
             dismiss()
-        } catch LendingModelError.bookAlreadyLent {
+        } catch LoanModelError.bookAlreadyLent {
             alertState = .error("この絵本はすでに貸出中です")
-        } catch LendingModelError.bookNotFound {
+        } catch LoanModelError.bookNotFound {
             alertState = .error("選択された絵本が見つかりません")
-        } catch LendingModelError.userNotFound {
+        } catch LoanModelError.userNotFound {
             alertState = .error("選択された利用者が見つかりません")
         } catch {
             alertState = .error("貸出登録に失敗しました: \(error.localizedDescription)")
@@ -145,7 +145,7 @@ struct NewLoanContainerView: View {
     private func refreshData() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
-        lendingModel.refreshLoans()
+        loanModel.refreshLoans()
     }
 }
 
@@ -153,7 +153,7 @@ struct NewLoanContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
@@ -162,5 +162,5 @@ struct NewLoanContainerView: View {
     return NewLoanContainerView()
         .environment(bookModel)
         .environment(userModel)
-        .environment(lendingModel)
+        .environment(loanModel)
 }

@@ -48,7 +48,7 @@ struct ContentView: View {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
@@ -58,6 +58,6 @@ struct ContentView: View {
     ContentView()
         .environment(bookModel)
         .environment(userModel)
-        .environment(lendingModel)
+        .environment(loanModel)
         .environment(classGroupModel)
 }

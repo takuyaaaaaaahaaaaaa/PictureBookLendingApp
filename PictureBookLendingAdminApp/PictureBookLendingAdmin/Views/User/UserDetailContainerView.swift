@@ -10,7 +10,7 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct UserDetailContainerView: View {
     @Environment(UserModel.self) private var userModel
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
@@ -88,10 +88,10 @@ struct UserDetailContainerView: View {
     
     /// 貸出情報取得
     private func loadUserData() {
-        let activeLoans = lendingModel.getActiveLoans()
+        let activeLoans = loanModel.getActiveLoans()
         activeLoansCount = activeLoans.filter { $0.userId == user.id }.count
         
-        loanHistory = lendingModel.getLoansByUser(userId: user.id)
+        loanHistory = loanModel.getLoansByUser(userId: user.id)
     }
 }
 
@@ -99,7 +99,7 @@ struct UserDetailContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
     let bookModel = BookModel(repository: mockFactory.bookRepository)
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository
@@ -111,6 +111,6 @@ struct UserDetailContainerView: View {
         UserDetailContainerView(user: sampleUser)
             .environment(userModel)
             .environment(bookModel)
-            .environment(lendingModel)
+            .environment(loanModel)
     }
 }

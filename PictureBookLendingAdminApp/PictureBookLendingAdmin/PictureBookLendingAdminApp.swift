@@ -16,7 +16,7 @@ struct PictureBookLendingAdminApp: App {
     @State private var userModel: UserModel
     
     /// 貸出モデル
-    @State private var lendingModel: LendingModel
+    @State private var loanModel: LoanModel
     
     /// クラス（組）モデル
     @State private var classGroupModel: ClassGroupModel
@@ -50,8 +50,8 @@ struct PictureBookLendingAdminApp: App {
             // @StateのwrappedValueを使用して初期化
             _bookModel = State(wrappedValue: BookModel(repository: bookRepository))
             _userModel = State(wrappedValue: UserModel(repository: userRepository))
-            _lendingModel = State(
-                wrappedValue: LendingModel(
+            _loanModel = State(
+                wrappedValue: LoanModel(
                     repository: loanRepository,
                     bookRepository: bookRepository,
                     userRepository: userRepository
@@ -69,7 +69,7 @@ struct PictureBookLendingAdminApp: App {
             ContentView()
                 .environment(bookModel)
                 .environment(userModel)
-                .environment(lendingModel)
+                .environment(loanModel)
                 .environment(classGroupModel)
         }
         .modelContainer(sharedModelContainer)

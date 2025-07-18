@@ -3,7 +3,7 @@ import Observation
 import PictureBookLendingDomain
 
 /// 貸出管理に関するエラー
-public enum LendingModelError: Error, Equatable {
+public enum LoanModelError: Error, Equatable {
     /// 指定された貸出情報が見つからない場合のエラー
     case loanNotFound
     /// 指定された利用者が見つからない場合のエラー
@@ -29,7 +29,7 @@ public enum LendingModelError: Error, Equatable {
 /// - 特定の利用者の貸出履歴
 /// などの機能を提供します。
 @Observable
-public class LendingModel {
+public class LoanModel {
     
     /// 貸出リポジトリ
     private let repository: LoanRepositoryProtocol
@@ -73,25 +73,25 @@ public class LendingModel {
     ///   - userId: 借りる利用者のID
     ///   - dueDate: 返却期限日
     /// - Returns: 作成された貸出情報
-    /// - Throws: 貸出処理に失敗した場合は `LendingModelError` を投げます
+    /// - Throws: 貸出処理に失敗した場合は `LoanModelError` を投げます
     public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
         do {
             _ = try bookRepository.findById(bookId)
         } catch {
-            throw LendingModelError.bookNotFound
+            throw LoanModelError.bookNotFound
         }
         
         // 利用者の存在確認
         do {
             _ = try userRepository.findById(userId)
         } catch {
-            throw LendingModelError.userNotFound
+            throw LoanModelError.userNotFound
         }
         
         // 貸出中かどうかのチェック
         if isBookLent(bookId: bookId) {
-            throw LendingModelError.bookAlreadyLent
+            throw LoanModelError.bookAlreadyLent
         }
         
         // 貸出情報の作成
@@ -113,7 +113,7 @@ public class LendingModel {
             
             return savedLoan
         } catch {
-            throw LendingModelError.lendingFailed
+            throw LoanModelError.lendingFailed
         }
     }
     
@@ -121,25 +121,25 @@ public class LendingModel {
     ///
     /// - Parameter loanId: 返却する貸出情報のID
     /// - Returns: 更新された貸出情報
-    /// - Throws: 返却処理に失敗した場合は `LendingModelError` を投げます
+    /// - Throws: 返却処理に失敗した場合は `LoanModelError` を投げます
     public func returnBook(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
             // リポジトリからも検索
             do {
                 if try repository.findById(loanId) == nil {
-                    throw LendingModelError.loanNotFound
+                    throw LoanModelError.loanNotFound
                 }
             } catch {
-                throw LendingModelError.loanNotFound
+                throw LoanModelError.loanNotFound
             }
             
-            throw LendingModelError.loanNotFound
+            throw LoanModelError.loanNotFound
         }
         
         // すでに返却済みかチェック
         if loans[loanIndex].isReturned {
-            throw LendingModelError.returnFailed
+            throw LoanModelError.returnFailed
         }
         
         // 返却処理：返却日を設定
@@ -162,7 +162,7 @@ public class LendingModel {
             
             return result
         } catch {
-            throw LendingModelError.returnFailed
+            throw LoanModelError.returnFailed
         }
     }
     
