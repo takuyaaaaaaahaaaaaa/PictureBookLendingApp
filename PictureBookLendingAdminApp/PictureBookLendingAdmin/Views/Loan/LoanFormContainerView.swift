@@ -57,7 +57,13 @@ struct LoanFormContainerView: View {
                 }
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
+                if alertState.type == .success {
+                    Button("OK", role: .cancel) {
+                        dismiss()  // 成功時は画面を閉じる
+                    }
+                } else {
+                    Button("OK", role: .cancel) {}
+                }
             } message: {
                 Text(alertState.message)
             }
@@ -106,7 +112,7 @@ struct LoanFormContainerView: View {
             }
             
             _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id, dueDate: dueDate)
-            dismiss()
+            alertState = .success("貸出登録が完了しました")
         } catch LoanModelError.bookAlreadyLent {
             alertState = .error("この絵本はすでに貸出中です")
         } catch LoanModelError.bookNotFound {

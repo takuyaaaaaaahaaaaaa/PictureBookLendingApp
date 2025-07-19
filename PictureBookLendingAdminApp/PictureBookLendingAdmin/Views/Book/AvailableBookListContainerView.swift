@@ -14,10 +14,16 @@ struct AvailableBookListContainerView: View {
     @State private var alertState = AlertState()
     
     private var filteredBooks: [Book] {
+        // 貸出可能な絵本のみをフィルタリング
+        let availableBooks = bookModel.books.filter { book in
+            !loanModel.isBookLent(bookId: book.id)
+        }
+        
+        // 検索テキストでさらにフィルタリング
         return if searchText.isEmpty {
-            bookModel.books
+            availableBooks
         } else {
-            bookModel.books.filter { book in
+            availableBooks.filter { book in
                 book.title.localizedCaseInsensitiveContains(searchText)
                     || book.author.localizedCaseInsensitiveContains(searchText)
             }
