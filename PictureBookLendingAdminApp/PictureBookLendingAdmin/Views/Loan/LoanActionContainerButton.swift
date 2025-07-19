@@ -61,7 +61,7 @@ struct LoanActionContainerButton: View {
                 try loanModel.returnBook(bookId: book.id)
                 alertState = .success("返却が完了しました")
             } catch {
-                alertState = .error("返却に失敗しました: \(error.localizedDescription)")
+                alertState = .error(error.localizedDescription)
             }
         }
     }

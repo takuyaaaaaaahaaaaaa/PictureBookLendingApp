@@ -1,3 +1,4 @@
+import Foundation
 import Observation
 import PictureBookLendingDomain
 
@@ -39,7 +40,14 @@ public class LoanSettingsModel {
 }
 
 /// 貸出設定に関するエラー
-public enum LoanSettingsError: Error, Equatable {
+public enum LoanSettingsError: Error, Equatable, LocalizedError {
     /// 無効な設定値
     case invalidSettings
+    
+    public var errorDescription: String? {
+        switch self {
+        case .invalidSettings:
+            return "無効な設定値です"
+        }
+    }
 }

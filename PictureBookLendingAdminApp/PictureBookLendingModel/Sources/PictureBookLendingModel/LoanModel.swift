@@ -3,7 +3,7 @@ import Observation
 import PictureBookLendingDomain
 
 /// 貸出管理に関するエラー
-public enum LoanModelError: Error, Equatable {
+public enum LoanModelError: Error, Equatable, LocalizedError {
     /// 指定された貸出情報が見つからない場合のエラー
     case loanNotFound
     /// 指定された利用者が見つからない場合のエラー
@@ -18,6 +18,25 @@ public enum LoanModelError: Error, Equatable {
     case lendingFailed
     /// その他の返却処理失敗エラー
     case returnFailed
+    
+    public var errorDescription: String? {
+        switch self {
+        case .loanNotFound:
+            return "指定された貸出情報が見つかりません"
+        case .userNotFound:
+            return "指定された利用者が見つかりません"
+        case .bookNotFound:
+            return "指定された絵本が見つかりません"
+        case .bookAlreadyLent:
+            return "この絵本は既に貸出中です"
+        case .maxBooksPerUserExceeded:
+            return "貸出可能な上限冊数を超えています"
+        case .lendingFailed:
+            return "貸出処理に失敗しました"
+        case .returnFailed:
+            return "返却処理に失敗しました"
+        }
+    }
 }
 
 /// 貸出管理モデル

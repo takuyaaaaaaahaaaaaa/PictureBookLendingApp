@@ -3,7 +3,7 @@ import Observation
 import PictureBookLendingDomain
 
 /// クラス（組）管理に関するエラー
-public enum ClassGroupModelError: Error, Equatable {
+public enum ClassGroupModelError: Error, Equatable, LocalizedError {
     /// 指定されたクラスが見つからない場合のエラー
     case classGroupNotFound
     /// クラス登録に失敗した場合のエラー
@@ -12,6 +12,19 @@ public enum ClassGroupModelError: Error, Equatable {
     case updateFailed
     /// クラス削除に失敗した場合のエラー
     case deletionFailed
+    
+    public var errorDescription: String? {
+        switch self {
+        case .classGroupNotFound:
+            return "指定されたクラスが見つかりません"
+        case .registrationFailed:
+            return "クラスの登録に失敗しました"
+        case .updateFailed:
+            return "クラス情報の更新に失敗しました"
+        case .deletionFailed:
+            return "クラスの削除に失敗しました"
+        }
+    }
 }
 
 /// クラス（組）管理モデル
