@@ -11,6 +11,7 @@ struct SettingsContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
+    @Environment(\.dismiss) private var dismiss
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
@@ -37,6 +38,13 @@ struct SettingsContainerView: View {
                 }
             )
             .navigationTitle("設定")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("閉じる") {
+                        dismiss()
+                    }
+                }
+            }
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
                 case .classGroup:

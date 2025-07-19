@@ -25,7 +25,7 @@ struct ContentView: View {
             
             // 返却（貸出記録から）タブ
             NavigationStack {
-                LendingContainerView()
+                LoanListContainerView()
             }
             .tabItem {
                 Label("返却", systemImage: "arrow.counterclockwise")

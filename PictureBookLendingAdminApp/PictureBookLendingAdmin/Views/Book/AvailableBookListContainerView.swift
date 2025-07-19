@@ -11,6 +11,7 @@ struct AvailableBookListContainerView: View {
     
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
+    @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
     
     private var filteredBooks: [Book] {
@@ -39,6 +40,16 @@ struct AvailableBookListContainerView: View {
             LoanActionContainerButton(book: book)
         }
         .navigationTitle("貸出")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("設定", systemImage: "gearshape") {
+                    isSettingsPresented = true
+                }
+            }
+        }
+        .sheet(isPresented: $isSettingsPresented) {
+            SettingsContainerView()
+        }
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }
