@@ -5,25 +5,28 @@ import SwiftUI
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-public struct BookDetailView: View {
+public struct BookDetailView<ActionButton: View>: View {
     @Binding var bookTitle: String
     @Binding var bookAuthor: String
     let bookId: UUID
     let isCurrentlyLent: Bool
     let onEdit: () -> Void
+    let actionButton: () -> ActionButton
     
     public init(
         bookTitle: Binding<String>,
         bookAuthor: Binding<String>,
         bookId: UUID,
         isCurrentlyLent: Bool,
-        onEdit: @escaping () -> Void
+        onEdit: @escaping () -> Void,
+        @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._bookTitle = bookTitle
         self._bookAuthor = bookAuthor
         self.bookId = bookId
         self.isCurrentlyLent = isCurrentlyLent
         self.onEdit = onEdit
+        self.actionButton = actionButton
     }
     
     public var body: some View {
@@ -36,14 +39,11 @@ public struct BookDetailView: View {
             
             Section("貸出状況") {
                 HStack {
-                    Image(
-                        systemName: isCurrentlyLent
-                            ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
-                    )
-                    .foregroundStyle(isCurrentlyLent ? .orange : .green)
+                    BookStatusView(isCurrentlyLent: isCurrentlyLent)
                     
-                    Text(isCurrentlyLent ? "現在貸出中" : "貸出可能")
-                        .foregroundStyle(isCurrentlyLent ? .orange : .green)
+                    Spacer()
+                    
+                    actionButton()
                 }
             }
             
@@ -68,7 +68,10 @@ public struct BookDetailView: View {
             bookId: sampleBookId,
             isCurrentlyLent: false,
             onEdit: {}
-        )
+        ) {
+            Button("貸出") {}
+                .buttonStyle(.bordered)
+        }
         .navigationTitle(bookTitle)
     }
 }

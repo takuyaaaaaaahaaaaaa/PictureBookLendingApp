@@ -40,19 +40,6 @@ struct UserDetailContainerView: View {
             onEdit: handleEdit
         )
         .navigationTitle(user.name)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("編集") {
-                    isEditSheetPresented = true
-                }
-            }
-        }
-        .sheet(isPresented: $isEditSheetPresented) {
-            UserFormContainerView(
-                mode: .edit(user),
-                onSave: handleUserSaved
-            )
-        }
         .onAppear {
             loadUserData()
         }

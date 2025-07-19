@@ -10,15 +10,13 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct BookDetailContainerView: View {
     @Environment(LoanModel.self) private var loanModel
-    
-    let initialBook: Book
+    @Environment(BookModel.self) private var bookModel
     
     @State private var book: Book
     @State private var isEditSheetPresented = false
-    @State private var isCurrentlyLent = false
+    @State private var alertState = AlertState()
     
     init(book: Book) {
-        self.initialBook = book
         self._book = State(initialValue: book)
     }
     
@@ -29,27 +27,29 @@ struct BookDetailContainerView: View {
             bookId: book.id,
             isCurrentlyLent: isCurrentlyLent,
             onEdit: handleEdit
-        )
+        ) {
+            LoanActionContainerButton(book: book)
+        }
         .navigationTitle(book.title)
         #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
         #endif
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("編集") {
-                    isEditSheetPresented = true
-                }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .onChange(of: book) { _, newValue in
+            do {
+                _ = try bookModel.updateBook(newValue)
+            } catch {
+                alertState = .error(error.localizedDescription)
             }
         }
-        .sheet(isPresented: $isEditSheetPresented) {
-            BookFormContainerView(
-                mode: .edit(book),
-                onSave: handleBookSaved
-            )
-        }
-        .onAppear {
-            checkLoanStatus()
-        }
+    }
+    
+    private var isCurrentlyLent: Bool {
+        loanModel.isBookLent(bookId: book.id)
     }
     
     // MARK: - Actions
@@ -60,11 +60,6 @@ struct BookDetailContainerView: View {
     
     private func handleBookSaved(_ savedBook: Book) {
         book = savedBook
-        checkLoanStatus()
-    }
-    
-    private func checkLoanStatus() {
-        isCurrentlyLent = loanModel.isBookLent(bookId: book.id)
     }
 }
 
