@@ -4,8 +4,8 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 絵本一覧のContainer View
-struct BookListContainerView: View {
+/// 貸出可能絵本一覧のContainer View
+struct AvailableBookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanModel.self) private var loanModel
     
@@ -32,7 +32,7 @@ struct BookListContainerView: View {
         ) { book in
             LoanActionContainerButton(book: book)
         }
-        .navigationTitle("絵本一覧")
+        .navigationTitle("貸出")
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }
@@ -80,7 +80,7 @@ struct BookListContainerView: View {
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
-    return BookListContainerView()
+    return AvailableBookListContainerView()
         .environment(bookModel)
         .environment(loanModel)
 }

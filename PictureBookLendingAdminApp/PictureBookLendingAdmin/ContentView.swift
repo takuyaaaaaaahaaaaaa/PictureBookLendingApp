@@ -16,7 +16,7 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             // 貸出（絵本から）タブ
             NavigationStack {
-                BookListContainerView()
+                AvailableBookListContainerView()
             }
             .tabItem {
                 Label("貸出", systemImage: "book")
