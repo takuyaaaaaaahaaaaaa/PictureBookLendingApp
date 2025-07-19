@@ -22,6 +22,7 @@ struct SettingsContainerView: View {
                 userCount: userModel.users.count,
                 bookCount: bookModel.books.count,
                 loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
+                maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
                 onSelectClassGroup: {
                     navigationPath.append(SettingsDestination.classGroup)
                 },

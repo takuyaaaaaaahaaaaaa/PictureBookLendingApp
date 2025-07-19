@@ -30,7 +30,7 @@ struct BookListContainerView: View {
             searchText: $searchText,
             onDelete: handleDeleteBooks
         ) { book in
-            BookActionContainerButton(book: book)
+            LoanActionContainerButton(book: book)
         }
         .navigationTitle("絵本一覧")
         .navigationDestination(for: Book.self) { book in

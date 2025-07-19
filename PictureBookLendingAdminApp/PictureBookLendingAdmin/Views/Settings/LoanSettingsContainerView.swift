@@ -13,11 +13,13 @@ struct LoanSettingsContainerView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var loanPeriodDays: Int = 14
+    @State private var maxBooksPerUser: Int = 1
     @State private var alertState = AlertState()
     
     var body: some View {
         LoanSettingsView(
             loanPeriodDays: $loanPeriodDays,
+            maxBooksPerUser: $maxBooksPerUser,
             onReset: handleReset
         )
         .toolbar {
@@ -47,10 +49,11 @@ struct LoanSettingsContainerView: View {
     // MARK: - Actions
     
     private func handleSave() {
-        let newSettings = LoanSettings(defaultLoanPeriodDays: loanPeriodDays)
+        let newSettings = LoanSettings(
+            defaultLoanPeriodDays: loanPeriodDays, maxBooksPerUser: maxBooksPerUser)
         
         guard newSettings.isValid() else {
-            alertState = .error("設定値が無効です。1日〜365日の範囲で設定してください。")
+            alertState = .error("設定値が無効です。貸出期間は1日〜365日、貸出可能数は1冊以上で設定してください。")
             return
         }
         
@@ -66,11 +69,13 @@ struct LoanSettingsContainerView: View {
     
     private func handleReset() {
         loanPeriodDays = LoanSettings.default.defaultLoanPeriodDays
-        alertState = .success("デフォルト設定（\(loanPeriodDays)日）にリセットしました")
+        maxBooksPerUser = LoanSettings.default.maxBooksPerUser
+        alertState = .success("デフォルト設定（\(loanPeriodDays)日・\(maxBooksPerUser)冊）にリセットしました")
     }
     
     private func loadCurrentSettings() {
         loanPeriodDays = loanSettingsModel.settings.defaultLoanPeriodDays
+        maxBooksPerUser = loanSettingsModel.settings.maxBooksPerUser
     }
 }
 

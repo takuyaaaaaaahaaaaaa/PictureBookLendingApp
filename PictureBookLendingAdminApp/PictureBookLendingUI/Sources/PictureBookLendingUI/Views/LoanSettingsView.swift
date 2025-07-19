@@ -6,13 +6,16 @@ import SwiftUI
 /// 設定の保存や検証はContainer Viewに委譲します。
 public struct LoanSettingsView: View {
     @Binding var loanPeriodDays: Int
+    @Binding var maxBooksPerUser: Int
     let onReset: () -> Void
     
     public init(
         loanPeriodDays: Binding<Int>,
+        maxBooksPerUser: Binding<Int>,
         onReset: @escaping () -> Void
     ) {
         self._loanPeriodDays = loanPeriodDays
+        self._maxBooksPerUser = maxBooksPerUser
         self.onReset = onReset
     }
     
@@ -40,6 +43,28 @@ public struct LoanSettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                 }
+                
+                Section("貸出可能数設定") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("一人当たりの貸出可能数")
+                            Spacer()
+                            Text("\(maxBooksPerUser)冊")
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                        Stepper(
+                            "貸出可能数: \(maxBooksPerUser)冊",
+                            value: $maxBooksPerUser,
+                            in: 1...99
+                        )
+                        .labelsHidden()
+                        
+                        Text("一人の利用者が同時に借りられる絵本の最大数です")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             
             VStack(spacing: 12) {
@@ -47,7 +72,7 @@ public struct LoanSettingsView: View {
                     .frame(maxWidth: .infinity)
                     .foregroundStyle(.orange)
                 
-                Text("デフォルト設定（14日）にリセットされます")
+                Text("デフォルト設定（14日・1冊）にリセットされます")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -66,6 +91,7 @@ public struct LoanSettingsView: View {
     NavigationStack {
         LoanSettingsView(
             loanPeriodDays: .constant(14),
+            maxBooksPerUser: .constant(1),
             onReset: {}
         )
     }

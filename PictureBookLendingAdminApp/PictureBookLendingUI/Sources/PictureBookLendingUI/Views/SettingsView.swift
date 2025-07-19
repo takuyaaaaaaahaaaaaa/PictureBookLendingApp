@@ -9,6 +9,7 @@ public struct SettingsView: View {
     let userCount: Int
     let bookCount: Int
     let loanPeriodDays: Int
+    let maxBooksPerUser: Int
     let onSelectClassGroup: () -> Void
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
@@ -19,6 +20,7 @@ public struct SettingsView: View {
         userCount: Int,
         bookCount: Int,
         loanPeriodDays: Int,
+        maxBooksPerUser: Int,
         onSelectClassGroup: @escaping () -> Void,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
@@ -28,6 +30,7 @@ public struct SettingsView: View {
         self.userCount = userCount
         self.bookCount = bookCount
         self.loanPeriodDays = loanPeriodDays
+        self.maxBooksPerUser = maxBooksPerUser
         self.onSelectClassGroup = onSelectClassGroup
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
@@ -60,7 +63,7 @@ public struct SettingsView: View {
             SettingsMenuItem(
                 iconName: "clock",
                 title: "貸出設定",
-                subtitle: "貸出期間：\(loanPeriodDays)日",
+                subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
                 action: onSelectLoanSettings
             )
             
@@ -110,6 +113,7 @@ private struct SettingsMenuItem: View {
             userCount: 25,
             bookCount: 120,
             loanPeriodDays: 14,
+            maxBooksPerUser: 1,
             onSelectClassGroup: {},
             onSelectUser: {},
             onSelectBook: {},

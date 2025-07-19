@@ -4,14 +4,15 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 絵本のアクションボタンContainer View
+/// 絵本の貸出アクションボタンContainer View
 ///
 /// 貸出中かどうかに応じて貸出ボタンまたは返却ボタンを表示します。
 /// Presentation ViewにUI表示を委譲し、ビジネスロジックのみを処理します。
-struct BookActionContainerButton: View {
+struct LoanActionContainerButton: View {
     let book: Book
     @Environment(LoanModel.self) private var loanModel
     @State private var isLoanSheetPresented = false
+    @State private var isReturnConfirmationPresented = false
     @State private var alertState = AlertState()
     
     private var isBookLent: Bool {
@@ -29,6 +30,14 @@ struct BookActionContainerButton: View {
         .sheet(isPresented: $isLoanSheetPresented) {
             LoanFormContainerView(selectedBook: book)
         }
+        .alert("返却確認", isPresented: $isReturnConfirmationPresented) {
+            Button("キャンセル", role: .cancel) {}
+            Button("返却する", role: .destructive) {
+                performReturn()
+            }
+        } message: {
+            Text("「\(book.title)」を返却しますか？")
+        }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -43,6 +52,10 @@ struct BookActionContainerButton: View {
     }
     
     private func handleReturnTap() {
+        isReturnConfirmationPresented = true
+    }
+    
+    private func performReturn() {
         Task {
             do {
                 try loanModel.returnBook(bookId: book.id)
@@ -69,7 +82,7 @@ struct BookActionContainerButton: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
     VStack(spacing: 16) {
-        BookActionContainerButton(book: sampleBook)
+        LoanActionContainerButton(book: sampleBook)
         
         // リスト内での表示例
         List {
@@ -84,7 +97,7 @@ struct BookActionContainerButton: View {
                 
                 Spacer()
                 
-                BookActionContainerButton(book: sampleBook)
+                LoanActionContainerButton(book: sampleBook)
             }
             .padding(.vertical, 4)
         }
