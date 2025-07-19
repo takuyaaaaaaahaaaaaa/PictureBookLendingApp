@@ -36,23 +36,6 @@ struct BookListContainerView: View {
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button(action: {
-                    isAddSheetPresented = true
-                }) {
-                    Label("絵本を追加", systemImage: "plus")
-                }
-            }
-        }
-        .sheet(isPresented: $isAddSheetPresented) {
-            BookFormContainerView(
-                mode: .add,
-                onSave: { _ in
-                    // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                }
-            )
-        }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {
