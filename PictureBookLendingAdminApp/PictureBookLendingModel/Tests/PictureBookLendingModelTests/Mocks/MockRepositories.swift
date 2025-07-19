@@ -152,11 +152,24 @@ class MockClassGroupRepository: ClassGroupRepositoryProtocol {
     }
 }
 
+/// テスト用のモック貸出設定リポジトリ
+class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable {
+    private var settings: LoanSettings = .default
+    
+    func fetch() -> LoanSettings {
+        return settings
+    }
+    
+    func save(_ newSettings: LoanSettings) throws {
+        settings = newSettings
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 class MockRepositoryFactory {
     let bookRepository = MockBookRepository()
     let userRepository = MockUserRepository()
     let loanRepository = MockLoanRepository()
     let classGroupRepository = MockClassGroupRepository()
-    // LoanSettingsRepositoryは各テストファイル内で定義
+    let loanSettingsRepository = MockLoanSettingsRepository()
 }

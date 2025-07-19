@@ -4,25 +4,6 @@ import Testing
 
 @testable import PictureBookLendingModel
 
-// テスト用のモック貸出設定リポジトリ
-private final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable
-{
-    private let lock = NSLock()
-    private var settings: LoanSettings = LoanSettings.default
-    
-    func fetch() -> LoanSettings {
-        lock.lock()
-        defer { lock.unlock() }
-        return settings
-    }
-    
-    func save(_ newSettings: LoanSettings) throws {
-        lock.lock()
-        defer { lock.unlock() }
-        self.settings = newSettings
-    }
-}
-
 /// LoanModelテストケース
 ///
 /// 絵本の貸出・返却を管理するモデルの基本機能をテストします。
@@ -38,12 +19,11 @@ struct LoanModelTests {
         
         let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
         let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
-        let loanSettingsRepository = MockLoanSettingsRepository()
         let loanModel = LoanModel(
             repository: mockRepositoryFactory.loanRepository,
             bookRepository: mockRepositoryFactory.bookRepository,
             userRepository: mockRepositoryFactory.userRepository,
-            loanSettingsRepository: loanSettingsRepository
+            loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
         )
         
         // テスト用データのセットアップ
@@ -154,5 +134,115 @@ struct LoanModelTests {
         #expect(throws: LoanModelError.loanNotFound) {
             try loanModel.returnBook(bookId: bookId)
         }
+    }
+    
+    /// 貸出可能上限チェック機能のテスト
+    @Test("貸出可能上限チェック機能のテスト")
+    func maxBooksPerUserCheck() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        // 貸出可能数を1冊に設定
+        let settings = LoanSettings(defaultLoanPeriodDays: 14, maxBooksPerUser: 1)
+        try mockRepositoryFactory.loanSettingsRepository.save(settings)
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        // 1冊目の貸出（成功すべき）
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        
+        #expect(loan1.userId == userId)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+        
+        // 2冊目の絵本を追加
+        let testBook2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+        let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
+        
+        // 2冊目の貸出（上限超過でエラーになるべき）
+        #expect(throws: LoanModelError.maxBooksPerUserExceeded) {
+            try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        }
+        
+        // アクティブな貸出は1冊のまま
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+    }
+    
+    /// 返却後の再貸出テスト
+    @Test("返却後の再貸出テスト")
+    func lendAfterReturn() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        // 貸出可能数を1冊に設定
+        let settings = LoanSettings(defaultLoanPeriodDays: 14, maxBooksPerUser: 1)
+        try mockRepositoryFactory.loanSettingsRepository.save(settings)
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        // 1冊目の貸出
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+        
+        // 返却
+        let returnedLoan = try loanModel.returnBook(loanId: loan1.id)
+        #expect(returnedLoan.isReturned == true)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 0)
+        
+        // 2冊目の絵本を追加
+        let testBook2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+        let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
+        
+        // 返却後は再度貸出可能
+        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        #expect(loan2.userId == userId)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+    }
+    
+    /// 複数冊貸出可能設定のテスト
+    @Test("複数冊貸出可能設定のテスト")
+    func multipleBooksAllowed() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        // 貸出可能数を3冊に設定
+        let settings = LoanSettings(defaultLoanPeriodDays: 14, maxBooksPerUser: 3)
+        try mockRepositoryFactory.loanSettingsRepository.save(settings)
+        
+        let userId = testUser.id
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        
+        // 1冊目の貸出
+        let loan1 = try loanModel.lendBook(bookId: testBook.id, userId: userId, dueDate: dueDate)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+        
+        // 2冊目の絵本を追加
+        let testBook2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+        let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
+        
+        // 2冊目の貸出
+        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 2)
+        
+        // 3冊目の絵本を追加
+        let testBook3 = Book(title: "からすのパンやさん", author: "かこさとし")
+        let savedBook3 = try mockRepositoryFactory.bookRepository.save(testBook3)
+        
+        // 3冊目の貸出
+        let loan3 = try loanModel.lendBook(bookId: savedBook3.id, userId: userId, dueDate: dueDate)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
+        
+        // 4冊目の絵本を追加
+        let testBook4 = Book(title: "14ひきのあさごはん", author: "いわむらかずお")
+        let savedBook4 = try mockRepositoryFactory.bookRepository.save(testBook4)
+        
+        // 4冊目の貸出（上限超過でエラーになるべき）
+        #expect(throws: LoanModelError.maxBooksPerUserExceeded) {
+            try loanModel.lendBook(bookId: savedBook4.id, userId: userId, dueDate: dueDate)
+        }
+        
+        // アクティブな貸出は3冊のまま
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
     }
 }

@@ -12,6 +12,8 @@ public enum LoanModelError: Error, Equatable {
     case bookNotFound
     /// 絵本がすでに貸出中の場合のエラー
     case bookAlreadyLent
+    /// 利用者の貸出可能上限を超えた場合のエラー
+    case maxBooksPerUserExceeded
     /// その他の貸出処理失敗エラー
     case lendingFailed
     /// その他の返却処理失敗エラー
@@ -112,6 +114,13 @@ public class LoanModel {
         // 貸出中かどうかのチェック
         if isBookLent(bookId: bookId) {
             throw LoanModelError.bookAlreadyLent
+        }
+        
+        // 利用者の貸出可能上限チェック
+        let settings = loanSettingsRepository.fetch()
+        let currentUserLoans = getUserActiveLoans(userId: userId)
+        if currentUserLoans.count >= settings.maxBooksPerUser {
+            throw LoanModelError.maxBooksPerUserExceeded
         }
         
         // 貸出情報の作成
@@ -287,6 +296,14 @@ public class LoanModel {
             print("利用者の貸出履歴の取得に失敗しました: \(error)")
             return loans.filter { $0.userId == userId }
         }
+    }
+    
+    /// 指定された利用者の現在アクティブな貸出情報を取得する
+    ///
+    /// - Parameter userId: 取得したい利用者のID
+    /// - Returns: 指定された利用者の現在アクティブな貸出情報リスト
+    public func getUserActiveLoans(userId: UUID) -> [Loan] {
+        return loans.filter { $0.userId == userId && !$0.isReturned }
     }
     
     /// 指定された絵本の貸出履歴を取得する

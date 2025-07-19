@@ -98,21 +98,3 @@ private final class ErrorThrowingMockLoanSettingsRepository: LoanSettingsReposit
             domain: "TestError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
     }
 }
-
-private final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable
-{
-    private let lock = NSLock()
-    private var _settings: LoanSettings = .default
-    
-    func fetch() -> LoanSettings {
-        lock.lock()
-        defer { lock.unlock() }
-        return _settings
-    }
-    
-    func save(_ newSettings: LoanSettings) throws {
-        lock.lock()
-        defer { lock.unlock() }
-        _settings = newSettings
-    }
-}
