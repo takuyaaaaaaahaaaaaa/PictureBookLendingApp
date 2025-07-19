@@ -6,9 +6,8 @@ import SwiftUI
 /// 絵本貸出管理アプリのメインコンテンツビュー
 ///
 /// タブベースのナビゲーション構造を提供し、以下の主要機能へのアクセスを提供します：
-/// - 貸出（絵本から）- 絵本を選択して貸出を行う
-/// - 返却・履歴（利用者から）- 利用者を選択して返却・履歴確認を行う
-/// - 設定（管理者用）- 絵本・利用者・組の管理を行う
+/// - 貸出（絵本から）- 貸出可能な絵本を選択して貸出を行う
+/// - 返却（貸出記録から）- 貸出中の記録を組別表示して返却を行う
 struct ContentView: View {
     // 選択中のタブを管理
     @State private var selectedTab = 0
@@ -24,21 +23,14 @@ struct ContentView: View {
             }
             .tag(0)
             
-            // 返却・履歴（利用者から）タブ
-            ClassGroupSelectionContainerView { _ in
-                // 組選択後の処理は後で実装
+            // 返却（貸出記録から）タブ
+            NavigationStack {
+                LendingContainerView()
             }
             .tabItem {
-                Label("返却・履歴", systemImage: "person.2")
+                Label("返却", systemImage: "arrow.counterclockwise")
             }
             .tag(1)
-            
-            // 設定（管理者用）タブ
-            SettingsContainerView()
-                .tabItem {
-                    Label("設定", systemImage: "gearshape")
-                }
-                .tag(2)
         }
     }
 }
