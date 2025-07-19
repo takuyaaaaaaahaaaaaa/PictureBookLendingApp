@@ -104,14 +104,14 @@ public struct UserLoanHistoryRow: View {
                     .foregroundStyle(loan.isReturned ? .green : .orange)
             }
             
-            Text("貸出日: \(formattedDate(loan.loanDate))")
+            Text("貸出日: \(loan.loanDate.formatted(date: .abbreviated, time: .omitted))")
                 .font(.caption)
             
             if loan.isReturned, let returnedDate = loan.returnedDate {
-                Text("返却日: \(formattedDate(returnedDate))")
+                Text("返却日: \(returnedDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
             } else {
-                Text("返却期限: \(formattedDate(loan.dueDate))")
+                Text("返却期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .foregroundStyle(isOverdue ? .red : .primary)
             }
@@ -122,15 +122,6 @@ public struct UserLoanHistoryRow: View {
     // 返却期限切れかどうかのチェック
     private var isOverdue: Bool {
         !loan.isReturned && Date() > loan.dueDate
-    }
-    
-    // 日付のフォーマット
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        formatter.locale = Locale(identifier: "ja_JP")
-        return formatter.string(from: date)
     }
 }
 
