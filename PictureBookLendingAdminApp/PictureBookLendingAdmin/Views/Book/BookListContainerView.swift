@@ -4,27 +4,27 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 貸出可能絵本一覧のContainer View
-struct AvailableBookListContainerView: View {
+/// 絵本一覧のContainer View
+///
+/// 全絵本（貸出可能・貸出中を含む）を表示し、
+/// 状態に応じて貸出・返却ボタンを提供します。
+struct BookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanModel.self) private var loanModel
     
     @State private var searchText = ""
-    @State private var isAddSheetPresented = false
     @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
     
     private var filteredBooks: [Book] {
-        // 貸出可能な絵本のみをフィルタリング
-        let availableBooks = bookModel.books.filter { book in
-            !loanModel.isBookLent(bookId: book.id)
-        }
+        // 全絵本を表示（貸出可能・貸出中を含む）
+        let allBooks = bookModel.books
         
-        // 検索テキストでさらにフィルタリング
+        // 検索テキストでフィルタリング
         return if searchText.isEmpty {
-            availableBooks
+            allBooks
         } else {
-            availableBooks.filter { book in
+            allBooks.filter { book in
                 book.title.localizedCaseInsensitiveContains(searchText)
                     || book.author.localizedCaseInsensitiveContains(searchText)
             }
@@ -39,7 +39,8 @@ struct AvailableBookListContainerView: View {
         ) { book in
             LoanActionContainerButton(book: book)
         }
-        .navigationTitle("貸出")
+        .navigationTitle("絵本")
+        .searchable(text: $searchText, prompt: "タイトル・著者で検索")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("設定", systemImage: "gearshape") {
@@ -97,7 +98,7 @@ struct AvailableBookListContainerView: View {
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
-    return AvailableBookListContainerView()
+    return BookListContainerView()
         .environment(bookModel)
         .environment(loanModel)
 }
