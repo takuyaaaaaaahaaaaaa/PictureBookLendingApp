@@ -4,7 +4,7 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
-/// 貸出記録一覧のContainer View
+/// 貸出管理のContainer View
 ///
 /// 組別グルーピング表示と返却機能を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
@@ -32,7 +32,7 @@ struct LoanListContainerView: View {
             userFilterOptions: userFilterOptions,
             onReturn: handleReturn
         )
-        .navigationTitle("返却")
+        .navigationTitle("貸出管理")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("設定", systemImage: "gearshape") {
