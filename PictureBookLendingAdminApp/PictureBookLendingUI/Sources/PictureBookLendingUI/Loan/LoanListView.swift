@@ -9,22 +9,22 @@ public struct LoanListView: View {
     /// 組でグルーピングされた貸出記録
     public let groupedLoans: [String: [LoanDisplayData]]
     /// 選択中の組フィルタ
-    @Binding public var selectedGroupFilter: String
+    @Binding public var selectedGroupFilter: ClassGroup?
     /// 選択中の利用者フィルタ
-    @Binding public var selectedUserFilter: String
+    @Binding public var selectedUserFilter: User?
     /// 組フィルタの選択肢
-    public let groupFilterOptions: [String]
+    public let groupFilterOptions: [ClassGroup]
     /// 利用者フィルタの選択肢
-    public let userFilterOptions: [String]
+    public let userFilterOptions: [User]
     /// 返却アクション
     public let onReturn: (UUID) -> Void
     
     public init(
         groupedLoans: [String: [LoanDisplayData]],
-        selectedGroupFilter: Binding<String>,
-        selectedUserFilter: Binding<String>,
-        groupFilterOptions: [String],
-        userFilterOptions: [String],
+        selectedGroupFilter: Binding<ClassGroup?>,
+        selectedUserFilter: Binding<User?>,
+        groupFilterOptions: [ClassGroup],
+        userFilterOptions: [User],
         onReturn: @escaping (UUID) -> Void
     ) {
         self.groupedLoans = groupedLoans
@@ -36,7 +36,7 @@ public struct LoanListView: View {
     }
     
     public var body: some View {
-        VStack(spacing: 0) {
+        VStack(spacing: 5) {
             // フィルタセクション
             filterSection
             
@@ -52,38 +52,24 @@ public struct LoanListView: View {
     // MARK: - Private Views
     
     private var filterSection: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Text("組フィルタ")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Picker("組フィルタ", selection: $selectedGroupFilter) {
-                    ForEach(groupFilterOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
+        HStack(spacing: 5) {
+            Picker("組フィルタ", selection: $selectedGroupFilter) {
+                Text("全組").tag(nil as ClassGroup?)
+                ForEach(groupFilterOptions) { group in
+                    Text(group.name).tag(group as ClassGroup?)
                 }
-                .pickerStyle(.menu)
-                .fixedSize()
             }
-            
-            HStack {
-                Text("利用者フィルタ")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Picker("利用者フィルタ", selection: $selectedUserFilter) {
-                    ForEach(userFilterOptions, id: \.self) { option in
-                        Text(option).tag(option)
-                    }
+            .pickerStyle(.menu)
+            .fixedSize()
+            Picker("利用者フィルタ", selection: $selectedUserFilter) {
+                Text("全利用者").tag(nil as User?)
+                ForEach(userFilterOptions) { user in
+                    Text(user.name).tag(user as User?)
                 }
-                .pickerStyle(.menu)
-                .fixedSize()
             }
+            .pickerStyle(.menu)
+            .fixedSize()
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-        .padding(.horizontal)
     }
     
     private var emptyStateView: some View {
@@ -195,11 +181,7 @@ private struct ReturnLoanRowView: View {
             
             Spacer()
             
-            Button("返却") {
-                onReturn()
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
+            ReturnButtonView(onTap: onReturn)
         }
         .padding(.vertical, 4)
     }
@@ -242,10 +224,17 @@ private struct ReturnLoanRowView: View {
 
     LoanListView(
         groupedLoans: sampleLoans,
-        selectedGroupFilter: .constant("全組"),
-        selectedUserFilter: .constant("全利用者"),
-        groupFilterOptions: ["全組", "もも組", "ひよこ組"],
-        userFilterOptions: ["全利用者", "田中太郎", "佐藤花子", "鈴木次郎"],
+        selectedGroupFilter: .constant(nil),
+        selectedUserFilter: .constant(nil),
+        groupFilterOptions: [
+            ClassGroup(name: "もも組", ageGroup: 3, year: 2024),
+            ClassGroup(name: "ひよこ組", ageGroup: 2, year: 2024),
+        ],
+        userFilterOptions: [
+            User(name: "田中太郎", classGroupId: UUID()),
+            User(name: "佐藤花子", classGroupId: UUID()),
+            User(name: "鈴木次郎", classGroupId: UUID()),
+        ],
         onReturn: { _ in }
     )
 }

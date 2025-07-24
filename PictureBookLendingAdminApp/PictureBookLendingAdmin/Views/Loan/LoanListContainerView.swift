@@ -15,9 +15,9 @@ struct LoanListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     
     /// 選択中の組フィルタ
-    @State private var selectedGroupFilter = "全組"
+    @State private var selectedGroupFilter: ClassGroup?
     /// 選択中の利用者フィルタ
-    @State private var selectedUserFilter = "全利用者"
+    @State private var selectedUserFilter: User?
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
     /// アラート状態
@@ -73,18 +73,21 @@ struct LoanListContainerView: View {
     }
     
     /// 組フィルタの選択肢
-    private var groupFilterOptions: [String] {
-        let allGroups = classGroupModel.getAllClassGroups().map(\.name).sorted()
-        return ["全組"] + allGroups
+    private var groupFilterOptions: [ClassGroup] {
+        classGroupModel.getAllClassGroups()
     }
     
     /// 利用者フィルタの選択肢
-    private var userFilterOptions: [String] {
-        let currentUsers = loanModel.getAllLoans().filter { !$0.isReturned }.compactMap { loan in
-            userModel.findUserById(loan.userId)?.name
+    private var userFilterOptions: [User] {
+        let currentLoans = loanModel.getAllLoans().filter { !$0.isReturned }
+        let currentUserIds = Set(currentLoans.map { $0.userId })
+        
+        let users = userModel.getAllUsers().filter { user in
+            currentUserIds.contains(user.id)
+                && (selectedGroupFilter == nil || user.classGroupId == selectedGroupFilter?.id)
         }
-        let uniqueUsers = Array(Set(currentUsers)).sorted()
-        return ["全利用者"] + uniqueUsers
+        
+        return users.sorted { $0.name < $1.name }
     }
     
     // MARK: - Private Methods
@@ -101,12 +104,16 @@ struct LoanListContainerView: View {
             let groupName = getGroupName(for: loan)
             
             // 組フィルタ適用
-            if selectedGroupFilter != "全組" && groupName != selectedGroupFilter {
+            if let selectedGroup = selectedGroupFilter,
+                user.classGroupId != selectedGroup.id
+            {
                 return nil
             }
             
             // 利用者フィルタ適用
-            if selectedUserFilter != "全利用者" && user.name != selectedUserFilter {
+            if let selectedUser = selectedUserFilter,
+                user.id != selectedUser.id
+            {
                 return nil
             }
             

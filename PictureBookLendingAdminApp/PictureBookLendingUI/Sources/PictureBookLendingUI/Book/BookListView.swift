@@ -26,9 +26,9 @@ public struct BookListView<RowAction: View>: View {
     public var body: some View {
         if books.isEmpty {
             ContentUnavailableView(
-                "絵本がありません",
+                "貸出可能な絵本がありません",
                 systemImage: "book.closed",
-                description: Text("右上の＋ボタンから絵本を追加してください")
+                description: Text("返却されるまで少々お待ちください")
             )
         } else {
             List {
