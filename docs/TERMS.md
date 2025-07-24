@@ -10,3 +10,4 @@
 | 返却期限 | dueDate | 返却予定日, 期限日, returnDate, deadline | 絵本を返却すべき期限日 |
 | 返却日 | returnedDate | 実際返却日, 返却完了日, actualReturnDate | 絵本が実際に返却された日付（未返却時はnil） |
 | 返却済み | isReturned | 返却フラグ, 完了ステータス, returned, completed | 絵本が返却済みかどうかの論理値（計算プロパティ） |
+| 貸出期間 | loanPeriod | 貸出日数, 借用期間, lendingDuration, borrowingPeriod | 絵本を貸し出してから返却期限までの日数（例：14日間） |

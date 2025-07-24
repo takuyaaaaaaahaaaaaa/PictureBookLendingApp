@@ -124,9 +124,52 @@ class MockLoanRepository: LoanRepositoryProtocol {
     }
 }
 
+/// テスト用のモッククラスグループリポジトリ
+class MockClassGroupRepository: ClassGroupRepositoryProtocol {
+    private var classGroups: [ClassGroup] = []
+    
+    func fetchAll() throws -> [ClassGroup] {
+        return classGroups
+    }
+    
+    func fetch(by id: UUID) throws -> ClassGroup? {
+        return classGroups.first { $0.id == id }
+    }
+    
+    func save(_ classGroup: ClassGroup) throws {
+        if let index = classGroups.firstIndex(where: { $0.id == classGroup.id }) {
+            classGroups[index] = classGroup
+        } else {
+            classGroups.append(classGroup)
+        }
+    }
+    
+    func delete(by id: UUID) throws {
+        guard let index = classGroups.firstIndex(where: { $0.id == id }) else {
+            throw RepositoryError.notFound
+        }
+        classGroups.remove(at: index)
+    }
+}
+
+/// テスト用のモック貸出設定リポジトリ
+class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable {
+    private var settings: LoanSettings = .default
+    
+    func fetch() -> LoanSettings {
+        return settings
+    }
+    
+    func save(_ newSettings: LoanSettings) throws {
+        settings = newSettings
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 class MockRepositoryFactory {
     let bookRepository = MockBookRepository()
     let userRepository = MockUserRepository()
     let loanRepository = MockLoanRepository()
+    let classGroupRepository = MockClassGroupRepository()
+    let loanSettingsRepository = MockLoanSettingsRepository()
 }

@@ -11,7 +11,7 @@ import SwiftUI
 struct DashboardContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(UserModel.self) private var userModel
-    @Environment(LendingModel.self) private var lendingModel
+    @Environment(LoanModel.self) private var loanModel
     
     @State private var bookCount = 0
     @State private var userCount = 0
@@ -44,7 +44,7 @@ struct DashboardContainerView: View {
         bookCount = bookModel.getAllBooks().count
         userCount = userModel.getAllUsers().count
         
-        let activeLoans = lendingModel.getActiveLoans()
+        let activeLoans = loanModel.getActiveLoans()
         activeLoansCount = activeLoans.count
         
         let today = Date()
@@ -58,14 +58,15 @@ struct DashboardContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockFactory.bookRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
     return DashboardContainerView()
         .environment(bookModel)
         .environment(userModel)
-        .environment(lendingModel)
+        .environment(loanModel)
 }

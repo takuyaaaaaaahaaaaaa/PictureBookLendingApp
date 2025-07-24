@@ -8,32 +8,31 @@ import SwiftUI
 public struct UserFormView: View {
     let mode: UserFormMode
     let name: Binding<String>
-    let group: Binding<String>
-    let isValidInput: Bool
-    let onSave: () -> Void
-    let onCancel: () -> Void
+    let classGroup: Binding<ClassGroup?>
+    let classGroups: [ClassGroup]
     
     public init(
         mode: UserFormMode,
         name: Binding<String>,
-        group: Binding<String>,
-        isValidInput: Bool,
-        onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        classGroup: Binding<ClassGroup?>,
+        classGroups: [ClassGroup]
     ) {
         self.mode = mode
         self.name = name
-        self.group = group
-        self.isValidInput = isValidInput
-        self.onSave = onSave
-        self.onCancel = onCancel
+        self.classGroup = classGroup
+        self.classGroups = classGroups
     }
     
     public var body: some View {
         Form {
             Section(header: Text("利用者情報")) {
                 TextField("名前", text: name)
-                TextField("組", text: group)
+                Picker("組", selection: classGroup) {
+                    Text("組を選択してください").tag(nil as ClassGroup?)
+                    ForEach(classGroups) { group in
+                        Text(group.name).tag(group as ClassGroup?)
+                    }
+                }
             }
         }
     }
@@ -47,16 +46,18 @@ public struct UserFormView: View {
 }
 
 #Preview {
-    let sampleUser = User(name: "山田太郎", group: "1年2組")
+    let sampleUser = User(name: "山田太郎", classGroupId: UUID())
+    let classGroups = [
+        ClassGroup(name: "きく", ageGroup: 1, year: 2025),
+        ClassGroup(name: "ひまわり", ageGroup: 2, year: 2025),
+    ]
     
     NavigationStack {
         UserFormView(
             mode: .edit(sampleUser),
             name: .constant("山田太郎"),
-            group: .constant("1年2組"),
-            isValidInput: true,
-            onSave: {},
-            onCancel: {}
+            classGroup: .constant(classGroups[1]),
+            classGroups: classGroups
         )
         .navigationTitle("利用者情報を編集")
     }

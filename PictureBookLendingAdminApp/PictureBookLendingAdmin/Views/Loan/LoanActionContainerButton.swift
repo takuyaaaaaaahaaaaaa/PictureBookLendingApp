@@ -1,0 +1,110 @@
+import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
+import PictureBookLendingModel
+import PictureBookLendingUI
+import SwiftUI
+
+/// 絵本の貸出アクションボタンContainer View
+///
+/// 貸出中かどうかに応じて貸出ボタンまたは返却ボタンを表示します。
+/// Presentation ViewにUI表示を委譲し、ビジネスロジックのみを処理します。
+struct LoanActionContainerButton: View {
+    let book: Book
+    @Environment(LoanModel.self) private var loanModel
+    @State private var isLoanSheetPresented = false
+    @State private var isReturnConfirmationPresented = false
+    @State private var alertState = AlertState()
+    
+    private var isBookLent: Bool {
+        loanModel.isBookLent(bookId: book.id)
+    }
+    
+    var body: some View {
+        VStack {
+            if isBookLent {
+                ReturnButtonView(onTap: handleReturnTap)
+            } else {
+                LoanButtonView(onTap: handleLoanTap)
+            }
+        }
+        .sheet(isPresented: $isLoanSheetPresented) {
+            LoanFormContainerView(selectedBook: book)
+        }
+        .alert("返却確認", isPresented: $isReturnConfirmationPresented) {
+            Button("キャンセル", role: .cancel) {}
+            Button("返却する", role: .destructive) {
+                performReturn()
+            }
+        } message: {
+            Text("「\(book.title)」を返却しますか？")
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+    }
+    
+    // MARK: - Actions
+    
+    private func handleLoanTap() {
+        isLoanSheetPresented = true
+    }
+    
+    private func handleReturnTap() {
+        isReturnConfirmationPresented = true
+    }
+    
+    private func performReturn() {
+        Task {
+            do {
+                try loanModel.returnBook(bookId: book.id)
+                alertState = .success("返却が完了しました")
+            } catch {
+                alertState = .error(error.localizedDescription)
+            }
+        }
+    }
+}
+
+#Preview {
+    let mockRepositoryFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+    let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
+    let loanModel = LoanModel(
+        repository: mockRepositoryFactory.loanRepository,
+        bookRepository: mockRepositoryFactory.bookRepository,
+        userRepository: mockRepositoryFactory.userRepository,
+        loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
+    )
+    let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
+    
+    let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+    
+    VStack(spacing: 16) {
+        LoanActionContainerButton(book: sampleBook)
+        
+        // リスト内での表示例
+        List {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(sampleBook.title)
+                        .font(.headline)
+                    Text(sampleBook.author)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                LoanActionContainerButton(book: sampleBook)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    .padding()
+    .environment(bookModel)
+    .environment(userModel)
+    .environment(loanModel)
+    .environment(classGroupModel)
+}

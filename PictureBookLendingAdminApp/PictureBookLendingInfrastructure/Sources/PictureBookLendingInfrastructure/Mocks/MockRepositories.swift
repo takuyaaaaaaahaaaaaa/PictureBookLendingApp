@@ -136,15 +136,15 @@ public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
     
     public init() {}
     
-    public func fetchAll() async throws -> [ClassGroup] {
+    public func fetchAll() throws -> [ClassGroup] {
         return classGroups
     }
     
-    public func fetch(by id: UUID) async throws -> ClassGroup? {
+    public func fetch(by id: UUID) throws -> ClassGroup? {
         return classGroups.first { $0.id == id }
     }
     
-    public func save(_ classGroup: ClassGroup) async throws {
+    public func save(_ classGroup: ClassGroup) throws {
         if let index = classGroups.firstIndex(where: { $0.id == classGroup.id }) {
             classGroups[index] = classGroup
         } else {
@@ -152,11 +152,31 @@ public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
         }
     }
     
-    public func delete(by id: UUID) async throws {
+    public func delete(by id: UUID) throws {
         guard let index = classGroups.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
         }
         classGroups.remove(at: index)
+    }
+}
+
+/// テスト用のモック貸出設定リポジトリ
+public final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable {
+    private let lock = NSLock()
+    private var _settings: LoanSettings = .default
+    
+    public init() {}
+    
+    public func fetch() -> LoanSettings {
+        lock.lock()
+        defer { lock.unlock() }
+        return _settings
+    }
+    
+    public func save(_ newSettings: LoanSettings) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        _settings = newSettings
     }
 }
 
@@ -166,6 +186,7 @@ public class MockRepositoryFactory: RepositoryFactory {
     public let userRepository = MockUserRepository()
     public let loanRepository = MockLoanRepository()
     public let classGroupRepository = MockClassGroupRepository()
+    public let loanSettingsRepository = MockLoanSettingsRepository()
     
     public init() {}
     
@@ -183,5 +204,9 @@ public class MockRepositoryFactory: RepositoryFactory {
     
     public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
         return classGroupRepository
+    }
+    
+    public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
+        return loanSettingsRepository
     }
 }

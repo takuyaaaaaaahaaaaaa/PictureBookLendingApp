@@ -191,7 +191,7 @@ public struct OverdueWarningView: View {
                     Spacer()
                     
                     VStack(alignment: .trailing) {
-                        Text("期限: \(formattedDate(loan.dueDate))")
+                        Text("期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
                         
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
@@ -212,15 +212,6 @@ public struct OverdueWarningView: View {
                 .fill(.background)
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
-    }
-    
-    // 日付のフォーマット
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        formatter.locale = Locale(identifier: "ja_JP")
-        return formatter.string(from: date)
     }
     
     // 期限切れ日数の計算

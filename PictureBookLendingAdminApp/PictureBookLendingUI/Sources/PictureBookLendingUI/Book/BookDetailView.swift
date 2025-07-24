@@ -5,39 +5,45 @@ import SwiftUI
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-public struct BookDetailView: View {
-    let book: Book
+public struct BookDetailView<ActionButton: View>: View {
+    @Binding var bookTitle: String
+    @Binding var bookAuthor: String
+    let bookId: UUID
     let isCurrentlyLent: Bool
     let onEdit: () -> Void
+    let actionButton: () -> ActionButton
     
     public init(
-        book: Book,
+        bookTitle: Binding<String>,
+        bookAuthor: Binding<String>,
+        bookId: UUID,
         isCurrentlyLent: Bool,
-        onEdit: @escaping () -> Void
+        onEdit: @escaping () -> Void,
+        @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
-        self.book = book
+        self._bookTitle = bookTitle
+        self._bookAuthor = bookAuthor
+        self.bookId = bookId
         self.isCurrentlyLent = isCurrentlyLent
         self.onEdit = onEdit
+        self.actionButton = actionButton
     }
     
     public var body: some View {
         List {
             Section("基本情報") {
-                DetailRow(label: "タイトル", value: book.title)
-                DetailRow(label: "著者", value: book.author)
-                DetailRow(label: "管理ID", value: book.id.uuidString)
+                EditableDetailRow(label: "タイトル", value: $bookTitle)
+                EditableDetailRow(label: "著者", value: $bookAuthor)
+                DetailRow(label: "管理ID", value: bookId.uuidString)
             }
             
             Section("貸出状況") {
                 HStack {
-                    Image(
-                        systemName: isCurrentlyLent
-                            ? "exclamationmark.circle.fill" : "checkmark.circle.fill"
-                    )
-                    .foregroundStyle(isCurrentlyLent ? .orange : .green)
+                    BookStatusView(isCurrentlyLent: isCurrentlyLent)
                     
-                    Text(isCurrentlyLent ? "現在貸出中" : "貸出可能")
-                        .foregroundStyle(isCurrentlyLent ? .orange : .green)
+                    Spacer()
+                    
+                    actionButton()
                 }
             }
             
@@ -51,14 +57,21 @@ public struct BookDetailView: View {
 }
 
 #Preview {
-    let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+    @Previewable @State var bookTitle = "はらぺこあおむし"
+    @Previewable @State var bookAuthor = "エリック・カール"
+    let sampleBookId = UUID()
     
     NavigationStack {
         BookDetailView(
-            book: sampleBook,
+            bookTitle: $bookTitle,
+            bookAuthor: $bookAuthor,
+            bookId: sampleBookId,
             isCurrentlyLent: false,
             onEdit: {}
-        )
-        .navigationTitle(sampleBook.title)
+        ) {
+            Button("貸出") {}
+                .buttonStyle(.bordered)
+        }
+        .navigationTitle(bookTitle)
     }
 }

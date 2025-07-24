@@ -17,6 +17,9 @@ public protocol RepositoryFactory {
     
     /// クラス（組）リポジトリを生成
     func makeClassGroupRepository() -> ClassGroupRepositoryProtocol
+    
+    /// 貸出設定リポジトリを生成
+    func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol
 }
 
 /// SwiftData用リポジトリファクトリ実装
@@ -58,5 +61,12 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
     /// - Returns: ClassGroupRepositoryProtocolのインスタンス
     public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
         SwiftDataClassGroupRepository(modelContext: modelContext)
+    }
+    
+    /// 貸出設定リポジトリのインスタンスを生成
+    ///
+    /// - Returns: LoanSettingsRepositoryProtocolのインスタンス
+    public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
+        UserDefaultsLoanSettingsRepository()
     }
 }

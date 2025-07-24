@@ -6,32 +6,51 @@ import SwiftUI
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
 public struct UserDetailView: View {
-    let user: User
+    @Binding var userName: String
+    @Binding var userClassGroupId: UUID
+    let userId: UUID
+    let availableClassGroups: [ClassGroup]
     let activeLoansCount: Int
     let loanHistory: [Loan]
     let getBookTitle: (UUID) -> String
+    let getClassGroupName: (UUID) -> String
     let onEdit: () -> Void
     
     public init(
-        user: User,
+        userName: Binding<String>,
+        userClassGroupId: Binding<UUID>,
+        userId: UUID,
+        availableClassGroups: [ClassGroup],
         activeLoansCount: Int,
         loanHistory: [Loan],
         getBookTitle: @escaping (UUID) -> String,
+        getClassGroupName: @escaping (UUID) -> String,
         onEdit: @escaping () -> Void
     ) {
-        self.user = user
+        self._userName = userName
+        self._userClassGroupId = userClassGroupId
+        self.userId = userId
+        self.availableClassGroups = availableClassGroups
         self.activeLoansCount = activeLoansCount
         self.loanHistory = loanHistory
         self.getBookTitle = getBookTitle
+        self.getClassGroupName = getClassGroupName
         self.onEdit = onEdit
     }
     
     public var body: some View {
         List {
             Section("基本情報") {
-                DetailRow(label: "名前", value: user.name)
-                DetailRow(label: "グループ", value: user.group)
-                DetailRow(label: "管理ID", value: user.id.uuidString)
+                EditableDetailRow(label: "名前", value: $userName)
+                
+                EditableDetailRowWithSelection(
+                    label: "グループ",
+                    selectedValue: $userClassGroupId,
+                    options: availableClassGroups.map(\.id),
+                    displayText: getClassGroupName
+                )
+                
+                DetailRow(label: "管理ID", value: userId.uuidString)
             }
             
             Section("貸出状況") {
@@ -85,14 +104,14 @@ public struct UserLoanHistoryRow: View {
                     .foregroundStyle(loan.isReturned ? .green : .orange)
             }
             
-            Text("貸出日: \(formattedDate(loan.loanDate))")
+            Text("貸出日: \(loan.loanDate.formatted(date: .abbreviated, time: .omitted))")
                 .font(.caption)
             
             if loan.isReturned, let returnedDate = loan.returnedDate {
-                Text("返却日: \(formattedDate(returnedDate))")
+                Text("返却日: \(returnedDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
             } else {
-                Text("返却期限: \(formattedDate(loan.dueDate))")
+                Text("返却期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
                     .font(.caption)
                     .foregroundStyle(isOverdue ? .red : .primary)
             }
@@ -104,34 +123,39 @@ public struct UserLoanHistoryRow: View {
     private var isOverdue: Bool {
         !loan.isReturned && Date() > loan.dueDate
     }
-    
-    // 日付のフォーマット
-    private func formattedDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .none
-        formatter.locale = Locale(identifier: "ja_JP")
-        return formatter.string(from: date)
-    }
 }
 
 #Preview {
-    let sampleUser = User(name: "山田太郎", group: "1年2組")
+    @Previewable @State var userName = "山田太郎"
+    @Previewable @State var userClassGroupId = UUID()
+    
+    let sampleUserId = UUID()
+    let sampleClassGroups = [
+        ClassGroup(id: userClassGroupId, name: "きく", ageGroup: 3, year: 2025),
+        ClassGroup(id: UUID(), name: "ばら", ageGroup: 4, year: 2025),
+        ClassGroup(id: UUID(), name: "さくら", ageGroup: 5, year: 2025),
+    ]
     let sampleLoan = Loan(
         bookId: UUID(),
-        userId: sampleUser.id,
+        userId: sampleUserId,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     )
     
     NavigationStack {
         UserDetailView(
-            user: sampleUser,
+            userName: $userName,
+            userClassGroupId: $userClassGroupId,
+            userId: sampleUserId,
+            availableClassGroups: sampleClassGroups,
             activeLoansCount: 1,
             loanHistory: [sampleLoan],
             getBookTitle: { _ in "はらぺこあおむし" },
+            getClassGroupName: { id in
+                sampleClassGroups.first { $0.id == id }?.name ?? "不明"
+            },
             onEdit: {}
         )
-        .navigationTitle(sampleUser.name)
+        .navigationTitle(userName)
     }
 }

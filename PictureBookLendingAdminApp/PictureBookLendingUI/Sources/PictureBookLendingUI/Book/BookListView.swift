@@ -5,33 +5,36 @@ import SwiftUI
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-public struct BookListView: View {
+public struct BookListView<RowAction: View>: View {
     let books: [Book]
     let searchText: Binding<String>
     let onDelete: (IndexSet) -> Void
+    let rowAction: (Book) -> RowAction
     
     public init(
         books: [Book],
         searchText: Binding<String>,
-        onDelete: @escaping (IndexSet) -> Void
+        onDelete: @escaping (IndexSet) -> Void,
+        @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
         self.books = books
         self.searchText = searchText
         self.onDelete = onDelete
+        self.rowAction = rowAction
     }
     
     public var body: some View {
         if books.isEmpty {
             ContentUnavailableView(
-                "絵本がありません",
+                "貸出可能な絵本がありません",
                 systemImage: "book.closed",
-                description: Text("右上の＋ボタンから絵本を追加してください")
+                description: Text("返却されるまで少々お待ちください")
             )
         } else {
             List {
                 ForEach(books) { book in
                     NavigationLink(value: book) {
-                        BookRowView(book: book)
+                        BookRowView(book: book, rowAction: rowAction)
                     }
                 }
                 .onDelete(perform: onDelete)
@@ -44,16 +47,23 @@ public struct BookListView: View {
 /// 絵本リスト行ビュー
 ///
 /// 一覧の各行に表示する絵本情報のレイアウトを定義します。
-public struct BookRowView: View {
+public struct BookRowView<RowAction: View>: View {
     let book: Book
+    let rowAction: (Book) -> RowAction
     
     public var body: some View {
-        VStack(alignment: .leading) {
-            Text(book.title)
-                .font(.headline)
-            Text(book.author)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(book.title)
+                    .font(.headline)
+                Text(book.author)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            rowAction(book)
         }
         .padding(.vertical, 4)
     }
@@ -68,7 +78,9 @@ public struct BookRowView: View {
             books: [book1, book2],
             searchText: .constant(""),
             onDelete: { _ in }
-        )
+        ) { book in
+            LoanButtonView(onTap: {})
+        }
         .navigationTitle("絵本一覧")
     }
 }
