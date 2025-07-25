@@ -43,20 +43,10 @@ struct BookListContainerView: View {
         .searchable(text: $searchText, prompt: "タイトル・著者で検索")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("設定", systemImage: "gearshape") {
-                    isSettingsPresented = true
-                }
+                // 設定ボタン
+                SettingContainerButton()
             }
         }
-        #if os(macOS)
-            .sheet(isPresented: $isSettingsPresented) {
-                SettingsContainerView()
-            }
-        #else
-            .fullScreenCover(isPresented: $isSettingsPresented) {
-                SettingsContainerView()
-            }
-        #endif
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }

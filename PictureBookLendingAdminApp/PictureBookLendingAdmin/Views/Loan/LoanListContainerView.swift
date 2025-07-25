@@ -35,20 +35,10 @@ struct LoanListContainerView: View {
         .navigationTitle("貸出管理")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("設定", systemImage: "gearshape") {
-                    isSettingsPresented = true
-                }
+                // 設定ボタン
+                SettingContainerButton()
             }
         }
-        #if os(macOS)
-            .sheet(isPresented: $isSettingsPresented) {
-                SettingsContainerView()
-            }
-        #else
-            .fullScreenCover(isPresented: $isSettingsPresented) {
-                SettingsContainerView()
-            }
-        #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             if alertState.type == .success {
                 Button("OK", role: .cancel) {}
