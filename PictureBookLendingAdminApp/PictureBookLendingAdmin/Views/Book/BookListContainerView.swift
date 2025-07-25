@@ -48,9 +48,15 @@ struct BookListContainerView: View {
                 }
             }
         }
-        .sheet(isPresented: $isSettingsPresented) {
-            SettingsContainerView()
-        }
+        #if os(macOS)
+            .sheet(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #else
+            .fullScreenCover(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #endif
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }

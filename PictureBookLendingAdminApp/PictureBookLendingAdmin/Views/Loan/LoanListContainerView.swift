@@ -40,9 +40,15 @@ struct LoanListContainerView: View {
                 }
             }
         }
-        .sheet(isPresented: $isSettingsPresented) {
-            SettingsContainerView()
-        }
+        #if os(macOS)
+            .sheet(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #else
+            .fullScreenCover(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             if alertState.type == .success {
                 Button("OK", role: .cancel) {}
