@@ -2,7 +2,13 @@ import Foundation
 import PictureBookLendingDomain
 
 /// UserDefaultsを使用した貸出設定リポジトリ実装
-public final class UserDefaultsLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked
+///
+/// @unchecked Sendableを使用する理由:
+/// - UserDefaultsはthread-safeなクラスであり、複数スレッドから安全にアクセス可能
+/// - JSONEncoder/JSONDecoderも不変なインスタンスなので同時アクセスが安全
+/// - FoundationがまだSendableプロトコルに準拠していないため、@uncheckedが必要
+public final class UserDefaultsLoanSettingsRepository: LoanSettingsRepositoryProtocol,
+    @unchecked
     Sendable
 {
     private let userDefaults: UserDefaults

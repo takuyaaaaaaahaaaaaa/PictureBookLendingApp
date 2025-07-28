@@ -5,7 +5,7 @@ import SwiftUI
 ///
 /// 組別グルーピング表示とフィルタ機能を提供します。
 /// Container Viewからデータと動作を受け取り、純粋なUI表示に専念します。
-public struct LoanListView: View {
+public struct LoanListView<RowAction: View>: View {
     /// 組でグルーピングされた貸出記録
     public let groupedLoans: [String: [LoanDisplayData]]
     /// 選択中の組フィルタ
@@ -16,8 +16,8 @@ public struct LoanListView: View {
     public let groupFilterOptions: [ClassGroup]
     /// 利用者フィルタの選択肢
     public let userFilterOptions: [User]
-    /// 返却アクション
-    public let onReturn: (UUID) -> Void
+    /// 各行に表示するアクションビューを生成するクロージャ
+    public let rowAction: (LoanDisplayData) -> RowAction
     
     public init(
         groupedLoans: [String: [LoanDisplayData]],
@@ -25,14 +25,14 @@ public struct LoanListView: View {
         selectedUserFilter: Binding<User?>,
         groupFilterOptions: [ClassGroup],
         userFilterOptions: [User],
-        onReturn: @escaping (UUID) -> Void
+        @ViewBuilder rowAction: @escaping (LoanDisplayData) -> RowAction
     ) {
         self.groupedLoans = groupedLoans
         self._selectedGroupFilter = selectedGroupFilter
         self._selectedUserFilter = selectedUserFilter
         self.groupFilterOptions = groupFilterOptions
         self.userFilterOptions = userFilterOptions
-        self.onReturn = onReturn
+        self.rowAction = rowAction
     }
     
     public var body: some View {
@@ -95,9 +95,9 @@ public struct LoanListView: View {
                 if let loans = groupedLoans[groupName], !loans.isEmpty {
                     Section(groupName) {
                         ForEach(loans, id: \.id) { loan in
-                            ReturnLoanRowView(
+                            LoanListRowView(
                                 loan: loan,
-                                onReturn: { onReturn(loan.id) }
+                                action: rowAction(loan)
                             )
                         }
                     }
@@ -114,16 +114,26 @@ public struct LoanListView: View {
 
 /// 貸出記録の表示用データ構造
 public struct LoanDisplayData: Identifiable, Equatable {
+    /// 貸出記録ID
     public let id: UUID
+    /// 絵本ID
+    public let bookId: UUID
+    /// 絵本タイトル
     public let bookTitle: String
+    /// 利用者名
     public let userName: String
+    /// 組名
     public let groupName: String
+    /// 貸出日
     public let loanDate: Date
+    /// 返却期限
     public let dueDate: Date
+    /// 延滞中かどうか
     public let isOverdue: Bool
     
     public init(
         id: UUID,
+        bookId: UUID,
         bookTitle: String,
         userName: String,
         groupName: String,
@@ -132,6 +142,7 @@ public struct LoanDisplayData: Identifiable, Equatable {
         isOverdue: Bool
     ) {
         self.id = id
+        self.bookId = bookId
         self.bookTitle = bookTitle
         self.userName = userName
         self.groupName = groupName
@@ -141,10 +152,12 @@ public struct LoanDisplayData: Identifiable, Equatable {
     }
 }
 
-/// 個別の貸出記録行View（返却用）
-private struct ReturnLoanRowView: View {
+/// 個別の貸出記録行View
+private struct LoanListRowView<Action: View>: View {
+    /// 貸出記録データ
     let loan: LoanDisplayData
-    let onReturn: () -> Void
+    /// 行に表示するアクションビュー
+    let action: Action
     
     var body: some View {
         HStack {
@@ -181,7 +194,7 @@ private struct ReturnLoanRowView: View {
             
             Spacer()
             
-            ReturnButtonView(onTap: onReturn)
+            action
         }
         .padding(.vertical, 4)
     }
@@ -192,6 +205,7 @@ private struct ReturnLoanRowView: View {
         "もも組": [
             LoanDisplayData(
                 id: UUID(),
+                bookId: UUID(),
                 bookTitle: "はらぺこあおむし",
                 userName: "田中太郎",
                 groupName: "もも組",
@@ -201,6 +215,7 @@ private struct ReturnLoanRowView: View {
             ),
             LoanDisplayData(
                 id: UUID(),
+                bookId: UUID(),
                 bookTitle: "ぐりとぐら",
                 userName: "佐藤花子",
                 groupName: "もも組",
@@ -212,6 +227,7 @@ private struct ReturnLoanRowView: View {
         "ひよこ組": [
             LoanDisplayData(
                 id: UUID(),
+                bookId: UUID(),
                 bookTitle: "おおきなかぶ",
                 userName: "鈴木次郎",
                 groupName: "ひよこ組",
@@ -235,6 +251,7 @@ private struct ReturnLoanRowView: View {
             User(name: "佐藤花子", classGroupId: UUID()),
             User(name: "鈴木次郎", classGroupId: UUID()),
         ],
-        onReturn: { _ in }
-    )
+    ) { loan in
+        ReturnButtonView(onTap: {})
+    }
 }

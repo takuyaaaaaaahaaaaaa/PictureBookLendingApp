@@ -37,19 +37,15 @@ struct BookListContainerView: View {
             searchText: $searchText,
             onDelete: handleDeleteBooks
         ) { book in
-            LoanActionContainerButton(book: book)
+            LoanActionContainerButton(bookId: book.id)
         }
         .navigationTitle("絵本")
         .searchable(text: $searchText, prompt: "タイトル・著者で検索")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("設定", systemImage: "gearshape") {
-                    isSettingsPresented = true
-                }
+                // 設定ボタン
+                SettingContainerButton()
             }
-        }
-        .sheet(isPresented: $isSettingsPresented) {
-            SettingsContainerView()
         }
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
