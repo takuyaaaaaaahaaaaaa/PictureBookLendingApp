@@ -25,7 +25,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
         let swiftDataBook = SwiftDataBook(
             id: book.id,
             title: book.title,
-            author: book.author
+            author: book.author,
+            isbn13: book.isbn13,
+            publisher: book.publisher,
+            publishedDate: book.publishedDate,
+            bookDescription: book.description,
+            thumbnailURLString: book.thumbnailURL?.absoluteString,
+            targetAge: book.targetAge,
+            pageCount: book.pageCount,
+            categories: book.categories
         )
         
         modelContext.insert(swiftDataBook)
@@ -52,7 +60,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
                 Book(
                     id: swiftDataBook.id,
                     title: swiftDataBook.title,
-                    author: swiftDataBook.author
+                    author: swiftDataBook.author,
+                    isbn13: swiftDataBook.isbn13,
+                    publisher: swiftDataBook.publisher,
+                    publishedDate: swiftDataBook.publishedDate,
+                    description: swiftDataBook.bookDescription,
+                    thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                    targetAge: swiftDataBook.targetAge,
+                    pageCount: swiftDataBook.pageCount,
+                    categories: swiftDataBook.categories
                 )
             }
         } catch {
@@ -78,7 +94,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             return Book(
                 id: swiftDataBook.id,
                 title: swiftDataBook.title,
-                author: swiftDataBook.author
+                author: swiftDataBook.author,
+                isbn13: swiftDataBook.isbn13,
+                publisher: swiftDataBook.publisher,
+                publishedDate: swiftDataBook.publishedDate,
+                description: swiftDataBook.bookDescription,
+                thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                targetAge: swiftDataBook.targetAge,
+                pageCount: swiftDataBook.pageCount,
+                categories: swiftDataBook.categories
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -103,6 +127,14 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             // プロパティを更新
             swiftDataBook.title = book.title
             swiftDataBook.author = book.author
+            swiftDataBook.isbn13 = book.isbn13
+            swiftDataBook.publisher = book.publisher
+            swiftDataBook.publishedDate = book.publishedDate
+            swiftDataBook.bookDescription = book.description
+            swiftDataBook.thumbnailURLString = book.thumbnailURL?.absoluteString
+            swiftDataBook.targetAge = book.targetAge
+            swiftDataBook.pageCount = book.pageCount
+            swiftDataBook.categories = book.categories
             
             try modelContext.save()
             
@@ -149,10 +181,38 @@ final public class SwiftDataBook {
     public var id: UUID
     public var title: String
     public var author: String
+    public var isbn13: String?
+    public var publisher: String?
+    public var publishedDate: String?
+    public var bookDescription: String?  // SwiftDataでは'description'は予約語なので別名
+    public var thumbnailURLString: String?  // URLは直接保存できないので文字列で保存
+    public var targetAge: Int?
+    public var pageCount: Int?
+    public var categories: [String]
     
-    public init(id: UUID, title: String, author: String) {
+    public init(
+        id: UUID,
+        title: String,
+        author: String,
+        isbn13: String? = nil,
+        publisher: String? = nil,
+        publishedDate: String? = nil,
+        bookDescription: String? = nil,
+        thumbnailURLString: String? = nil,
+        targetAge: Int? = nil,
+        pageCount: Int? = nil,
+        categories: [String] = []
+    ) {
         self.id = id
         self.title = title
         self.author = author
+        self.isbn13 = isbn13
+        self.publisher = publisher
+        self.publishedDate = publishedDate
+        self.bookDescription = bookDescription
+        self.thumbnailURLString = thumbnailURLString
+        self.targetAge = targetAge
+        self.pageCount = pageCount
+        self.categories = categories
     }
 }

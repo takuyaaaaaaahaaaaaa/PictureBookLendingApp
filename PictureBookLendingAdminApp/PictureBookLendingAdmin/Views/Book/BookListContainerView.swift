@@ -36,7 +36,7 @@ struct BookListContainerView: View {
                 BookDetailContainerView(book: book)
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button(action: {
                         isAddSheetPresented = true
                     }) {
