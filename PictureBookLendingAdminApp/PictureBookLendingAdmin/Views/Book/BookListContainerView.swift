@@ -37,7 +37,7 @@ struct BookListContainerView: View {
             searchText: $searchText,
             onDelete: handleDeleteBooks
         ) { book in
-            LoanActionContainerButton(book: book)
+            LoanActionContainerButton(bookId: book.id)
         }
         .navigationTitle("絵本")
         .searchable(text: $searchText, prompt: "タイトル・著者で検索")

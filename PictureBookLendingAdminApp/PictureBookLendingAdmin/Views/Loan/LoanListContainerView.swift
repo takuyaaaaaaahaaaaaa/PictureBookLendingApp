@@ -29,9 +29,10 @@ struct LoanListContainerView: View {
             selectedGroupFilter: $selectedGroupFilter,
             selectedUserFilter: $selectedUserFilter,
             groupFilterOptions: groupFilterOptions,
-            userFilterOptions: userFilterOptions,
-            onReturn: handleReturn
-        )
+            userFilterOptions: userFilterOptions
+        ) { loan in
+            LoanActionContainerButton(bookId: loan.bookId)
+        }
         .navigationTitle("貸出管理")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -115,6 +116,7 @@ struct LoanListContainerView: View {
             
             return LoanDisplayData(
                 id: loan.id,
+                bookId: book.id,
                 bookTitle: book.title,
                 userName: user.name,
                 groupName: groupName,
@@ -141,16 +143,6 @@ struct LoanListContainerView: View {
         userModel.refreshUsers()
         loanModel.refreshLoans()
         classGroupModel.refreshClassGroups()
-    }
-    
-    /// 返却処理
-    private func handleReturn(_ loanId: UUID) {
-        do {
-            _ = try loanModel.returnBook(loanId: loanId)
-            alertState = .success("返却が完了しました")
-        } catch {
-            alertState = .error("返却処理に失敗しました: \(error.localizedDescription)")
-        }
     }
 }
 

@@ -28,7 +28,7 @@ struct BookDetailContainerView: View {
             isCurrentlyLent: isCurrentlyLent,
             onEdit: handleEdit
         ) {
-            LoanActionContainerButton(book: book)
+            LoanActionContainerButton(bookId: book.id)
         }
         .navigationTitle(book.title)
         #if os(iOS)

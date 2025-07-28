@@ -9,14 +9,29 @@ import SwiftUI
 /// 貸出中かどうかに応じて貸出ボタンまたは返却ボタンを表示します。
 /// Presentation ViewにUI表示を委譲し、ビジネスロジックのみを処理します。
 struct LoanActionContainerButton: View {
-    let book: Book
+    /// 対象絵本のID
+    let bookId: UUID
+    
+    /// 絵本管理モデル
+    @Environment(BookModel.self) private var bookModel
+    /// 貸出管理モデル
     @Environment(LoanModel.self) private var loanModel
+    
+    /// 貸出フォームシートの表示状態
     @State private var isLoanSheetPresented = false
+    /// 返却確認アラートの表示状態
     @State private var isReturnConfirmationPresented = false
+    /// アラート状態管理
     @State private var alertState = AlertState()
     
+    /// bookIdから取得した絵本オブジェクト
+    private var book: Book? {
+        bookModel.findBookById(bookId)
+    }
+    
+    /// 絵本が貸出中かどうか
     private var isBookLent: Bool {
-        loanModel.isBookLent(bookId: book.id)
+        loanModel.isBookLent(bookId: bookId)
     }
     
     var body: some View {
@@ -28,7 +43,9 @@ struct LoanActionContainerButton: View {
             }
         }
         .sheet(isPresented: $isLoanSheetPresented) {
-            LoanFormContainerView(selectedBook: book)
+            if let book = book {
+                LoanFormContainerView(selectedBook: book)
+            }
         }
         .alert("返却確認", isPresented: $isReturnConfirmationPresented) {
             Button("キャンセル", role: .cancel) {}
@@ -36,7 +53,11 @@ struct LoanActionContainerButton: View {
                 performReturn()
             }
         } message: {
-            Text("「\(book.title)」を返却しますか？")
+            if let book = book {
+                Text("「\(book.title)」を返却しますか？")
+            } else {
+                Text("この絵本を返却しますか？")
+            }
         }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
@@ -47,18 +68,21 @@ struct LoanActionContainerButton: View {
     
     // MARK: - Actions
     
+    /// 貸出ボタンタップ時の処理
     private func handleLoanTap() {
         isLoanSheetPresented = true
     }
     
+    /// 返却ボタンタップ時の処理
     private func handleReturnTap() {
         isReturnConfirmationPresented = true
     }
     
+    /// 返却処理の実行
     private func performReturn() {
         Task {
             do {
-                try loanModel.returnBook(bookId: book.id)
+                try loanModel.returnBook(bookId: bookId)
                 alertState = .success("返却が完了しました")
             } catch {
                 alertState = .error(error.localizedDescription)
@@ -82,7 +106,7 @@ struct LoanActionContainerButton: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
     VStack(spacing: 16) {
-        LoanActionContainerButton(book: sampleBook)
+        LoanActionContainerButton(bookId: sampleBook.id)
         
         // リスト内での表示例
         List {
@@ -97,7 +121,7 @@ struct LoanActionContainerButton: View {
                 
                 Spacer()
                 
-                LoanActionContainerButton(book: sampleBook)
+                LoanActionContainerButton(bookId: sampleBook.id)
             }
             .padding(.vertical, 4)
         }

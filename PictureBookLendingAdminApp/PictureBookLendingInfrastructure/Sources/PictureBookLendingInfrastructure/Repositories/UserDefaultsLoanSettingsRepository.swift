@@ -2,7 +2,8 @@ import Foundation
 import PictureBookLendingDomain
 
 /// UserDefaultsを使用した貸出設定リポジトリ実装
-public final class UserDefaultsLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked
+public final class UserDefaultsLoanSettingsRepository: LoanSettingsRepositoryProtocol,
+    @unchecked
     Sendable
 {
     private let userDefaults: UserDefaults
