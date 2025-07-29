@@ -146,19 +146,3 @@ public class SwiftDataUserRepository: UserRepositoryProtocol {
         }
     }
 }
-
-/// SwiftData用の利用者モデル
-///
-/// SwiftDataで永続化するための利用者モデル
-@Model
-final public class SwiftDataUser {
-    public var id: UUID
-    public var name: String
-    public var classGroupId: UUID
-    
-    public init(id: UUID, name: String, classGroupId: UUID) {
-        self.id = id
-        self.name = name
-        self.classGroupId = classGroupId
-    }
-}

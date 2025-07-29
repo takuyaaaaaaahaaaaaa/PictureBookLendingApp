@@ -219,6 +219,7 @@ public class LoanModel {
     /// - Parameter bookId: 返却する絵本のID
     /// - Returns: 更新された貸出情報
     /// - Throws: 返却処理に失敗した場合は `LoanModelError` を投げます
+    @discardableResult
     public func returnBook(bookId: UUID) throws -> Loan {
         // 指定された絵本の現在の貸出情報を検索
         guard let currentLoan = loans.first(where: { $0.bookId == bookId && !$0.isReturned }) else {

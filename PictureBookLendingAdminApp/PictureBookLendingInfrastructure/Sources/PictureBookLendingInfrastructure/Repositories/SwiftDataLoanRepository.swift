@@ -236,28 +236,3 @@ public class SwiftDataLoanRepository: LoanRepositoryProtocol {
         }
     }
 }
-
-/// SwiftData用の貸出モデル
-///
-/// SwiftDataで永続化するための貸出モデル
-@Model
-final public class SwiftDataLoan {
-    public var id: UUID
-    public var bookId: UUID
-    public var userId: UUID
-    public var loanDate: Date
-    public var dueDate: Date
-    public var returnedDate: Date?
-    
-    public init(
-        id: UUID, bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date,
-        returnedDate: Date? = nil
-    ) {
-        self.id = id
-        self.bookId = bookId
-        self.userId = userId
-        self.loanDate = loanDate
-        self.dueDate = dueDate
-        self.returnedDate = returnedDate
-    }
-}
