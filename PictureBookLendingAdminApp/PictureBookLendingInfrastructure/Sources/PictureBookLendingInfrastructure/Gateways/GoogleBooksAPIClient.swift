@@ -3,7 +3,7 @@ import PictureBookLendingDomain
 
 /// Google Books APIクライアント
 /// Google Books API v1を使用して書籍の詳細情報を取得します
-public struct GoogleBooksAPIClient {
+public struct GoogleBooksAPIClient: Sendable {
     
     /// URLSession（テスト時にモック可能）
     private let urlSession: URLSession
@@ -16,19 +16,19 @@ public struct GoogleBooksAPIClient {
     
     /// ISBNから書籍情報を取得する
     /// - Parameter isbn: ISBN-13またはISBN-10
-    /// - Returns: 書籍メタデータ
-    /// - Throws: BookMetadataServiceError
-    public func fetchMetadata(for isbn: String) async throws -> BookMetadata {
+    /// - Returns: ドメインモデルとしてのBook
+    /// - Throws: BookMetadataGatewayError
+    public func fetchBook(for isbn: String) async throws -> Book {
         let normalizedISBN = ISBNValidator.normalize(isbn)
         
         // ISBN形式検証
         guard ISBNValidator.isValidISBN(normalizedISBN) else {
-            throw BookMetadataServiceError.invalidISBN
+            throw BookMetadataGatewayError.invalidISBN
         }
         
         // URLを構築
         guard let url = buildURL(for: normalizedISBN) else {
-            throw BookMetadataServiceError.unknown
+            throw BookMetadataGatewayError.unknown
         }
         
         // APIリクエスト実行
@@ -36,16 +36,16 @@ public struct GoogleBooksAPIClient {
         do {
             (data, response) = try await urlSession.data(from: url)
         } catch {
-            throw BookMetadataServiceError.networkError
+            throw BookMetadataGatewayError.networkError
         }
         
         // HTTPレスポンス検証
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw BookMetadataServiceError.unknown
+            throw BookMetadataGatewayError.unknown
         }
         
         guard (200..<300).contains(httpResponse.statusCode) else {
-            throw BookMetadataServiceError.httpError(statusCode: httpResponse.statusCode)
+            throw BookMetadataGatewayError.httpError(statusCode: httpResponse.statusCode)
         }
         
         // JSONデコード
@@ -53,16 +53,16 @@ public struct GoogleBooksAPIClient {
         do {
             volumesResponse = try JSONDecoder().decode(VolumesResponse.self, from: data)
         } catch {
-            throw BookMetadataServiceError.decodingError
+            throw BookMetadataGatewayError.decodingError
         }
         
         // 結果検証とベストマッチ選択
         guard let items = volumesResponse.items, !items.isEmpty else {
-            throw BookMetadataServiceError.bookNotFound
+            throw BookMetadataGatewayError.bookNotFound
         }
         
         let bestMatch = selectBestMatch(items: items, targetISBN: normalizedISBN)
-        return mapToBookMetadata(volume: bestMatch)
+        return mapToBook(volume: bestMatch)
     }
     
     /// Google Books API URLを構築する
@@ -125,10 +125,10 @@ public struct GoogleBooksAPIClient {
         return items[0]
     }
     
-    /// Google Books APIのレスポンスをBookMetadataにマッピングする
+    /// Google Books APIのレスポンスをBookドメインモデルにマッピングする
     /// - Parameter volume: Google Books APIのボリューム
-    /// - Returns: BookMetadata
-    private func mapToBookMetadata(volume: Volume) -> BookMetadata {
+    /// - Returns: Bookドメインモデル
+    private func mapToBook(volume: Volume) -> Book {
         let volumeInfo = volume.volumeInfo
         
         // サムネイルURLの処理（httpをhttpsに変換）
@@ -142,20 +142,18 @@ public struct GoogleBooksAPIClient {
 
         // ISBN情報の抽出
         let isbn13 = volumeInfo.industryIdentifiers?.first { $0.type == "ISBN_13" }?.identifier
-        let isbn10 = volumeInfo.industryIdentifiers?.first { $0.type == "ISBN_10" }?.identifier
         
-        return BookMetadata(
+        return Book(
             title: volumeInfo.title ?? "（タイトル未取得）",
-            authors: volumeInfo.authors ?? [],
+            author: volumeInfo.authors?.joined(separator: ", ") ?? "（著者未取得）",
+            isbn13: isbn13,
             publisher: volumeInfo.publisher,
             publishedDate: volumeInfo.publishedDate,
             description: volumeInfo.description,
-            pageCount: volumeInfo.pageCount,
-            categories: volumeInfo.categories ?? [],
             thumbnailURL: thumbnailURL,
-            infoLink: volumeInfo.infoLink,
-            isbn13: isbn13,
-            isbn10: isbn10
+            targetAge: nil,  // APIからは取得できないため、後でユーザーが設定
+            pageCount: volumeInfo.pageCount,
+            categories: volumeInfo.categories ?? []
         )
     }
 }

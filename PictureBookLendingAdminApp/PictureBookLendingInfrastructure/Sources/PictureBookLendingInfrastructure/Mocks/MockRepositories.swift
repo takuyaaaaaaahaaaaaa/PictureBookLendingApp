@@ -209,4 +209,29 @@ public class MockRepositoryFactory: RepositoryFactory {
     public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
         return loanSettingsRepository
     }
+    
+    public func makeBookMetadataGateway() -> BookMetadataGatewayProtocol {
+        return MockBookMetadataGateway()
+    }
+}
+
+/// テスト用のモック書籍メタデータゲートウェイ
+public class MockBookMetadataGateway: BookMetadataGatewayProtocol {
+    public init() {}
+    
+    public func getBook(by isbn: String) async throws -> Book {
+        // テスト用のサンプルデータを返す
+        return Book(
+            title: "テスト用絵本(\(isbn))",
+            author: "テスト著者",
+            isbn13: isbn,
+            publisher: "テスト出版社",
+            publishedDate: "2023-01-01",
+            description: "これはテスト用の絵本です。",
+            thumbnailURL: URL(string: "https://example.com/thumbnail.jpg"),
+            targetAge: 3,
+            pageCount: 32,
+            categories: ["絵本", "テスト"]
+        )
+    }
 }
