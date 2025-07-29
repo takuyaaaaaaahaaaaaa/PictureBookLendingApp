@@ -16,8 +16,7 @@ let package = Package(
             targets: ["PictureBookLendingInfrastructure"])
     ],
     dependencies: [
-        .package(path: "../PictureBookLendingDomain"),
-        .package(url: "https://github.com/swiftlang/swift-testing.git", from: "0.99.0"),
+        .package(path: "../PictureBookLendingDomain")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -31,8 +30,7 @@ let package = Package(
         .testTarget(
             name: "PictureBookLendingInfrastructureTests",
             dependencies: [
-                "PictureBookLendingInfrastructure",
-                .product(name: "Testing", package: "swift-testing"),
+                "PictureBookLendingInfrastructure"
             ]
         ),
     ]

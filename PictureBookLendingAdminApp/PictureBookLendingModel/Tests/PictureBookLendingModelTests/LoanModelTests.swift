@@ -214,7 +214,7 @@ struct LoanModelTests {
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
         
         // 1冊目の貸出
-        let loan1 = try loanModel.lendBook(bookId: testBook.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: userId, dueDate: dueDate)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
         
         // 2冊目の絵本を追加
@@ -222,7 +222,7 @@ struct LoanModelTests {
         let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
         
         // 2冊目の貸出
-        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 2)
         
         // 3冊目の絵本を追加
@@ -230,7 +230,7 @@ struct LoanModelTests {
         let savedBook3 = try mockRepositoryFactory.bookRepository.save(testBook3)
         
         // 3冊目の貸出
-        let loan3 = try loanModel.lendBook(bookId: savedBook3.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: savedBook3.id, userId: userId, dueDate: dueDate)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
         
         // 4冊目の絵本を追加
