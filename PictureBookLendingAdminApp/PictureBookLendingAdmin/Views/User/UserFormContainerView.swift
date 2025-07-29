@@ -10,13 +10,18 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.dismiss) private var dismiss
     
     let mode: UserFormMode
     var onSave: ((User) -> Void)? = nil
     
+    /// 利用者名
     @State private var name = ""
-    @State private var group = ""
+    /// 所属している組
+    @State private var classGroup: ClassGroup?
+    /// 組一覧
+    @State private var classGroups: [ClassGroup] = []
     @State private var alertState = AlertState()
     
     init(mode: UserFormMode, onSave: ((User) -> Void)? = nil) {
@@ -29,10 +34,8 @@ struct UserFormContainerView: View {
             UserFormView(
                 mode: mode,
                 name: $name,
-                group: $group,
-                isValidInput: isValidInput,
-                onSave: handleSave,
-                onCancel: handleCancel
+                classGroup: $classGroup,
+                classGroups: classGroups
             )
             .navigationTitle(isEditMode ? "利用者情報を編集" : "利用者を登録")
             .toolbar {
@@ -71,8 +74,7 @@ struct UserFormContainerView: View {
     }
     
     private var isValidInput: Bool {
-        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !group.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && classGroup != nil
     }
     
     // MARK: - Actions
@@ -82,19 +84,24 @@ struct UserFormContainerView: View {
     }
     
     private func handleSave() {
+        guard let selectedClassGroup = classGroup else {
+            alertState = .error("組を選択してください")
+            return
+        }
+        
         do {
             let savedUser: User
             
             switch mode {
             case .add:
-                let newUser = User(name: name, group: group)
+                let newUser = User(name: name, classGroupId: selectedClassGroup.id)
                 savedUser = try userModel.registerUser(newUser)
 
             case .edit(let user):
                 let updatedUser = User(
                     id: user.id,
                     name: name,
-                    group: group
+                    classGroupId: selectedClassGroup.id
                 )
                 savedUser = try userModel.updateUser(updatedUser)
             }
@@ -107,9 +114,11 @@ struct UserFormContainerView: View {
     }
     
     private func loadInitialData() {
+        classGroups = classGroupModel.getAllClassGroups()
+        
         if case .edit(let user) = mode {
             name = user.name
-            group = user.group
+            classGroup = classGroupModel.findClassGroupById(user.classGroupId)
         }
     }
 }
@@ -117,7 +126,9 @@ struct UserFormContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
+    let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     
     return UserFormContainerView(mode: .add)
         .environment(userModel)
+        .environment(classGroupModel)
 }

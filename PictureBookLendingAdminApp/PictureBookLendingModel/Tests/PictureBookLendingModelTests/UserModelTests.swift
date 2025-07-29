@@ -29,14 +29,15 @@ struct UserModelTests {
     func registerUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
-        let user = User(name: "山田太郎", group: "1年2組")
+        let classGroupId = UUID()
+        let user = User(name: "山田太郎", classGroupId: classGroupId)
         
         // 2. Act - 実行
         let registeredUser = try userModel.registerUser(user)
         
         // 3. Assert - 検証
         #expect(registeredUser.name == "山田太郎")
-        #expect(registeredUser.group == "1年2組")
+        #expect(registeredUser.classGroupId == classGroupId)
         #expect(!registeredUser.id.uuidString.isEmpty)
         #expect(userModel.users.count == 1)
     }
@@ -48,8 +49,10 @@ struct UserModelTests {
     func getAllUsers() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
-        let user1 = User(name: "山田太郎", group: "1年2組")
-        let user2 = User(name: "鈴木花子", group: "2年1組")
+        let classGroupId1 = UUID()
+        let classGroupId2 = UUID()
+        let user1 = User(name: "山田太郎", classGroupId: classGroupId1)
+        let user2 = User(name: "鈴木花子", classGroupId: classGroupId2)
         
         // 2. Act - 実行
         _ = try userModel.registerUser(user1)
@@ -68,7 +71,8 @@ struct UserModelTests {
     func findUserById() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
-        let user = User(name: "山田太郎", group: "1年2組")
+        let classGroupId = UUID()
+        let user = User(name: "山田太郎", classGroupId: classGroupId)
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
         
@@ -87,18 +91,19 @@ struct UserModelTests {
     func updateUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
-        let user = User(name: "山田太郎", group: "1年2組")
+        let classGroupId = UUID()
+        let user = User(name: "山田太郎", classGroupId: classGroupId)
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
         
-        let updatedUserInfo = User(id: id, name: "山田次郎", group: "1年2組")
+        let updatedUserInfo = User(id: id, name: "山田次郎", classGroupId: classGroupId)
         
         // 2. Act - 実行
         let updatedUser = try userModel.updateUser(updatedUserInfo)
         
         // 3. Assert - 検証
         #expect(updatedUser.name == "山田次郎")
-        #expect(updatedUser.group == "1年2組")
+        #expect(updatedUser.classGroupId == classGroupId)
         #expect(userModel.users.count == 1)  // 数は変わらない
         #expect(userModel.findUserById(id)?.name == "山田次郎")
     }
@@ -110,7 +115,8 @@ struct UserModelTests {
     func deleteUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
-        let user = User(name: "山田太郎", group: "1年2組")
+        let classGroupId = UUID()
+        let user = User(name: "山田太郎", classGroupId: classGroupId)
         let registeredUser = try userModel.registerUser(user)
         let id = registeredUser.id
         

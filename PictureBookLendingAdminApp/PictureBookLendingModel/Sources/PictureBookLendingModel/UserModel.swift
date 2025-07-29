@@ -3,13 +3,24 @@ import Observation
 import PictureBookLendingDomain
 
 /// 利用者管理に関するエラー
-public enum UserModelError: Error, Equatable {
+public enum UserModelError: Error, Equatable, LocalizedError {
     /// 指定された利用者が見つからない場合のエラー
     case userNotFound
     /// 利用者登録に失敗した場合のエラー
     case registrationFailed
     /// 利用者情報更新に失敗した場合のエラー
     case updateFailed
+    
+    public var errorDescription: String? {
+        switch self {
+        case .userNotFound:
+            return "指定された利用者が見つかりません"
+        case .registrationFailed:
+            return "利用者の登録に失敗しました"
+        case .updateFailed:
+            return "利用者情報の更新に失敗しました"
+        }
+    }
 }
 
 /// 利用者管理モデル

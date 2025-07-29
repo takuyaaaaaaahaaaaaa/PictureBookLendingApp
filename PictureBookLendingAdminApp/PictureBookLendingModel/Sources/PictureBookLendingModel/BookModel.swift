@@ -3,13 +3,24 @@ import Observation
 import PictureBookLendingDomain
 
 /// 絵本管理に関するエラー
-public enum BookModelError: Error, Equatable {
+public enum BookModelError: Error, Equatable, LocalizedError {
     /// 指定された絵本が見つからない場合のエラー
     case bookNotFound
     /// 絵本登録に失敗した場合のエラー
     case registrationFailed
     /// 絵本更新に失敗した場合のエラー
     case updateFailed
+    
+    public var errorDescription: String? {
+        switch self {
+        case .bookNotFound:
+            return "指定された絵本が見つかりません"
+        case .registrationFailed:
+            return "絵本の登録に失敗しました"
+        case .updateFailed:
+            return "絵本の更新に失敗しました"
+        }
+    }
 }
 
 /// 絵本管理モデル

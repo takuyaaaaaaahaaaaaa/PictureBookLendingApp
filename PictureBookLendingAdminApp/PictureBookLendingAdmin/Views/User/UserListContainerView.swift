@@ -17,55 +17,56 @@ struct UserListContainerView: View {
     @State private var navigationPath = NavigationPath()
     
     private var filteredUsers: [User] {
-        return if searchText.isEmpty {
+        if searchText.isEmpty {
             userModel.users
         } else {
             userModel.users.filter { user in
                 user.name.localizedCaseInsensitiveContains(searchText)
-                    || user.group.localizedCaseInsensitiveContains(searchText)
+                // TODO: 組名検索機能は後で実装（classGroupIdから組名を取得する仕組みが必要）
+                // || user.group.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            UserListView(
-                users: filteredUsers,
-                searchText: $searchText,
-                onDelete: handleDeleteUsers
-            )
-            .navigationTitle("利用者一覧")
-            .navigationDestination(for: User.self) { user in
-                UserDetailContainerView(user: user)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        isAddSheetPresented = true
-                    }) {
-                        Label("利用者を追加", systemImage: "plus")
-                    }
+        UserListView(
+            users: filteredUsers,
+            searchText: $searchText,
+            onDelete: handleDeleteUsers
+        ) { user in
+            UserRowContainerView(user: user)
+        }
+        .navigationTitle("利用者一覧")
+        .navigationDestination(for: User.self) { user in
+            UserDetailContainerView(user: user)
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button(action: {
+                    isAddSheetPresented = true
+                }) {
+                    Label("利用者を追加", systemImage: "plus")
                 }
             }
-            .sheet(isPresented: $isAddSheetPresented) {
-                UserFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
-                    }
-                )
-            }
-            .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(alertState.message)
-            }
-            .onAppear {
-                userModel.refreshUsers()
-            }
-            .refreshable {
-                userModel.refreshUsers()
-            }
+        }
+        .sheet(isPresented: $isAddSheetPresented) {
+            UserFormContainerView(
+                mode: .add,
+                onSave: { _ in
+                    // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
+                }
+            )
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .onAppear {
+            userModel.refreshUsers()
+        }
+        .refreshable {
+            userModel.refreshUsers()
         }
     }
     
@@ -81,15 +82,15 @@ struct UserListContainerView: View {
             }
         }
     }
-    
 }
 
 #Preview {
-    let mockFactory = MockRepositoryFactory()
-    
     // プレビュー用のサンプルデータを追加
-    let user1 = User(name: "山田太郎", group: "1年2組")
-    let user2 = User(name: "鈴木花子", group: "2年1組")
+    let mockFactory = MockRepositoryFactory()
+    let user1 = User(name: "山田太郎", classGroupId: UUID())
+    let user2 = User(name: "鈴木花子", classGroupId: UUID())
+    
+    // リポジトリにサンプルデータを追加
     _ = try? mockFactory.userRepository.save(user1)
     _ = try? mockFactory.userRepository.save(user2)
     

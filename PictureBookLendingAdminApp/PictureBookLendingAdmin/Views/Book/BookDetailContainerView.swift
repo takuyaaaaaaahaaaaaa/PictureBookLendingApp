@@ -9,26 +9,31 @@ import SwiftUI
 /// ビジネスロジック、状態管理、データ取得を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
 struct BookDetailContainerView: View {
-    @Environment(LendingModel.self) private var lendingModel
-    
-    let initialBook: Book
+    @Environment(LoanModel.self) private var loanModel
+    @Environment(BookModel.self) private var bookModel
     
     @State private var book: Book
     @State private var isEditSheetPresented = false
-    @State private var isCurrentlyLent = false
+    @State private var alertState = AlertState()
     
     init(book: Book) {
-        self.initialBook = book
         self._book = State(initialValue: book)
     }
     
     var body: some View {
         BookDetailView(
-            book: book,
+            bookTitle: $book.title,
+            bookAuthor: $book.author,
+            bookId: book.id,
             isCurrentlyLent: isCurrentlyLent,
             onEdit: handleEdit
-        )
+        ) {
+            LoanActionContainerButton(bookId: book.id)
+        }
         .navigationTitle(book.title)
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("編集") {
@@ -36,15 +41,22 @@ struct BookDetailContainerView: View {
                 }
             }
         }
-        .sheet(isPresented: $isEditSheetPresented) {
-            BookFormContainerView(
-                mode: .edit(book),
-                onSave: handleBookSaved
-            )
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
         }
-        .onAppear {
-            checkLendingStatus()
+        .onChange(of: book) { _, newValue in
+            do {
+                _ = try bookModel.updateBook(newValue)
+            } catch {
+                alertState = .error(error.localizedDescription)
+            }
         }
+    }
+    
+    private var isCurrentlyLent: Bool {
+        loanModel.isBookLent(bookId: book.id)
     }
     
     // MARK: - Actions
@@ -55,26 +67,22 @@ struct BookDetailContainerView: View {
     
     private func handleBookSaved(_ savedBook: Book) {
         book = savedBook
-        checkLendingStatus()
-    }
-    
-    private func checkLendingStatus() {
-        isCurrentlyLent = lendingModel.isBookLent(bookId: book.id)
     }
 }
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let lendingModel = LendingModel(
+    let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
-        userRepository: mockFactory.userRepository
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
-    return NavigationStack {
+    NavigationStack {
         BookDetailContainerView(book: sampleBook)
-            .environment(lendingModel)
+            .environment(loanModel)
     }
 }

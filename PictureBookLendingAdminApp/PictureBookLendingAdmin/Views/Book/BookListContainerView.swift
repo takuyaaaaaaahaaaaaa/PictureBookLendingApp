@@ -5,19 +5,26 @@ import PictureBookLendingUI
 import SwiftUI
 
 /// 絵本一覧のContainer View
+///
+/// 全絵本（貸出可能・貸出中を含む）を表示し、
+/// 状態に応じて貸出・返却ボタンを提供します。
 struct BookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
+    @Environment(LoanModel.self) private var loanModel
     
     @State private var searchText = ""
-    @State private var isAddSheetPresented = false
+    @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
-    @State private var navigationPath = NavigationPath()
     
     private var filteredBooks: [Book] {
+        // 全絵本を表示（貸出可能・貸出中を含む）
+        let allBooks = bookModel.books
+        
+        // 検索テキストでフィルタリング
         return if searchText.isEmpty {
-            bookModel.books
+            allBooks
         } else {
-            bookModel.books.filter { book in
+            allBooks.filter { book in
                 book.title.localizedCaseInsensitiveContains(searchText)
                     || book.author.localizedCaseInsensitiveContains(searchText)
             }
@@ -25,44 +32,34 @@ struct BookListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            BookListView(
-                books: filteredBooks,
-                searchText: $searchText,
-                onDelete: handleDeleteBooks
-            )
-            .navigationTitle("絵本一覧")
-            .navigationDestination(for: Book.self) { book in
-                BookDetailContainerView(book: book)
+        BookListView(
+            books: filteredBooks,
+            searchText: $searchText,
+            onDelete: handleDeleteBooks
+        ) { book in
+            LoanActionContainerButton(bookId: book.id)
+        }
+        .navigationTitle("絵本")
+        .searchable(text: $searchText, prompt: "タイトル・著者で検索")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                // 設定ボタン
+                SettingContainerButton()
             }
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button(action: {
-                        isAddSheetPresented = true
-                    }) {
-                        Label("絵本を追加", systemImage: "plus")
-                    }
-                }
-            }
-            .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
-            }
-            .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(alertState.message)
-            }
-            .onAppear {
-                bookModel.refreshBooks()
-            }
-            .refreshable {
-                bookModel.refreshBooks()
-            }
+        }
+        .navigationDestination(for: Book.self) { book in
+            BookDetailContainerView(book: book)
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .onAppear {
+            bookModel.refreshBooks()
+        }
+        .refreshable {
+            bookModel.refreshBooks()
         }
     }
     
@@ -90,7 +87,14 @@ struct BookListContainerView: View {
     _ = try? mockFactory.bookRepository.save(book2)
     
     let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let loanModel = LoanModel(
+        repository: mockFactory.loanRepository,
+        bookRepository: mockFactory.bookRepository,
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
+    )
     
     return BookListContainerView()
         .environment(bookModel)
+        .environment(loanModel)
 }
