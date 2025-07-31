@@ -4,7 +4,9 @@
       "id" : "86AA3CCE-4665-4E6B-B73F-74E644273669",
       "name" : "Test Scheme Action",
       "options" : {
-
+        "excludedTags" : [
+          "integrationTest"
+        ]
       }
     }
   ],
@@ -17,6 +19,11 @@
   },
   "testTargets" : [
     {
+      "skippedTags" : {
+        "tags" : [
+          ".integrationTest"
+        ]
+      },
       "target" : {
         "containerPath" : "container:PictureBookLendingAdmin.xcodeproj",
         "identifier" : "EFF77EFF2DD66AAD009BD213",
@@ -24,6 +31,11 @@
       }
     },
     {
+      "skippedTags" : {
+        "tags" : [
+          ".integrationTest"
+        ]
+      },
       "target" : {
         "containerPath" : "container:PictureBookLendingInfrastructure",
         "identifier" : "PictureBookLendingInfrastructureTests",
@@ -31,6 +43,11 @@
       }
     },
     {
+      "skippedTags" : {
+        "tags" : [
+          ".integrationTest"
+        ]
+      },
       "target" : {
         "containerPath" : "container:PictureBookLendingUI",
         "identifier" : "PictureBookLendingUITests",
@@ -38,6 +55,11 @@
       }
     },
     {
+      "skippedTags" : {
+        "tags" : [
+          ".integrationTest"
+        ]
+      },
       "target" : {
         "containerPath" : "container:PictureBookLendingModel",
         "identifier" : "PictureBookLendingModelTests",

@@ -69,7 +69,7 @@ public struct GoogleBooksOptimizedNormalizer: StringNormalizer {
         // 3. 記号を正規化（スペースに変換）
         text = normalizeSymbols(text)
         
-        // 4. 旧字体・異体字を正規化  
+        // 4. 旧字体・異体字を正規化
         text = normalizeVariantCharacters(text)
         
         // 5. 役割語の除去
@@ -104,13 +104,13 @@ public struct GoogleBooksOptimizedNormalizer: StringNormalizer {
         
         // 各種記号をスペースに変換
         let symbolsToSpace = [
-            "・", "･", "·",           // 中黒
-            "－", "―", "ー", "─",     // ハイフン・長音符
-            "～", "〜",               // 波ダッシュ
-            "：", ":",                // コロン
-            "／", "/",                // スラッシュ
-            "（", "）", "(", ")",     // 括弧
-            "「", "」", "『", "』",   // かぎ括弧
+            "・", "･", "·",  // 中黒
+            "－", "―", "ー", "─",  // ハイフン・長音符
+            "～", "〜",  // 波ダッシュ
+            "：", ":",  // コロン
+            "／", "/",  // スラッシュ
+            "（", "）", "(", ")",  // 括弧
+            "「", "」", "『", "』",  // かぎ括弧
         ]
         
         for symbol in symbolsToSpace {
@@ -133,7 +133,7 @@ public struct GoogleBooksOptimizedNormalizer: StringNormalizer {
             "髙": "高",
             "﨑": "崎",
         ]
-        
+
         for (variant, standard) in variants {
             result = result.replacingOccurrences(of: variant, with: standard)
         }

@@ -4,11 +4,12 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 検索精度テスト - 表記ゆれによる検索結果の違いを検証
+@Suite(.tags(.integrationTest))
 struct SearchAccuracyTests {
     private let apiClient = GoogleBookSearchGateway()
     
     /// 「ぐりとぐら」の表記ゆれテスト
-    @Test func testGuriToGuraVariations() async throws {
+    @Test(.tags(.integrationTest)) func testGuriToGuraVariations() async throws {
         let variations: [(description: String, title: String, author: String?)] = [
             ("基本形", "ぐりとぐら", "なかがわりえこ"),
             ("スペース入り", "ぐり と ぐら", "なかがわりえこ"),
@@ -46,7 +47,7 @@ struct SearchAccuracyTests {
     }
     
     /// 「はらぺこあおむし」の表記ゆれテスト
-    @Test func testHungryBugVariations() async throws {
+    @Test(.tags(.integrationTest)) func testHungryBugVariations() async throws {
         let variations: [(description: String, title: String, author: String?)] = [
             ("基本形", "はらぺこあおむし", "エリック・カール"),
             ("スペース入り", "はらぺこ あおむし", "エリック・カール"),
@@ -84,7 +85,7 @@ struct SearchAccuracyTests {
     }
     
     /// 記号・文字種の違いテスト
-    @Test func testSymbolVariations() async throws {
+    @Test(.tags(.integrationTest)) func testSymbolVariations() async throws {
         let testCases: [(description: String, title: String, author: String)] = [
             ("数字半角", "100万回生きたねこ", "佐野洋子"),
             ("数字全角", "１００万回生きたねこ", "佐野洋子"),
@@ -118,7 +119,7 @@ struct SearchAccuracyTests {
     }
     
     /// 著者名の役割語テスト
-    @Test func testAuthorRoleVariations() async throws {
+    @Test(.tags(.integrationTest)) func testAuthorRoleVariations() async throws {
         let variations: [(description: String, title: String, author: String)] = [
             ("著者名のみ", "からすのパンやさん", "かこさとし"),
             ("作者付き", "からすのパンやさん", "かこさとし作"),
@@ -151,7 +152,7 @@ struct SearchAccuracyTests {
     }
     
     /// タイトルのみ vs タイトル+著者の比較
-    @Test func testTitleOnlyVsTitleAuthor() async throws {
+    @Test(.tags(.integrationTest)) func testTitleOnlyVsTitleAuthor() async throws {
         let testBooks = [
             ("ぐりとぐら", "なかがわりえこ"),
             ("はらぺこあおむし", "エリック・カール"),

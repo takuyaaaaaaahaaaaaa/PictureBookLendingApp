@@ -5,13 +5,14 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 最適化された正規化の効果検証テスト
+@Suite(.tags(.integrationTest))
 struct OptimizedNormalizationTests {
     private let gateway = GoogleBookSearchGateway()
     private let originalNormalizer = JapaneseStringNormalizer()
     private let optimizedNormalizer = GoogleBooksOptimizedNormalizer()
     
     /// スペース問題の改善効果テスト
-    @Test func testSpaceNormalizationImprovement() async throws {
+    @Test(.tags(.integrationTest)) func testSpaceNormalizationImprovement() async throws {
         print("=== スペース正規化の改善効果テスト ===")
         
         let testCases = [
@@ -42,8 +43,12 @@ struct OptimizedNormalizationTests {
             let optimizedResult = await searchBooks(title: optimizedNormalized, author: author)
             
             // 期待する結果が含まれているか確認
-            let originalHasExpected = originalResult.books.contains { $0.title.contains(expectedTitle) }
-            let optimizedHasExpected = optimizedResult.books.contains { $0.title.contains(expectedTitle) }
+            let originalHasExpected = originalResult.books.contains {
+                $0.title.contains(expectedTitle)
+            }
+            let optimizedHasExpected = optimizedResult.books.contains {
+                $0.title.contains(expectedTitle)
+            }
             
             if originalHasExpected { originalSuccessCount += 1 }
             if optimizedHasExpected { optimizedSuccessCount += 1 }
@@ -67,7 +72,7 @@ struct OptimizedNormalizationTests {
     }
     
     /// 著者名役割語の改善効果テスト
-    @Test func testAuthorRoleNormalizationImprovement() async throws {
+    @Test(.tags(.integrationTest)) func testAuthorRoleNormalizationImprovement() async throws {
         print("=== 著者名役割語の改善効果テスト ===")
         
         let testCases = [
@@ -95,21 +100,29 @@ struct OptimizedNormalizationTests {
             let optimizedResult = await searchBooks(title: title, author: optimizedAuthor)
             
             // 期待する著者名が含まれているか確認
-            let originalHasExpected = originalResult.books.contains { $0.author.contains(expectedAuthor) }
-            let optimizedHasExpected = optimizedResult.books.contains { $0.author.contains(expectedAuthor) }
+            let originalHasExpected = originalResult.books.contains {
+                $0.author.contains(expectedAuthor)
+            }
+            let optimizedHasExpected = optimizedResult.books.contains {
+                $0.author.contains(expectedAuthor)
+            }
             
             if originalHasExpected { originalSuccessCount += 1 }
             if optimizedHasExpected { optimizedSuccessCount += 1 }
             
-            print("結果: 元=\(originalResult.count)件(\(originalHasExpected ? "✅" : "❌")), 最適化=\(optimizedResult.count)件(\(optimizedHasExpected ? "✅" : "❌"))")
+            print(
+                "結果: 元=\(originalResult.count)件(\(originalHasExpected ? "✅" : "❌")), 最適化=\(optimizedResult.count)件(\(optimizedHasExpected ? "✅" : "❌"))"
+            )
         }
         
         print("\n=== 統計 ===")
-        print("成功率: 元=\(originalSuccessCount)/\(testCases.count), 最適化=\(optimizedSuccessCount)/\(testCases.count)")
+        print(
+            "成功率: 元=\(originalSuccessCount)/\(testCases.count), 最適化=\(optimizedSuccessCount)/\(testCases.count)"
+        )
     }
     
     /// 実際の利用シーンでの総合テスト
-    @Test func testRealWorldScenarios() async throws {
+    @Test(.tags(.integrationTest)) func testRealWorldScenarios() async throws {
         print("=== 実際の利用シーンでの総合テスト ===")
         
         let scenarios = [
@@ -148,7 +161,8 @@ struct OptimizedNormalizationTests {
         }
         
         let successRate = Double(successCount) / Double(scenarios.count) * 100
-        print("\n総合成功率: \(successCount)/\(scenarios.count) (\(String(format: "%.0f", successRate))%)")
+        print(
+            "\n総合成功率: \(successCount)/\(scenarios.count) (\(String(format: "%.0f", successRate))%)")
         
         #expect(successCount >= 3, "少なくとも75%以上の成功率が期待される")
     }

@@ -5,15 +5,16 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 詳細な正規化効果検証テスト
+@Suite(.tags(.integrationTest))
 struct DetailedNormalizationTests {
     private let gateway = GoogleBookSearchGateway()
     private let normalizer = JapaneseStringNormalizer()
     
     /// スペース正規化の詳細テスト
-    @Test func testSpaceNormalizationDetail() async throws {
+    @Test(.tags(.integrationTest)) func testSpaceNormalizationDetail() async throws {
         print("=== スペース正規化の詳細テスト ===")
         
-        let testBook = "ぐりとぐら"
+        let _ = "ぐりとぐら"  // 基準となる絵本タイトル
         let author = "なかがわりえこ"
         
         // さまざまなスペースパターン
@@ -74,7 +75,7 @@ struct DetailedNormalizationTests {
     }
     
     /// 記号正規化の詳細テスト
-    @Test func testSymbolNormalizationDetail() async throws {
+    @Test(.tags(.integrationTest)) func testSymbolNormalizationDetail() async throws {
         print("=== 記号正規化の詳細テスト ===")
         
         let author = "エリック・カール"
@@ -99,8 +100,12 @@ struct DetailedNormalizationTests {
             let normalizedResult = await getSearchResult(title: normalizedTitle, author: author)
             
             print("正規化: \"\(title)\" → \"\(normalizedTitle)\"")
-            print("【正規化なし】結果: \(originalResult.count)件, 期待含む: \(originalResult.hasExpected ? "✅" : "❌")")
-            print("【正規化あり】結果: \(normalizedResult.count)件, 期待含む: \(normalizedResult.hasExpected ? "✅" : "❌")")
+            print(
+                "【正規化なし】結果: \(originalResult.count)件, 期待含む: \(originalResult.hasExpected ? "✅" : "❌")"
+            )
+            print(
+                "【正規化あり】結果: \(normalizedResult.count)件, 期待含む: \(normalizedResult.hasExpected ? "✅" : "❌")"
+            )
             
             if originalResult.count == 0 && normalizedResult.count > 0 {
                 print("🎉 正規化により検索可能になりました！")
@@ -109,7 +114,7 @@ struct DetailedNormalizationTests {
     }
     
     /// 著者名正規化の詳細テスト
-    @Test func testAuthorNormalizationDetail() async throws {
+    @Test(.tags(.integrationTest)) func testAuthorNormalizationDetail() async throws {
         print("=== 著者名正規化の詳細テスト ===")
         
         let title = "ぐりとぐら"
@@ -146,7 +151,7 @@ struct DetailedNormalizationTests {
     }
     
     /// 実際の絵本タイトルでの総合テスト
-    @Test func testRealBookTitlesComprehensive() async throws {
+    @Test(.tags(.integrationTest)) func testRealBookTitlesComprehensive() async throws {
         print("=== 実際の絵本タイトルでの総合テスト ===")
         
         let realBookTests = [
@@ -169,11 +174,16 @@ struct DetailedNormalizationTests {
             
             // 検索実行
             let originalResult = await getSearchResult(title: title, author: author)
-            let normalizedResult = await getSearchResult(title: normalizedTitle, author: normalizedAuthor)
+            let normalizedResult = await getSearchResult(
+                title: normalizedTitle, author: normalizedAuthor)
             
             // 期待する結果が含まれているか確認
-            let originalHasExpected = originalResult.books.contains { $0.title.contains(expectedInTitle) }
-            let normalizedHasExpected = normalizedResult.books.contains { $0.title.contains(expectedInTitle) }
+            let originalHasExpected = originalResult.books.contains {
+                $0.title.contains(expectedInTitle)
+            }
+            let normalizedHasExpected = normalizedResult.books.contains {
+                $0.title.contains(expectedInTitle)
+            }
             
             print("\n結果:")
             print("  正規化なし: \(originalResult.count)件、期待結果: \(originalHasExpected ? "✅" : "❌")")
@@ -193,7 +203,9 @@ struct DetailedNormalizationTests {
     
     // MARK: - Helper
     
-    private func getSearchResult(title: String, author: String?) async -> (count: Int, hasExpected: Bool, books: [Book]) {
+    private func getSearchResult(title: String, author: String?) async -> (
+        count: Int, hasExpected: Bool, books: [Book]
+    ) {
         do {
             let books = try await gateway.searchBooks(
                 title: title,

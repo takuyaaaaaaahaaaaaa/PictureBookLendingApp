@@ -8,12 +8,13 @@ import Testing
 ///
 /// 実際のGoogle Books APIを使用した統合テストです
 /// APIキーが設定されている必要があります
+@Suite(.tags(.integrationTest))
 struct GoogleBookSearchGatewayTests {
     
     private let gateway = GoogleBookSearchGateway()
     
     /// 有効なISBNで書籍情報が取得できることをテスト
-    @Test func fetchBookWithValidISBN() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithValidISBN() async throws {
         // はらぺこあおむしのISBN-13
         let isbn = "978-4834000825"
         
@@ -33,7 +34,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// 別の有効なISBNでもテスト（ぐりとぐら）
-    @Test func fetchBookWithAnotherValidISBN() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithAnotherValidISBN() async throws {
         let isbn = "9784061272743"
         
         let book = try await gateway.searchBook(by: isbn)
@@ -47,7 +48,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// 無効なISBN形式でエラーが発生することをテスト
-    @Test func fetchBookWithInvalidISBNFormat() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithInvalidISBNFormat() async throws {
         let invalidISBN = "invalid-isbn"
         
         await #expect(throws: BookMetadataGatewayError.invalidISBN) {
@@ -56,7 +57,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// 存在しないが有効な形式のISBNでエラーが発生することをテスト
-    @Test func fetchBookWithNonExistentISBN() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithNonExistentISBN() async throws {
         let nonExistentISBN = "9789999999991"  // 有効なISBN-13形式だが存在しない
         
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
@@ -65,7 +66,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// ISBN-10形式でも動作することをテスト
-    @Test func fetchBookWithISBN10() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithISBN10() async throws {
         let isbn10 = "4834000826"  // はらぺこあおむしの有効なISBN-10
         
         let book = try await gateway.searchBook(by: isbn10)
@@ -78,7 +79,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// ハイフン付きISBNでも動作することをテスト
-    @Test func fetchBookWithHyphenatedISBN() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookWithHyphenatedISBN() async throws {
         let hyphenatedISBN = "978-4-83-400082-5"  // はらぺこあおむしの正しいハイフン付きISBN
         
         let book = try await gateway.searchBook(by: hyphenatedISBN)
@@ -91,7 +92,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// タイトルで書籍を検索するテスト
-    @Test func searchBooksByTitle() async throws {
+    @Test(.tags(.integrationTest)) func searchBooksByTitle() async throws {
         let title = "ぐりとぐら"
         
         let books = try await gateway.searchBooks(title: title, author: nil, maxResults: 20)
@@ -106,7 +107,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// タイトルと著者で書籍を検索するテスト
-    @Test func searchBooksByTitleAndAuthor() async throws {
+    @Test(.tags(.integrationTest)) func searchBooksByTitleAndAuthor() async throws {
         let title = "ぐりとぐら"
         let author = "なかがわりえこ"
         
@@ -122,7 +123,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// 検索結果が見つからない場合のテスト
-    @Test func searchBooksNotFound() async throws {
+    @Test(.tags(.integrationTest)) func searchBooksNotFound() async throws {
         let title = "存在しない絵本のタイトル12345"
         
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
@@ -131,7 +132,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// 複数の有名絵本を検索するテスト
-    @Test func searchMultipleFamousBooks() async throws {
+    @Test(.tags(.integrationTest)) func searchMultipleFamousBooks() async throws {
         let testCases = [
             ("はらぺこあおむし", "エリック・カール"),
             ("100万回生きたねこ", "佐野洋子"),
@@ -147,7 +148,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// パフォーマンステスト（3秒以内で応答）
-    @Test func fetchBookPerformance() async throws {
+    @Test(.tags(.integrationTest)) func fetchBookPerformance() async throws {
         let isbn = "9784834000825"  // はらぺこあおむしの有効なISBN
         let startTime = Date()
         
@@ -161,7 +162,7 @@ struct GoogleBookSearchGatewayTests {
     }
     
     /// BookSearchGatewayProtocolの動作テスト
-    @Test func bookSearchGatewayProtocolIntegration() async throws {
+    @Test(.tags(.integrationTest)) func bookSearchGatewayProtocolIntegration() async throws {
         let gateway: BookSearchGatewayProtocol = GoogleBookSearchGateway()
         let isbn = "9784834000825"  // はらぺこあおむしの有効なISBN
         
