@@ -34,6 +34,13 @@ struct BookDetailContainerView: View {
         #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
         #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("編集") {
+                    isEditSheetPresented = true
+                }
+            }
+        }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {

@@ -121,21 +121,3 @@ public class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol {
     }
     
 }
-
-/// SwiftData用のクラス（組）モデル
-///
-/// SwiftDataで永続化するためのクラス（組）モデル
-@Model
-final public class SwiftDataClassGroup {
-    public var id: UUID
-    public var name: String
-    public var ageGroup: Int
-    public var year: Int
-    
-    public init(id: UUID, name: String, ageGroup: Int, year: Int) {
-        self.id = id
-        self.name = name
-        self.ageGroup = ageGroup
-        self.year = year
-    }
-}

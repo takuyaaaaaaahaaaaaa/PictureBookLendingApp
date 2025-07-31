@@ -17,6 +17,7 @@
       "Bash(git commit:*)",
       "Bash(find:*)",
       "Bash(afplay:*)",
+      "mcp__chatGPTOnMac__ask_via_shortcuts_cli",
       "Bash(swift build)"
     ],
     "deny": []

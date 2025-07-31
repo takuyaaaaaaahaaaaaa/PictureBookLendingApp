@@ -25,7 +25,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
         let swiftDataBook = SwiftDataBook(
             id: book.id,
             title: book.title,
-            author: book.author
+            author: book.author,
+            isbn13: book.isbn13,
+            publisher: book.publisher,
+            publishedDate: book.publishedDate,
+            bookDescription: book.description,
+            thumbnailURLString: book.thumbnailURL?.absoluteString,
+            targetAge: book.targetAge,
+            pageCount: book.pageCount,
+            categories: book.categories
         )
         
         modelContext.insert(swiftDataBook)
@@ -52,7 +60,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
                 Book(
                     id: swiftDataBook.id,
                     title: swiftDataBook.title,
-                    author: swiftDataBook.author
+                    author: swiftDataBook.author,
+                    isbn13: swiftDataBook.isbn13,
+                    publisher: swiftDataBook.publisher,
+                    publishedDate: swiftDataBook.publishedDate,
+                    description: swiftDataBook.bookDescription,
+                    thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                    targetAge: swiftDataBook.targetAge,
+                    pageCount: swiftDataBook.pageCount,
+                    categories: swiftDataBook.categories
                 )
             }
         } catch {
@@ -78,7 +94,15 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             return Book(
                 id: swiftDataBook.id,
                 title: swiftDataBook.title,
-                author: swiftDataBook.author
+                author: swiftDataBook.author,
+                isbn13: swiftDataBook.isbn13,
+                publisher: swiftDataBook.publisher,
+                publishedDate: swiftDataBook.publishedDate,
+                description: swiftDataBook.bookDescription,
+                thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                targetAge: swiftDataBook.targetAge,
+                pageCount: swiftDataBook.pageCount,
+                categories: swiftDataBook.categories
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -103,6 +127,14 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             // プロパティを更新
             swiftDataBook.title = book.title
             swiftDataBook.author = book.author
+            swiftDataBook.isbn13 = book.isbn13
+            swiftDataBook.publisher = book.publisher
+            swiftDataBook.publishedDate = book.publishedDate
+            swiftDataBook.bookDescription = book.description
+            swiftDataBook.thumbnailURLString = book.thumbnailURL?.absoluteString
+            swiftDataBook.targetAge = book.targetAge
+            swiftDataBook.pageCount = book.pageCount
+            swiftDataBook.categories = book.categories
             
             try modelContext.save()
             
@@ -138,21 +170,5 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
         } catch {
             throw RepositoryError.deleteFailed
         }
-    }
-}
-
-/// SwiftData用の絵本モデル
-///
-/// SwiftDataで永続化するための絵本モデル
-@Model
-final public class SwiftDataBook {
-    public var id: UUID
-    public var title: String
-    public var author: String
-    
-    public init(id: UUID, title: String, author: String) {
-        self.id = id
-        self.title = title
-        self.author = author
     }
 }
