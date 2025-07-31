@@ -63,3 +63,4 @@ fastlane/test_output
 
 # Secrets and API Keys
 **/Secrets.swift
+**/SecretsGenerated.swift
