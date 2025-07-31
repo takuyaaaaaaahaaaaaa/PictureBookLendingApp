@@ -4,20 +4,20 @@ import Testing
 
 @testable import PictureBookLendingInfrastructure
 
-/// GoogleBooksAPIClientテストケース
+/// GoogleBookSearchGatewayテストケース
 ///
 /// 実際のGoogle Books APIを使用した統合テストです
 /// APIキーが設定されている必要があります
-struct GoogleBooksAPIClientTests {
+struct GoogleBookSearchGatewayTests {
     
-    private let apiClient = GoogleBooksAPIClient()
+    private let gateway = GoogleBookSearchGateway()
     
     /// 有効なISBNで書籍情報が取得できることをテスト
     @Test func fetchBookWithValidISBN() async throws {
         // はらぺこあおむしのISBN-13
         let isbn = "978-4834000825"
         
-        let book = try await apiClient.fetchBook(for: isbn)
+        let book = try await gateway.searchBook(by: isbn)
         
         // 基本情報が取得できていることを確認
         #expect(!book.title.isEmpty)
@@ -36,7 +36,7 @@ struct GoogleBooksAPIClientTests {
     @Test func fetchBookWithAnotherValidISBN() async throws {
         let isbn = "9784061272743"
         
-        let book = try await apiClient.fetchBook(for: isbn)
+        let book = try await gateway.searchBook(by: isbn)
         
         #expect(!book.title.isEmpty)
         #expect(!book.author.isEmpty)
@@ -51,7 +51,7 @@ struct GoogleBooksAPIClientTests {
         let invalidISBN = "invalid-isbn"
         
         await #expect(throws: BookMetadataGatewayError.invalidISBN) {
-            try await apiClient.fetchBook(for: invalidISBN)
+            try await gateway.searchBook(by: invalidISBN)
         }
     }
     
@@ -60,7 +60,7 @@ struct GoogleBooksAPIClientTests {
         let nonExistentISBN = "9789999999991"  // 有効なISBN-13形式だが存在しない
         
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
-            try await apiClient.fetchBook(for: nonExistentISBN)
+            try await gateway.searchBook(by: nonExistentISBN)
         }
     }
     
@@ -68,7 +68,7 @@ struct GoogleBooksAPIClientTests {
     @Test func fetchBookWithISBN10() async throws {
         let isbn10 = "4834000826"  // はらぺこあおむしの有効なISBN-10
         
-        let book = try await apiClient.fetchBook(for: isbn10)
+        let book = try await gateway.searchBook(by: isbn10)
         
         #expect(!book.title.isEmpty)
         #expect(!book.author.isEmpty)
@@ -81,7 +81,7 @@ struct GoogleBooksAPIClientTests {
     @Test func fetchBookWithHyphenatedISBN() async throws {
         let hyphenatedISBN = "978-4-83-400082-5"  // はらぺこあおむしの正しいハイフン付きISBN
         
-        let book = try await apiClient.fetchBook(for: hyphenatedISBN)
+        let book = try await gateway.searchBook(by: hyphenatedISBN)
         
         #expect(!book.title.isEmpty)
         #expect(!book.author.isEmpty)
@@ -90,12 +90,68 @@ struct GoogleBooksAPIClientTests {
         print("タイトル: \(book.title)")
     }
     
+    /// タイトルで書籍を検索するテスト
+    @Test func searchBooksByTitle() async throws {
+        let title = "ぐりとぐら"
+        
+        let books = try await gateway.searchBooks(title: title, author: nil, maxResults: 20)
+        
+        // 結果が取得できることを確認
+        #expect(!books.isEmpty)
+        
+        print("「\(title)」の検索結果（\(books.count)件）:")
+        for (index, book) in books.prefix(3).enumerated() {
+            print("\(index + 1). \(book.title) - \(book.author)")
+        }
+    }
+    
+    /// タイトルと著者で書籍を検索するテスト
+    @Test func searchBooksByTitleAndAuthor() async throws {
+        let title = "ぐりとぐら"
+        let author = "なかがわりえこ"
+        
+        let books = try await gateway.searchBooks(title: title, author: author, maxResults: 20)
+        
+        // 結果が取得できることを確認
+        #expect(!books.isEmpty)
+        
+        print("「\(title)」「\(author)」の検索結果（\(books.count)件）:")
+        for (index, book) in books.prefix(3).enumerated() {
+            print("\(index + 1). \(book.title) - \(book.author)")
+        }
+    }
+    
+    /// 検索結果が見つからない場合のテスト
+    @Test func searchBooksNotFound() async throws {
+        let title = "存在しない絵本のタイトル12345"
+        
+        await #expect(throws: BookMetadataGatewayError.bookNotFound) {
+            try await gateway.searchBooks(title: title, author: nil, maxResults: 20)
+        }
+    }
+    
+    /// 複数の有名絵本を検索するテスト
+    @Test func searchMultipleFamousBooks() async throws {
+        let testCases = [
+            ("はらぺこあおむし", "エリック・カール"),
+            ("100万回生きたねこ", "佐野洋子"),
+            ("スイミー", "レオ・レオニ"),
+        ]
+        
+        for (title, author) in testCases {
+            let books = try await gateway.searchBooks(title: title, author: author, maxResults: 20)
+            
+            #expect(!books.isEmpty)
+            print("「\(title)」の検索結果: \(books.first?.title ?? "不明")")
+        }
+    }
+    
     /// パフォーマンステスト（3秒以内で応答）
     @Test func fetchBookPerformance() async throws {
         let isbn = "9784834000825"  // はらぺこあおむしの有効なISBN
         let startTime = Date()
         
-        _ = try await apiClient.fetchBook(for: isbn)
+        _ = try await gateway.searchBook(by: isbn)
         
         let elapsedTime = Date().timeIntervalSince(startTime)
         print("API応答時間: \(String(format: "%.2f", elapsedTime))秒")
@@ -104,17 +160,17 @@ struct GoogleBooksAPIClientTests {
         #expect(elapsedTime < 3.0)
     }
     
-    /// BookMetadataGatewayの動作テスト
-    @Test func bookMetadataGatewayIntegration() async throws {
-        let gateway = BookMetadataGateway()
+    /// BookSearchGatewayProtocolの動作テスト
+    @Test func bookSearchGatewayProtocolIntegration() async throws {
+        let gateway: BookSearchGatewayProtocol = GoogleBookSearchGateway()
         let isbn = "9784834000825"  // はらぺこあおむしの有効なISBN
         
-        let book = try await gateway.getBook(by: isbn)
+        let book = try await gateway.searchBook(by: isbn)
         
         #expect(!book.title.isEmpty)
         #expect(!book.author.isEmpty)
         
-        print("BookMetadataGateway経由で取得:")
+        print("BookSearchGatewayProtocol経由で取得:")
         print("タイトル: \(book.title)")
     }
 }

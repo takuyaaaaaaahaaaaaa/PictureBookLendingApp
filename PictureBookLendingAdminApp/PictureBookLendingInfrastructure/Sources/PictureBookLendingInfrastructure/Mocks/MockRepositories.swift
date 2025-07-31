@@ -210,16 +210,16 @@ public class MockRepositoryFactory: RepositoryFactory {
         return loanSettingsRepository
     }
     
-    public func makeBookMetadataGateway() -> BookMetadataGatewayProtocol {
-        return MockBookMetadataGateway()
+    public func makeBookSearchGateway() -> BookSearchGatewayProtocol {
+        return MockBookSearchGateway()
     }
 }
 
-/// テスト用のモック書籍メタデータゲートウェイ
-public class MockBookMetadataGateway: BookMetadataGatewayProtocol {
+/// テスト用のモック書籍検索ゲートウェイ
+public class MockBookSearchGateway: BookSearchGatewayProtocol {
     public init() {}
     
-    public func getBook(by isbn: String) async throws -> Book {
+    public func searchBook(by isbn: String) async throws -> Book {
         // テスト用のサンプルデータを返す
         return Book(
             title: "テスト用絵本(\(isbn))",
@@ -233,5 +233,29 @@ public class MockBookMetadataGateway: BookMetadataGatewayProtocol {
             pageCount: 32,
             categories: ["絵本", "テスト"]
         )
+    }
+    
+    public func searchBooks(title: String, author: String?, maxResults: Int) async throws -> [Book]
+    {
+        // テスト用の複数サンプルデータを返す
+        var books: [Book] = []
+        
+        for i in 1...min(maxResults, 3) {
+            let book = Book(
+                title: "\(title) (\(i))",
+                author: author ?? "テスト著者\(i)",
+                isbn13: "978000000000\(i)",
+                publisher: "テスト出版社\(i)",
+                publishedDate: "2023-0\(i)-01",
+                description: "これは\(title)のテスト用絵本です。",
+                thumbnailURL: URL(string: "https://example.com/thumbnail\(i).jpg"),
+                targetAge: 2 + i,
+                pageCount: 30 + i * 2,
+                categories: ["絵本", "テスト"]
+            )
+            books.append(book)
+        }
+        
+        return books
     }
 }

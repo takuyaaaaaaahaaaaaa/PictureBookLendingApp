@@ -21,8 +21,8 @@ public protocol RepositoryFactory {
     /// 貸出設定リポジトリを生成
     func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol
     
-    /// 書籍メタデータゲートウェイを生成
-    func makeBookMetadataGateway() -> BookMetadataGatewayProtocol
+    /// 書籍検索ゲートウェイを生成
+    func makeBookSearchGateway() -> BookSearchGatewayProtocol
 }
 
 /// SwiftData用リポジトリファクトリ実装
@@ -73,10 +73,10 @@ public class SwiftDataRepositoryFactory: RepositoryFactory {
         UserDefaultsLoanSettingsRepository()
     }
     
-    /// 書籍メタデータゲートウェイのインスタンスを生成
+    /// 書籍検索ゲートウェイのインスタンスを生成
     ///
-    /// - Returns: BookMetadataGatewayProtocolのインスタンス
-    public func makeBookMetadataGateway() -> BookMetadataGatewayProtocol {
-        BookMetadataGateway()
+    /// - Returns: BookSearchGatewayProtocolのインスタンス
+    public func makeBookSearchGateway() -> BookSearchGatewayProtocol {
+        GoogleBookSearchGateway()
     }
 }
