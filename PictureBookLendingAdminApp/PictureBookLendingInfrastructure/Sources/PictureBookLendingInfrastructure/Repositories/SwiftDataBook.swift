@@ -11,7 +11,7 @@ import SwiftData
 @Model
 final public class SwiftDataBook {
     /// 絵本の一意識別子
-    public var id: UUID
+    @Attribute(.unique) public var id: UUID
     
     /// 絵本のタイトル
     public var title: String

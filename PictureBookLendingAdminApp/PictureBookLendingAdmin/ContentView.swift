@@ -31,6 +31,15 @@ struct ContentView: View {
                 Label("貸出管理", systemImage: "list.clipboard")
             }
             .tag(1)
+            
+            // 絵本登録タブ（新規追加）
+            NavigationStack {
+                BookSearchContainerView()
+            }
+            .tabItem {
+                Label("絵本登録", systemImage: "plus.circle")
+            }
+            .tag(2)
         }
     }
 }

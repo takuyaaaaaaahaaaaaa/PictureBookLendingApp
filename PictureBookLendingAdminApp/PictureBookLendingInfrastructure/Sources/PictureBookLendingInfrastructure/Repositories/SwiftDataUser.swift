@@ -8,7 +8,7 @@ import SwiftData
 @Model
 final public class SwiftDataUser {
     /// 利用者の一意識別子
-    public var id: UUID
+    @Attribute(.unique) public var id: UUID
     
     /// 利用者の名前
     public var name: String

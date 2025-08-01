@@ -7,7 +7,7 @@ import Foundation
 ///
 /// このプロトコルは腐敗防止層（Anti-Corruption Layer）として機能し、
 /// 外部システムの変更からドメインモデルを保護します。
-public protocol BookSearchGatewayProtocol {
+public protocol BookSearchGatewayProtocol: Sendable {
     
     /// 指定されたISBNで書籍を検索する
     ///

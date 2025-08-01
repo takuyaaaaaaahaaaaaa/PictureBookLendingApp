@@ -8,7 +8,7 @@ import SwiftData
 @Model
 final public class SwiftDataClassGroup {
     /// クラスの一意識別子
-    public var id: UUID
+    @Attribute(.unique) public var id: UUID
     
     /// クラス名（例: "さくら組", "年長A組"）
     public var name: String
