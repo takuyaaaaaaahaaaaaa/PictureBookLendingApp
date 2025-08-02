@@ -33,6 +33,7 @@ public enum UserModelError: Error, Equatable, LocalizedError {
 /// - 利用者の削除
 /// などの機能を提供します。
 @Observable
+@MainActor
 public class UserModel {
     
     /// 利用者リポジトリ

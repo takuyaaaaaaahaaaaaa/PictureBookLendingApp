@@ -26,6 +26,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(model.settings.defaultLoanPeriodDays, 14)
     }
     
+    @MainActor
     func testUpdateValidSettings() throws {
         // 有効な設定値で更新
         let newSettings = LoanSettings(defaultLoanPeriodDays: 7)
@@ -40,6 +41,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(mockRepository.fetch(), newSettings)
     }
     
+    @MainActor
     func testUpdateInvalidSettings() {
         // 無効な設定値で更新を試行
         let invalidSettings = LoanSettings(defaultLoanPeriodDays: 0)
@@ -52,6 +54,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(model.settings, .default)
     }
     
+    @MainActor
     func testResetToDefault() throws {
         // 設定を変更
         let customSettings = LoanSettings(defaultLoanPeriodDays: 30)
@@ -69,6 +72,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(mockRepository.fetch(), LoanSettings.default)
     }
     
+    @MainActor
     func testRepositoryError() {
         // エラーを投げるモックリポジトリを作成
         let errorRepository = ErrorThrowingMockLoanSettingsRepository()

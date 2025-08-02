@@ -6,6 +6,7 @@ import PictureBookLendingDomain
 ///
 /// 貸出設定の取得・更新を管理するモデルクラスです。
 @Observable
+@MainActor
 public class LoanSettingsModel {
     /// 現在の貸出設定
     public private(set) var settings: LoanSettings

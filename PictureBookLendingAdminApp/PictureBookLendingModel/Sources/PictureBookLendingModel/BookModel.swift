@@ -63,6 +63,7 @@ public class BookModel {
     /// - Parameter book: 登録する絵本の情報
     /// - Returns: 登録された絵本（IDが割り当てられます）
     /// - Throws: 登録に失敗した場合は `BookModelError.registrationFailed` を投げます
+    @MainActor
     public func registerBook(_ book: Book) throws -> Book {
         do {
             // リポジトリに保存
@@ -125,6 +126,7 @@ public class BookModel {
     /// - Parameter book: 更新する絵本情報（IDで既存の絵本を特定）
     /// - Returns: 更新された絵本
     /// - Throws: 更新に失敗した場合は `BookModelError` を投げます
+    @MainActor
     public func updateBook(_ book: Book) throws -> Book {
         do {
             // リポジトリで更新
@@ -153,6 +155,7 @@ public class BookModel {
     /// - Parameter id: 削除する絵本のID
     /// - Returns: 削除に成功したかどうか
     /// - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
+    @MainActor
     public func deleteBook(_ id: UUID) throws -> Bool {
         do {
             // リポジトリから削除

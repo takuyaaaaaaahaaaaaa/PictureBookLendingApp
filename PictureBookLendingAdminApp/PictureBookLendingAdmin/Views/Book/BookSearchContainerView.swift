@@ -17,18 +17,16 @@ struct BookSearchContainerView: View {
     
     init() {
         // 依存関係を初期化
-        let gateway = GoogleBookSearchGateway()
+        let repositoryFactory = SwiftDataRepositoryFactory.shared
+        let gateway = repositoryFactory.makeBookSearchGateway()
         let normalizer = GoogleBooksOptimizedNormalizer()
-        let container = try! ModelContainer(for: SwiftDataBook.self)
-        let repositoryFactory = SwiftDataRepositoryFactory(modelContext: container.mainContext)
         let repository = repositoryFactory.makeBookRepository()
-        
-        let model = RegisterModel(
-            gateway: gateway,
-            normalizer: normalizer,
-            repository: repository
-        )
-        self._registerModel = State(initialValue: model)
+        self._registerModel = State(
+            initialValue: RegisterModel(
+                gateway: gateway,
+                normalizer: normalizer,
+                repository: repository
+            ))
     }
     
     var body: some View {
