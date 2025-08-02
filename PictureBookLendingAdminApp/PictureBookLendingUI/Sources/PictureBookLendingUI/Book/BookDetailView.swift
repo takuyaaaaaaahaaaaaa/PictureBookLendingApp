@@ -6,24 +6,18 @@ import SwiftUI
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
 public struct BookDetailView<ActionButton: View>: View {
-    @Binding var bookTitle: String
-    @Binding var bookAuthor: String
-    let bookId: UUID
+    @Binding var book: Book
     let isCurrentlyLent: Bool
     let onEdit: () -> Void
     let actionButton: () -> ActionButton
     
     public init(
-        bookTitle: Binding<String>,
-        bookAuthor: Binding<String>,
-        bookId: UUID,
+        book: Binding<Book>,
         isCurrentlyLent: Bool,
         onEdit: @escaping () -> Void,
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
-        self._bookTitle = bookTitle
-        self._bookAuthor = bookAuthor
-        self.bookId = bookId
+        self._book = book
         self.isCurrentlyLent = isCurrentlyLent
         self.onEdit = onEdit
         self.actionButton = actionButton
@@ -31,10 +25,33 @@ public struct BookDetailView<ActionButton: View>: View {
     
     public var body: some View {
         List {
+            Section("サムネイル") {
+                HStack {
+                    Spacer()
+                    
+                    AsyncImage(url: URL(string: book.thumbnail ?? book.smallThumbnail ?? "")) {
+                        image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } placeholder: {
+                        Image(systemName: "book.closed")
+                            .foregroundStyle(.secondary)
+                            .font(.system(size: 48))
+                    }
+                    .frame(width: 120, height: 160)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            }
+            
             Section("基本情報") {
-                EditableDetailRow(label: "タイトル", value: $bookTitle)
-                EditableDetailRow(label: "著者", value: $bookAuthor)
-                DetailRow(label: "管理ID", value: bookId.uuidString)
+                EditableDetailRow(label: "タイトル", value: $book.title)
+                EditableDetailRow(label: "著者", value: $book.author)
+                DetailRow(label: "管理ID", value: book.id.uuidString)
             }
             
             Section("貸出状況") {
@@ -57,21 +74,22 @@ public struct BookDetailView<ActionButton: View>: View {
 }
 
 #Preview {
-    @Previewable @State var bookTitle = "はらぺこあおむし"
-    @Previewable @State var bookAuthor = "エリック・カール"
-    let sampleBookId = UUID()
+    @Previewable @State var sampleBook = Book(
+        title: "はらぺこあおむし",
+        author: "エリック・カール",
+        smallThumbnail: "https://example.com/small-thumbnail.jpg",
+        thumbnail: "https://example.com/thumbnail.jpg"
+    )
     
     NavigationStack {
         BookDetailView(
-            bookTitle: $bookTitle,
-            bookAuthor: $bookAuthor,
-            bookId: sampleBookId,
+            book: $sampleBook,
             isCurrentlyLent: false,
             onEdit: {}
         ) {
             Button("貸出") {}
                 .buttonStyle(.bordered)
         }
-        .navigationTitle(bookTitle)
+        .navigationTitle(sampleBook.title)
     }
 }

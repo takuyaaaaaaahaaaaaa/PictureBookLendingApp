@@ -120,6 +120,10 @@ public struct LoanDisplayData: Identifiable, Equatable {
     public let bookId: UUID
     /// 絵本タイトル
     public let bookTitle: String
+    /// 絵本の小さなサムネイル画像URL
+    public let bookSmallThumbnail: String?
+    /// 絵本のサムネイル画像URL
+    public let bookThumbnail: String?
     /// 利用者名
     public let userName: String
     /// 組名
@@ -135,6 +139,8 @@ public struct LoanDisplayData: Identifiable, Equatable {
         id: UUID,
         bookId: UUID,
         bookTitle: String,
+        bookSmallThumbnail: String? = nil,
+        bookThumbnail: String? = nil,
         userName: String,
         groupName: String,
         loanDate: Date,
@@ -144,6 +150,8 @@ public struct LoanDisplayData: Identifiable, Equatable {
         self.id = id
         self.bookId = bookId
         self.bookTitle = bookTitle
+        self.bookSmallThumbnail = bookSmallThumbnail
+        self.bookThumbnail = bookThumbnail
         self.userName = userName
         self.groupName = groupName
         self.loanDate = loanDate
@@ -161,6 +169,21 @@ private struct LoanListRowView<Action: View>: View {
     
     var body: some View {
         HStack {
+            // サムネイル画像
+            AsyncImage(url: URL(string: loan.bookThumbnail ?? loan.bookSmallThumbnail ?? "")) {
+                image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(.secondary)
+                    .font(.title2)
+            }
+            .frame(width: 50, height: 65)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(loan.userName)

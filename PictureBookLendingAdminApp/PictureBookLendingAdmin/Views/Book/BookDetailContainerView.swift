@@ -22,9 +22,7 @@ struct BookDetailContainerView: View {
     
     var body: some View {
         BookDetailView(
-            bookTitle: $book.title,
-            bookAuthor: $book.author,
-            bookId: book.id,
+            book: $book,
             isCurrentlyLent: isCurrentlyLent,
             onEdit: handleEdit
         ) {
