@@ -11,7 +11,7 @@ import SwiftData
 @Model
 final public class SwiftDataBook {
     /// 絵本の一意識別子
-    public var id: UUID
+    @Attribute(.unique) public var id: UUID
     
     /// 絵本のタイトル
     public var title: String
@@ -32,9 +32,11 @@ final public class SwiftDataBook {
     /// - Note: `description`は予約語のため`bookDescription`として定義
     public var bookDescription: String?
     
-    /// サムネイル画像のURL文字列
-    /// - Note: URL型は直接保存できないため文字列として保存
-    public var thumbnailURLString: String?
+    /// 小さなサムネイル画像のURL
+    public var smallThumbnail: String?
+    
+    /// 通常サイズのサムネイル画像のURL
+    public var thumbnail: String?
     
     /// 対象年齢
     public var targetAge: Int?
@@ -55,7 +57,8 @@ final public class SwiftDataBook {
     ///   - publisher: 出版社名
     ///   - publishedDate: 出版日
     ///   - bookDescription: 絵本の説明・概要
-    ///   - thumbnailURLString: サムネイル画像のURL文字列
+    ///   - smallThumbnail: 小さなサムネイル画像のURL
+    ///   - thumbnail: 通常サイズのサムネイル画像のURL
     ///   - targetAge: 対象年齢
     ///   - pageCount: ページ数
     ///   - categories: カテゴリ・ジャンルの配列
@@ -67,7 +70,8 @@ final public class SwiftDataBook {
         publisher: String? = nil,
         publishedDate: String? = nil,
         bookDescription: String? = nil,
-        thumbnailURLString: String? = nil,
+        smallThumbnail: String? = nil,
+        thumbnail: String? = nil,
         targetAge: Int? = nil,
         pageCount: Int? = nil,
         categories: [String] = []
@@ -79,7 +83,8 @@ final public class SwiftDataBook {
         self.publisher = publisher
         self.publishedDate = publishedDate
         self.bookDescription = bookDescription
-        self.thumbnailURLString = thumbnailURLString
+        self.smallThumbnail = smallThumbnail
+        self.thumbnail = thumbnail
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories

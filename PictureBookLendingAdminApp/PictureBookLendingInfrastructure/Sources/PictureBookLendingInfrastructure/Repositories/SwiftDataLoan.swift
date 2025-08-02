@@ -8,7 +8,7 @@ import SwiftData
 @Model
 final public class SwiftDataLoan {
     /// 貸出記録の一意識別子
-    public var id: UUID
+    @Attribute(.unique) public var id: UUID
     
     /// 貸出された絵本のID
     public var bookId: UUID

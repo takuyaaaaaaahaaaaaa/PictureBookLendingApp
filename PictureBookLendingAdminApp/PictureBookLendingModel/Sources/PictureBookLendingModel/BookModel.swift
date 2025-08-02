@@ -33,6 +33,7 @@ public enum BookModelError: Error, Equatable, LocalizedError {
 /// - 絵本の削除
 /// などの機能を提供します。
 @Observable
+@MainActor
 public class BookModel {
     
     /// 絵本リポジトリ

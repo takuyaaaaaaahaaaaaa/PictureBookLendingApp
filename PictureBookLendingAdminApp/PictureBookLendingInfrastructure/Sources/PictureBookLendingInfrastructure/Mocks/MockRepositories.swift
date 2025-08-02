@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 
 /// テスト用のモックブックリポジトリ
-public class MockBookRepository: BookRepositoryProtocol {
+public final class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private var books: [Book] = []
     
     public init() {}
@@ -41,7 +41,7 @@ public class MockBookRepository: BookRepositoryProtocol {
 }
 
 /// テスト用のモックユーザーリポジトリ
-public class MockUserRepository: UserRepositoryProtocol {
+public final class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
     private var users: [User] = []
     
     public init() {}
@@ -80,7 +80,7 @@ public class MockUserRepository: UserRepositoryProtocol {
 }
 
 /// テスト用のモック貸出リポジトリ
-public class MockLoanRepository: LoanRepositoryProtocol {
+public final class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
     private var loans: [Loan] = []
     
     public init() {}
@@ -131,7 +131,7 @@ public class MockLoanRepository: LoanRepositoryProtocol {
 }
 
 /// テスト用のモッククラス（組）リポジトリ
-public class MockClassGroupRepository: ClassGroupRepositoryProtocol {
+public final class MockClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendable {
     private var classGroups: [ClassGroup] = []
     
     public init() {}
@@ -181,7 +181,7 @@ public final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @
 }
 
 /// テスト用のモックリポジトリファクトリ
-public class MockRepositoryFactory: RepositoryFactory {
+public final class MockRepositoryFactory: RepositoryFactory {
     public let bookRepository = MockBookRepository()
     public let userRepository = MockUserRepository()
     public let loanRepository = MockLoanRepository()
@@ -210,16 +210,16 @@ public class MockRepositoryFactory: RepositoryFactory {
         return loanSettingsRepository
     }
     
-    public func makeBookMetadataGateway() -> BookMetadataGatewayProtocol {
-        return MockBookMetadataGateway()
+    public func makeBookSearchGateway() -> BookSearchGatewayProtocol {
+        return MockBookSearchGateway()
     }
 }
 
-/// テスト用のモック書籍メタデータゲートウェイ
-public class MockBookMetadataGateway: BookMetadataGatewayProtocol {
+/// テスト用のモック書籍検索ゲートウェイ
+public final class MockBookSearchGateway: BookSearchGatewayProtocol {
     public init() {}
     
-    public func getBook(by isbn: String) async throws -> Book {
+    public func searchBook(by isbn: String) async throws -> Book {
         // テスト用のサンプルデータを返す
         return Book(
             title: "テスト用絵本(\(isbn))",
@@ -228,10 +228,36 @@ public class MockBookMetadataGateway: BookMetadataGatewayProtocol {
             publisher: "テスト出版社",
             publishedDate: "2023-01-01",
             description: "これはテスト用の絵本です。",
-            thumbnailURL: URL(string: "https://example.com/thumbnail.jpg"),
+            smallThumbnail: "https://example.com/small-thumbnail.jpg",
+            thumbnail: "https://example.com/thumbnail.jpg",
             targetAge: 3,
             pageCount: 32,
             categories: ["絵本", "テスト"]
         )
+    }
+    
+    public func searchBooks(title: String, author: String?, maxResults: Int) async throws -> [Book]
+    {
+        // テスト用の複数サンプルデータを返す
+        var books: [Book] = []
+        
+        for i in 1...min(maxResults, 3) {
+            let book = Book(
+                title: "\(title) (\(i))",
+                author: author ?? "テスト著者\(i)",
+                isbn13: "978000000000\(i)",
+                publisher: "テスト出版社\(i)",
+                publishedDate: "2023-0\(i)-01",
+                description: "これは\(title)のテスト用絵本です。",
+                smallThumbnail: "https://example.com/small-thumbnail\(i).jpg",
+                thumbnail: "https://example.com/thumbnail\(i).jpg",
+                targetAge: 2 + i,
+                pageCount: 30 + i * 2,
+                categories: ["絵本", "テスト"]
+            )
+            books.append(book)
+        }
+        
+        return books
     }
 }

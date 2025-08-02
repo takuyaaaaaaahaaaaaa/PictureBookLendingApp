@@ -6,24 +6,24 @@ import XCTest
 final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
     
     var userDefaults: UserDefaults!
-    var repository: UserDefaultsLoanSettingsRepository!
     
     override func setUp() {
         super.setUp()
         // テスト用のUserDefaultsを作成（テスト後に削除される）
         userDefaults = UserDefaults(suiteName: "test.PictureBookLending.LoanSettings")!
-        repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
     }
     
     override func tearDown() {
         // テストデータをクリーンアップ
         userDefaults.removePersistentDomain(forName: "test.PictureBookLending.LoanSettings")
-        repository = nil
         userDefaults = nil
         super.tearDown()
     }
     
+    @MainActor
     func testFetchDefaultSettings() {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 初回取得時はデフォルト設定が返されること
         let settings = repository.fetch()
         
@@ -31,7 +31,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(settings.defaultLoanPeriodDays, 14)
     }
     
+    @MainActor
     func testSaveAndFetch() throws {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 設定を保存
         let newSettings = LoanSettings(defaultLoanPeriodDays: 21)
         try repository.save(newSettings)
@@ -43,7 +46,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(fetchedSettings.defaultLoanPeriodDays, 21)
     }
     
+    @MainActor
     func testPersistence() throws {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 設定を保存
         let customSettings = LoanSettings(defaultLoanPeriodDays: 7)
         try repository.save(customSettings)
@@ -57,7 +63,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(persistedSettings.defaultLoanPeriodDays, 7)
     }
     
+    @MainActor
     func testOverwriteSettings() throws {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 最初の設定を保存
         let firstSettings = LoanSettings(defaultLoanPeriodDays: 10)
         try repository.save(firstSettings)
@@ -74,7 +83,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(fetchedSettings, secondSettings)
     }
     
+    @MainActor
     func testInvalidDataHandling() {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 無効なJSONデータをUserDefaultsに直接設定
         let invalidData = "invalid json data".data(using: .utf8)!
         userDefaults.set(invalidData, forKey: "PictureBookLending_LoanSettings")
@@ -84,7 +96,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(settings, .default)
     }
     
+    @MainActor
     func testMissingDataHandling() {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // データが存在しない場合
         userDefaults.removeObject(forKey: "PictureBookLending_LoanSettings")
         
@@ -93,7 +108,10 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         XCTAssertEqual(settings, .default)
     }
     
+    @MainActor
     func testEncodingDecodingRoundTrip() throws {
+        let repository = UserDefaultsLoanSettingsRepository(userDefaults: userDefaults)
+        
         // 境界値のテスト
         let testCases = [
             LoanSettings(defaultLoanPeriodDays: 1),

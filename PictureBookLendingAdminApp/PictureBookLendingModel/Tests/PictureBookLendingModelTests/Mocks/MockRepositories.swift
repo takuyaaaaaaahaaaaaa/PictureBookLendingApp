@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 
 /// テスト用のモックブックリポジトリ
-class MockBookRepository: BookRepositoryProtocol {
+class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private var books: [Book] = []
     
     func save(_ book: Book) throws -> Book {
@@ -39,7 +39,7 @@ class MockBookRepository: BookRepositoryProtocol {
 }
 
 /// テスト用のモックユーザーリポジトリ
-class MockUserRepository: UserRepositoryProtocol {
+class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
     private var users: [User] = []
     
     func save(_ user: User) throws -> User {
@@ -76,7 +76,7 @@ class MockUserRepository: UserRepositoryProtocol {
 }
 
 /// テスト用のモック貸出リポジトリ
-class MockLoanRepository: LoanRepositoryProtocol {
+class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
     private var loans: [Loan] = []
     
     func save(_ loan: Loan) throws -> Loan {
@@ -125,7 +125,7 @@ class MockLoanRepository: LoanRepositoryProtocol {
 }
 
 /// テスト用のモッククラスグループリポジトリ
-class MockClassGroupRepository: ClassGroupRepositoryProtocol {
+class MockClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendable {
     private var classGroups: [ClassGroup] = []
     
     func fetchAll() throws -> [ClassGroup] {
@@ -166,6 +166,7 @@ class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sen
 }
 
 /// テスト用のモックリポジトリファクトリ
+@MainActor
 class MockRepositoryFactory {
     let bookRepository = MockBookRepository()
     let userRepository = MockUserRepository()

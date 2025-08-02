@@ -50,6 +50,7 @@ public enum LoanModelError: Error, Equatable, LocalizedError {
 /// - 特定の利用者の貸出履歴
 /// などの機能を提供します。
 @Observable
+@MainActor
 public class LoanModel {
     
     /// 貸出リポジトリ

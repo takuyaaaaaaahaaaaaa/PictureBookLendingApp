@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用絵本リポジトリ実装
 ///
 /// SwiftDataを使用して絵本の永続化を担当するリポジトリ
-public class SwiftDataBookRepository: BookRepositoryProtocol {
+public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private let modelContext: ModelContext
     
     /// イニシャライザ
@@ -30,7 +30,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             publisher: book.publisher,
             publishedDate: book.publishedDate,
             bookDescription: book.description,
-            thumbnailURLString: book.thumbnailURL?.absoluteString,
+            smallThumbnail: book.smallThumbnail,
+            thumbnail: book.thumbnail,
             targetAge: book.targetAge,
             pageCount: book.pageCount,
             categories: book.categories
@@ -65,7 +66,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
                     publisher: swiftDataBook.publisher,
                     publishedDate: swiftDataBook.publishedDate,
                     description: swiftDataBook.bookDescription,
-                    thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                    smallThumbnail: swiftDataBook.smallThumbnail,
+                    thumbnail: swiftDataBook.thumbnail,
                     targetAge: swiftDataBook.targetAge,
                     pageCount: swiftDataBook.pageCount,
                     categories: swiftDataBook.categories
@@ -99,7 +101,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
                 publisher: swiftDataBook.publisher,
                 publishedDate: swiftDataBook.publishedDate,
                 description: swiftDataBook.bookDescription,
-                thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                smallThumbnail: swiftDataBook.smallThumbnail,
+                thumbnail: swiftDataBook.thumbnail,
                 targetAge: swiftDataBook.targetAge,
                 pageCount: swiftDataBook.pageCount,
                 categories: swiftDataBook.categories
@@ -131,7 +134,8 @@ public class SwiftDataBookRepository: BookRepositoryProtocol {
             swiftDataBook.publisher = book.publisher
             swiftDataBook.publishedDate = book.publishedDate
             swiftDataBook.bookDescription = book.description
-            swiftDataBook.thumbnailURLString = book.thumbnailURL?.absoluteString
+            swiftDataBook.smallThumbnail = book.smallThumbnail
+            swiftDataBook.thumbnail = book.thumbnail
             swiftDataBook.targetAge = book.targetAge
             swiftDataBook.pageCount = book.pageCount
             swiftDataBook.categories = book.categories

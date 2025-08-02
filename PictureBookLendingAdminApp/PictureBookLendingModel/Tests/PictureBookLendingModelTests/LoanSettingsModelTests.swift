@@ -11,7 +11,7 @@ final class LoanSettingsModelTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockRepository = MockLoanSettingsRepository()
-        model = LoanSettingsModel(repository: mockRepository)
+        // @MainActorのモデルは非同期で初期化する必要があるため、各テストメソッド内で初期化
     }
     
     override func tearDown() {
@@ -20,13 +20,21 @@ final class LoanSettingsModelTests: XCTestCase {
         super.tearDown()
     }
     
+    @MainActor
     func testInitialSettings() {
+        // @MainActorのモデルをテスト内で初期化
+        model = LoanSettingsModel(repository: mockRepository)
+        
         // 初期設定がデフォルト値になっていることを確認
         XCTAssertEqual(model.settings, .default)
         XCTAssertEqual(model.settings.defaultLoanPeriodDays, 14)
     }
     
+    @MainActor
     func testUpdateValidSettings() throws {
+        // @MainActorのモデルをテスト内で初期化
+        model = LoanSettingsModel(repository: mockRepository)
+        
         // 有効な設定値で更新
         let newSettings = LoanSettings(defaultLoanPeriodDays: 7)
         
@@ -40,7 +48,11 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(mockRepository.fetch(), newSettings)
     }
     
+    @MainActor
     func testUpdateInvalidSettings() {
+        // @MainActorのモデルをテスト内で初期化
+        model = LoanSettingsModel(repository: mockRepository)
+        
         // 無効な設定値で更新を試行
         let invalidSettings = LoanSettings(defaultLoanPeriodDays: 0)
         
@@ -52,7 +64,11 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(model.settings, .default)
     }
     
+    @MainActor
     func testResetToDefault() throws {
+        // @MainActorのモデルをテスト内で初期化
+        model = LoanSettingsModel(repository: mockRepository)
+        
         // 設定を変更
         let customSettings = LoanSettings(defaultLoanPeriodDays: 30)
         try model.updateSettings(customSettings)
@@ -69,6 +85,7 @@ final class LoanSettingsModelTests: XCTestCase {
         XCTAssertEqual(mockRepository.fetch(), LoanSettings.default)
     }
     
+    @MainActor
     func testRepositoryError() {
         // エラーを投げるモックリポジトリを作成
         let errorRepository = ErrorThrowingMockLoanSettingsRepository()
