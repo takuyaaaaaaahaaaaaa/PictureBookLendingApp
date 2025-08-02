@@ -228,7 +228,8 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
             publisher: "テスト出版社",
             publishedDate: "2023-01-01",
             description: "これはテスト用の絵本です。",
-            thumbnailURL: URL(string: "https://example.com/thumbnail.jpg"),
+            smallThumbnail: "https://example.com/small-thumbnail.jpg",
+            thumbnail: "https://example.com/thumbnail.jpg",
             targetAge: 3,
             pageCount: 32,
             categories: ["絵本", "テスト"]
@@ -248,7 +249,8 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
                 publisher: "テスト出版社\(i)",
                 publishedDate: "2023-0\(i)-01",
                 description: "これは\(title)のテスト用絵本です。",
-                thumbnailURL: URL(string: "https://example.com/thumbnail\(i).jpg"),
+                smallThumbnail: "https://example.com/small-thumbnail\(i).jpg",
+                thumbnail: "https://example.com/thumbnail\(i).jpg",
                 targetAge: 2 + i,
                 pageCount: 30 + i * 2,
                 categories: ["絵本", "テスト"]

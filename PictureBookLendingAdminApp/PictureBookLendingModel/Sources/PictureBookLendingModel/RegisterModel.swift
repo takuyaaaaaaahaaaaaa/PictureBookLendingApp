@@ -188,7 +188,8 @@ public class RegisterModel {
                 publisher: nil,
                 publishedDate: nil,
                 description: nil,
-                thumbnailURL: nil,
+                smallThumbnail: nil,
+                thumbnail: nil,
                 targetAge: 3,  // デフォルト対象年齢
                 pageCount: nil,
                 categories: []

@@ -216,15 +216,6 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     private func mapToBook(volume: Volume) -> Book {
         let volumeInfo = volume.volumeInfo
         
-        // サムネイルURLの処理（httpをhttpsに変換）
-        let thumbnailURL: URL? = {
-            let thumbnailString =
-                volumeInfo.imageLinks?.thumbnail ?? volumeInfo.imageLinks?.smallThumbnail
-            guard let urlString = thumbnailString else { return nil }
-            let httpsString = urlString.replacingOccurrences(of: "http://", with: "https://")
-            return URL(string: httpsString)
-        }()
-
         // 小さなサムネイル画像URLの処理
         let smallThumbnail: String? = {
             guard let urlString = volumeInfo.imageLinks?.smallThumbnail else { return nil }
@@ -247,7 +238,6 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             publisher: volumeInfo.publisher,
             publishedDate: volumeInfo.publishedDate,
             description: volumeInfo.description,
-            thumbnailURL: thumbnailURL,
             smallThumbnail: smallThumbnail,
             thumbnail: thumbnail,
             targetAge: nil,  // APIからは取得できないため、後でユーザーが設定

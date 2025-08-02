@@ -198,7 +198,8 @@ public struct BookSearchView: View {
                                         publisher: manualBook.publisher,
                                         publishedDate: manualBook.publishedDate,
                                         description: manualBook.description,
-                                        thumbnailURL: manualBook.thumbnailURL,
+                                        smallThumbnail: manualBook.smallThumbnail,
+                                        thumbnail: manualBook.thumbnail,
                                         targetAge: manualBook.targetAge,
                                         pageCount: manualBook.pageCount,
                                         categories: manualBook.categories
@@ -226,7 +227,8 @@ public struct BookSearchView: View {
                                         publisher: manualBook.publisher,
                                         publishedDate: manualBook.publishedDate,
                                         description: manualBook.description,
-                                        thumbnailURL: manualBook.thumbnailURL,
+                                        smallThumbnail: manualBook.smallThumbnail,
+                                        thumbnail: manualBook.thumbnail,
                                         targetAge: manualBook.targetAge,
                                         pageCount: manualBook.pageCount,
                                         categories: manualBook.categories
@@ -252,7 +254,8 @@ public struct BookSearchView: View {
                                 publisher: manualBook.publisher,
                                 publishedDate: manualBook.publishedDate,
                                 description: manualBook.description,
-                                thumbnailURL: manualBook.thumbnailURL,
+                                smallThumbnail: manualBook.smallThumbnail,
+                                thumbnail: manualBook.thumbnail,
                                 targetAge: newAge,
                                 pageCount: manualBook.pageCount,
                                 categories: manualBook.categories

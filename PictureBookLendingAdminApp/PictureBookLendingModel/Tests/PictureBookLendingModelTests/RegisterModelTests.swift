@@ -17,7 +17,8 @@ struct RegisterModelTests {
             publisher: "福音館書店",
             publishedDate: "1967-01-20",
             description: "森で大きな卵を見つけたぐりとぐら...",
-            thumbnailURL: nil,
+            smallThumbnail: nil,
+            thumbnail: nil,
             targetAge: 3,
             pageCount: 28,
             categories: ["絵本", "児童書"]
@@ -29,7 +30,8 @@ struct RegisterModelTests {
             publisher: "福音館書店",
             publishedDate: "1967-06-01",
             description: "雪の日にぐりとぐらが見つけた足跡...",
-            thumbnailURL: nil,
+            smallThumbnail: nil,
+            thumbnail: nil,
             targetAge: 3,
             pageCount: 28,
             categories: ["絵本", "児童書"]

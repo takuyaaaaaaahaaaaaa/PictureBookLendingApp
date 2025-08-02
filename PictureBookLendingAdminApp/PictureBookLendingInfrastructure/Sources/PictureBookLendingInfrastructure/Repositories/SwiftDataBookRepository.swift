@@ -30,7 +30,6 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             publisher: book.publisher,
             publishedDate: book.publishedDate,
             bookDescription: book.description,
-            thumbnailURLString: book.thumbnailURL?.absoluteString,
             smallThumbnail: book.smallThumbnail,
             thumbnail: book.thumbnail,
             targetAge: book.targetAge,
@@ -67,7 +66,6 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     publisher: swiftDataBook.publisher,
                     publishedDate: swiftDataBook.publishedDate,
                     description: swiftDataBook.bookDescription,
-                    thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
                     smallThumbnail: swiftDataBook.smallThumbnail,
                     thumbnail: swiftDataBook.thumbnail,
                     targetAge: swiftDataBook.targetAge,
@@ -103,7 +101,6 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 publisher: swiftDataBook.publisher,
                 publishedDate: swiftDataBook.publishedDate,
                 description: swiftDataBook.bookDescription,
-                thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
                 smallThumbnail: swiftDataBook.smallThumbnail,
                 thumbnail: swiftDataBook.thumbnail,
                 targetAge: swiftDataBook.targetAge,
@@ -137,7 +134,6 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.publisher = book.publisher
             swiftDataBook.publishedDate = book.publishedDate
             swiftDataBook.bookDescription = book.description
-            swiftDataBook.thumbnailURLString = book.thumbnailURL?.absoluteString
             swiftDataBook.smallThumbnail = book.smallThumbnail
             swiftDataBook.thumbnail = book.thumbnail
             swiftDataBook.targetAge = book.targetAge

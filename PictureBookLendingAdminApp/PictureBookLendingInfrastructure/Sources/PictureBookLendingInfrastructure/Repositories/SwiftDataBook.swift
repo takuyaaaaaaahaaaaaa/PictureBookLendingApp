@@ -32,10 +32,6 @@ final public class SwiftDataBook {
     /// - Note: `description`は予約語のため`bookDescription`として定義
     public var bookDescription: String?
     
-    /// サムネイル画像のURL文字列（旧形式）
-    /// - Note: URL型は直接保存できないため文字列として保存
-    public var thumbnailURLString: String?
-    
     /// 小さなサムネイル画像のURL
     public var smallThumbnail: String?
     
@@ -61,7 +57,6 @@ final public class SwiftDataBook {
     ///   - publisher: 出版社名
     ///   - publishedDate: 出版日
     ///   - bookDescription: 絵本の説明・概要
-    ///   - thumbnailURLString: サムネイル画像のURL文字列（旧形式）
     ///   - smallThumbnail: 小さなサムネイル画像のURL
     ///   - thumbnail: 通常サイズのサムネイル画像のURL
     ///   - targetAge: 対象年齢
@@ -75,7 +70,6 @@ final public class SwiftDataBook {
         publisher: String? = nil,
         publishedDate: String? = nil,
         bookDescription: String? = nil,
-        thumbnailURLString: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
         targetAge: Int? = nil,
@@ -89,7 +83,6 @@ final public class SwiftDataBook {
         self.publisher = publisher
         self.publishedDate = publishedDate
         self.bookDescription = bookDescription
-        self.thumbnailURLString = thumbnailURLString
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
         self.targetAge = targetAge
