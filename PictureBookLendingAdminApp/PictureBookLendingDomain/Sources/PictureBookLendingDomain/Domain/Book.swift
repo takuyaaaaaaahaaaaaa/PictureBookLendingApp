@@ -17,8 +17,12 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var publishedDate: String?
     /// 絵本の説明・あらすじ
     public var description: String?
-    /// サムネイル画像のURL
+    /// サムネイル画像のURL（旧形式・URL型）
     public var thumbnailURL: URL?
+    /// 小さなサムネイル画像のURL
+    public var smallThumbnail: String?
+    /// 通常サイズのサムネイル画像のURL
+    public var thumbnail: String?
     /// 対象年齢
     public var targetAge: Int?
     /// ページ数
@@ -36,6 +40,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     ///   - publishedDate: 出版日（任意）
     ///   - description: 説明・あらすじ（任意）
     ///   - thumbnailURL: サムネイル画像のURL（任意）
+    ///   - smallThumbnail: 小さなサムネイル画像のURL（任意）
+    ///   - thumbnail: 通常サイズのサムネイル画像のURL（任意）
     ///   - targetAge: 対象年齢（任意）
     ///   - pageCount: ページ数（任意）
     ///   - categories: カテゴリ・ジャンル（デフォルトは空配列）
@@ -48,6 +54,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         publishedDate: String? = nil,
         description: String? = nil,
         thumbnailURL: URL? = nil,
+        smallThumbnail: String? = nil,
+        thumbnail: String? = nil,
         targetAge: Int? = nil,
         pageCount: Int? = nil,
         categories: [String] = []
@@ -60,6 +68,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.publishedDate = publishedDate
         self.description = description
         self.thumbnailURL = thumbnailURL
+        self.smallThumbnail = smallThumbnail
+        self.thumbnail = thumbnail
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories
@@ -79,6 +89,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.publishedDate = nil
         self.description = nil
         self.thumbnailURL = nil
+        self.smallThumbnail = nil
+        self.thumbnail = nil
         self.targetAge = nil
         self.pageCount = nil
         self.categories = []

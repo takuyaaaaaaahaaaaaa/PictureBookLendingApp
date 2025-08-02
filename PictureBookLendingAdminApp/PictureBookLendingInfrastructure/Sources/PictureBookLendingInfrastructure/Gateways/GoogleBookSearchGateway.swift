@@ -225,6 +225,18 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             return URL(string: httpsString)
         }()
 
+        // 小さなサムネイル画像URLの処理
+        let smallThumbnail: String? = {
+            guard let urlString = volumeInfo.imageLinks?.smallThumbnail else { return nil }
+            return urlString.replacingOccurrences(of: "http://", with: "https://")
+        }()
+
+        // 通常サイズのサムネイル画像URLの処理
+        let thumbnail: String? = {
+            guard let urlString = volumeInfo.imageLinks?.thumbnail else { return nil }
+            return urlString.replacingOccurrences(of: "http://", with: "https://")
+        }()
+
         // ISBN情報の抽出
         let isbn13 = volumeInfo.industryIdentifiers?.first { $0.type == "ISBN_13" }?.identifier
         
@@ -236,6 +248,8 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             publishedDate: volumeInfo.publishedDate,
             description: volumeInfo.description,
             thumbnailURL: thumbnailURL,
+            smallThumbnail: smallThumbnail,
+            thumbnail: thumbnail,
             targetAge: nil,  // APIからは取得できないため、後でユーザーが設定
             pageCount: volumeInfo.pageCount,
             categories: volumeInfo.categories ?? []

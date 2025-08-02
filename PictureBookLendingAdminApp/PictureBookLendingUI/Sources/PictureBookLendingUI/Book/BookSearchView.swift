@@ -308,6 +308,23 @@ struct SearchResultRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack {
+                // サムネイル画像
+                AsyncImage(
+                    url: URL(
+                        string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? "")
+                ) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                } placeholder: {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.title2)
+                }
+                .frame(width: 60, height: 80)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                
                 VStack(alignment: .leading, spacing: 4) {
                     Text(scoredBook.book.title)
                         .font(.headline)

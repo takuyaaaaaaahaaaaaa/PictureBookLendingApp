@@ -31,6 +31,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             publishedDate: book.publishedDate,
             bookDescription: book.description,
             thumbnailURLString: book.thumbnailURL?.absoluteString,
+            smallThumbnail: book.smallThumbnail,
+            thumbnail: book.thumbnail,
             targetAge: book.targetAge,
             pageCount: book.pageCount,
             categories: book.categories
@@ -66,6 +68,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     publishedDate: swiftDataBook.publishedDate,
                     description: swiftDataBook.bookDescription,
                     thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                    smallThumbnail: swiftDataBook.smallThumbnail,
+                    thumbnail: swiftDataBook.thumbnail,
                     targetAge: swiftDataBook.targetAge,
                     pageCount: swiftDataBook.pageCount,
                     categories: swiftDataBook.categories
@@ -100,6 +104,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 publishedDate: swiftDataBook.publishedDate,
                 description: swiftDataBook.bookDescription,
                 thumbnailURL: swiftDataBook.thumbnailURLString.flatMap(URL.init(string:)),
+                smallThumbnail: swiftDataBook.smallThumbnail,
+                thumbnail: swiftDataBook.thumbnail,
                 targetAge: swiftDataBook.targetAge,
                 pageCount: swiftDataBook.pageCount,
                 categories: swiftDataBook.categories
@@ -132,6 +138,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.publishedDate = book.publishedDate
             swiftDataBook.bookDescription = book.description
             swiftDataBook.thumbnailURLString = book.thumbnailURL?.absoluteString
+            swiftDataBook.smallThumbnail = book.smallThumbnail
+            swiftDataBook.thumbnail = book.thumbnail
             swiftDataBook.targetAge = book.targetAge
             swiftDataBook.pageCount = book.pageCount
             swiftDataBook.categories = book.categories
