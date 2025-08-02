@@ -3,7 +3,7 @@ import Foundation
 /// 貸出リポジトリプロトコル
 ///
 /// 貸出情報の永続化を担当するリポジトリのインターフェース
-public protocol LoanRepositoryProtocol {
+public protocol LoanRepositoryProtocol: Sendable {
     /// 貸出情報を保存する
     ///
     /// - Parameter loan: 保存する貸出情報

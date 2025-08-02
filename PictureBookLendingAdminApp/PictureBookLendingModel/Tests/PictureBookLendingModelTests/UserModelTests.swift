@@ -16,6 +16,7 @@ import Testing
 @Suite("UserModel Tests")
 struct UserModelTests {
     
+    @MainActor
     private func createUserModel() -> (UserModel, MockUserRepository) {
         let mockRepository = MockUserRepository()
         let userModel = UserModel(repository: mockRepository)
@@ -26,6 +27,7 @@ struct UserModelTests {
     ///
     /// 新しい利用者を登録し、正しく登録されることを確認します。
     @Test("利用者登録機能のテスト")
+    @MainActor
     func registerUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
@@ -46,6 +48,7 @@ struct UserModelTests {
     ///
     /// 複数の利用者を登録し、全ての利用者が取得できることを確認します。
     @Test("全利用者取得機能のテスト")
+    @MainActor
     func getAllUsers() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
@@ -68,6 +71,7 @@ struct UserModelTests {
     ///
     /// IDを指定して利用者を検索し、正しい利用者が取得できることを確認します。
     @Test("利用者ID検索機能のテスト")
+    @MainActor
     func findUserById() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
@@ -88,6 +92,7 @@ struct UserModelTests {
     ///
     /// 登録済みの利用者情報を更新し、正しく更新されることを確認します。
     @Test("利用者更新機能のテスト")
+    @MainActor
     func updateUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
@@ -112,6 +117,7 @@ struct UserModelTests {
     ///
     /// 登録済みの利用者を削除し、正しく削除されることを確認します。
     @Test("利用者削除機能のテスト")
+    @MainActor
     func deleteUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()
@@ -133,6 +139,7 @@ struct UserModelTests {
     ///
     /// 存在しない利用者IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
     @Test("存在しない利用者削除時のエラーテスト")
+    @MainActor
     func deleteNonExistingUser() throws {
         // 1. Arrange - 準備
         let (userModel, _) = createUserModel()

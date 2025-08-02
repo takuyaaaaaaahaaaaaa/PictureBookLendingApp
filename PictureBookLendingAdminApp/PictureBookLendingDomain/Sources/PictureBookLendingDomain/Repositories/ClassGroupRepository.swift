@@ -1,7 +1,7 @@
 import Foundation
 
 /// クラス（組）データの永続化を管理するリポジトリのプロトコル
-public protocol ClassGroupRepositoryProtocol {
+public protocol ClassGroupRepositoryProtocol: Sendable {
     /// すべてのクラスを取得する
     func fetchAll() throws -> [ClassGroup]
     

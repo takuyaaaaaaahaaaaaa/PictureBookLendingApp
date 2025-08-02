@@ -16,6 +16,7 @@ import Testing
 @Suite("BookModel Tests")
 struct BookModelTests {
     
+    @MainActor
     private func createBookModel() -> (BookModel, MockBookRepository) {
         let mockRepository = MockBookRepository()
         let bookModel = BookModel(repository: mockRepository)
@@ -26,6 +27,7 @@ struct BookModelTests {
     ///
     /// 新しい絵本を登録し、正しく登録されることを確認します。
     @Test("絵本登録機能")
+    @MainActor
     func registerBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -45,6 +47,7 @@ struct BookModelTests {
     ///
     /// 複数の絵本を登録し、全ての絵本が取得できることを確認します。
     @Test("全絵本取得機能")
+    @MainActor
     func getAllBooks() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -65,6 +68,7 @@ struct BookModelTests {
     ///
     /// IDを指定して絵本を検索し、正しい絵本が取得できることを確認します。
     @Test("絵本ID検索機能")
+    @MainActor
     func findBookById() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -84,6 +88,7 @@ struct BookModelTests {
     ///
     /// 登録済みの絵本情報を更新し、正しく更新されることを確認します。
     @Test("絵本更新機能")
+    @MainActor
     func updateBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -108,6 +113,7 @@ struct BookModelTests {
     ///
     /// 登録済みの絵本を削除し、正しく削除されることを確認します。
     @Test("絵本削除機能")
+    @MainActor
     func deleteBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
@@ -128,6 +134,7 @@ struct BookModelTests {
     ///
     /// 存在しない絵本IDを指定して削除を試みた場合、適切なエラーが発生することを確認します。
     @Test("存在しない絵本削除時のエラー")
+    @MainActor
     func deleteNonExistingBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()

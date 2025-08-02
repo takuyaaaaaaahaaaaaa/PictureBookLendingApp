@@ -17,6 +17,7 @@ import Testing
 @Suite("ClassGroupModel Tests")
 struct ClassGroupModelTests {
     
+    @MainActor
     private func createClassGroupModel() -> (ClassGroupModel, MockClassGroupRepository) {
         let mockRepository = MockClassGroupRepository()
         let classGroupModel = ClassGroupModel(repository: mockRepository)
@@ -27,6 +28,7 @@ struct ClassGroupModelTests {
     ///
     /// 新しいクラスを登録し、正しく登録されることを確認します。
     @Test("クラス登録機能")
+    @MainActor
     func registerClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
@@ -47,6 +49,7 @@ struct ClassGroupModelTests {
     ///
     /// 複数のクラスを登録し、全てのクラスが取得できることを確認します。
     @Test("全クラス取得機能")
+    @MainActor
     func getAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
@@ -67,6 +70,7 @@ struct ClassGroupModelTests {
     ///
     /// IDを指定してクラスを検索し、正しいクラスが取得できることを確認します。
     @Test("クラスID検索機能")
+    @MainActor
     func findClassGroupById() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
@@ -88,6 +92,7 @@ struct ClassGroupModelTests {
     ///
     /// 登録済みのクラス情報を更新し、正しく更新されることを確認します。
     @Test("クラス更新機能")
+    @MainActor
     func updateClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
@@ -111,6 +116,7 @@ struct ClassGroupModelTests {
     ///
     /// 登録済みのクラスを削除し、正しく削除されることを確認します。
     @Test("クラス削除機能")
+    @MainActor
     func deleteClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
@@ -132,6 +138,7 @@ struct ClassGroupModelTests {
     ///
     /// リポジトリからクラス一覧をロードし、正しくキャッシュされることを確認します。
     @Test("クラス一覧ロード機能")
+    @MainActor
     func loadAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, repository) = createClassGroupModel()
@@ -152,6 +159,7 @@ struct ClassGroupModelTests {
     ///
     /// キャッシュをリフレッシュし、最新データが取得されることを確認します。
     @Test("クラス一覧リフレッシュ機能")
+    @MainActor
     func refreshClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, repository) = createClassGroupModel()

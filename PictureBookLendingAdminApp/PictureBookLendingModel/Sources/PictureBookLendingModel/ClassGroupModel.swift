@@ -38,6 +38,7 @@ public enum ClassGroupModelError: Error, Equatable, LocalizedError {
 /// - 年度別、年齢別のクラス検索
 /// などの機能を提供します。
 @Observable
+@MainActor
 public class ClassGroupModel {
     
     /// クラスリポジトリ

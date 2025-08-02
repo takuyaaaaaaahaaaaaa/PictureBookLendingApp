@@ -39,6 +39,7 @@ struct RegisterModelTests {
     // MARK: - Initialization Tests
     
     @Test("RegisterModelの初期化")
+    @MainActor
     func testInitialization() {
         let model = createRegisterModel()
         
@@ -57,6 +58,7 @@ struct RegisterModelTests {
     // MARK: - Search Input Tests
     
     @Test("検索実行可能性の判定")
+    @MainActor
     func testCanSearch() {
         let model = createRegisterModel()
         
@@ -92,6 +94,7 @@ struct RegisterModelTests {
     // MARK: - Search Results Tests
     
     @Test("検索結果の選択")
+    @MainActor
     func testSelectSearchResult() {
         let model = createRegisterModel()
         let scoredBook = ScoredBook(book: sampleBooks[0], score: 0.9)
@@ -104,6 +107,7 @@ struct RegisterModelTests {
     }
     
     @Test("検索結果のクリア")
+    @MainActor
     func testClearSearchResults() {
         let model = createRegisterModel()
         
@@ -122,6 +126,7 @@ struct RegisterModelTests {
     // MARK: - Manual Entry Tests
     
     @Test("手動入力モードへの切り替え")
+    @MainActor
     func testSwitchToManualEntry() {
         let model = createRegisterModel()
         
@@ -143,6 +148,7 @@ struct RegisterModelTests {
     }
     
     @Test("手動入力モードで著者が空の場合")
+    @MainActor
     func testSwitchToManualEntryWithEmptyAuthor() {
         let model = createRegisterModel()
         
@@ -155,6 +161,7 @@ struct RegisterModelTests {
     }
     
     @Test("検索結果モードへの切り替え")
+    @MainActor
     func testSwitchToSearchResults() {
         let model = createRegisterModel()
         
@@ -170,6 +177,7 @@ struct RegisterModelTests {
     }
     
     @Test("手動入力の絵本情報更新")
+    @MainActor
     func testUpdateManualBook() {
         let model = createRegisterModel()
         let updatedBook = sampleBooks[0]
@@ -182,6 +190,7 @@ struct RegisterModelTests {
     // MARK: - Registration Tests
     
     @Test("登録実行可能性の判定")
+    @MainActor
     func testCanRegister() {
         let model = createRegisterModel()
         
@@ -199,6 +208,7 @@ struct RegisterModelTests {
     }
     
     @Test("登録対象の絵本取得")
+    @MainActor
     func testBookToRegister() {
         let model = createRegisterModel()
         
@@ -218,6 +228,7 @@ struct RegisterModelTests {
     // MARK: - State Management Tests
     
     @Test("登録状態のリセット")
+    @MainActor
     func testResetRegistrationState() {
         let model = createRegisterModel()
         
@@ -245,6 +256,7 @@ struct RegisterModelTests {
     // MARK: - Search Analysis Tests
     
     @Test("検索分析の取得")
+    @MainActor
     func testGetSearchAnalysis() {
         let model = createRegisterModel()
         
@@ -272,6 +284,7 @@ struct RegisterModelTests {
     }
     
     @Test("検索品質の評価")
+    @MainActor
     func testSearchQuality() {
         // excellent: 0.9以上の結果がある
         let excellentAnalysis = SearchAnalysis(
@@ -328,6 +341,7 @@ struct RegisterModelTests {
     
     // MARK: - Helper Methods
     
+    @MainActor
     private func createRegisterModel() -> RegisterModel {
         let mockGateway = MockBookSearchGateway()
         let normalizer = MockStringNormalizer()

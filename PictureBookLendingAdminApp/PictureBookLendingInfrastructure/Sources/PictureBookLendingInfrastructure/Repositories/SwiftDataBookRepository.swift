@@ -5,7 +5,7 @@ import SwiftData
 /// SwiftData用絵本リポジトリ実装
 ///
 /// SwiftDataを使用して絵本の永続化を担当するリポジトリ
-public class SwiftDataBookRepository: BookRepositoryProtocol {
+public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private let modelContext: ModelContext
     
     /// イニシャライザ

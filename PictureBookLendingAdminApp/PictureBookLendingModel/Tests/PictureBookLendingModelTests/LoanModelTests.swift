@@ -10,6 +10,7 @@ import Testing
 @Suite("LoanModel Tests")
 struct LoanModelTests {
     
+    @MainActor
     private func createLoanModel() throws -> (
         mockRepositoryFactory: MockRepositoryFactory, bookModel: BookModel, userModel: UserModel,
         loanModel: LoanModel, testBook: Book, testUser: User
@@ -43,6 +44,7 @@ struct LoanModelTests {
     
     /// 絵本貸出機能のテスト
     @Test("絵本貸出機能のテスト")
+    @MainActor
     func lendBook() throws {
         let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
@@ -65,6 +67,7 @@ struct LoanModelTests {
     
     /// 絵本返却機能のテスト
     @Test("絵本返却機能のテスト")
+    @MainActor
     func returnBook() throws {
         let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
@@ -90,6 +93,7 @@ struct LoanModelTests {
     
     /// 絵本IDから返却機能のテスト
     @Test("絵本IDから返却機能のテスト")
+    @MainActor
     func returnBookByBookId() throws {
         let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
@@ -122,6 +126,7 @@ struct LoanModelTests {
     
     /// 貸出中でない絵本を返却しようとするとエラーが発生することのテスト
     @Test("貸出中でない絵本を返却しようとするとエラーが発生することのテスト")
+    @MainActor
     func returnBookNotLent() throws {
         let (_, _, _, loanModel, testBook, _) = try createLoanModel()
         
@@ -138,6 +143,7 @@ struct LoanModelTests {
     
     /// 貸出可能上限チェック機能のテスト
     @Test("貸出可能上限チェック機能のテスト")
+    @MainActor
     func maxBooksPerUserCheck() throws {
         let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
@@ -170,6 +176,7 @@ struct LoanModelTests {
     
     /// 返却後の再貸出テスト
     @Test("返却後の再貸出テスト")
+    @MainActor
     func lendAfterReturn() throws {
         let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
@@ -203,6 +210,7 @@ struct LoanModelTests {
     
     /// 複数冊貸出可能設定のテスト
     @Test("複数冊貸出可能設定のテスト")
+    @MainActor
     func multipleBooksAllowed() throws {
         let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
         
