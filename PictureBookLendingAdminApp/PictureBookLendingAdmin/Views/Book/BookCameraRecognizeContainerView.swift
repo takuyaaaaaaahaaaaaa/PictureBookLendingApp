@@ -13,23 +13,30 @@ import VisionKit
 struct BookScannerContainerView: View {
     @State var ISBNCode: String = ""
     @State var texts: [String] = []
+    @State var isScanning: Bool = false
     @State var isScanComplete: Bool = false
     
     var body: some View {
-        BookScannerView(ISBNCode: $ISBNCode, texts: $texts, isScanComplete: $isScanComplete)
-            .toolbar {
-                ToolbarItem {
-                    Button("読み込み終了"){}
-                }
+        VStack {
+            Button("読み込み開始") {
+                isScanning = true
             }
-            .alert(
-                "取得完了", isPresented: $isScanComplete, actions: {},
-                message: {
-                    Text("ISBNCode: \(ISBNCode) \(texts.joined(separator: "/"))")
+        }
+        .fullScreenCover(isPresented: $isScanning) {
+            BookScannerView(ISBNCode: $ISBNCode, texts: $texts, isScanComplete: $isScanComplete)
+                .overlay(alignment: .topTrailing) {
+                    Button("読み込み終了") {
+                        isScanning = false
+                    }
                 }
-            )
+                .alert(
+                    "取得完了", isPresented: $isScanComplete, actions: {},
+                    message: {
+                        Text("ISBNCode: \(ISBNCode) \(texts.joined(separator: "/"))")
+                    }
+                )
+        }
     }
-    
 }
 
 /// 絵本スキャンView
@@ -129,8 +136,7 @@ struct BookScannerView: UIViewControllerRepresentable {
         func dataScanner(
             _ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem],
             allItems: [RecognizedItem]
-        ) {
-        }
+        ) {}
     }
     
 }
