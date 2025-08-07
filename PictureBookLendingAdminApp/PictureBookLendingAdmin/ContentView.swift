@@ -9,37 +9,33 @@ import SwiftUI
 /// - 絵本 - 全絵本一覧（貸出可能・貸出中を含む）
 /// - 貸出管理 - 貸出中記録の組別グルーピング表示
 struct ContentView: View {
-    // 選択中のタブを管理
-    @State private var selectedTab = 0
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+        TabView {
             // 絵本タブ
-            NavigationStack {
-                BookListContainerView()
+            Tab("絵本", systemImage: "book") {
+                NavigationStack {
+                    BookListContainerView()
+                }
             }
-            .tabItem {
-                Label("絵本", systemImage: "book")
-            }
-            .tag(0)
             
             // 貸出管理タブ
-            NavigationStack {
-                LoanListContainerView()
+            Tab("貸し出し管理", systemImage: "list.clipboard") {
+                NavigationStack {
+                    LoanListContainerView()
+                }
             }
-            .tabItem {
-                Label("貸出管理", systemImage: "list.clipboard")
-            }
-            .tag(1)
             
             // 絵本登録タブ（新規追加）
-            NavigationStack {
-                BookSearchContainerView()
+            Tab("絵本登録", systemImage: "plus.circle") {
+                NavigationStack {
+                    BookSearchContainerView()
+                }
             }
-            .tabItem {
-                Label("絵本登録", systemImage: "plus.circle")
+            
+            Tab("カメラ登録", systemImage: "plus.circle") {
+                BookScannerContainerView()
             }
-            .tag(2)
         }
     }
 }
