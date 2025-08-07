@@ -13,26 +13,21 @@ import VisionKit
 struct BookScannerContainerView: View {
     @State var ISBNCode: String = ""
     @State var texts: [String] = []
-    @State var showAlert: Bool = false
+    @State var isScanComplete: Bool = false
     
     var body: some View {
-        BookScannerView(ISBNCode: $ISBNCode, texts: $texts)
+        BookScannerView(ISBNCode: $ISBNCode, texts: $texts, isScanComplete: $isScanComplete)
+            .toolbar {
+                ToolbarItem {
+                    Button("読み込み終了"){}
+                }
+            }
             .alert(
-                "取得完了", isPresented: $showAlert, actions: {},
+                "取得完了", isPresented: $isScanComplete, actions: {},
                 message: {
-                    Text("ISBNCode: \(ISBNCode)\ntexts: \(texts.joined())")
+                    Text("ISBNCode: \(ISBNCode) \(texts.joined(separator: "/"))")
                 }
             )
-            .onChange(of: ISBNCode) {
-                if !ISBNCode.isEmpty {
-                    showAlert = true
-                }
-            }
-            .onChange(of: texts) {
-                if !texts.isEmpty {
-                    showAlert = true
-                }
-            }
     }
     
 }
@@ -44,6 +39,8 @@ struct BookScannerView: UIViewControllerRepresentable {
     @Binding var ISBNCode: String
     /// テキスト
     @Binding var texts: [String]
+    /// スキャン完了
+    @Binding var isScanComplete: Bool
     
     /// 初回作成時のみ実行
     func makeUIViewController(context: Context) -> DataScannerViewController {
@@ -53,6 +50,9 @@ struct BookScannerView: UIViewControllerRepresentable {
                 .text(languages: ["ja"]),  // 日本語指定
                 .barcode(symbologies: [.ean13]),  // 13桁のISBN対応
             ],
+            qualityLevel: .balanced,
+            recognizesMultipleItems: true,
+            //isGuidanceEnabled: true,
             isHighlightingEnabled: true  // スキャン時にハイライト
         )
         dataScannerViewController.delegate = context.coordinator
@@ -76,7 +76,7 @@ struct BookScannerView: UIViewControllerRepresentable {
             self.parent = bookScannerView
         }
         
-        // スキャナがアイテムの認識を開始すると呼ばれる
+        // スキャナがアイテムの認識を開始すると呼ばれる処理
         func dataScanner(
             _ dataScanner: DataScannerViewController, didAdd addedItems: [RecognizedItem],
             allItems: [RecognizedItem]
@@ -87,31 +87,50 @@ struct BookScannerView: UIViewControllerRepresentable {
                 let payloadStringValue = barcode.payloadStringValue
             {
                 parent.ISBNCode = payloadStringValue
-                return
+                parent.isScanComplete = true
             }
             
             // テキストを取得
             let recognizedTexts = addedItems.compactMap { item -> String? in
                 if case .text(let text) = item {
-                    return text.transcript
+                    let transcript = text.transcript.trimmingCharacters(in: .whitespacesAndNewlines)  // 空白削除
+                    if !transcript.isEmpty {
+                        return transcript
+                    }
+                    return nil
                 }
                 return nil
             }
             if !recognizedTexts.isEmpty {
                 parent.texts = recognizedTexts
-                return
+                parent.isScanComplete = true
+            }
+            
+        }
+        
+        /// 認識したアイテムをタップした際に呼ばれる処理
+        func dataScanner(_ dataScanner: DataScannerViewController, didTapOn item: RecognizedItem) {
+            // ISBN番号を取得
+            if case .barcode(let barcode) = item,
+                let payloadStringValue = barcode.payloadStringValue
+            {
+                parent.ISBNCode = payloadStringValue
+                parent.isScanComplete = true
+            }
+            
+            // テキストを取得
+            if case .text(let text) = item, !text.transcript.isEmpty {
+                parent.texts = [text.transcript]
+                parent.isScanComplete = true
             }
         }
         
-        // スキャナがアイテムの認識を停止した時に呼ばれる
+        // スキャナがアイテムの認識を停止した時に呼ばれる処理
         func dataScanner(
             _ dataScanner: DataScannerViewController, didRemove removedItems: [RecognizedItem],
             allItems: [RecognizedItem]
         ) {
-            parent.ISBNCode = ""
-            parent.texts = []
         }
-        
     }
     
 }
