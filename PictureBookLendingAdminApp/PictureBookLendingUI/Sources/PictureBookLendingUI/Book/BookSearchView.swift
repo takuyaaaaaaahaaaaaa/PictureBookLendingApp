@@ -1,3 +1,4 @@
+import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
 
@@ -312,18 +313,14 @@ struct SearchResultRow: View {
         Button(action: onTap) {
             HStack {
                 // サムネイル画像
-                AsyncImage(
-                    url: URL(
-                        string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? "")
-                ) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                        .font(.title2)
-                }
+                KFImage(URL(string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? ""))
+                    .placeholder {
+                        Image(systemName: "book.closed")
+                            .foregroundStyle(.secondary)
+                            .font(.title2)
+                    }
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
                 .frame(width: 60, height: 80)
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
