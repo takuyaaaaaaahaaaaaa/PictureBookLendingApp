@@ -1,4 +1,4 @@
-// swift-tools-version: 6.2
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -16,7 +16,8 @@ let package = Package(
             targets: ["PictureBookLendingUI"])
     ],
     dependencies: [
-        .package(path: "../PictureBookLendingDomain")
+        .package(path: "../PictureBookLendingDomain"),
+        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.1.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -24,7 +25,8 @@ let package = Package(
         .target(
             name: "PictureBookLendingUI",
             dependencies: [
-                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain")
+                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
+                .product(name: "Kingfisher", package: "Kingfisher")
             ]
         ),
         .testTarget(

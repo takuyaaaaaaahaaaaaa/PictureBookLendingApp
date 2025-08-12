@@ -40,7 +40,7 @@ public struct EditableDetailRow: View {
     @Binding var value: String
     public init(
         label: String,
-        value: Binding<String>,
+        value: Binding<String>
     ) {
         self.label = label
         self._value = value

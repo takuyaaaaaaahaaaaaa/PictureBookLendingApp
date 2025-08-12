@@ -1,5 +1,6 @@
 import PictureBookLendingDomain
 import SwiftUI
+import Kingfisher
 
 /// 絵本詳細のPresentation View
 ///
@@ -29,19 +30,17 @@ public struct BookDetailView<ActionButton: View>: View {
                 HStack {
                     Spacer()
                     
-                    AsyncImage(url: URL(string: book.thumbnail ?? book.smallThumbnail ?? "")) {
-                        image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                    } placeholder: {
-                        Image(systemName: "book.closed")
-                            .foregroundStyle(.secondary)
-                            .font(.system(size: 48))
-                    }
-                    .frame(width: 120, height: 160)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    KFImage(URL(string: book.thumbnail ?? book.smallThumbnail ?? ""))
+                        .placeholder {
+                            Image(systemName: "book.closed")
+                                .foregroundStyle(.secondary)
+                                .font(.system(size: 48))
+                        }
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 120, height: 160)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     Spacer()
                 }

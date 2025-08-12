@@ -1,5 +1,6 @@
 import PictureBookLendingDomain
 import SwiftUI
+import Kingfisher
 
 /// 絵本一覧のPresentation View
 ///
@@ -54,18 +55,17 @@ public struct BookRowView<RowAction: View>: View {
     public var body: some View {
         HStack {
             // サムネイル画像
-            AsyncImage(url: URL(string: book.thumbnail ?? book.smallThumbnail ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                Image(systemName: "book.closed")
-                    .foregroundStyle(.secondary)
-                    .font(.title2)
-            }
-            .frame(width: 50, height: 65)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            KFImage(URL(string: book.thumbnail ?? book.smallThumbnail ?? ""))
+                .placeholder {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.title2)
+                }
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 50, height: 65)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
