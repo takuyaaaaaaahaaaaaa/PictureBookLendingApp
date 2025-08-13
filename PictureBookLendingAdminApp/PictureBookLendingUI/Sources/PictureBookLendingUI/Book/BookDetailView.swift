@@ -9,8 +9,6 @@ import SwiftUI
 public struct BookDetailView<ActionButton: View>: View {
     /// 表示・編集対象の絵本データ
     @Binding var book: Book
-    /// 絵本が現在貸出中かどうかを示すフラグ
-    let isCurrentlyLent: Bool
     /// 現在の貸出情報（貸出中の場合のみ存在）
     let currentLoan: Loan?
     /// 編集ボタンタップ時のアクション
@@ -20,13 +18,11 @@ public struct BookDetailView<ActionButton: View>: View {
     
     public init(
         book: Binding<Book>,
-        isCurrentlyLent: Bool,
         currentLoan: Loan? = nil,
         onEdit: @escaping () -> Void,
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._book = book
-        self.isCurrentlyLent = isCurrentlyLent
         self.currentLoan = currentLoan
         self.onEdit = onEdit
         self.actionButton = actionButton
@@ -63,7 +59,7 @@ public struct BookDetailView<ActionButton: View>: View {
             
             Section("貸出状況") {
                 HStack {
-                    BookStatusView(isCurrentlyLent: isCurrentlyLent)
+                    BookStatusView(isCurrentlyLent: currentLoan != nil)
                     
                     Spacer()
                     
@@ -103,7 +99,7 @@ public struct BookDetailView<ActionButton: View>: View {
     NavigationStack {
         BookDetailView(
             book: $sampleBook,
-            isCurrentlyLent: false,
+            currentLoan: nil,
             onEdit: {}
         ) {
             Button("貸出") {}

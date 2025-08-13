@@ -23,7 +23,6 @@ struct BookDetailContainerView: View {
     var body: some View {
         BookDetailView(
             book: $book,
-            isCurrentlyLent: isCurrentlyLent,
             currentLoan: currentLoan,
             onEdit: handleEdit
         ) {
@@ -52,10 +51,6 @@ struct BookDetailContainerView: View {
                 alertState = .error(error.localizedDescription)
             }
         }
-    }
-    
-    private var isCurrentlyLent: Bool {
-        loanModel.isBookLent(bookId: book.id)
     }
     
     private var currentLoan: Loan? {
