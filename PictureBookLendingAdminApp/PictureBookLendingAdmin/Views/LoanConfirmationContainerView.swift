@@ -54,8 +54,7 @@ struct LoanConfirmationContainerView: View {
         do {
             let _ = try loanModel.lendBook(
                 bookId: book.id,
-                userId: user.id,
-                dueDate: dueDate
+                userId: user.id
             )
             onComplete()
             dismiss()

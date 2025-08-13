@@ -51,12 +51,11 @@ struct LoanModelTests {
         let bookId = testBook.id
         let userId = testUser.id
         
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         #expect(loan.bookId == bookId)
         #expect(loan.user.id == userId)
-        #expect(loan.dueDate == dueDate)
+        #expect(loan.dueDate > Date())
         #expect(loan.returnedDate == nil)
         #expect(loan.isReturned == false)
         
@@ -74,8 +73,7 @@ struct LoanModelTests {
         let bookId = testBook.id
         let userId = testUser.id
         
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
         let loanId = loan.id
         
         let returnedLoan = try loanModel.returnBook(loanId: loanId)
@@ -100,8 +98,7 @@ struct LoanModelTests {
         let bookId = testBook.id
         let userId = testUser.id
         
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         // 貸出中であることを確認
         #expect(loanModel.isBookLent(bookId: bookId) == true)
@@ -155,8 +152,7 @@ struct LoanModelTests {
         let userId = testUser.id
         
         // 1冊目の貸出（成功すべき）
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         #expect(loan1.user.id == userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
@@ -167,7 +163,7 @@ struct LoanModelTests {
         
         // 2冊目の貸出（上限超過でエラーになるべき）
         #expect(throws: LoanModelError.maxBooksPerUserExceeded) {
-            try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+            try loanModel.lendBook(bookId: savedBook2.id, userId: userId)
         }
         
         // アクティブな貸出は1冊のまま
@@ -188,8 +184,7 @@ struct LoanModelTests {
         let userId = testUser.id
         
         // 1冊目の貸出
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
         
@@ -203,7 +198,7 @@ struct LoanModelTests {
         let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
         
         // 返却後は再度貸出可能
-        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId)
         #expect(loan2.user.id == userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
     }
@@ -217,8 +212,7 @@ struct LoanModelTests {
         let bookId = testBook.id
         let userId = testUser.id
         
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         // LoanがUser情報を含むことを確認
         #expect(loan.user.id == testUser.id)
@@ -243,8 +237,7 @@ struct LoanModelTests {
         #expect(currentLoanBefore == nil)
         
         // 貸出実行
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
         
         // 貸出後は現在の貸出が取得できることを確認
         let currentLoanAfter = loanModel.getCurrentLoan(bookId: bookId)
@@ -272,10 +265,9 @@ struct LoanModelTests {
         try mockRepositoryFactory.loanSettingsRepository.save(settings)
         
         let userId = testUser.id
-        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
         
         // 1冊目の貸出
-        _ = try loanModel.lendBook(bookId: testBook.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
         
         // 2冊目の絵本を追加
@@ -283,7 +275,7 @@ struct LoanModelTests {
         let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
         
         // 2冊目の貸出
-        _ = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: savedBook2.id, userId: userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 2)
         
         // 3冊目の絵本を追加
@@ -291,7 +283,7 @@ struct LoanModelTests {
         let savedBook3 = try mockRepositoryFactory.bookRepository.save(testBook3)
         
         // 3冊目の貸出
-        _ = try loanModel.lendBook(bookId: savedBook3.id, userId: userId, dueDate: dueDate)
+        _ = try loanModel.lendBook(bookId: savedBook3.id, userId: userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
         
         // 4冊目の絵本を追加
@@ -300,7 +292,7 @@ struct LoanModelTests {
         
         // 4冊目の貸出（上限超過でエラーになるべき）
         #expect(throws: LoanModelError.maxBooksPerUserExceeded) {
-            try loanModel.lendBook(bookId: savedBook4.id, userId: userId, dueDate: dueDate)
+            try loanModel.lendBook(bookId: savedBook4.id, userId: userId)
         }
         
         // アクティブな貸出は3冊のまま

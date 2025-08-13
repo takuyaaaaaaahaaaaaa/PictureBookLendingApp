@@ -103,20 +103,6 @@ public class LoanModel {
     /// - Returns: 作成された貸出情報
     /// - Throws: 貸出処理に失敗した場合は `LoanModelError` を投げます
     public func lendBook(bookId: UUID, userId: UUID) throws -> Loan {
-        let settings = loanSettingsRepository.fetch()
-        let dueDate = settings.calculateDueDate(from: Date())
-        return try lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
-    }
-    
-    /// 絵本を貸し出す
-    ///
-    /// - Parameters:
-    ///   - bookId: 貸し出す絵本のID
-    ///   - userId: 借りる利用者のID
-    ///   - dueDate: 返却期限日
-    /// - Returns: 作成された貸出情報
-    /// - Throws: 貸出処理に失敗した場合は `LoanModelError` を投げます
-    public func lendBook(bookId: UUID, userId: UUID, dueDate: Date) throws -> Loan {
         // 絵本の存在確認
         do {
             _ = try bookRepository.findById(bookId)
@@ -147,6 +133,9 @@ public class LoanModel {
             throw LoanModelError.maxBooksPerUserExceeded
         }
         
+        // 返却期限日を設定から自動計算
+        let dueDate = settings.calculateDueDate(from: Date())
+        
         // 貸出情報の作成（User情報を含める）
         let loan = Loan(
             id: UUID(),
@@ -160,10 +149,8 @@ public class LoanModel {
         do {
             // リポジトリに保存
             let savedLoan = try repository.save(loan)
-            
             // キャッシュに追加
             loans.append(savedLoan)
-            
             return savedLoan
         } catch {
             throw LoanModelError.lendingFailed
