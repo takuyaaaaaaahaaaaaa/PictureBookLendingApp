@@ -24,6 +24,7 @@ struct BookDetailContainerView: View {
         BookDetailView(
             book: $book,
             currentLoan: currentLoan,
+            loanHistory: loanHistory,
             onEdit: handleEdit
         ) {
             LoanActionContainerButton(bookId: book.id)
@@ -55,6 +56,11 @@ struct BookDetailContainerView: View {
     
     private var currentLoan: Loan? {
         loanModel.getCurrentLoan(bookId: book.id)
+    }
+    
+    private var loanHistory: [Loan] {
+        loanModel.getLoansByBook(bookId: book.id)
+            .sorted { $0.loanDate > $1.loanDate }  // 新しい順にソート
     }
     
     // MARK: - Actions

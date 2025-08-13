@@ -141,9 +141,10 @@ public struct UserLoanHistoryRow: View {
         ClassGroup(id: UUID(), name: "ばら", ageGroup: 4, year: 2025),
         ClassGroup(id: UUID(), name: "さくら", ageGroup: 5, year: 2025),
     ]
+    let sampleUser = User(id: sampleUserId, name: "山田太郎", classGroupId: userClassGroupId)
     let sampleLoan = Loan(
         bookId: UUID(),
-        userId: sampleUserId,
+        user: sampleUser,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     )

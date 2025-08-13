@@ -55,7 +55,7 @@ struct LoanModelTests {
         let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
         #expect(loan.bookId == bookId)
-        #expect(loan.userId == userId)
+        #expect(loan.user.id == userId)
         #expect(loan.dueDate == dueDate)
         #expect(loan.returnedDate == nil)
         #expect(loan.isReturned == false)
@@ -158,7 +158,7 @@ struct LoanModelTests {
         let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
         let loan1 = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
         
-        #expect(loan1.userId == userId)
+        #expect(loan1.user.id == userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
         
         // 2冊目の絵本を追加
@@ -204,8 +204,61 @@ struct LoanModelTests {
         
         // 返却後は再度貸出可能
         let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: userId, dueDate: dueDate)
-        #expect(loan2.userId == userId)
+        #expect(loan2.user.id == userId)
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+    }
+    
+    /// LoanがUser情報を含むことのテスト
+    @Test("LoanがUser情報を含むことのテスト")
+    @MainActor
+    func loanContainsUserInfo() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        
+        // LoanがUser情報を含むことを確認
+        #expect(loan.user.id == testUser.id)
+        #expect(loan.user.name == testUser.name)
+        #expect(loan.user.classGroupId == testUser.classGroupId)
+        
+        // 後方互換性の確認
+        #expect(loan.user.id == testUser.id)
+    }
+    
+    /// getCurrentLoanメソッドのテスト
+    @Test("getCurrentLoanメソッドのテスト")
+    @MainActor
+    func getCurrentLoan() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        // 貸出前は現在の貸出がないことを確認
+        let currentLoanBefore = loanModel.getCurrentLoan(bookId: bookId)
+        #expect(currentLoanBefore == nil)
+        
+        // 貸出実行
+        let dueDate = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId, dueDate: dueDate)
+        
+        // 貸出後は現在の貸出が取得できることを確認
+        let currentLoanAfter = loanModel.getCurrentLoan(bookId: bookId)
+        #expect(currentLoanAfter != nil)
+        #expect(currentLoanAfter?.id == loan.id)
+        #expect(currentLoanAfter?.user.name == testUser.name)
+        
+        // 返却実行
+        let returnedLoan = try loanModel.returnBook(loanId: loan.id)
+        #expect(returnedLoan.isReturned == true)
+        
+        // 返却後は現在の貸出がないことを確認
+        let currentLoanAfterReturn = loanModel.getCurrentLoan(bookId: bookId)
+        #expect(currentLoanAfterReturn == nil)
     }
     
     /// 複数冊貸出可能設定のテスト

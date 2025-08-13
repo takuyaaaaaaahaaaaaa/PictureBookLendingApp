@@ -124,9 +124,13 @@ public class LoanModel {
             throw LoanModelError.bookNotFound
         }
         
-        // 利用者の存在確認
+        // 利用者の存在確認と取得
+        let user: User
         do {
-            _ = try userRepository.findById(userId)
+            guard let foundUser = try userRepository.findById(userId) else {
+                throw LoanModelError.userNotFound
+            }
+            user = foundUser
         } catch {
             throw LoanModelError.userNotFound
         }
@@ -143,11 +147,11 @@ public class LoanModel {
             throw LoanModelError.maxBooksPerUserExceeded
         }
         
-        // 貸出情報の作成
+        // 貸出情報の作成（User情報を含める）
         let loan = Loan(
             id: UUID(),
             bookId: bookId,
-            userId: userId,
+            user: user,
             loanDate: Date(),
             dueDate: dueDate,
             returnedDate: nil
@@ -196,7 +200,7 @@ public class LoanModel {
         let returnedLoan = Loan(
             id: updatedLoan.id,
             bookId: updatedLoan.bookId,
-            userId: updatedLoan.userId,
+            user: updatedLoan.user,
             loanDate: updatedLoan.loanDate,
             dueDate: updatedLoan.dueDate,
             returnedDate: Date()
@@ -325,7 +329,7 @@ public class LoanModel {
             return try repository.findByUserId(userId)
         } catch {
             print("利用者の貸出履歴の取得に失敗しました: \(error)")
-            return loans.filter { $0.userId == userId }
+            return loans.filter { $0.user.id == userId }
         }
     }
     
@@ -334,7 +338,7 @@ public class LoanModel {
     /// - Parameter userId: 取得したい利用者のID
     /// - Returns: 指定された利用者の現在アクティブな貸出情報リスト
     public func getUserActiveLoans(userId: UUID) -> [Loan] {
-        return loans.filter { $0.userId == userId && !$0.isReturned }
+        return loans.filter { $0.user.id == userId && !$0.isReturned }
     }
     
     /// 指定された絵本の貸出履歴を取得する

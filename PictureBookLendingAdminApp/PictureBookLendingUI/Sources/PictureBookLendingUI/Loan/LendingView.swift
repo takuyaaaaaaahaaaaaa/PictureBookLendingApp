@@ -49,7 +49,7 @@ public struct LendingView: View {
                         LoanRowView(
                             loan: loan,
                             bookTitle: getBookTitle(loan.bookId),
-                            userName: getUserName(loan.userId),
+                            userName: loan.user.name,
                             onReturn: onReturn
                         )
                     }
@@ -156,9 +156,10 @@ public struct LoanRowView: View {
 }
 
 #Preview {
+    let sampleUser = User(name: "テスト太郎", classGroupId: UUID())
     let loan1 = Loan(
         bookId: UUID(),
-        userId: UUID(),
+        user: sampleUser,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date(),
         returnedDate: nil

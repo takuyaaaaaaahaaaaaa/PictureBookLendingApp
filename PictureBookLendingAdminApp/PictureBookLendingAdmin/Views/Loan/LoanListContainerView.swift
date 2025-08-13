@@ -77,7 +77,7 @@ struct LoanListContainerView: View {
     /// 利用者フィルタの選択肢
     private var userFilterOptions: [User] {
         let currentLoans = loanModel.getAllLoans().filter { !$0.isReturned }
-        let currentUserIds = Set(currentLoans.map { $0.userId })
+        let currentUserIds = Set(currentLoans.map { $0.user.id })
         
         let users = userModel.getAllUsers().filter { user in
             currentUserIds.contains(user.id)
@@ -93,7 +93,7 @@ struct LoanListContainerView: View {
     private func applyFilters(to loans: [Loan]) -> [LoanDisplayData] {
         loans.compactMap { loan -> LoanDisplayData? in
             guard let book = bookModel.findBookById(loan.bookId),
-                let user = userModel.findUserById(loan.userId)
+                let user = userModel.findUserById(loan.user.id)
             else {
                 return nil
             }
@@ -129,7 +129,7 @@ struct LoanListContainerView: View {
     
     /// 貸出記録から組名を取得
     private func getGroupName(for loan: Loan) -> String {
-        guard let user = userModel.findUserById(loan.userId),
+        guard let user = userModel.findUserById(loan.user.id),
             let classGroup = classGroupModel.findClassGroupById(user.classGroupId)
         else {
             return "未分類"

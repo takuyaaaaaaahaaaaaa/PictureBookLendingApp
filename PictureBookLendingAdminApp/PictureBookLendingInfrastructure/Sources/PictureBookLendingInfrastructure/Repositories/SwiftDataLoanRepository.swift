@@ -26,7 +26,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
         let swiftDataLoan = SwiftDataLoan(
             id: loan.id,
             bookId: loan.bookId,
-            userId: loan.userId,
+            user: loan.user,
             loanDate: loan.loanDate,
             dueDate: loan.dueDate,
             returnedDate: loan.returnedDate
@@ -56,7 +56,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
                 Loan(
                     id: swiftDataLoan.id,
                     bookId: swiftDataLoan.bookId,
-                    userId: swiftDataLoan.userId,
+                    user: swiftDataLoan.user,
                     loanDate: swiftDataLoan.loanDate,
                     dueDate: swiftDataLoan.dueDate,
                     returnedDate: swiftDataLoan.returnedDate
@@ -86,7 +86,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
             return Loan(
                 id: swiftDataLoan.id,
                 bookId: swiftDataLoan.bookId,
-                userId: swiftDataLoan.userId,
+                user: swiftDataLoan.user,
                 loanDate: swiftDataLoan.loanDate,
                 dueDate: swiftDataLoan.dueDate,
                 returnedDate: swiftDataLoan.returnedDate
@@ -112,7 +112,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
                 Loan(
                     id: swiftDataLoan.id,
                     bookId: swiftDataLoan.bookId,
-                    userId: swiftDataLoan.userId,
+                    user: swiftDataLoan.user,
                     loanDate: swiftDataLoan.loanDate,
                     dueDate: swiftDataLoan.dueDate,
                     returnedDate: swiftDataLoan.returnedDate
@@ -131,7 +131,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
     
     public func findByUserId(_ userId: UUID) throws -> [Loan] {
         do {
-            let predicate = #Predicate<SwiftDataLoan> { $0.userId == userId }
+            let predicate = #Predicate<SwiftDataLoan> { $0.user.id == userId }
             let descriptor = FetchDescriptor<SwiftDataLoan>(predicate: predicate)
             
             let swiftDataLoans = try modelContext.fetch(descriptor)
@@ -139,7 +139,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
                 Loan(
                     id: swiftDataLoan.id,
                     bookId: swiftDataLoan.bookId,
-                    userId: swiftDataLoan.userId,
+                    user: swiftDataLoan.user,
                     loanDate: swiftDataLoan.loanDate,
                     dueDate: swiftDataLoan.dueDate,
                     returnedDate: swiftDataLoan.returnedDate
@@ -165,7 +165,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
                 Loan(
                     id: swiftDataLoan.id,
                     bookId: swiftDataLoan.bookId,
-                    userId: swiftDataLoan.userId,
+                    user: swiftDataLoan.user,
                     loanDate: swiftDataLoan.loanDate,
                     dueDate: swiftDataLoan.dueDate,
                     returnedDate: swiftDataLoan.returnedDate
@@ -194,7 +194,7 @@ public final class SwiftDataLoanRepository: LoanRepositoryProtocol, @unchecked S
             
             // プロパティを更新
             swiftDataLoan.bookId = loan.bookId
-            swiftDataLoan.userId = loan.userId
+            swiftDataLoan.user = loan.user
             swiftDataLoan.loanDate = loan.loanDate
             swiftDataLoan.dueDate = loan.dueDate
             swiftDataLoan.returnedDate = loan.returnedDate

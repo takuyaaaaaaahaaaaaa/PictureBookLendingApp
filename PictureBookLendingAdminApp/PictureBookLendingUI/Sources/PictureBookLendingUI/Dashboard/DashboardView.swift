@@ -184,7 +184,7 @@ public struct OverdueWarningView: View {
                             .font(.subheadline)
                             .bold()
                         
-                        Text(getUserName(loan.userId))
+                        Text(loan.user.name)
                             .font(.caption)
                     }
                     
@@ -292,9 +292,10 @@ public struct InfoCardView: View {
 }
 
 #Preview {
+    let sampleUser = User(name: "テスト太郎", classGroupId: UUID())
     let loan1 = Loan(
         bookId: UUID(),
-        userId: UUID(),
+        user: sampleUser,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date(),
         returnedDate: nil
