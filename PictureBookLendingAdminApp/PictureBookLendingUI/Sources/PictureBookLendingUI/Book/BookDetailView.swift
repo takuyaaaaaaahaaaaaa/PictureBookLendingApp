@@ -7,10 +7,15 @@ import SwiftUI
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
 public struct BookDetailView<ActionButton: View>: View {
+    /// 表示・編集対象の絵本データ
     @Binding var book: Book
+    /// 絵本が現在貸出中かどうかを示すフラグ
     let isCurrentlyLent: Bool
+    /// 現在の貸出情報（貸出中の場合のみ存在）
     let currentLoan: Loan?
+    /// 編集ボタンタップ時のアクション
     let onEdit: () -> Void
+    /// 貸出・返却などのアクションボタンを生成するクロージャ
     let actionButton: () -> ActionButton
     
     public init(
