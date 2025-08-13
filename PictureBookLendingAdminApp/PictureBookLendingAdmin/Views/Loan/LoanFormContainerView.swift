@@ -21,9 +21,6 @@ struct LoanFormContainerView: View {
     @State private var selectedClassGroup: ClassGroup?
     /// 選択した利用者
     @State private var selectedUser: User?
-    /// 返却期限
-    @State private var dueDate =
-        Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     @State private var alertState = AlertState()
     
     var body: some View {
@@ -34,7 +31,6 @@ struct LoanFormContainerView: View {
                 users: filteredUsersForSelectedClassGroup,
                 selectedClassGroup: $selectedClassGroup,
                 selectedUser: $selectedUser,
-                dueDate: dueDate,
                 isValidInput: isValidInput
             )
             // 選択中の組が変化した場合、選択中の利用者情報を初期化
@@ -86,7 +82,7 @@ struct LoanFormContainerView: View {
     }
     
     private var isValidInput: Bool {
-        selectedUser != nil && dueDate > Date()
+        selectedUser != nil
     }
     
     // MARK: - Actions
@@ -111,7 +107,7 @@ struct LoanFormContainerView: View {
                 return
             }
             
-            _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id, dueDate: dueDate)
+            _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id)
             alertState = .success("貸出登録が完了しました")
         } catch LoanModelError.bookAlreadyLent {
             alertState = .error("この絵本はすでに貸出中です")

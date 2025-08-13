@@ -104,16 +104,22 @@ public struct UserLoanHistoryRow: View {
                     .foregroundStyle(loan.isReturned ? .green : .orange)
             }
             
-            Text("貸出日: \(loan.loanDate.formatted(date: .abbreviated, time: .omitted))")
-                .font(.caption)
+            Text(
+                "貸出日: \(loan.loanDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+            )
+            .font(.caption)
             
             if loan.isReturned, let returnedDate = loan.returnedDate {
-                Text("返却日: \(returnedDate.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
+                Text(
+                    "返却日: \(returnedDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                )
+                .font(.caption)
             } else {
-                Text("返却期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
-                    .foregroundStyle(isOverdue ? .red : .primary)
+                Text(
+                    "返却期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                )
+                .font(.caption)
+                .foregroundStyle(isOverdue ? .red : .primary)
             }
         }
         .padding(.vertical, 4)
@@ -135,9 +141,10 @@ public struct UserLoanHistoryRow: View {
         ClassGroup(id: UUID(), name: "ばら", ageGroup: 4, year: 2025),
         ClassGroup(id: UUID(), name: "さくら", ageGroup: 5, year: 2025),
     ]
+    let sampleUser = User(id: sampleUserId, name: "山田太郎", classGroupId: userClassGroupId)
     let sampleLoan = Loan(
         bookId: UUID(),
-        userId: sampleUserId,
+        user: sampleUser,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     )

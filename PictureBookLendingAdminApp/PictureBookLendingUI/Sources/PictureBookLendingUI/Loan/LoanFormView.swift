@@ -11,7 +11,6 @@ public struct LoanFormView: View {
     let users: [User]
     @Binding var selectedClassGroup: ClassGroup?
     @Binding var selectedUser: User?
-    let dueDate: Date
     let isValidInput: Bool
     
     public init(
@@ -20,7 +19,6 @@ public struct LoanFormView: View {
         users: [User],
         selectedClassGroup: Binding<ClassGroup?>,
         selectedUser: Binding<User?>,
-        dueDate: Date,
         isValidInput: Bool
     ) {
         self.book = book
@@ -28,7 +26,6 @@ public struct LoanFormView: View {
         self.users = users
         self._selectedClassGroup = selectedClassGroup
         self._selectedUser = selectedUser
-        self.dueDate = dueDate
         self.isValidInput = isValidInput
     }
     
@@ -45,10 +42,6 @@ public struct LoanFormView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
-            }
-            
-            Section(header: Text("返却期限")) {
-                Text(dueDate.formatted(date: .complete, time: .omitted))
             }
             
             Section(header: Text("組を選択")) {
@@ -104,7 +97,6 @@ public struct LoanFormView: View {
             users: sampleUsers,
             selectedClassGroup: $selectedClassGroup,
             selectedUser: $selectedUser,
-            dueDate: Date(),
             isValidInput: selectedClassGroup != nil && selectedUser != nil
         )
         .navigationTitle("貸出登録")

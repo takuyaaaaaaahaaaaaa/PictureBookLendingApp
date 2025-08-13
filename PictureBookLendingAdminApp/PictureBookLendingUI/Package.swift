@@ -17,7 +17,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../PictureBookLendingDomain"),
-        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.5.0")
+        .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.5.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -26,7 +26,7 @@ let package = Package(
             name: "PictureBookLendingUI",
             dependencies: [
                 .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
-                .product(name: "Kingfisher", package: "Kingfisher")
+                .product(name: "Kingfisher", package: "Kingfisher"),
             ]
         ),
         .testTarget(

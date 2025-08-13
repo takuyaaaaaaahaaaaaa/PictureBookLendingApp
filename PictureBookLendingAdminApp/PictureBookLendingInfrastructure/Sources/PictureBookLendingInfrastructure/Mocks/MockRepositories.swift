@@ -106,7 +106,7 @@ public final class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendab
     }
     
     public func findByUserId(_ userId: UUID) throws -> [Loan] {
-        return loans.filter { $0.userId == userId }
+        return loans.filter { $0.user.id == userId }
     }
     
     public func fetchActiveLoans() throws -> [Loan] {

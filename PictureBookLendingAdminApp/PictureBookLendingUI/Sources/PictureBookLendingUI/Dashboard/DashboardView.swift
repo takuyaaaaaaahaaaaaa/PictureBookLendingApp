@@ -184,15 +184,17 @@ public struct OverdueWarningView: View {
                             .font(.subheadline)
                             .bold()
                         
-                        Text(getUserName(loan.userId))
+                        Text(loan.user.name)
                             .font(.caption)
                     }
                     
                     Spacer()
                     
                     VStack(alignment: .trailing) {
-                        Text("期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
-                            .font(.caption)
+                        Text(
+                            "期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                        )
+                        .font(.caption)
                         
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
                             .font(.caption)
@@ -290,9 +292,10 @@ public struct InfoCardView: View {
 }
 
 #Preview {
+    let sampleUser = User(name: "テスト太郎", classGroupId: UUID())
     let loan1 = Loan(
         bookId: UUID(),
-        userId: UUID(),
+        user: sampleUser,
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date(),
         returnedDate: nil

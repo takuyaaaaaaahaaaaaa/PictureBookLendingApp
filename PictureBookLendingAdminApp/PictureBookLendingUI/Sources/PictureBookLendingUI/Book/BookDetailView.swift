@@ -7,19 +7,27 @@ import SwiftUI
 /// 純粋なUI表示のみを担当し、NavigationStack、toolbar、sheet等の
 /// 画面制御はContainer Viewに委譲します。
 public struct BookDetailView<ActionButton: View>: View {
+    /// 表示・編集対象の絵本データ
     @Binding var book: Book
-    let isCurrentlyLent: Bool
+    /// 現在の貸出情報（貸出中の場合のみ存在）
+    let currentLoan: Loan?
+    /// 貸出履歴一覧
+    let loanHistory: [Loan]
+    /// 編集ボタンタップ時のアクション
     let onEdit: () -> Void
+    /// 貸出・返却などのアクションボタンを生成するクロージャ
     let actionButton: () -> ActionButton
     
     public init(
         book: Binding<Book>,
-        isCurrentlyLent: Bool,
+        currentLoan: Loan? = nil,
+        loanHistory: [Loan] = [],
         onEdit: @escaping () -> Void,
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._book = book
-        self.isCurrentlyLent = isCurrentlyLent
+        self.currentLoan = currentLoan
+        self.loanHistory = loanHistory
         self.onEdit = onEdit
         self.actionButton = actionButton
     }
@@ -38,9 +46,9 @@ public struct BookDetailView<ActionButton: View>: View {
                         }
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                    .frame(width: 120, height: 160)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .frame(width: 120, height: 160)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     Spacer()
                 }
@@ -55,18 +63,76 @@ public struct BookDetailView<ActionButton: View>: View {
             
             Section("貸出状況") {
                 HStack {
-                    BookStatusView(isCurrentlyLent: isCurrentlyLent)
+                    BookStatusView(isCurrentlyLent: currentLoan != nil)
                     
                     Spacer()
                     
                     actionButton()
                 }
+                
+                if let loan = currentLoan {
+                    HStack {
+                        Text("返却予定日")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(
+                            loan.dueDate.formatted(
+                                .dateTime.year().month(.abbreviated).day().locale(
+                                    Locale(identifier: "ja_JP"))))
+                    }
+                }
             }
             
             Section("貸出履歴") {
-                Text("貸出履歴は別画面で確認できます")
-                    .foregroundStyle(.secondary)
-                    .font(.caption)
+                if loanHistory.isEmpty {
+                    Text("まだ貸出履歴がありません")
+                        .foregroundStyle(.secondary)
+                        .font(.caption)
+                } else {
+                    ForEach(loanHistory) { loan in
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(loan.user.name)
+                                    .font(.headline)
+                                Spacer()
+                                if loan.isReturned {
+                                    Label("返却済", systemImage: "checkmark.circle.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.green)
+                                } else {
+                                    Label("貸出中", systemImage: "clock.fill")
+                                        .font(.caption)
+                                        .foregroundStyle(.orange)
+                                }
+                            }
+                            
+                            HStack {
+                                Text(
+                                    "貸出日: \(loan.loanDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                                )
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            }
+                            
+                            HStack {
+                                if let returnedDate = loan.returnedDate {
+                                    Text(
+                                        "返却日: \(returnedDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                } else {
+                                    Text(
+                                        "返却期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                                    )
+                                    .font(.caption)
+                                    .foregroundStyle(Date() > loan.dueDate ? .red : .secondary)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
             }
         }
     }
@@ -83,7 +149,7 @@ public struct BookDetailView<ActionButton: View>: View {
     NavigationStack {
         BookDetailView(
             book: $sampleBook,
-            isCurrentlyLent: false,
+            currentLoan: nil,
             onEdit: {}
         ) {
             Button("貸出") {}

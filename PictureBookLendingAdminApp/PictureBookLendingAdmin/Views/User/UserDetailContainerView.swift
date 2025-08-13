@@ -79,7 +79,7 @@ struct UserDetailContainerView: View {
     /// 貸出情報取得
     private func loadUserData() {
         let activeLoans = loanModel.getActiveLoans()
-        activeLoansCount = activeLoans.filter { $0.userId == user.id }.count
+        activeLoansCount = activeLoans.filter { $0.user.id == user.id }.count
         
         loanHistory = loanModel.getLoansByUser(userId: user.id)
     }

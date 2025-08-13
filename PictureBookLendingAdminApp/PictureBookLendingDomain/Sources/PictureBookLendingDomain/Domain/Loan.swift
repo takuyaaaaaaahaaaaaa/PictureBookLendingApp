@@ -7,8 +7,8 @@ public struct Loan: Identifiable, Codable {
     public var id: UUID
     /// 貸し出された絵本のID
     public var bookId: UUID
-    /// 借りた利用者のID
-    public var userId: UUID
+    /// 借りた利用者の情報（貸出時点でのスナップショット）
+    public var user: User
     /// 貸出日
     public var loanDate: Date
     /// 返却期限日
@@ -25,17 +25,17 @@ public struct Loan: Identifiable, Codable {
     /// - Parameters:
     ///   - id: 貸出の一意識別子（デフォルトでは新しいUUIDが生成されます）
     ///   - bookId: 貸し出された絵本のID
-    ///   - userId: 借りた利用者のID
+    ///   - user: 借りた利用者の情報
     ///   - loanDate: 貸出日
     ///   - dueDate: 返却期限日
     ///   - returnedDate: 返却日（デフォルトはnil）
     public init(
-        id: UUID = UUID(), bookId: UUID, userId: UUID, loanDate: Date, dueDate: Date,
+        id: UUID = UUID(), bookId: UUID, user: User, loanDate: Date, dueDate: Date,
         returnedDate: Date? = nil
     ) {
         self.id = id
         self.bookId = bookId
-        self.userId = userId
+        self.user = user
         self.loanDate = loanDate
         self.dueDate = dueDate
         self.returnedDate = returnedDate
