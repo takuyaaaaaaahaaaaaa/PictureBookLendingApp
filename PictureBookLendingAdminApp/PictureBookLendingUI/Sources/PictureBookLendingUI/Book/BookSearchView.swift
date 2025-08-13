@@ -313,14 +313,16 @@ struct SearchResultRow: View {
         Button(action: onTap) {
             HStack {
                 // サムネイル画像
-                KFImage(URL(string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? ""))
-                    .placeholder {
-                        Image(systemName: "book.closed")
-                            .foregroundStyle(.secondary)
-                            .font(.title2)
-                    }
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
+                KFImage(
+                    URL(string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? "")
+                )
+                .placeholder {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.title2)
+                }
+                .resizable()
+                .aspectRatio(contentMode: .fit)
                 .frame(width: 60, height: 80)
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
