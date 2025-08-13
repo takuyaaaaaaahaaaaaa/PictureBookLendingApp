@@ -9,17 +9,20 @@ import SwiftUI
 public struct BookDetailView<ActionButton: View>: View {
     @Binding var book: Book
     let isCurrentlyLent: Bool
+    let currentLoan: Loan?
     let onEdit: () -> Void
     let actionButton: () -> ActionButton
     
     public init(
         book: Binding<Book>,
         isCurrentlyLent: Bool,
+        currentLoan: Loan? = nil,
         onEdit: @escaping () -> Void,
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._book = book
         self.isCurrentlyLent = isCurrentlyLent
+        self.currentLoan = currentLoan
         self.onEdit = onEdit
         self.actionButton = actionButton
     }
@@ -38,9 +41,9 @@ public struct BookDetailView<ActionButton: View>: View {
                         }
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                    .frame(width: 120, height: 160)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .frame(width: 120, height: 160)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     Spacer()
                 }
@@ -60,6 +63,18 @@ public struct BookDetailView<ActionButton: View>: View {
                     Spacer()
                     
                     actionButton()
+                }
+                
+                if let loan = currentLoan {
+                    HStack {
+                        Text("返却予定日")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(
+                            loan.dueDate.formatted(
+                                .dateTime.year().month(.abbreviated).day().locale(
+                                    Locale(identifier: "ja_JP"))))
+                    }
                 }
             }
             

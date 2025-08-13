@@ -256,6 +256,16 @@ public class LoanModel {
         }
     }
     
+    /// 絵本の現在の貸出情報を取得する
+    ///
+    /// - Parameter bookId: 取得したい絵本のID
+    /// - Returns: 現在貸出中の場合はLoanオブジェクト、貸出中でない場合はnil
+    public func getCurrentLoan(bookId: UUID) -> Loan? {
+        return loans.first { loan in
+            loan.bookId == bookId && !loan.isReturned
+        }
+    }
+    
     /// 貸出情報を最新の状態に更新する
     ///
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。

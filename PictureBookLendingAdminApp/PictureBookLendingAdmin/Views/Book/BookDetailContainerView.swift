@@ -24,6 +24,7 @@ struct BookDetailContainerView: View {
         BookDetailView(
             book: $book,
             isCurrentlyLent: isCurrentlyLent,
+            currentLoan: currentLoan,
             onEdit: handleEdit
         ) {
             LoanActionContainerButton(bookId: book.id)
@@ -55,6 +56,10 @@ struct BookDetailContainerView: View {
     
     private var isCurrentlyLent: Bool {
         loanModel.isBookLent(bookId: book.id)
+    }
+    
+    private var currentLoan: Loan? {
+        loanModel.getCurrentLoan(bookId: book.id)
     }
     
     // MARK: - Actions
