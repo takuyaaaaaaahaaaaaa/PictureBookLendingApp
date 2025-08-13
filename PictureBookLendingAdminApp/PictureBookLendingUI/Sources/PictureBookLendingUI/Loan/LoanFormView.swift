@@ -48,7 +48,10 @@ public struct LoanFormView: View {
             }
             
             Section(header: Text("返却期限")) {
-                Text(dueDate.formatted(date: .complete, time: .omitted))
+                Text(
+                    dueDate.formatted(
+                        .dateTime.year().month(.wide).day().weekday(.wide).locale(
+                            Locale(identifier: "ja_JP"))))
             }
             
             Section(header: Text("組を選択")) {

@@ -191,8 +191,10 @@ public struct OverdueWarningView: View {
                     Spacer()
                     
                     VStack(alignment: .trailing) {
-                        Text("期限: \(loan.dueDate.formatted(date: .abbreviated, time: .omitted))")
-                            .font(.caption)
+                        Text(
+                            "期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
+                        )
+                        .font(.caption)
                         
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
                             .font(.caption)
