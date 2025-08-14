@@ -19,6 +19,9 @@ final public class SwiftDataBook {
     /// 著者名
     public var author: String
     
+    /// 独自の管理番号
+    public var managementNumber: String?
+    
     /// ISBN-13コード
     public var isbn13: String?
     
@@ -53,6 +56,7 @@ final public class SwiftDataBook {
     ///   - id: 絵本の一意識別子
     ///   - title: 絵本のタイトル
     ///   - author: 著者名
+    ///   - managementNumber: 独自の管理番号
     ///   - isbn13: ISBN-13コード
     ///   - publisher: 出版社名
     ///   - publishedDate: 出版日
@@ -74,11 +78,13 @@ final public class SwiftDataBook {
         thumbnail: String? = nil,
         targetAge: Int? = nil,
         pageCount: Int? = nil,
-        categories: [String] = []
+        categories: [String] = [],
+        managementNumber: String? = nil
     ) {
         self.id = id
         self.title = title
         self.author = author
+        self.managementNumber = managementNumber
         self.isbn13 = isbn13
         self.publisher = publisher
         self.publishedDate = publishedDate

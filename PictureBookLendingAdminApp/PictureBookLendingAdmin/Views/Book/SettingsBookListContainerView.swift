@@ -47,14 +47,25 @@ struct SettingsBookListContainerView: View {
                 }
             }
         }
-        .sheet(isPresented: $isAddSheetPresented) {
-            BookFormContainerView(
-                mode: .add,
-                onSave: { _ in
-                    // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                }
-            )
-        }
+        #if os(macOS)
+            .sheet(isPresented: $isAddSheetPresented) {
+                BookFormContainerView(
+                    mode: .add,
+                    onSave: { _ in
+                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
+                    }
+                )
+            }
+        #else
+            .fullScreenCover(isPresented: $isAddSheetPresented) {
+                BookFormContainerView(
+                    mode: .add,
+                    onSave: { _ in
+                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
+                    }
+                )
+            }
+        #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {

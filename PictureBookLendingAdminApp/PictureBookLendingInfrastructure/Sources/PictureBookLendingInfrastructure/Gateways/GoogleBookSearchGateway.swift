@@ -242,7 +242,8 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             thumbnail: thumbnail,
             targetAge: nil,  // APIからは取得できないため、後でユーザーが設定
             pageCount: volumeInfo.pageCount,
-            categories: volumeInfo.categories ?? []
+            categories: volumeInfo.categories ?? [],
+            managementNumber: nil
         )
     }
 }

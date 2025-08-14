@@ -130,7 +130,11 @@ private struct LoanInfoSection<Content: View>: View {
 
 #Preview {
     LoanConfirmationView(
-        book: Book(title: "はらぺこあおむし", author: "エリック・カール"),
+        book: Book(
+            title: "はらぺこあおむし",
+            author: "エリック・カール",
+            managementNumber: "あ13"
+        ),
         user: User(name: "山田太郎", classGroupId: UUID()),
         classGroup: ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025),
         dueDate: Date().addingTimeInterval(7 * 24 * 60 * 60),

@@ -15,27 +15,32 @@ struct BookFormContainerView: View {
     let mode: BookFormMode
     var onSave: ((Book) -> Void)? = nil
     
-    @State private var title = ""
-    @State private var author = ""
+    @State private var book: Book
     @State private var alertState = AlertState()
+    
+    init(mode: BookFormMode, onSave: ((Book) -> Void)? = nil) {
+        self.mode = mode
+        self.onSave = onSave
+        
+        // 初期値を設定
+        switch mode {
+        case .add:
+            self._book = State(initialValue: Book(title: "", author: ""))
+        case .edit(let existingBook):
+            self._book = State(initialValue: existingBook)
+        }
+    }
     
     var body: some View {
         NavigationStack {
             BookFormView(
-                title: $title,
-                author: $author,
+                book: $book,
                 mode: mode,
                 onSave: handleSave,
                 onCancel: handleCancel
             )
             .navigationTitle(isEditMode ? "絵本を編集" : "絵本を追加")
-            .onAppear {
-                // 編集モードの場合、初期値をセット
-                if case .edit(let book) = mode {
-                    title = book.title
-                    author = book.author
-                }
-            }
+            .interactiveDismissDisabled()
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -58,22 +63,15 @@ struct BookFormContainerView: View {
     
     private func handleSave() {
         do {
+            let savedBook: Book
             switch mode {
             case .add:
-                let newBook = Book(title: title, author: author)
-                let savedBook = try bookModel.registerBook(newBook)
-                onSave?(savedBook)
-
-            case .edit(let book):
-                let updatedBook = Book(
-                    id: book.id,
-                    title: title,
-                    author: author
-                )
-                let savedBook = try bookModel.updateBook(updatedBook)
-                onSave?(savedBook)
+                savedBook = try bookModel.registerBook(book)
+            case .edit:
+                savedBook = try bookModel.updateBook(book)
             }
             
+            onSave?(savedBook)
             dismiss()
         } catch {
             alertState = .error("保存に失敗しました: \(error.localizedDescription)")
