@@ -16,6 +16,8 @@ struct LoanActionContainerButton: View {
     @Environment(BookModel.self) private var bookModel
     /// 貸出管理モデル
     @Environment(LoanModel.self) private var loanModel
+    /// ユーザ管理モデル
+    @Environment(UserModel.self) private var userModel
     
     /// 貸出フォームシートの表示状態
     @State private var isLoanSheetPresented = false
@@ -27,6 +29,12 @@ struct LoanActionContainerButton: View {
     /// bookIdから取得した絵本オブジェクト
     private var book: Book? {
         bookModel.findBookById(bookId)
+    }
+    
+    /// 貸出中のユーザ名
+    private var userName: String? {
+        guard let loan = loanModel.getCurrentLoan(bookId: bookId) else { return nil }
+        return loan.user.name
     }
     
     /// 絵本が貸出中かどうか
@@ -48,15 +56,15 @@ struct LoanActionContainerButton: View {
             }
         }
         .alert("返却確認", isPresented: $isReturnConfirmationPresented) {
-            Button("キャンセル", role: .cancel) {}
             Button("返却する", role: .destructive) {
                 performReturn()
             }
+            Button("キャンセル", role: .cancel) {}
         } message: {
-            if let book = book {
-                Text("「\(book.title)」を返却しますか？")
-            } else {
-                Text("この絵本を返却しますか？")
+            if let book, let userName {
+                VStack {
+                    Text("利用者：\(userName) \nタイトル：\(book.title)")
+                }
             }
         }
         .alert(alertState.title, isPresented: $alertState.isPresented) {

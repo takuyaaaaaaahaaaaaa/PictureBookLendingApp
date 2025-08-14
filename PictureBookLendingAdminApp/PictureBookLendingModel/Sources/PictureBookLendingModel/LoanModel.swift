@@ -300,6 +300,16 @@ public class LoanModel {
         return loans.filter { !$0.isReturned }
     }
     
+    /// 延滞している貸出件数を取得する
+    ///
+    /// - Returns: 延滞している貸出件数
+    public func getOverDueLoansCount(at today: Date) -> Int {
+        getActiveLoans()
+            .filter { !$0.isReturned }  // 未返却
+            .filter { $0.dueDate < today }  // 返却期限が過ぎている
+            .count
+    }
+    
     /// 全ての貸出履歴を取得する
     ///
     /// - Returns: 全ての貸出情報リスト

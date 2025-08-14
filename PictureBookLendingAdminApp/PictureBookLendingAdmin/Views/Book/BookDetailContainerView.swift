@@ -76,6 +76,8 @@ struct BookDetailContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
@@ -88,5 +90,7 @@ struct BookDetailContainerView: View {
     NavigationStack {
         BookDetailContainerView(book: sampleBook)
             .environment(loanModel)
+            .environment(bookModel)
+            .environment(userModel)
     }
 }

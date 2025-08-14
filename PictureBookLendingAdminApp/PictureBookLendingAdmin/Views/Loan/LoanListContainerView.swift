@@ -10,14 +10,11 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct LoanListContainerView: View {
     @Environment(BookModel.self) private var bookModel
-    @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
     /// 選択中の組フィルタ
     @State private var selectedGroupFilter: ClassGroup?
-    /// 選択中の利用者フィルタ
-    @State private var selectedUserFilter: User?
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
     /// アラート状態
@@ -27,9 +24,7 @@ struct LoanListContainerView: View {
         LoanListView(
             groupedLoans: groupedLoans,
             selectedGroupFilter: $selectedGroupFilter,
-            selectedUserFilter: $selectedUserFilter,
-            groupFilterOptions: groupFilterOptions,
-            userFilterOptions: userFilterOptions
+            groupFilterOptions: groupFilterOptions
         ) { loan in
             LoanActionContainerButton(bookId: loan.bookId)
         }
@@ -41,15 +36,12 @@ struct LoanListContainerView: View {
             }
         }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
-            if alertState.type == .success {
-                Button("OK", role: .cancel) {}
-            } else {
-                Button("OK", role: .cancel) {}
-            }
+            Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
         }
         .onAppear {
+            selectedGroupFilter = nil  // フィルターリセット
             refreshData()
         }
         .refreshable {
@@ -74,32 +66,16 @@ struct LoanListContainerView: View {
         classGroupModel.getAllClassGroups()
     }
     
-    /// 利用者フィルタの選択肢
-    private var userFilterOptions: [User] {
-        let currentLoans = loanModel.getAllLoans().filter { !$0.isReturned }
-        let currentUserIds = Set(currentLoans.map { $0.user.id })
-        
-        let users = userModel.getAllUsers().filter { user in
-            currentUserIds.contains(user.id)
-                && (selectedGroupFilter == nil || user.classGroupId == selectedGroupFilter?.id)
-        }
-        
-        return users.sorted { $0.name < $1.name }
-    }
-    
     // MARK: - Private Methods
     
     /// フィルタを適用した貸出記録の取得
     private func applyFilters(to loans: [Loan]) -> [LoanDisplayData] {
         loans.compactMap { loan -> LoanDisplayData? in
-            guard let book = bookModel.findBookById(loan.bookId),
-                let user = userModel.findUserById(loan.user.id)
-            else {
+            guard let book = bookModel.findBookById(loan.bookId) else {
                 return nil
             }
             
-            let groupName = getGroupName(for: loan)
-            
+            let user = loan.user
             // 組フィルタ適用
             if let selectedGroup = selectedGroupFilter,
                 user.classGroupId != selectedGroup.id
@@ -107,13 +83,7 @@ struct LoanListContainerView: View {
                 return nil
             }
             
-            // 利用者フィルタ適用
-            if let selectedUser = selectedUserFilter,
-                user.id != selectedUser.id
-            {
-                return nil
-            }
-            
+            let groupName = getGroupName(for: loan)
             return LoanDisplayData(
                 id: loan.id,
                 bookId: book.id,
@@ -129,8 +99,7 @@ struct LoanListContainerView: View {
     
     /// 貸出記録から組名を取得
     private func getGroupName(for loan: Loan) -> String {
-        guard let user = userModel.findUserById(loan.user.id),
-            let classGroup = classGroupModel.findClassGroupById(user.classGroupId)
+        guard let classGroup = classGroupModel.findClassGroupById(loan.user.classGroupId)
         else {
             return "未分類"
         }
@@ -140,7 +109,6 @@ struct LoanListContainerView: View {
     /// データ更新
     private func refreshData() {
         bookModel.refreshBooks()
-        userModel.refreshUsers()
         loanModel.refreshLoans()
         classGroupModel.refreshClassGroups()
     }

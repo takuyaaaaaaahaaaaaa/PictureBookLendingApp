@@ -55,7 +55,7 @@ public struct BookRowView<RowAction: View>: View {
     public var body: some View {
         HStack {
             // サムネイル画像
-            KFImage(URL(string: book.thumbnail ?? book.smallThumbnail ?? ""))
+            KFImage(URL(string: book.smallThumbnail ?? book.thumbnail ?? ""))
                 .placeholder {
                     Image(systemName: "book.closed")
                         .foregroundStyle(.secondary)
