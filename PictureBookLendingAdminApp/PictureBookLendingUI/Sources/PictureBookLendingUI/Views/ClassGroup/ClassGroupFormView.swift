@@ -29,13 +29,9 @@ public struct ClassGroupFormView: View {
                 TextField("組名", text: $name)
                 
                 Picker("年齢", selection: $ageGroup) {
-                    Text("0歳児").tag("0歳児")
-                    Text("1歳児").tag("1歳児")
-                    Text("2歳児").tag("2歳児")
-                    Text("3歳児").tag("3歳児")
-                    Text("4歳児").tag("4歳児")
-                    Text("5歳児").tag("5歳児")
-                    Text("大人").tag("大人")
+                    ForEach(Const.AgeGroup.sortedCases, id: \.self) { ageGroupCase in
+                        Text(ageGroupCase.displayText).tag(ageGroupCase.rawValue)
+                    }
                 }
                 
                 Picker("年度", selection: $year) {
@@ -68,7 +64,7 @@ public enum ClassGroupFormMode {
         ClassGroupFormView(
             mode: .add,
             name: .constant(""),
-            ageGroup: .constant("3歳児"),
+            ageGroup: .constant(Const.AgeGroup.infant3.rawValue),
             year: .constant(2024)
         )
         .navigationTitle("組を追加")
@@ -81,9 +77,10 @@ public enum ClassGroupFormMode {
 #Preview("編集モード") {
     NavigationStack {
         ClassGroupFormView(
-            mode: .edit(ClassGroup(name: "ひまわり組", ageGroup: "3歳児", year: 2024)),
+            mode: .edit(
+                ClassGroup(name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024)),
             name: .constant("ひまわり組"),
-            ageGroup: .constant("3歳児"),
+            ageGroup: .constant(Const.AgeGroup.infant3.rawValue),
             year: .constant(2024)
         )
         .navigationTitle("組を編集")
