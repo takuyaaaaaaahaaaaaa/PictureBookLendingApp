@@ -43,6 +43,7 @@ struct BookAutoFillContainerButton: View {
         )
         .sheet(isPresented: $isResultSheetPresented) {
             searchResultsSheet
+                .interactiveDismissDisabled()  // スワイプで閉じないように
         }
         .onChange(of: registerModel.searchResults) { _, newResults in
             if !newResults.isEmpty {
@@ -54,33 +55,35 @@ struct BookAutoFillContainerButton: View {
     @ViewBuilder
     private var searchResultsSheet: some View {
         NavigationStack {
-            if registerModel.searchResults.isEmpty {
-                ContentUnavailableView(
-                    "検索結果なし",
-                    systemImage: "magnifyingglass",
-                    description: Text("該当する絵本が見つかりませんでした")
-                )
-            } else {
-                List(registerModel.searchResults, id: \.book.id) { scoredBook in
-                    Button {
-                        selectBook(scoredBook.book)
-                    } label: {
-                        SearchResultRowView(scoredBook: scoredBook)
+            Group {
+                if registerModel.searchResults.isEmpty {
+                    ContentUnavailableView(
+                        "検索結果なし",
+                        systemImage: "magnifyingglass",
+                        description: Text("該当する絵本が見つかりませんでした")
+                    )
+                } else {
+                    List(registerModel.searchResults, id: \.book.id) { scoredBook in
+                        Button {
+                            selectBook(scoredBook.book)
+                        } label: {
+                            SearchResultRowView(scoredBook: scoredBook)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                    .listStyle(.plain)
                 }
-                .listStyle(.plain)
             }
-        }
-        .navigationTitle("検索結果")
-        #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-        #endif
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("キャンセル") {
-                    isResultSheetPresented = false
-                    registerModel.clearSearchResults()
+            .navigationTitle("検索結果")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("キャンセル") {
+                        isResultSheetPresented = false
+                        registerModel.clearSearchResults()
+                    }
                 }
             }
         }
