@@ -32,7 +32,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             bookDescription: book.description,
             smallThumbnail: book.smallThumbnail,
             thumbnail: book.thumbnail,
-            targetAge: book.targetAge,
+            targetAge: book.targetAge?.rawValue,
             pageCount: book.pageCount,
             categories: book.categories,
             managementNumber: book.managementNumber
@@ -69,7 +69,9 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     description: swiftDataBook.bookDescription,
                     smallThumbnail: swiftDataBook.smallThumbnail,
                     thumbnail: swiftDataBook.thumbnail,
-                    targetAge: swiftDataBook.targetAge,
+                    targetAge: swiftDataBook.targetAge.flatMap {
+                        Const.TargetAudience(rawValue: $0)
+                    },
                     pageCount: swiftDataBook.pageCount,
                     categories: swiftDataBook.categories,
                     managementNumber: swiftDataBook.managementNumber
@@ -105,7 +107,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 description: swiftDataBook.bookDescription,
                 smallThumbnail: swiftDataBook.smallThumbnail,
                 thumbnail: swiftDataBook.thumbnail,
-                targetAge: swiftDataBook.targetAge,
+                targetAge: swiftDataBook.targetAge.flatMap { Const.TargetAudience(rawValue: $0) },
                 pageCount: swiftDataBook.pageCount,
                 categories: swiftDataBook.categories,
                 managementNumber: swiftDataBook.managementNumber
@@ -140,7 +142,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.bookDescription = book.description
             swiftDataBook.smallThumbnail = book.smallThumbnail
             swiftDataBook.thumbnail = book.thumbnail
-            swiftDataBook.targetAge = book.targetAge
+            swiftDataBook.targetAge = book.targetAge?.rawValue
             swiftDataBook.pageCount = book.pageCount
             swiftDataBook.categories = book.categories
             

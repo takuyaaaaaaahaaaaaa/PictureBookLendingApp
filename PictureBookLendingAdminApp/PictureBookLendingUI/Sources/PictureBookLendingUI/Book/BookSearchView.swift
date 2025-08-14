@@ -243,30 +243,41 @@ public struct BookSearchView: View {
                         .multilineTextAlignment(.trailing)
                     }
                     
-                    EditableDetailRowWithSelection(
-                        label: "対象年齢",
-                        selectedValue: .constant(manualBook.targetAge ?? 3),
-                        options: Array(1...10),
-                        displayText: { "\($0)歳" },
-                        onSelectionChanged: { newAge in
-                            let updatedBook = Book(
-                                id: manualBook.id,
-                                title: manualBook.title,
-                                author: manualBook.author,
-                                isbn13: manualBook.isbn13,
-                                publisher: manualBook.publisher,
-                                publishedDate: manualBook.publishedDate,
-                                description: manualBook.description,
-                                smallThumbnail: manualBook.smallThumbnail,
-                                thumbnail: manualBook.thumbnail,
-                                targetAge: newAge,
-                                pageCount: manualBook.pageCount,
-                                categories: manualBook.categories,
-                                managementNumber: manualBook.managementNumber
+                    HStack {
+                        Text("対象読者")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Picker(
+                            "対象読者",
+                            selection: Binding(
+                                get: { manualBook.targetAge },
+                                set: { newTargetAge in
+                                    let updatedBook = Book(
+                                        id: manualBook.id,
+                                        title: manualBook.title,
+                                        author: manualBook.author,
+                                        isbn13: manualBook.isbn13,
+                                        publisher: manualBook.publisher,
+                                        publishedDate: manualBook.publishedDate,
+                                        description: manualBook.description,
+                                        smallThumbnail: manualBook.smallThumbnail,
+                                        thumbnail: manualBook.thumbnail,
+                                        targetAge: newTargetAge,
+                                        pageCount: manualBook.pageCount,
+                                        categories: manualBook.categories,
+                                        managementNumber: manualBook.managementNumber
+                                    )
+                                    onManualBookChanged(updatedBook)
+                                }
                             )
-                            onManualBookChanged(updatedBook)
+                        ) {
+                            Text("未選択").tag(nil as Const.TargetAudience?)
+                            ForEach(Const.TargetAudience.sortedCases, id: \.self) { audience in
+                                Text(audience.displayText).tag(audience as Const.TargetAudience?)
+                            }
                         }
-                    )
+                        .pickerStyle(.menu)
+                    }
                 }
             }
         } else {
@@ -400,7 +411,7 @@ struct SearchResultRow: View {
                     book: Book(
                         title: "ぐりとぐら",
                         author: "なかがわりえこ",
-                        targetAge: 3,
+                        targetAge: .toddler,
                         managementNumber: nil
                     ),
                     score: 0.95
@@ -409,7 +420,7 @@ struct SearchResultRow: View {
                     book: Book(
                         title: "ぐりとぐらのおきゃくさま",
                         author: "なかがわりえこ",
-                        targetAge: 3,
+                        targetAge: .toddler,
                         managementNumber: nil
                     ),
                     score: 0.75
@@ -447,7 +458,7 @@ struct SearchResultRow: View {
             manualBook: Book(
                 title: "テスタイトル",
                 author: "テスト著者",
-                targetAge: 4,
+                targetAge: .lowerElementary,
                 managementNumber: nil
             ),
             onManualBookChanged: { _ in },

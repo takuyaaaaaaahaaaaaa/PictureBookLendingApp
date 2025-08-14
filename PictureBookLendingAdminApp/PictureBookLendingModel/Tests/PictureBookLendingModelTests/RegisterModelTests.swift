@@ -19,7 +19,7 @@ struct RegisterModelTests {
             description: "森で大きな卵を見つけたぐりとぐら...",
             smallThumbnail: nil,
             thumbnail: nil,
-            targetAge: 3,
+            targetAge: .toddler,
             pageCount: 28,
             categories: ["絵本", "児童書"]
         ),
@@ -32,7 +32,7 @@ struct RegisterModelTests {
             description: "雪の日にぐりとぐらが見つけた足跡...",
             smallThumbnail: nil,
             thumbnail: nil,
-            targetAge: 3,
+            targetAge: .toddler,
             pageCount: 28,
             categories: ["絵本", "児童書"]
         ),

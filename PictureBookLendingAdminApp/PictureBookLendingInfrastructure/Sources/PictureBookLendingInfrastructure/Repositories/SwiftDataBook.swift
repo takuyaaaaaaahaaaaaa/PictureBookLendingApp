@@ -41,8 +41,8 @@ final public class SwiftDataBook {
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
     
-    /// 対象年齢
-    public var targetAge: Int?
+    /// 対象年齢（rawValue文字列として保存）
+    public var targetAge: String?
     
     /// ページ数
     public var pageCount: Int?
@@ -76,7 +76,7 @@ final public class SwiftDataBook {
         bookDescription: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
-        targetAge: Int? = nil,
+        targetAge: String? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
         managementNumber: String? = nil
