@@ -8,20 +8,26 @@ import SwiftUI
 public struct ClassGroupListView: View {
     let classGroups: [ClassGroup]
     let getUserCount: (UUID) -> Int
+    let isEditMode: Bool
     let onAdd: () -> Void
+    let onSelect: (ClassGroup) -> Void
     let onEdit: (ClassGroup) -> Void
     let onDelete: (IndexSet) -> Void
     
     public init(
         classGroups: [ClassGroup],
         getUserCount: @escaping (UUID) -> Int,
+        isEditMode: Bool = false,
         onAdd: @escaping () -> Void,
+        onSelect: @escaping (ClassGroup) -> Void,
         onEdit: @escaping (ClassGroup) -> Void,
         onDelete: @escaping (IndexSet) -> Void
     ) {
         self.classGroups = classGroups
         self.getUserCount = getUserCount
+        self.isEditMode = isEditMode
         self.onAdd = onAdd
+        self.onSelect = onSelect
         self.onEdit = onEdit
         self.onDelete = onDelete
     }
@@ -40,10 +46,14 @@ public struct ClassGroupListView: View {
                         classGroup: classGroup,
                         userCount: getUserCount(classGroup.id)
                     ) {
-                        onEdit(classGroup)
+                        if isEditMode {
+                            onEdit(classGroup)
+                        } else {
+                            onSelect(classGroup)
+                        }
                     }
                 }
-                .onDelete(perform: onDelete)
+                .onDelete(perform: isEditMode ? onDelete : nil)
             }
         }
     }
@@ -99,6 +109,7 @@ public struct ClassGroupListRowView: View {
             ],
             getUserCount: { _ in 8 },
             onAdd: {},
+            onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }
         )
@@ -112,6 +123,7 @@ public struct ClassGroupListRowView: View {
             classGroups: [],
             getUserCount: { _ in 0 },
             onAdd: {},
+            onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }
         )

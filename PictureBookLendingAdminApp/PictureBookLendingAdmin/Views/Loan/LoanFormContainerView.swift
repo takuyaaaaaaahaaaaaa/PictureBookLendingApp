@@ -47,7 +47,7 @@ struct LoanFormContainerView: View {
                     }
                 }
                 
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .bottomBar) {
                     Button("登録") {
                         handleRegister()
                     }

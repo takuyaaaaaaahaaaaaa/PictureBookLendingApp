@@ -24,23 +24,25 @@ public struct UserListView<RowContent: View>: View {
     }
     
     public var body: some View {
-        if users.isEmpty {
-            ContentUnavailableView(
-                "利用者がいません",
-                systemImage: "person.slash",
-                description: Text("右上の＋ボタンから利用者を登録してください")
-            )
-        } else {
-            List {
-                ForEach(users) { user in
-                    NavigationLink(value: user) {
-                        rowContent(user)
+        Group {
+            if users.isEmpty {
+                ContentUnavailableView(
+                    "利用者がいません",
+                    systemImage: "person.slash",
+                    description: Text("右上の＋ボタンから利用者を登録してください")
+                )
+            } else {
+                List {
+                    ForEach(users) { user in
+                        NavigationLink(value: user) {
+                            rowContent(user)
+                        }
                     }
+                    .onDelete(perform: onDelete)
                 }
-                .onDelete(perform: onDelete)
             }
-            .searchable(text: searchText, prompt: "名前またはグループで検索")
         }
+        .searchable(text: searchText, prompt: "名前またはグループで検索")
     }
 }
 

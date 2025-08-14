@@ -53,6 +53,7 @@ struct LoanActionContainerButton: View {
         .sheet(isPresented: $isLoanSheetPresented) {
             if let book = book {
                 LoanFormContainerView(selectedBook: book)
+                    .interactiveDismissDisabled()  // スワイプで閉じないようにする
             }
         }
         .alert("返却確認", isPresented: $isReturnConfirmationPresented) {

@@ -16,6 +16,7 @@ struct ClassGroupListContainerView: View {
     @State private var alertState = AlertState()
     @State private var isAddSheetPresented = false
     @State private var editingClassGroup: ClassGroup?
+    @State private var isEditMode = false
     
     let onClassGroupSelected: ((UUID) -> Void)?
     
@@ -27,8 +28,10 @@ struct ClassGroupListContainerView: View {
         ClassGroupListView(
             classGroups: classGroupModel.classGroups,
             getUserCount: getUserCountForClassGroup,
+            isEditMode: isEditMode,
             onAdd: handleAdd,
-            onEdit: handleSelectClassGroup,
+            onSelect: handleSelectClassGroup,
+            onEdit: handleEditClassGroup,
             onDelete: handleDelete
         )
         .navigationTitle("組一覧")
@@ -36,16 +39,17 @@ struct ClassGroupListContainerView: View {
             .navigationBarTitleDisplayMode(.large)
         #endif
         .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Menu {
-                    Button("組を追加", systemImage: "plus.circle") {
-                        isAddSheetPresented = true
-                    }
-                    Button("組を編集", systemImage: "pencil.circle") {
-                        // 編集モードの実装は後で必要に応じて追加
-                    }
-                } label: {
-                    Image(systemName: "plus")
+            ToolbarItem(id: "fix") {
+                Button(isEditMode ? "編集モード終了" : "組編集モード") {
+                    isEditMode.toggle()
+                }
+            }
+            
+            ToolbarSpacer(.fixed)
+            
+            ToolbarItem(id: "add") {
+                Button("組追加") {
+                    handleAdd()
                 }
             }
         }
@@ -79,6 +83,10 @@ struct ClassGroupListContainerView: View {
     
     private func handleSelectClassGroup(_ classGroup: ClassGroup) {
         onClassGroupSelected?(classGroup.id)
+    }
+    
+    private func handleEditClassGroup(_ classGroup: ClassGroup) {
+        editingClassGroup = classGroup
     }
     
     private func getUserCountForClassGroup(_ classGroupId: UUID) -> Int {
