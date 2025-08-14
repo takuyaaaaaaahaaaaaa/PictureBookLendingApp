@@ -3,6 +3,7 @@ import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import SwiftData
 import SwiftUI
+import TipKit
 
 @main
 struct PictureBookLendingAdminApp: App {
@@ -58,6 +59,13 @@ struct PictureBookLendingAdminApp: App {
                 .environment(loanModel)
                 .environment(classGroupModel)
                 .environment(loanSettingsModel)
+                .task {
+                    // TipKitを初期化
+                    try? Tips.configure([
+                        .displayFrequency(.immediate),
+                        .datastoreLocation(.applicationDefault),
+                    ])
+                }
         }
         .modelContainer(SwiftDataRepositoryFactory.shared.modelContainer)
     }

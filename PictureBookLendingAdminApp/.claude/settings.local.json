@@ -4,7 +4,8 @@
       "Bash(xcodebuild:*)",
       "Bash(afplay:*)",
       "Bash(git add:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(swift test)"
     ],
     "deny": []
   }

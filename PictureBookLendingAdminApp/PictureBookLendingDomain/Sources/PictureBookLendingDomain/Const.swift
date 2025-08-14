@@ -5,11 +5,17 @@ public enum Const {
     
     /// 絵本の対象読者の定義
     public enum TargetAudience: String, CaseIterable, Codable, Sendable {
+        /// 乳児
         case infant = "乳児"
+        /// 幼児
         case toddler = "幼児"
+        /// 小学校低学年
         case lowerElementary = "小学校低学年"
+        /// 小学校高学年
         case upperElementary = "小学校高学年"
+        /// 中高生
         case juniorHighSchool = "中高生"
+        /// 大人
         case adult = "大人"
         
         /// 表示用のテキスト
