@@ -36,6 +36,12 @@ struct BookFormContainerView: View {
             BookFormView(
                 book: $book,
                 mode: mode,
+                actionButton: {
+                    BookAutoFillContainerButton(
+                        targetBook: $book,
+                        onAutoFillComplete: handleAutoFill
+                    )
+                },
                 onSave: handleSave,
                 onCancel: handleCancel
             )
@@ -80,6 +86,10 @@ struct BookFormContainerView: View {
     
     private func handleCancel() {
         dismiss()
+    }
+    
+    private func handleAutoFill(_ filledBook: Book) {
+        book = filledBook
     }
 }
 

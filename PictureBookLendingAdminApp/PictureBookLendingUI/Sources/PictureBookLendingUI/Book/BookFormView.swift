@@ -1,3 +1,4 @@
+import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
 
@@ -5,26 +6,52 @@ import SwiftUI
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert等の
 /// 画面制御はContainer Viewに委譲します。
-public struct BookFormView: View {
+public struct BookFormView<ActionButton: View>: View {
     @Binding var book: Book
     let mode: BookFormMode
+    let actionButton: ActionButton?
     let onSave: () -> Void
     let onCancel: () -> Void
     
     public init(
         book: Binding<Book>,
         mode: BookFormMode,
+        @ViewBuilder actionButton: () -> ActionButton,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) {
         self._book = book
         self.mode = mode
+        self.actionButton = actionButton()
+        self.onSave = onSave
+        self.onCancel = onCancel
+    }
+    
+    public init(
+        book: Binding<Book>,
+        mode: BookFormMode,
+        onSave: @escaping () -> Void,
+        onCancel: @escaping () -> Void
+    ) where ActionButton == EmptyView {
+        self._book = book
+        self.mode = mode
+        self.actionButton = nil
         self.onSave = onSave
         self.onCancel = onCancel
     }
     
     public var body: some View {
         Form {
+            // サムネイル表示セクション
+            Section(header: Text("プレビュー")) {
+                thumbnailSection
+                
+                // 自動入力ボタン（Container側から注入）
+                if let actionButton = actionButton {
+                    actionButton
+                }
+            }
+            
             Section(header: Text("基本情報（*は必須）")) {
                 TextField("タイトル *", text: $book.title)
                 TextField("著者 *", text: $book.author)
@@ -128,6 +155,34 @@ public struct BookFormView: View {
     private var isValidInput: Bool {
         !book.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !book.author.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
+    @ViewBuilder
+    private var thumbnailSection: some View {
+        HStack {
+            Spacer()
+            
+            if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
+                KFImage(URL(string: thumbnailURL))
+                    .placeholder {
+                        Image(systemName: "book.closed")
+                            .foregroundStyle(.secondary)
+                            .font(.system(size: 40))
+                    }
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 150)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                Image(systemName: "book.closed")
+                    .font(.system(size: 60))
+                    .foregroundStyle(.secondary)
+                    .frame(height: 100)
+            }
+            
+            Spacer()
+        }
     }
 }
 

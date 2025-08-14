@@ -1,0 +1,210 @@
+import Kingfisher
+import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
+import PictureBookLendingModel
+import PictureBookLendingUI
+import SwiftUI
+
+/// 絵本自動入力ボタンのContainer View
+///
+/// RegisterModelを使用してビジネスロジックを処理し、
+/// BookAutoFillButtonに状態とアクションを提供します。
+struct BookAutoFillContainerButton: View {
+    @Binding var targetBook: Book
+    let onAutoFillComplete: (Book) -> Void
+    
+    @State private var registerModel: RegisterModel
+    @State private var isResultSheetPresented = false
+    
+    init(targetBook: Binding<Book>, onAutoFillComplete: @escaping (Book) -> Void) {
+        self._targetBook = targetBook
+        self.onAutoFillComplete = onAutoFillComplete
+        
+        // RegisterModelを初期化
+        let repositoryFactory = SwiftDataRepositoryFactory.shared
+        let gateway = repositoryFactory.makeBookSearchGateway()
+        let normalizer = GoogleBooksOptimizedNormalizer()
+        let repository = repositoryFactory.makeBookRepository()
+        
+        self._registerModel = State(
+            initialValue: RegisterModel(
+                gateway: gateway,
+                normalizer: normalizer,
+                repository: repository
+            )
+        )
+    }
+    
+    var body: some View {
+        BookAutoFillButton(
+            isSearching: registerModel.isSearching,
+            searchError: registerModel.searchError,
+            onSearch: handleSearch
+        )
+        .sheet(isPresented: $isResultSheetPresented) {
+            searchResultsSheet
+        }
+        .onChange(of: registerModel.searchResults) { _, newResults in
+            if !newResults.isEmpty {
+                isResultSheetPresented = true
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var searchResultsSheet: some View {
+        NavigationStack {
+            if registerModel.searchResults.isEmpty {
+                ContentUnavailableView(
+                    "検索結果なし",
+                    systemImage: "magnifyingglass",
+                    description: Text("該当する絵本が見つかりませんでした")
+                )
+            } else {
+                List(registerModel.searchResults, id: \.book.id) { scoredBook in
+                    Button {
+                        selectBook(scoredBook.book)
+                    } label: {
+                        SearchResultRowView(scoredBook: scoredBook)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .listStyle(.plain)
+            }
+        }
+        .navigationTitle("検索結果")
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("キャンセル") {
+                    isResultSheetPresented = false
+                    registerModel.clearSearchResults()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Action Handlers
+    
+    private func handleSearch() {
+        // BookFormViewのタイトルと著者名を使用して検索
+        registerModel.searchTitle = targetBook.title
+        registerModel.searchAuthor = targetBook.author
+        
+        do {
+            try registerModel.searchBooks()
+        } catch {
+            // エラーはregisterModel.searchErrorに設定される
+        }
+    }
+    
+    private func selectBook(_ book: Book) {
+        // targetBookの既存値を保持しつつ、検索結果の情報で更新
+        let updatedBook = Book(
+            id: targetBook.id,  // 既存のIDを保持
+            title: book.title.isEmpty ? targetBook.title : book.title,
+            author: book.author.isEmpty ? targetBook.author : book.author,
+            isbn13: book.isbn13 ?? targetBook.isbn13,
+            publisher: book.publisher ?? targetBook.publisher,
+            publishedDate: book.publishedDate ?? targetBook.publishedDate,
+            description: book.description ?? targetBook.description,
+            smallThumbnail: book.smallThumbnail ?? targetBook.smallThumbnail,
+            thumbnail: book.thumbnail ?? targetBook.thumbnail,
+            targetAge: book.targetAge ?? targetBook.targetAge,
+            pageCount: book.pageCount ?? targetBook.pageCount,
+            categories: book.categories.isEmpty ? targetBook.categories : book.categories,
+            managementNumber: targetBook.managementNumber  // 管理番号は既存値を保持
+        )
+        
+        targetBook = updatedBook
+        onAutoFillComplete(updatedBook)
+        
+        // UI状態をリセット
+        isResultSheetPresented = false
+        registerModel.clearSearchResults()
+    }
+}
+
+/// 検索結果行ビュー
+private struct SearchResultRowView: View {
+    let scoredBook: ScoredBook
+    
+    var body: some View {
+        HStack {
+            // サムネイル画像
+            KFImage(URL(string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? ""))
+                .placeholder {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.title2)
+                }
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 60, height: 80)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(scoredBook.book.title)
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.leading)
+                
+                Text(scoredBook.book.author)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                if let publisher = scoredBook.book.publisher {
+                    Text(publisher)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                // スコア表示
+                HStack {
+                    Text("関連度:")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    
+                    Text("\(Int(scoredBook.score * 100))%")
+                        .font(.caption)
+                        .foregroundStyle(scoreColor)
+                        .fontWeight(.medium)
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var scoreColor: Color {
+        switch scoredBook.score {
+        case 0.8...:
+            return .green
+        case 0.5..<0.8:
+            return .orange
+        default:
+            return .red
+        }
+    }
+}
+
+#Preview {
+    @Previewable @State var sampleBook = Book(
+        title: "テスト絵本",
+        author: "テスト著者"
+    )
+    
+    BookAutoFillContainerButton(
+        targetBook: $sampleBook,
+        onAutoFillComplete: { book in
+            print("Auto-filled book: \(book.title)")
+        }
+    )
+    .padding()
+}
