@@ -13,8 +13,6 @@ public struct BookDetailView<ActionButton: View>: View {
     let currentLoan: Loan?
     /// 貸出履歴一覧
     let loanHistory: [Loan]
-    /// 編集ボタンタップ時のアクション
-    let onEdit: () -> Void
     /// 貸出・返却などのアクションボタンを生成するクロージャ
     let actionButton: () -> ActionButton
     
@@ -22,13 +20,11 @@ public struct BookDetailView<ActionButton: View>: View {
         book: Binding<Book>,
         currentLoan: Loan? = nil,
         loanHistory: [Loan] = [],
-        onEdit: @escaping () -> Void,
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._book = book
         self.currentLoan = currentLoan
         self.loanHistory = loanHistory
-        self.onEdit = onEdit
         self.actionButton = actionButton
     }
     
@@ -58,10 +54,38 @@ public struct BookDetailView<ActionButton: View>: View {
             Section("基本情報") {
                 EditableDetailRow(label: "タイトル", value: $book.title)
                 EditableDetailRow(label: "著者", value: $book.author)
+                if let publisher = book.publisher, !publisher.isEmpty {
+                    DetailRow(label: "出版社", value: publisher)
+                }
+                if let publishedDate = book.publishedDate, !publishedDate.isEmpty {
+                    DetailRow(label: "出版日", value: publishedDate)
+                }
+                if let isbn13 = book.isbn13, !isbn13.isEmpty {
+                    DetailRow(label: "ISBN", value: isbn13)
+                }
+                if let pageCount = book.pageCount {
+                    DetailRow(label: "ページ数", value: "\(pageCount)ページ")
+                }
+                if let targetAge = book.targetAge {
+                    DetailRow(label: "対象年齢", value: "\(targetAge)歳以上")
+                }
+                if !book.categories.isEmpty {
+                    DetailRow(label: "カテゴリ", value: book.categories.joined(separator: ", "))
+                }
                 if let managementNumber = book.managementNumber, !managementNumber.isEmpty {
                     DetailRow(label: "管理番号", value: managementNumber)
+                } else {
+                    DetailRow(label: "管理番号", value: "未設定")
+                        .foregroundStyle(.secondary)
                 }
-                DetailRow(label: "管理ID", value: book.id.uuidString)
+            }
+            
+            if let description = book.description, !description.isEmpty {
+                Section("内容説明") {
+                    Text(description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             
             Section("貸出状況") {
@@ -145,15 +169,22 @@ public struct BookDetailView<ActionButton: View>: View {
     @Previewable @State var sampleBook = Book(
         title: "はらぺこあおむし",
         author: "エリック・カール",
+        isbn13: "9784033280103",
+        publisher: "偕成社",
+        publishedDate: "1976-05-01",
+        description: "おなかがぺこぺこのあおむしが、美味しそうな食べ物をパクパク食べて成長していく物語。穴あきのしかけ絵本として世界中で愛されています。",
         smallThumbnail: "https://example.com/small-thumbnail.jpg",
-        thumbnail: "https://example.com/thumbnail.jpg"
+        thumbnail: "https://example.com/thumbnail.jpg",
+        targetAge: 3,
+        pageCount: 25,
+        categories: ["絵本", "しかけ絵本"],
+        managementNumber: "PB-001"
     )
     
     NavigationStack {
         BookDetailView(
             book: $sampleBook,
-            currentLoan: nil,
-            onEdit: {}
+            currentLoan: nil
         ) {
             Button("貸出") {}
                 .buttonStyle(.bordered)

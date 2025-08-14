@@ -63,7 +63,7 @@ public struct BookListView<RowAction: View>: View {
                 .onDelete(perform: isEditMode ? onDelete : nil)
             }
             .searchable(
-                text: searchText, placement: .navigationBarDrawer(displayMode: .always),
+                text: searchText,
                 prompt: "絵本のタイトルまたは著者で検索")
         }
     }
