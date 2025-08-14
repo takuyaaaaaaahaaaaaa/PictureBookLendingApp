@@ -12,6 +12,7 @@ public struct SettingsView: View {
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
+    let onSelectBulkAdd: () -> Void
     let onSelectLoanSettings: () -> Void
     
     public init(
@@ -22,6 +23,7 @@ public struct SettingsView: View {
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
+        onSelectBulkAdd: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
@@ -31,6 +33,7 @@ public struct SettingsView: View {
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
+        self.onSelectBulkAdd = onSelectBulkAdd
         self.onSelectLoanSettings = onSelectLoanSettings
     }
     
@@ -48,6 +51,13 @@ public struct SettingsView: View {
                 title: "絵本管理",
                 subtitle: "\(bookCount)冊登録済み",
                 action: onSelectBook
+            )
+            
+            SettingsMenuItem(
+                iconName: "plus.rectangle.on.rectangle",
+                title: "絵本一括追加",
+                subtitle: "テキストから複数の絵本を一度に登録",
+                action: onSelectBulkAdd
             )
             
             SettingsMenuItem(
@@ -107,6 +117,7 @@ private struct SettingsMenuItem: View {
             maxBooksPerUser: 1,
             onSelectUser: {},
             onSelectBook: {},
+            onSelectBulkAdd: {},
             onSelectLoanSettings: {}
         )
         .navigationTitle("設定")
