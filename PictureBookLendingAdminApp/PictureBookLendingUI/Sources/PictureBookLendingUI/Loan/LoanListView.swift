@@ -11,36 +11,26 @@ public struct LoanListView<RowAction: View>: View {
     public let groupedLoans: [String: [LoanDisplayData]]
     /// 選択中の組フィルタ
     @Binding public var selectedGroupFilter: ClassGroup?
-    /// 選択中の利用者フィルタ
-    @Binding public var selectedUserFilter: User?
     /// 組フィルタの選択肢
     public let groupFilterOptions: [ClassGroup]
-    /// 利用者フィルタの選択肢
-    public let userFilterOptions: [User]
     /// 各行に表示するアクションビューを生成するクロージャ
     public let rowAction: (LoanDisplayData) -> RowAction
     
     public init(
         groupedLoans: [String: [LoanDisplayData]],
         selectedGroupFilter: Binding<ClassGroup?>,
-        selectedUserFilter: Binding<User?>,
         groupFilterOptions: [ClassGroup],
-        userFilterOptions: [User],
         @ViewBuilder rowAction: @escaping (LoanDisplayData) -> RowAction
     ) {
         self.groupedLoans = groupedLoans
         self._selectedGroupFilter = selectedGroupFilter
-        self._selectedUserFilter = selectedUserFilter
         self.groupFilterOptions = groupFilterOptions
-        self.userFilterOptions = userFilterOptions
         self.rowAction = rowAction
     }
     
     public var body: some View {
-        VStack(spacing: 5) {
-            // フィルタセクション
+        VStack(alignment: .leading, spacing: 5) {
             filterSection
-            
             // 貸出記録一覧
             if groupedLoans.isEmpty {
                 emptyStateView
@@ -52,24 +42,24 @@ public struct LoanListView<RowAction: View>: View {
     
     // MARK: - Private Views
     
+    /// フィルター
     private var filterSection: some View {
-        HStack(spacing: 5) {
-            Picker("組フィルタ", selection: $selectedGroupFilter) {
-                Text("全組").tag(nil as ClassGroup?)
+        ScrollView(.horizontal) {
+            HStack {
                 ForEach(groupFilterOptions) { group in
-                    Text(group.name).tag(group as ClassGroup?)
+                    Button(group.name) {
+                        // 未選択の場合は選択、選択中の場合は解除
+                        if selectedGroupFilter == group {
+                            selectedGroupFilter = nil
+                        } else {
+                            selectedGroupFilter = group
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(selectedGroupFilter == group ? .accentColor : .secondary)
                 }
             }
-            .pickerStyle(.menu)
-            .fixedSize()
-            Picker("利用者フィルタ", selection: $selectedUserFilter) {
-                Text("全利用者").tag(nil as User?)
-                ForEach(userFilterOptions) { user in
-                    Text(user.name).tag(user as User?)
-                }
-            }
-            .pickerStyle(.menu)
-            .fixedSize()
+            .padding()
         }
     }
     
@@ -105,7 +95,7 @@ public struct LoanListView<RowAction: View>: View {
                 }
             }
         }
-        .listStyle(.sidebar)
+        .listStyle(.grouped)
     }
     
     private var sortedGroupNames: [String] {
@@ -169,7 +159,7 @@ private struct LoanListRowView<Action: View>: View {
     let action: Action
     
     var body: some View {
-        HStack {
+        HStack(spacing: 20) {
             // サムネイル画像
             KFImage(URL(string: loan.bookThumbnail ?? loan.bookSmallThumbnail ?? ""))
                 .placeholder {
@@ -227,6 +217,8 @@ private struct LoanListRowView<Action: View>: View {
 }
 
 #Preview {
+    @Previewable @State var selectedGroupFilter: ClassGroup?
+    
     let sampleLoans: [String: [LoanDisplayData]] = [
         "もも組": [
             LoanDisplayData(
@@ -264,20 +256,17 @@ private struct LoanListRowView<Action: View>: View {
         ],
     ]
 
-    LoanListView(
-        groupedLoans: sampleLoans,
-        selectedGroupFilter: .constant(nil),
-        selectedUserFilter: .constant(nil),
-        groupFilterOptions: [
-            ClassGroup(name: "もも組", ageGroup: 3, year: 2024),
-            ClassGroup(name: "ひよこ組", ageGroup: 2, year: 2024),
-        ],
-        userFilterOptions: [
-            User(name: "田中太郎", classGroupId: UUID()),
-            User(name: "佐藤花子", classGroupId: UUID()),
-            User(name: "鈴木次郎", classGroupId: UUID()),
-        ],
-    ) { loan in
-        ReturnButtonView(onTap: {})
+    NavigationStack {
+        LoanListView(
+            groupedLoans: sampleLoans,
+            selectedGroupFilter: $selectedGroupFilter,
+            groupFilterOptions: [
+                ClassGroup(name: "もも組", ageGroup: 3, year: 2024),
+                ClassGroup(name: "ひよこ組", ageGroup: 2, year: 2024),
+            ]
+        ) { loan in
+            ReturnButtonView(onTap: {})
+        }
+        .navigationTitle("貸出管理")
     }
 }
