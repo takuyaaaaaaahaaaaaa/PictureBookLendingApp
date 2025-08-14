@@ -7,17 +7,20 @@ import SwiftUI
 /// データ取得やビジネスロジックはContainer Viewに委譲します。
 public struct ClassGroupListView: View {
     let classGroups: [ClassGroup]
+    let getUserCount: (UUID) -> Int
     let onAdd: () -> Void
     let onEdit: (ClassGroup) -> Void
     let onDelete: (IndexSet) -> Void
     
     public init(
         classGroups: [ClassGroup],
+        getUserCount: @escaping (UUID) -> Int,
         onAdd: @escaping () -> Void,
         onEdit: @escaping (ClassGroup) -> Void,
         onDelete: @escaping (IndexSet) -> Void
     ) {
         self.classGroups = classGroups
+        self.getUserCount = getUserCount
         self.onAdd = onAdd
         self.onEdit = onEdit
         self.onDelete = onDelete
@@ -33,7 +36,10 @@ public struct ClassGroupListView: View {
         } else {
             List {
                 ForEach(classGroups) { classGroup in
-                    ClassGroupListRowView(classGroup: classGroup) {
+                    ClassGroupListRowView(
+                        classGroup: classGroup,
+                        userCount: getUserCount(classGroup.id)
+                    ) {
                         onEdit(classGroup)
                     }
                 }
@@ -46,10 +52,12 @@ public struct ClassGroupListView: View {
 /// 組一覧の行表示コンポーネント
 public struct ClassGroupListRowView: View {
     let classGroup: ClassGroup
+    let userCount: Int
     let onTap: () -> Void
     
-    public init(classGroup: ClassGroup, onTap: @escaping () -> Void) {
+    public init(classGroup: ClassGroup, userCount: Int, onTap: @escaping () -> Void) {
         self.classGroup = classGroup
+        self.userCount = userCount
         self.onTap = onTap
     }
     
@@ -63,7 +71,8 @@ public struct ClassGroupListRowView: View {
                     
                     let ageGroupText = Text("\(classGroup.ageGroup)歳児 ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
-                    Text("\(ageGroupText)(\(yearText))")
+                    let userCountText = Text(" • \(userCount)人")
+                    Text("\(ageGroupText)(\(yearText))\(userCountText)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -88,6 +97,7 @@ public struct ClassGroupListRowView: View {
                 ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024),
                 ClassGroup(name: "さくら組", ageGroup: 5, year: 2024),
             ],
+            getUserCount: { _ in 8 },
             onAdd: {},
             onEdit: { _ in },
             onDelete: { _ in }
@@ -100,6 +110,7 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [],
+            getUserCount: { _ in 0 },
             onAdd: {},
             onEdit: { _ in },
             onDelete: { _ in }
@@ -110,7 +121,11 @@ public struct ClassGroupListRowView: View {
 
 #Preview("組の行") {
     List {
-        ClassGroupListRowView(classGroup: ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024)) {}
-        ClassGroupListRowView(classGroup: ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024)) {}
+        ClassGroupListRowView(
+            classGroup: ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024), userCount: 8
+        ) {}
+        ClassGroupListRowView(
+            classGroup: ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024), userCount: 12
+        ) {}
     }
 }

@@ -8,23 +8,46 @@ import SwiftUI
 ///
 /// ビジネスロジック、状態管理、データ取得、画面制御を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
+/// 組IDが指定された場合は、その組の利用者のみ表示します。
 struct UserListContainerView: View {
     @Environment(UserModel.self) private var userModel
+    @Environment(ClassGroupModel.self) private var classGroupModel
+    
+    let classGroupId: UUID?
     
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
     @State private var navigationPath = NavigationPath()
     
+    init(classGroupId: UUID? = nil) {
+        self.classGroupId = classGroupId
+    }
+    
     private var filteredUsers: [User] {
-        if searchText.isEmpty {
-            userModel.users
-        } else {
-            userModel.users.filter { user in
-                user.name.localizedCaseInsensitiveContains(searchText)
-                // TODO: 組名検索機能は後で実装（classGroupIdから組名を取得する仕組みが必要）
-                // || user.group.localizedCaseInsensitiveContains(searchText)
+        let usersInGroup =
+            if let classGroupId = classGroupId {
+                userModel.users.filter { $0.classGroupId == classGroupId }
+            } else {
+                userModel.users
             }
+        
+        return if searchText.isEmpty {
+            usersInGroup
+        } else {
+            usersInGroup.filter { user in
+                user.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    private var navigationTitle: String {
+        if let classGroupId = classGroupId,
+            let classGroup = classGroupModel.findClassGroupById(classGroupId)
+        {
+            "\(classGroup.name)の利用者"
+        } else {
+            "利用者一覧"
         }
     }
     
@@ -36,7 +59,7 @@ struct UserListContainerView: View {
         ) { user in
             UserRowContainerView(user: user)
         }
-        .navigationTitle("利用者一覧")
+        .navigationTitle(navigationTitle)
         .navigationDestination(for: User.self) { user in
             UserDetailContainerView(user: user)
         }
@@ -52,6 +75,7 @@ struct UserListContainerView: View {
         .sheet(isPresented: $isAddSheetPresented) {
             UserFormContainerView(
                 mode: .add,
+                initialClassGroupId: classGroupId,
                 onSave: { _ in
                     // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
                 }

@@ -95,7 +95,9 @@ public struct LoanListView<RowAction: View>: View {
                 }
             }
         }
-        .listStyle(.grouped)
+        #if os(iOS)
+            .listStyle(.grouped)
+        #endif
     }
     
     private var sortedGroupNames: [String] {

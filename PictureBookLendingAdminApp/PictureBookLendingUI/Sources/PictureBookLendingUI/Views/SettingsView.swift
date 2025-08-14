@@ -10,7 +10,6 @@ public struct SettingsView: View {
     let bookCount: Int
     let loanPeriodDays: Int
     let maxBooksPerUser: Int
-    let onSelectClassGroup: () -> Void
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
     let onSelectLoanSettings: () -> Void
@@ -21,7 +20,6 @@ public struct SettingsView: View {
         bookCount: Int,
         loanPeriodDays: Int,
         maxBooksPerUser: Int,
-        onSelectClassGroup: @escaping () -> Void,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void
@@ -31,7 +29,6 @@ public struct SettingsView: View {
         self.bookCount = bookCount
         self.loanPeriodDays = loanPeriodDays
         self.maxBooksPerUser = maxBooksPerUser
-        self.onSelectClassGroup = onSelectClassGroup
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
         self.onSelectLoanSettings = onSelectLoanSettings
@@ -40,16 +37,9 @@ public struct SettingsView: View {
     public var body: some View {
         VStack(spacing: 16) {
             SettingsMenuItem(
-                iconName: "person.3",
-                title: "組管理",
-                subtitle: "\(classGroupCount)組登録済み",
-                action: onSelectClassGroup
-            )
-            
-            SettingsMenuItem(
                 iconName: "person",
                 title: "利用者管理",
-                subtitle: "\(userCount)人登録済み",
+                subtitle: "\(classGroupCount)組・\(userCount)人登録済み",
                 action: onSelectUser
             )
             
@@ -115,7 +105,6 @@ private struct SettingsMenuItem: View {
             bookCount: 120,
             loanPeriodDays: 14,
             maxBooksPerUser: 1,
-            onSelectClassGroup: {},
             onSelectUser: {},
             onSelectBook: {},
             onSelectLoanSettings: {}
