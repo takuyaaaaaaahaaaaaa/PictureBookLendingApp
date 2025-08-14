@@ -230,7 +230,7 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
             description: "これはテスト用の絵本です。",
             smallThumbnail: "https://example.com/small-thumbnail.jpg",
             thumbnail: "https://example.com/thumbnail.jpg",
-            targetAge: 3,
+            targetAge: .toddler,
             pageCount: 32,
             categories: ["絵本", "テスト"],
             managementNumber: "テスト\(isbn.suffix(3))"
@@ -252,7 +252,7 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
                 description: "これは\(title)のテスト用絵本です。",
                 smallThumbnail: "https://example.com/small-thumbnail\(i).jpg",
                 thumbnail: "https://example.com/thumbnail\(i).jpg",
-                targetAge: 2 + i,
+                targetAge: Const.TargetAudience.allCases[i % Const.TargetAudience.allCases.count],
                 pageCount: 30 + i * 2,
                 categories: ["絵本", "テスト"],
                 managementNumber: "テスト\(i)"

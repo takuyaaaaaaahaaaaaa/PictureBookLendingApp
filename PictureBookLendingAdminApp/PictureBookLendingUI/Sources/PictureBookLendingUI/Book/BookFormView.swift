@@ -58,12 +58,18 @@ public struct BookFormView: View {
             }
             
             Section(header: Text("その他（任意）")) {
-                Stepper(
-                    "対象年齢: \(book.targetAge ?? 0)歳",
-                    value: Binding(
-                        get: { book.targetAge ?? 0 },
-                        set: { book.targetAge = $0 == 0 ? nil : $0 }
-                    ), in: 0...12)
+                HStack {
+                    Text("対象読者")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Picker("対象読者", selection: $book.targetAge) {
+                        Text("未選択").tag(nil as Const.TargetAudience?)
+                        ForEach(Const.TargetAudience.sortedCases, id: \.self) { audience in
+                            Text(audience.displayText).tag(audience as Const.TargetAudience?)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
                 
                 TextField(
                     "ページ数",
@@ -133,7 +139,7 @@ public struct BookFormView: View {
         publisher: "サンプル出版",
         publishedDate: "2023-01-01",
         description: "これはサンプルの絵本です。",
-        targetAge: 3,
+        targetAge: .toddler,
         pageCount: 32,
         categories: ["絵本"],
         managementNumber: "あ13"

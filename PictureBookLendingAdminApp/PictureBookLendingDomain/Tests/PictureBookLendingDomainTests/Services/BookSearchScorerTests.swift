@@ -13,22 +13,22 @@ struct BookSearchScorerTests {
         Book(
             title: "ぐりとぐら",
             author: "なかがわりえこ",
-            targetAge: 3
+            targetAge: .toddler
         ),
         Book(
             title: "ぐりとぐらのおきゃくさま",
             author: "なかがわりえこ",
-            targetAge: 3
+            targetAge: .toddler
         ),
         Book(
             title: "はらぺこあおむし",
             author: "エリック・カール",
-            targetAge: 2
+            targetAge: .toddler
         ),
         Book(
             title: "スイミー",
             author: "レオ・レオニ",
-            targetAge: 4
+            targetAge: .lowerElementary
         ),
     ]
     
@@ -178,7 +178,7 @@ struct BookSearchScorerTests {
         let book = Book(
             title: "ABC Picture Book",
             author: "Test Author",
-            targetAge: 3
+            targetAge: .toddler
         )
         
         let query1 = BookSearchQuery(title: "abc picture book")
@@ -199,7 +199,7 @@ struct BookSearchScorerTests {
         let book = Book(
             title: "はらぺこあおむし",
             author: "エリック・カール",
-            targetAge: 2
+            targetAge: .toddler
         )
         
         // タイポを含むクエリ
@@ -232,7 +232,7 @@ struct ScoredBookTests {
         let book = Book(
             title: "Test Book",
             author: "Test Author",
-            targetAge: 3
+            targetAge: .toddler
         )
         
         let scoredBook1 = ScoredBook(book: book, score: 0.8)

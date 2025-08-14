@@ -190,7 +190,7 @@ public class RegisterModel {
                 description: nil,
                 smallThumbnail: nil,
                 thumbnail: nil,
-                targetAge: 3,  // デフォルト対象年齢
+                targetAge: .toddler,  // デフォルト対象読者
                 pageCount: nil,
                 categories: [],
                 managementNumber: ""
