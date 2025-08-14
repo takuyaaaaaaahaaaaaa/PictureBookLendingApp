@@ -46,9 +46,22 @@ struct BookListContainerView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 // 設定ボタン
-                SettingContainerButton()
+                // TODO: iOS26 beta6のバグで以下が効かない
+                //SettingContainerButton()
+                Button("設定", systemImage: "gearshape") {
+                    isSettingsPresented = true
+                }
             }
         }
+        #if os(macOS)
+            .sheet(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #else
+            .fullScreenCover(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #endif
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }
