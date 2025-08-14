@@ -9,6 +9,8 @@ import SwiftUI
 /// - 絵本 - 全絵本一覧（貸出可能・貸出中を含む）
 /// - 貸出管理 - 貸出中記録の組別グルーピング表示
 struct ContentView: View {
+    /// 貸出管理モデル
+    @Environment(LoanModel.self) private var loanModel
     // 選択中のタブを管理
     @State private var selectedTab = 0
     
@@ -30,6 +32,7 @@ struct ContentView: View {
             .tabItem {
                 Label("貸出管理", systemImage: "list.clipboard")
             }
+            .badge(overDueCount)
             .tag(1)
             
             // 絵本登録タブ（新規追加）
@@ -41,6 +44,11 @@ struct ContentView: View {
             }
             .tag(2)
         }
+    }
+    
+    /// 延滞件数
+    var overDueCount: Int {
+        return loanModel.getOverDueLoansCount(at: Date())
     }
 }
 
