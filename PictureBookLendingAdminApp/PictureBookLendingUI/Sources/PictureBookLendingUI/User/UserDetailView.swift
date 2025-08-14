@@ -137,9 +137,9 @@ public struct UserLoanHistoryRow: View {
     
     let sampleUserId = UUID()
     let sampleClassGroups = [
-        ClassGroup(id: userClassGroupId, name: "きく", ageGroup: 3, year: 2025),
-        ClassGroup(id: UUID(), name: "ばら", ageGroup: 4, year: 2025),
-        ClassGroup(id: UUID(), name: "さくら", ageGroup: 5, year: 2025),
+        ClassGroup(id: userClassGroupId, name: "きく", ageGroup: "3歳児", year: 2025),
+        ClassGroup(id: UUID(), name: "ばら", ageGroup: "4歳児", year: 2025),
+        ClassGroup(id: UUID(), name: "さくら", ageGroup: "5歳児", year: 2025),
     ]
     let sampleUser = User(id: sampleUserId, name: "山田太郎", classGroupId: userClassGroupId)
     let sampleLoan = Loan(

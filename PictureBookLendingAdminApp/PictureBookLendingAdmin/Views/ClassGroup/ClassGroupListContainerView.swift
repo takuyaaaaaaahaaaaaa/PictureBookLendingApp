@@ -8,28 +8,48 @@ import SwiftUI
 ///
 /// ビジネスロジック、状態管理、データ取得を担当し、
 /// Presentation ViewにデータとアクションHookを提供します。
+/// 利用者管理の組選択画面としても使用されます。
 struct ClassGroupListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(UserModel.self) private var userModel
     
     @State private var alertState = AlertState()
     @State private var isAddSheetPresented = false
     @State private var editingClassGroup: ClassGroup?
+    @State private var isEditMode = false
+    
+    let onClassGroupSelected: ((UUID) -> Void)?
+    
+    init(onClassGroupSelected: ((UUID) -> Void)? = nil) {
+        self.onClassGroupSelected = onClassGroupSelected
+    }
     
     var body: some View {
         ClassGroupListView(
             classGroups: classGroupModel.classGroups,
+            getUserCount: getUserCountForClassGroup,
+            isEditMode: isEditMode,
             onAdd: handleAdd,
-            onEdit: handleEdit,
+            onSelect: handleSelectClassGroup,
+            onEdit: handleEditClassGroup,
             onDelete: handleDelete
         )
-        .navigationTitle("組管理")
+        .navigationTitle("組一覧")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
         #endif
         .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button("追加") {
-                    isAddSheetPresented = true
+            ToolbarItem(id: "fix") {
+                Button(isEditMode ? "編集モード終了" : "組編集モード") {
+                    isEditMode.toggle()
+                }
+            }
+            
+            ToolbarSpacer(.fixed)
+            
+            ToolbarItem(id: "add") {
+                Button("組追加") {
+                    handleAdd()
                 }
             }
         }
@@ -61,8 +81,16 @@ struct ClassGroupListContainerView: View {
         isAddSheetPresented = true
     }
     
-    private func handleEdit(_ classGroup: ClassGroup) {
+    private func handleSelectClassGroup(_ classGroup: ClassGroup) {
+        onClassGroupSelected?(classGroup.id)
+    }
+    
+    private func handleEditClassGroup(_ classGroup: ClassGroup) {
         editingClassGroup = classGroup
+    }
+    
+    private func getUserCountForClassGroup(_ classGroupId: UUID) -> Int {
+        userModel.users.filter { $0.classGroupId == classGroupId }.count
     }
     
     private func handleDelete(at offsets: IndexSet) {

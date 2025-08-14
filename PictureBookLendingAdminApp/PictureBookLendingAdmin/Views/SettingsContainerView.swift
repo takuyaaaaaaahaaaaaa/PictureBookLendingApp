@@ -24,9 +24,6 @@ struct SettingsContainerView: View {
                 bookCount: bookModel.books.count,
                 loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
                 maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
-                onSelectClassGroup: {
-                    navigationPath.append(SettingsDestination.classGroup)
-                },
                 onSelectUser: {
                     navigationPath.append(SettingsDestination.user)
                 },
@@ -47,12 +44,14 @@ struct SettingsContainerView: View {
             }
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
-                case .classGroup:
-                    ClassGroupListContainerView()
                 case .user:
-                    UserListContainerView()
+                    ClassGroupListContainerView { classGroupId in
+                        navigationPath.append(SettingsDestination.userList(classGroupId))
+                    }
                 case .book:
                     SettingsBookListContainerView()
+                case .userList(let classGroupId):
+                    UserListContainerView(classGroupId: classGroupId)
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -64,9 +63,9 @@ struct SettingsContainerView: View {
     }
     
     private enum SettingsDestination: Hashable {
-        case classGroup
         case user
         case book
+        case userList(UUID)
     }
 }
 

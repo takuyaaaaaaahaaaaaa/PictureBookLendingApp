@@ -47,7 +47,7 @@ struct LoanFormContainerView: View {
                     }
                 }
                 
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .automatic) {
                     Button("登録") {
                         handleRegister()
                     }
@@ -147,7 +147,7 @@ struct LoanFormContainerView: View {
     let loanSettingModel = LoanSettingsModel(
         repository: mockRepositoryFactory.loanSettingsRepository)
     
-    let selectedBook = Book(title: "りんごかもしれない", author: "ヨシタケ・シンスケ")
+    let selectedBook = Book(title: "りんごかもしれない", author: "ヨシタケ・シンスケ", managementNumber: "え001")
     
     LoanFormContainerView(selectedBook: selectedBook)
         .environment(userModel)

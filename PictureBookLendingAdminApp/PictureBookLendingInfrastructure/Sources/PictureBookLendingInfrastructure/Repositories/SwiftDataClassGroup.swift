@@ -13,8 +13,8 @@ final public class SwiftDataClassGroup {
     /// クラス名（例: "さくら組", "年長A組"）
     public var name: String
     
-    /// 年齢グループ（0歳児、1歳児など）
-    public var ageGroup: Int
+    /// 年齢グループ（"0歳児", "1歳児", "大人"など）
+    public var ageGroup: String
     
     /// 年度（西暦）
     public var year: Int
@@ -26,7 +26,7 @@ final public class SwiftDataClassGroup {
     ///   - name: クラス名
     ///   - ageGroup: 年齢グループ
     ///   - year: 年度（西暦）
-    public init(id: UUID, name: String, ageGroup: Int, year: Int) {
+    public init(id: UUID, name: String, ageGroup: String, year: Int) {
         self.id = id
         self.name = name
         self.ageGroup = ageGroup

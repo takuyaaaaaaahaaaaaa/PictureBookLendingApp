@@ -7,18 +7,27 @@ import SwiftUI
 /// データ取得やビジネスロジックはContainer Viewに委譲します。
 public struct ClassGroupListView: View {
     let classGroups: [ClassGroup]
+    let getUserCount: (UUID) -> Int
+    let isEditMode: Bool
     let onAdd: () -> Void
+    let onSelect: (ClassGroup) -> Void
     let onEdit: (ClassGroup) -> Void
     let onDelete: (IndexSet) -> Void
     
     public init(
         classGroups: [ClassGroup],
+        getUserCount: @escaping (UUID) -> Int,
+        isEditMode: Bool = false,
         onAdd: @escaping () -> Void,
+        onSelect: @escaping (ClassGroup) -> Void,
         onEdit: @escaping (ClassGroup) -> Void,
         onDelete: @escaping (IndexSet) -> Void
     ) {
         self.classGroups = classGroups
+        self.getUserCount = getUserCount
+        self.isEditMode = isEditMode
         self.onAdd = onAdd
+        self.onSelect = onSelect
         self.onEdit = onEdit
         self.onDelete = onDelete
     }
@@ -33,11 +42,18 @@ public struct ClassGroupListView: View {
         } else {
             List {
                 ForEach(classGroups) { classGroup in
-                    ClassGroupListRowView(classGroup: classGroup) {
-                        onEdit(classGroup)
+                    ClassGroupListRowView(
+                        classGroup: classGroup,
+                        userCount: getUserCount(classGroup.id)
+                    ) {
+                        if isEditMode {
+                            onEdit(classGroup)
+                        } else {
+                            onSelect(classGroup)
+                        }
                     }
                 }
-                .onDelete(perform: onDelete)
+                .onDelete(perform: isEditMode ? onDelete : nil)
             }
         }
     }
@@ -46,10 +62,12 @@ public struct ClassGroupListView: View {
 /// 組一覧の行表示コンポーネント
 public struct ClassGroupListRowView: View {
     let classGroup: ClassGroup
+    let userCount: Int
     let onTap: () -> Void
     
-    public init(classGroup: ClassGroup, onTap: @escaping () -> Void) {
+    public init(classGroup: ClassGroup, userCount: Int, onTap: @escaping () -> Void) {
         self.classGroup = classGroup
+        self.userCount = userCount
         self.onTap = onTap
     }
     
@@ -61,9 +79,10 @@ public struct ClassGroupListRowView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     
-                    let ageGroupText = Text("\(classGroup.ageGroup)歳児 ")
+                    let ageGroupText = Text("\(classGroup.ageGroup) ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
-                    Text("\(ageGroupText)(\(yearText))")
+                    let userCountText = Text(" • \(userCount)人")
+                    Text("\(ageGroupText)(\(yearText))\(userCountText)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -84,11 +103,13 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [
-                ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024),
-                ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024),
-                ClassGroup(name: "さくら組", ageGroup: 5, year: 2024),
+                ClassGroup(name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024),
+                ClassGroup(name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024),
+                ClassGroup(name: "さくら組", ageGroup: Const.AgeGroup.infant5.rawValue, year: 2024),
             ],
+            getUserCount: { _ in 8 },
             onAdd: {},
+            onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }
         )
@@ -100,7 +121,9 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [],
+            getUserCount: { _ in 0 },
             onAdd: {},
+            onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }
         )
@@ -110,7 +133,13 @@ public struct ClassGroupListRowView: View {
 
 #Preview("組の行") {
     List {
-        ClassGroupListRowView(classGroup: ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024)) {}
-        ClassGroupListRowView(classGroup: ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024)) {}
+        ClassGroupListRowView(
+            classGroup: ClassGroup(
+                name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024), userCount: 8
+        ) {}
+        ClassGroupListRowView(
+            classGroup: ClassGroup(
+                name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024), userCount: 12
+        ) {}
     }
 }

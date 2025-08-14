@@ -14,6 +14,7 @@ struct UserFormContainerView: View {
     @Environment(\.dismiss) private var dismiss
     
     let mode: UserFormMode
+    let initialClassGroupId: UUID?
     var onSave: ((User) -> Void)? = nil
     
     /// 利用者名
@@ -24,8 +25,9 @@ struct UserFormContainerView: View {
     @State private var classGroups: [ClassGroup] = []
     @State private var alertState = AlertState()
     
-    init(mode: UserFormMode, onSave: ((User) -> Void)? = nil) {
+    init(mode: UserFormMode, initialClassGroupId: UUID? = nil, onSave: ((User) -> Void)? = nil) {
         self.mode = mode
+        self.initialClassGroupId = initialClassGroupId
         self.onSave = onSave
     }
     
@@ -119,6 +121,8 @@ struct UserFormContainerView: View {
         if case .edit(let user) = mode {
             name = user.name
             classGroup = classGroupModel.findClassGroupById(user.classGroupId)
+        } else if let initialClassGroupId = initialClassGroupId {
+            classGroup = classGroupModel.findClassGroupById(initialClassGroupId)
         }
     }
 }

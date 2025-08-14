@@ -261,8 +261,8 @@ private struct LoanListRowView<Action: View>: View {
             groupedLoans: sampleLoans,
             selectedGroupFilter: $selectedGroupFilter,
             groupFilterOptions: [
-                ClassGroup(name: "もも組", ageGroup: 3, year: 2024),
-                ClassGroup(name: "ひよこ組", ageGroup: 2, year: 2024),
+                ClassGroup(name: "もも組", ageGroup: "3歳児", year: 2024),
+                ClassGroup(name: "ひよこ組", ageGroup: "2歳児", year: 2024),
             ]
         ) { loan in
             ReturnButtonView(onTap: {})
