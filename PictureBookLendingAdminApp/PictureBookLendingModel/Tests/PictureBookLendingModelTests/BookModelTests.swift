@@ -31,7 +31,7 @@ struct BookModelTests {
     func registerBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
-        let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let book = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
         
         // 2. Act - 実行
         let registeredBook = try bookModel.registerBook(book)
@@ -51,8 +51,8 @@ struct BookModelTests {
     func getAllBooks() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
-        let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
-        let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+        let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
+        let book2 = Book(title: "ぐりとぐら", author: "中川李枝子", managementNumber: "あ002")
         
         // 2. Act - 実行
         _ = try bookModel.registerBook(book1)
@@ -72,7 +72,7 @@ struct BookModelTests {
     func findBookById() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
-        let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let book = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
         
@@ -92,7 +92,7 @@ struct BookModelTests {
     func updateBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
-        let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let book = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
         
@@ -117,7 +117,7 @@ struct BookModelTests {
     func deleteBook() throws {
         // 1. Arrange - 準備
         let (bookModel, _) = createBookModel()
-        let book = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let book = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
         let registeredBook = try bookModel.registerBook(book)
         let id = registeredBook.id
         

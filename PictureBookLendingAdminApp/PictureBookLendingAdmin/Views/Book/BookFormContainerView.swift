@@ -17,6 +17,7 @@ struct BookFormContainerView: View {
     
     @State private var title = ""
     @State private var author = ""
+    @State private var managementNumber = ""
     @State private var alertState = AlertState()
     
     var body: some View {
@@ -24,6 +25,7 @@ struct BookFormContainerView: View {
             BookFormView(
                 title: $title,
                 author: $author,
+                managementNumber: $managementNumber,
                 mode: mode,
                 onSave: handleSave,
                 onCancel: handleCancel
@@ -34,6 +36,7 @@ struct BookFormContainerView: View {
                 if case .edit(let book) = mode {
                     title = book.title
                     author = book.author
+                    managementNumber = book.managementNumber ?? ""
                 }
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
@@ -60,7 +63,11 @@ struct BookFormContainerView: View {
         do {
             switch mode {
             case .add:
-                let newBook = Book(title: title, author: author)
+                let newBook = Book(
+                    title: title,
+                    author: author,
+                    managementNumber: managementNumber
+                )
                 let savedBook = try bookModel.registerBook(newBook)
                 onSave?(savedBook)
 
@@ -68,7 +75,17 @@ struct BookFormContainerView: View {
                 let updatedBook = Book(
                     id: book.id,
                     title: title,
-                    author: author
+                    author: author,
+                    isbn13: book.isbn13,
+                    publisher: book.publisher,
+                    publishedDate: book.publishedDate,
+                    description: book.description,
+                    smallThumbnail: book.smallThumbnail,
+                    thumbnail: book.thumbnail,
+                    targetAge: book.targetAge,
+                    pageCount: book.pageCount,
+                    categories: book.categories,
+                    managementNumber: managementNumber.isEmpty ? nil : managementNumber
                 )
                 let savedBook = try bookModel.updateBook(updatedBook)
                 onSave?(savedBook)

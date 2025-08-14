@@ -232,7 +232,8 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
             thumbnail: "https://example.com/thumbnail.jpg",
             targetAge: 3,
             pageCount: 32,
-            categories: ["絵本", "テスト"]
+            categories: ["絵本", "テスト"],
+            managementNumber: "テスト\(isbn.suffix(3))"
         )
     }
     
@@ -253,7 +254,8 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
                 thumbnail: "https://example.com/thumbnail\(i).jpg",
                 targetAge: 2 + i,
                 pageCount: 30 + i * 2,
-                categories: ["絵本", "テスト"]
+                categories: ["絵本", "テスト"],
+                managementNumber: "テスト\(i)"
             )
             books.append(book)
         }

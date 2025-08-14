@@ -8,6 +8,7 @@ import SwiftUI
 public struct BookFormView: View {
     @Binding var title: String
     @Binding var author: String
+    @Binding var managementNumber: String
     let mode: BookFormMode
     let onSave: () -> Void
     let onCancel: () -> Void
@@ -15,12 +16,14 @@ public struct BookFormView: View {
     public init(
         title: Binding<String>,
         author: Binding<String>,
+        managementNumber: Binding<String>,
         mode: BookFormMode,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) {
         self._title = title
         self._author = author
+        self._managementNumber = managementNumber
         self.mode = mode
         self.onSave = onSave
         self.onCancel = onCancel
@@ -31,6 +34,7 @@ public struct BookFormView: View {
             Section(header: Text("絵本情報")) {
                 TextField("タイトル", text: $title)
                 TextField("著者", text: $author)
+                TextField("管理番号（例: あ13）", text: $managementNumber)
             }
         }
         .toolbar {
@@ -69,6 +73,7 @@ public struct BookFormView: View {
         BookFormView(
             title: .constant("サンプル本"),
             author: .constant("著者名"),
+            managementNumber: .constant("あ13"),
             mode: .add,
             onSave: {},
             onCancel: {}

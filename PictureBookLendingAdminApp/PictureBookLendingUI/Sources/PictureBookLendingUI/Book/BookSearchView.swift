@@ -394,11 +394,19 @@ struct SearchResultRow: View {
             searchError: nil,
             searchResults: [
                 ScoredBook(
-                    book: Book(title: "ぐりとぐら", author: "なかがわりえこ", targetAge: 3),
+                    book: Book(
+                        title: "ぐりとぐら",
+                        author: "なかがわりえこ",
+                        targetAge: 3
+                    ),
                     score: 0.95
                 ),
                 ScoredBook(
-                    book: Book(title: "ぐりとぐらのおきゃくさま", author: "なかがわりえこ", targetAge: 3),
+                    book: Book(
+                        title: "ぐりとぐらのおきゃくさま",
+                        author: "なかがわりえこ",
+                        targetAge: 3
+                    ),
                     score: 0.75
                 ),
             ],
@@ -431,7 +439,11 @@ struct SearchResultRow: View {
             selectedResult: nil,
             onResultSelected: { _ in },
             isManualEntryMode: true,
-            manualBook: Book(title: "テスタイトル", author: "テスト著者", targetAge: 4),
+            manualBook: Book(
+                title: "テスタイトル",
+                author: "テスト著者",
+                targetAge: 4
+            ),
             onManualBookChanged: { _ in },
             onSearch: {},
             onClearResults: {},

@@ -34,7 +34,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             thumbnail: book.thumbnail,
             targetAge: book.targetAge,
             pageCount: book.pageCount,
-            categories: book.categories
+            categories: book.categories,
+            managementNumber: book.managementNumber
         )
         
         modelContext.insert(swiftDataBook)
@@ -70,7 +71,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     thumbnail: swiftDataBook.thumbnail,
                     targetAge: swiftDataBook.targetAge,
                     pageCount: swiftDataBook.pageCount,
-                    categories: swiftDataBook.categories
+                    categories: swiftDataBook.categories,
+                    managementNumber: swiftDataBook.managementNumber
                 )
             }
         } catch {
@@ -105,7 +107,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 thumbnail: swiftDataBook.thumbnail,
                 targetAge: swiftDataBook.targetAge,
                 pageCount: swiftDataBook.pageCount,
-                categories: swiftDataBook.categories
+                categories: swiftDataBook.categories,
+                managementNumber: swiftDataBook.managementNumber
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -130,6 +133,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             // プロパティを更新
             swiftDataBook.title = book.title
             swiftDataBook.author = book.author
+            swiftDataBook.managementNumber = book.managementNumber
             swiftDataBook.isbn13 = book.isbn13
             swiftDataBook.publisher = book.publisher
             swiftDataBook.publishedDate = book.publishedDate

@@ -27,6 +27,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var pageCount: Int?
     /// カテゴリ・ジャンル
     public var categories: [String]
+    /// 独自の管理番号
+    public var managementNumber: String?
     
     /// 絵本モデルの初期化（完全版）
     /// - Parameters:
@@ -42,6 +44,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     ///   - targetAge: 対象年齢（任意）
     ///   - pageCount: ページ数（任意）
     ///   - categories: カテゴリ・ジャンル（デフォルトは空配列）
+    ///   - managementNumber: 独自の管理番号（任意）
     public init(
         id: UUID = UUID(),
         title: String,
@@ -54,11 +57,13 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         thumbnail: String? = nil,
         targetAge: Int? = nil,
         pageCount: Int? = nil,
-        categories: [String] = []
+        categories: [String] = [],
+        managementNumber: String? = nil
     ) {
         self.id = id
         self.title = title
         self.author = author
+        self.managementNumber = managementNumber
         self.isbn13 = isbn13
         self.publisher = publisher
         self.publishedDate = publishedDate
@@ -88,5 +93,6 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.targetAge = nil
         self.pageCount = nil
         self.categories = []
+        self.managementNumber = nil
     }
 }

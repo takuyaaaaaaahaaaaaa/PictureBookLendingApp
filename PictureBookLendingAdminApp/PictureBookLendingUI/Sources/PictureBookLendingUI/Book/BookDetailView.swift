@@ -58,6 +58,9 @@ public struct BookDetailView<ActionButton: View>: View {
             Section("基本情報") {
                 EditableDetailRow(label: "タイトル", value: $book.title)
                 EditableDetailRow(label: "著者", value: $book.author)
+                if let managementNumber = book.managementNumber, !managementNumber.isEmpty {
+                    DetailRow(label: "管理番号", value: managementNumber)
+                }
                 DetailRow(label: "管理ID", value: book.id.uuidString)
             }
             
