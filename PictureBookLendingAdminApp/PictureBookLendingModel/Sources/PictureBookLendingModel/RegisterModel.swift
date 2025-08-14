@@ -192,7 +192,8 @@ public class RegisterModel {
                 thumbnail: nil,
                 targetAge: 3,  // デフォルト対象年齢
                 pageCount: nil,
-                categories: []
+                categories: [],
+                managementNumber: ""
             )
         }
     }

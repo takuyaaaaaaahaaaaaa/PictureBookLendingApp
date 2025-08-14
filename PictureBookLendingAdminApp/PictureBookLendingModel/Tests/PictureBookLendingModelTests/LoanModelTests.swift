@@ -32,7 +32,7 @@ struct LoanModelTests {
         let classGroup = ClassGroup(name: "1年2組", ageGroup: 6, year: 2025)
         try mockRepositoryFactory.classGroupRepository.save(classGroup)
         
-        let initialBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+        let initialBook = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
         let initialUser = User(name: "山田太郎", classGroupId: classGroup.id)
         
         // 本とユーザーを登録
