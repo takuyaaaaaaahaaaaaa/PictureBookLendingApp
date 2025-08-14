@@ -27,7 +27,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var pageCount: Int?
     /// カテゴリ・ジャンル
     public var categories: [String]
-    /// 独自の管理番号
+    /// 組織がすでに管理している独自の管理番号
     public var managementNumber: String?
     
     /// 絵本モデルの初期化（完全版）

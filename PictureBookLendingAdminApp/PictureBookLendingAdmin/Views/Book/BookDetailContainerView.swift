@@ -13,7 +13,6 @@ struct BookDetailContainerView: View {
     @Environment(BookModel.self) private var bookModel
     
     @State private var book: Book
-    @State private var isEditSheetPresented = false
     @State private var alertState = AlertState()
     
     init(book: Book) {
@@ -25,7 +24,6 @@ struct BookDetailContainerView: View {
             book: $book,
             currentLoan: currentLoan,
             loanHistory: loanHistory,
-            onEdit: handleEdit
         ) {
             LoanActionContainerButton(bookId: book.id)
         }
@@ -33,13 +31,6 @@ struct BookDetailContainerView: View {
         #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
         #endif
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Button("編集") {
-                    isEditSheetPresented = true
-                }
-            }
-        }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -61,16 +52,6 @@ struct BookDetailContainerView: View {
     private var loanHistory: [Loan] {
         loanModel.getLoansByBook(bookId: book.id)
             .sorted { $0.loanDate > $1.loanDate }  // 新しい順にソート
-    }
-    
-    // MARK: - Actions
-    
-    private func handleEdit() {
-        isEditSheetPresented = true
-    }
-    
-    private func handleBookSaved(_ savedBook: Book) {
-        book = savedBook
     }
 }
 
