@@ -17,6 +17,7 @@ struct BookFormContainerView: View {
     
     @State private var book: Book
     @State private var alertState = AlertState()
+    @State private var isConfirmationPresented = false
     
     init(mode: BookFormMode, onSave: ((Book) -> Void)? = nil) {
         self.mode = mode
@@ -36,7 +37,7 @@ struct BookFormContainerView: View {
             BookFormView(
                 book: $book,
                 mode: mode,
-                actionButton: {
+                autoFillButton: {
                     BookAutoFillContainerButton(
                         targetBook: $book,
                         onAutoFillComplete: handleAutoFill
@@ -51,6 +52,14 @@ struct BookFormContainerView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(alertState.message)
+            }
+            .alert("管理番号の確認", isPresented: $isConfirmationPresented) {
+                Button("このまま保存", role: .none) {
+                    proceedWithSave()
+                }
+                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("管理番号が入力されていません。このまま保存しますか？")
             }
         }
     }
@@ -68,6 +77,18 @@ struct BookFormContainerView: View {
     // MARK: - Actions
     
     private func handleSave() {
+        // 管理番号が未入力または空の場合は確認モーダルを表示
+        let hasManagementNumber =
+            book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        
+        if !hasManagementNumber {
+            isConfirmationPresented = true
+        } else {
+            proceedWithSave()
+        }
+    }
+    
+    private func proceedWithSave() {
         do {
             let savedBook: Book
             switch mode {

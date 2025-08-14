@@ -1,28 +1,46 @@
 import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
+import TipKit
+
+/// 自動入力機能の案内用Tip
+struct AutoFillTip: Tip {
+    var title: Text {
+        Text("タイトルと著者名から自動入力")
+    }
+    
+    var message: Text? {
+        Text("タイトルと著者名を入力すると、書籍情報を自動検索して入力できます")
+    }
+    
+    var image: Image? {
+        Image(systemName: "wand.and.stars")
+    }
+}
 
 /// 絵本フォームのPresentation View
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert等の
 /// 画面制御はContainer Viewに委譲します。
-public struct BookFormView<ActionButton: View>: View {
+public struct BookFormView<AutoFillButton: View>: View {
     @Binding var book: Book
     let mode: BookFormMode
-    let actionButton: ActionButton?
+    let autoFillButton: AutoFillButton?
     let onSave: () -> Void
     let onCancel: () -> Void
+    
+    private let autoFillTip = AutoFillTip()
     
     public init(
         book: Binding<Book>,
         mode: BookFormMode,
-        @ViewBuilder actionButton: () -> ActionButton,
+        @ViewBuilder autoFillButton: () -> AutoFillButton,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void
     ) {
         self._book = book
         self.mode = mode
-        self.actionButton = actionButton()
+        self.autoFillButton = autoFillButton()
         self.onSave = onSave
         self.onCancel = onCancel
     }
@@ -32,10 +50,10 @@ public struct BookFormView<ActionButton: View>: View {
         mode: BookFormMode,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void
-    ) where ActionButton == EmptyView {
+    ) where AutoFillButton == EmptyView {
         self._book = book
         self.mode = mode
-        self.actionButton = nil
+        self.autoFillButton = nil
         self.onSave = onSave
         self.onCancel = onCancel
     }
@@ -45,16 +63,27 @@ public struct BookFormView<ActionButton: View>: View {
             // サムネイル表示セクション
             Section(header: Text("プレビュー")) {
                 thumbnailSection
-                
-                // 自動入力ボタン（Container側から注入）
-                if let actionButton = actionButton {
-                    actionButton
-                }
             }
             
             Section(header: Text("基本情報（*は必須）")) {
                 TextField("タイトル *", text: $book.title)
                 TextField("著者 *", text: $book.author)
+                
+                // 自動入力ボタン（タイトル・著者名の下に配置）
+                if let autoFillButton = autoFillButton {
+                    HStack {
+                        Image(systemName: "wand.and.stars")
+                            .foregroundStyle(.secondary)
+                        Text("タイトルと著者名から情報を自動入力")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        autoFillButton
+                    }
+                    .padding(.vertical, 4)
+                    .popoverTip(autoFillTip)
+                }
+                
                 TextField(
                     "管理番号（例: あ13）",
                     text: Binding(
