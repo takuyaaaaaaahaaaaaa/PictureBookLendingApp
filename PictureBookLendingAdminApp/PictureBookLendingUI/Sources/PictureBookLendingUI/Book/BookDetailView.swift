@@ -38,9 +38,9 @@ public struct BookDetailView<ActionButton: View>: View {
                         }
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                    .frame(width: 120, height: 160)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .frame(width: 120, height: 160)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     Spacer()
                 }

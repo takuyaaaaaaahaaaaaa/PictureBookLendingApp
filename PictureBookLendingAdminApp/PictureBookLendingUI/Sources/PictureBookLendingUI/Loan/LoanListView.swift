@@ -179,9 +179,9 @@ private struct LoanListRowView<Action: View>: View {
                 }
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-            .frame(width: 50, height: 65)
-            .background(.regularMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+                .frame(width: 50, height: 65)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
