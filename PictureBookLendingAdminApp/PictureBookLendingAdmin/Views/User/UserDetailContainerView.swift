@@ -16,12 +16,12 @@ struct UserDetailContainerView: View {
     
     /// 利用者
     @State private var user: User
-    /// 編集表示
-    @State private var isEditSheetPresented = false
     /// 貸出数
     @State private var activeLoansCount = 0
     /// 貸出履歴
     @State private var loanHistory: [Loan] = []
+    /// アラート状態管理
+    @State private var alertState = AlertState()
     
     init(user: User) {
         self._user = State(initialValue: user)
@@ -37,9 +37,24 @@ struct UserDetailContainerView: View {
             loanHistory: loanHistory,
             getBookTitle: getBookTitle,
             getClassGroupName: getClassGroupName,
-            onEdit: handleEdit
+            onEdit: {}
         )
         .navigationTitle(user.name)
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("保存") {
+                    saveUserChanges(user)
+                }
+            }
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
         .onAppear {
             loadUserData()
         }
@@ -47,13 +62,13 @@ struct UserDetailContainerView: View {
     
     // MARK: - Actions
     
-    private func handleEdit() {
-        isEditSheetPresented = true
-    }
-    
-    private func handleUserSaved(_ savedUser: User) {
-        user = savedUser
-        loadUserData()
+    private func saveUserChanges(_ updatedUser: User) {
+        do {
+            _ = try userModel.updateUser(updatedUser)
+            alertState = .success("利用者情報を保存しました")
+        } catch {
+            alertState = .error("利用者情報の保存に失敗しました: \(error.localizedDescription)")
+        }
     }
     
     /// 絵本タイトル取得

@@ -9,17 +9,26 @@ import SwiftUI
 public struct BookListView<RowAction: View>: View {
     let books: [Book]
     let searchText: Binding<String>
+    let isEditMode: Bool
+    let onSelect: (Book) -> Void
+    let onEdit: (Book) -> Void
     let onDelete: (IndexSet) -> Void
     let rowAction: (Book) -> RowAction
     
     public init(
         books: [Book],
         searchText: Binding<String>,
+        isEditMode: Bool = false,
+        onSelect: @escaping (Book) -> Void,
+        onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (IndexSet) -> Void,
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
         self.books = books
         self.searchText = searchText
+        self.isEditMode = isEditMode
+        self.onSelect = onSelect
+        self.onEdit = onEdit
         self.onDelete = onDelete
         self.rowAction = rowAction
     }
@@ -34,13 +43,28 @@ public struct BookListView<RowAction: View>: View {
         } else {
             List {
                 ForEach(books) { book in
-                    NavigationLink(value: book) {
-                        BookRowView(book: book, rowAction: rowAction)
+                    if isEditMode {
+                        Button {
+                            onEdit(book)
+                        } label: {
+                            BookRowView(book: book, rowAction: rowAction)
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        NavigationLink(value: book) {
+                            BookRowView(book: book, rowAction: rowAction)
+                        }
+                        .simultaneousGesture(
+                            TapGesture().onEnded {
+                                onSelect(book)
+                            })
                     }
                 }
-                .onDelete(perform: onDelete)
+                .onDelete(perform: isEditMode ? onDelete : nil)
             }
-            .searchable(text: searchText, prompt: "絵本のタイトルまたは著者で検索")
+            .searchable(
+                text: searchText, placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "絵本のタイトルまたは著者で検索")
         }
     }
 }
@@ -91,6 +115,8 @@ public struct BookRowView<RowAction: View>: View {
         BookListView(
             books: [book1, book2],
             searchText: .constant(""),
+            onSelect: { _ in },
+            onEdit: { _ in },
             onDelete: { _ in }
         ) { book in
             LoanButtonView(onTap: {})
