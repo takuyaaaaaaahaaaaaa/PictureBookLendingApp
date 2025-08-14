@@ -83,6 +83,7 @@ struct BookListContainerView: View {
     _ = try? mockFactory.bookRepository.save(book2)
     
     let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
@@ -93,4 +94,5 @@ struct BookListContainerView: View {
     return BookListContainerView()
         .environment(bookModel)
         .environment(loanModel)
+        .environment(userModel)
 }
