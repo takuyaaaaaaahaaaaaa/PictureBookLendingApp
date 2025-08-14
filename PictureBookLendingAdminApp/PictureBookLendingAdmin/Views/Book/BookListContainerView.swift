@@ -35,7 +35,10 @@ struct BookListContainerView: View {
         BookListView(
             books: filteredBooks,
             searchText: $searchText,
-            onDelete: handleDeleteBooks
+            isEditMode: false,
+            onSelect: handleSelectBook,
+            onEdit: { _ in },  // 編集モードオフなので使用されない
+            onDelete: { _ in }  // 編集モードオフなので削除不可
         ) { book in
             LoanActionContainerButton(bookId: book.id)
         }
@@ -65,15 +68,8 @@ struct BookListContainerView: View {
     
     // MARK: - Actions
     
-    private func handleDeleteBooks(at offsets: IndexSet) {
-        for index in offsets {
-            let book = filteredBooks[index]
-            do {
-                _ = try bookModel.deleteBook(book.id)
-            } catch {
-                alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
-            }
-        }
+    private func handleSelectBook(_ book: Book) {
+        // 絵本詳細画面に遷移（NavigationLinkで自動的に処理される）
     }
 }
 

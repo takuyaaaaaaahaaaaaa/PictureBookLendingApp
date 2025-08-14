@@ -13,6 +13,8 @@ struct SettingsBookListContainerView: View {
     
     @State private var searchText = ""
     @State private var isAddSheetPresented = false
+    @State private var editingBook: Book?
+    @State private var isEditMode = false
     @State private var alertState = AlertState()
     
     private var filteredBooks: [Book] {
@@ -30,6 +32,9 @@ struct SettingsBookListContainerView: View {
         BookListView(
             books: filteredBooks,
             searchText: $searchText,
+            isEditMode: isEditMode,
+            onSelect: handleSelectBook,
+            onEdit: handleEditBook,
             onDelete: handleDeleteBooks
         ) { book in
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
@@ -39,6 +44,12 @@ struct SettingsBookListContainerView: View {
             BookDetailContainerView(book: book)
         }
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button(isEditMode ? "完了" : "編集") {
+                    isEditMode.toggle()
+                }
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
                     isAddSheetPresented = true
@@ -56,12 +67,28 @@ struct SettingsBookListContainerView: View {
                     }
                 )
             }
+            .sheet(item: $editingBook) { book in
+                BookFormContainerView(
+                    mode: .edit(book),
+                    onSave: { _ in
+                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
+                    }
+                )
+            }
         #else
             .fullScreenCover(isPresented: $isAddSheetPresented) {
                 BookFormContainerView(
                     mode: .add,
                     onSave: { _ in
                         // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
+                    }
+                )
+            }
+            .fullScreenCover(item: $editingBook) { book in
+                BookFormContainerView(
+                    mode: .edit(book),
+                    onSave: { _ in
+                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
                     }
                 )
             }
@@ -82,6 +109,14 @@ struct SettingsBookListContainerView: View {
     }
     
     // MARK: - Actions
+    
+    private func handleSelectBook(_ book: Book) {
+        // 絵本詳細画面に遷移（NavigationLinkで自動的に処理される）
+    }
+    
+    private func handleEditBook(_ book: Book) {
+        editingBook = book
+    }
     
     private func handleDeleteBooks(at offsets: IndexSet) {
         for index in offsets {
