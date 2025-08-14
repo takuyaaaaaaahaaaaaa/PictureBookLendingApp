@@ -19,7 +19,6 @@
 		EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91542DF0A0D6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91572DF0A1A6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91562DF0A1A6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91592DF0A1AB007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */; };
-		EFFB36EC2E4DD1A3001D68FC /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = EFFB36EB2E4DD1A3001D68FC /* Kingfisher */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,7 +70,6 @@
 				EF6CC9292E21CB6E0092EEDE /* PictureBookLendingInfrastructure in Frameworks */,
 				EF8FCE702E2153450044F238 /* PictureBookLendingUI in Frameworks */,
 				EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */,
-				EFFB36EC2E4DD1A3001D68FC /* Kingfisher in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -156,7 +154,6 @@
 				EF8FCE6F2E2153450044F238 /* PictureBookLendingUI */,
 				EF6CC9282E21CB6E0092EEDE /* PictureBookLendingInfrastructure */,
 				EF65430A2E225FB000D9B543 /* PictureBookLendingModel */,
-				EFFB36EB2E4DD1A3001D68FC /* Kingfisher */,
 			);
 			productName = PictureBookLendingAdmin;
 			productReference = EFF77EF02DD66AAB009BD213 /* PictureBookLendingAdmin.app */;
@@ -247,7 +244,6 @@
 			mainGroup = EFF77EE72DD66AAB009BD213;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				EFFB36E82E4DD184001D68FC /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFF77EF12DD66AAB009BD213 /* Products */;
@@ -695,17 +691,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		EFFB36E82E4DD184001D68FC /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/onevcat/Kingfisher";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 8.5.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
 		EF6543062E225FA400D9B543 /* PictureBookLendingModel */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -754,11 +739,6 @@
 		EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PictureBookLendingDomain;
-		};
-		EFFB36EB2E4DD1A3001D68FC /* Kingfisher */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = EFFB36E82E4DD184001D68FC /* XCRemoteSwiftPackageReference "Kingfisher" */;
-			productName = Kingfisher;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
