@@ -25,9 +25,9 @@ public struct BookFormView: View {
     
     public var body: some View {
         Form {
-            Section(header: Text("基本情報")) {
-                TextField("タイトル", text: $book.title)
-                TextField("著者", text: $book.author)
+            Section(header: Text("基本情報（*は必須）")) {
+                TextField("タイトル *", text: $book.title)
+                TextField("著者 *", text: $book.author)
                 TextField(
                     "管理番号（例: あ13）",
                     text: Binding(
@@ -36,7 +36,7 @@ public struct BookFormView: View {
                     ))
             }
             
-            Section(header: Text("詳細情報")) {
+            Section(header: Text("詳細情報（任意）")) {
                 TextField(
                     "ISBN-13",
                     text: Binding(
@@ -57,7 +57,7 @@ public struct BookFormView: View {
                     ))
             }
             
-            Section(header: Text("その他")) {
+            Section(header: Text("その他（任意）")) {
                 Stepper(
                     "対象年齢: \(book.targetAge ?? 0)歳",
                     value: Binding(
@@ -83,7 +83,7 @@ public struct BookFormView: View {
                 #endif
             }
             
-            Section(header: Text("説明")) {
+            Section(header: Text("説明（任意）")) {
                 TextField(
                     "絵本の説明・あらすじ",
                     text: Binding(

@@ -203,7 +203,8 @@ public struct BookSearchView: View {
                                         thumbnail: manualBook.thumbnail,
                                         targetAge: manualBook.targetAge,
                                         pageCount: manualBook.pageCount,
-                                        categories: manualBook.categories
+                                        categories: manualBook.categories,
+                                        managementNumber: manualBook.managementNumber
                                     )
                                     onManualBookChanged(updatedBook)
                                 }
@@ -232,7 +233,8 @@ public struct BookSearchView: View {
                                         thumbnail: manualBook.thumbnail,
                                         targetAge: manualBook.targetAge,
                                         pageCount: manualBook.pageCount,
-                                        categories: manualBook.categories
+                                        categories: manualBook.categories,
+                                        managementNumber: manualBook.managementNumber
                                     )
                                     onManualBookChanged(updatedBook)
                                 }
@@ -259,7 +261,8 @@ public struct BookSearchView: View {
                                 thumbnail: manualBook.thumbnail,
                                 targetAge: newAge,
                                 pageCount: manualBook.pageCount,
-                                categories: manualBook.categories
+                                categories: manualBook.categories,
+                                managementNumber: manualBook.managementNumber
                             )
                             onManualBookChanged(updatedBook)
                         }
@@ -397,7 +400,8 @@ struct SearchResultRow: View {
                     book: Book(
                         title: "ぐりとぐら",
                         author: "なかがわりえこ",
-                        targetAge: 3
+                        targetAge: 3,
+                        managementNumber: nil
                     ),
                     score: 0.95
                 ),
@@ -405,7 +409,8 @@ struct SearchResultRow: View {
                     book: Book(
                         title: "ぐりとぐらのおきゃくさま",
                         author: "なかがわりえこ",
-                        targetAge: 3
+                        targetAge: 3,
+                        managementNumber: nil
                     ),
                     score: 0.75
                 ),
@@ -442,7 +447,8 @@ struct SearchResultRow: View {
             manualBook: Book(
                 title: "テスタイトル",
                 author: "テスト著者",
-                targetAge: 4
+                targetAge: 4,
+                managementNumber: nil
             ),
             onManualBookChanged: { _ in },
             onSearch: {},
