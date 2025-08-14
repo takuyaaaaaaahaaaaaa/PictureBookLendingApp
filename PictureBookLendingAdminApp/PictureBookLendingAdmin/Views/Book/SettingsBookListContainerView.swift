@@ -44,11 +44,13 @@ struct SettingsBookListContainerView: View {
             BookDetailContainerView(book: book)
         }
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button(isEditMode ? "完了" : "編集") {
+            ToolbarItem {
+                Button(isEditMode ? "編集モード完了" : "編集モード") {
                     isEditMode.toggle()
                 }
             }
+            
+            ToolbarSpacer(.fixed)
             
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {

@@ -43,7 +43,6 @@ struct BookListContainerView: View {
             LoanActionContainerButton(bookId: book.id)
         }
         .navigationTitle("絵本")
-        .searchable(text: $searchText, prompt: "タイトル・著者で検索")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 // 設定ボタン
