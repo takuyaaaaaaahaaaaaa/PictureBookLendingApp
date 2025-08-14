@@ -8,8 +8,8 @@ public struct ClassGroup: Identifiable, Equatable, Sendable, Codable, Hashable {
     /// クラス名（例: "ひよこ組"）
     public var name: String
     
-    /// 年齢グループ（例: 0歳児、1歳児など）
-    public var ageGroup: Int
+    /// 年齢グループ（例: "0歳児", "1歳児", "大人"など）
+    public var ageGroup: String
     
     /// 年度（例: 2025）
     public var year: Int
@@ -17,7 +17,7 @@ public struct ClassGroup: Identifiable, Equatable, Sendable, Codable, Hashable {
     public init(
         id: UUID = UUID(),
         name: String,
-        ageGroup: Int,
+        ageGroup: String,
         year: Int
     ) {
         self.id = id

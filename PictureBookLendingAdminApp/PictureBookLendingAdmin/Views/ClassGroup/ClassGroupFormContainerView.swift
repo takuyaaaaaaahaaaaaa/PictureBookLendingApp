@@ -20,7 +20,7 @@ struct ClassGroupFormContainerView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var name = ""
-    @State private var ageGroup = 0
+    @State private var ageGroup = "0歳児"
     @State private var year = Calendar.current.component(.year, from: Date())
     
     init(mode: ClassGroupFormMode, onSave: @escaping (ClassGroup) -> Void) {

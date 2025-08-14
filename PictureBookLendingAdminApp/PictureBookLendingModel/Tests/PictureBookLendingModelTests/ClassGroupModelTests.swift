@@ -32,7 +32,7 @@ struct ClassGroupModelTests {
     func registerClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         
         // 2. Act - 実行
         try classGroupModel.registerClassGroup(classGroup)
@@ -41,7 +41,7 @@ struct ClassGroupModelTests {
         let classGroups = classGroupModel.getAllClassGroups()
         #expect(classGroups.count == 1)
         #expect(classGroups.first?.name == "ひよこ組")
-        #expect(classGroups.first?.ageGroup == 0)
+        #expect(classGroups.first?.ageGroup == "0歳児")
         #expect(classGroups.first?.year == 2025)
     }
     
@@ -53,8 +53,8 @@ struct ClassGroupModelTests {
     func getAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
-        let classGroup1 = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
-        let classGroup2 = ClassGroup(name: "りす組", ageGroup: 1, year: 2025)
+        let classGroup1 = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
+        let classGroup2 = ClassGroup(name: "りす組", ageGroup: "1歳児", year: 2025)
         
         // 2. Act - 実行
         try classGroupModel.registerClassGroup(classGroup1)
@@ -74,7 +74,7 @@ struct ClassGroupModelTests {
     func findClassGroupById() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         try classGroupModel.registerClassGroup(classGroup)
         let id = classGroup.id
         
@@ -84,7 +84,7 @@ struct ClassGroupModelTests {
         // 3. Assert - 検証
         #expect(foundClassGroup != nil)
         #expect(foundClassGroup?.name == "ひよこ組")
-        #expect(foundClassGroup?.ageGroup == 0)
+        #expect(foundClassGroup?.ageGroup == "0歳児")
         #expect(foundClassGroup?.year == 2025)
     }
     
@@ -96,7 +96,7 @@ struct ClassGroupModelTests {
     func updateClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         try classGroupModel.registerClassGroup(classGroup)
         
         var updatedClassGroup = classGroup
@@ -120,7 +120,7 @@ struct ClassGroupModelTests {
     func deleteClassGroup() throws {
         // 1. Arrange - 準備
         let (classGroupModel, _) = createClassGroupModel()
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         try classGroupModel.registerClassGroup(classGroup)
         let id = classGroup.id
         
@@ -142,7 +142,7 @@ struct ClassGroupModelTests {
     func loadAllClassGroups() throws {
         // 1. Arrange - 準備
         let (classGroupModel, repository) = createClassGroupModel()
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         try repository.save(classGroup)
         
         // 2. Act - 実行
@@ -168,7 +168,7 @@ struct ClassGroupModelTests {
         #expect(classGroupModel.getAllClassGroups().count == 0)
         
         // リポジトリに直接データを追加
-        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: 0, year: 2025)
+        let classGroup = ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025)
         try repository.save(classGroup)
         
         // 2. Act - 実行

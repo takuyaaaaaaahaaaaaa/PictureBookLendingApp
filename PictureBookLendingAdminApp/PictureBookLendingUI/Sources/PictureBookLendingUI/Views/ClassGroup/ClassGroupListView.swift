@@ -69,7 +69,7 @@ public struct ClassGroupListRowView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     
-                    let ageGroupText = Text("\(classGroup.ageGroup)歳児 ")
+                    let ageGroupText = Text("\(classGroup.ageGroup) ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
                     let userCountText = Text(" • \(userCount)人")
                     Text("\(ageGroupText)(\(yearText))\(userCountText)")
@@ -93,9 +93,9 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [
-                ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024),
-                ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024),
-                ClassGroup(name: "さくら組", ageGroup: 5, year: 2024),
+                ClassGroup(name: "ひまわり組", ageGroup: "3歳児", year: 2024),
+                ClassGroup(name: "たんぽぽ組", ageGroup: "4歳児", year: 2024),
+                ClassGroup(name: "さくら組", ageGroup: "5歳児", year: 2024),
             ],
             getUserCount: { _ in 8 },
             onAdd: {},
@@ -122,10 +122,10 @@ public struct ClassGroupListRowView: View {
 #Preview("組の行") {
     List {
         ClassGroupListRowView(
-            classGroup: ClassGroup(name: "ひまわり組", ageGroup: 3, year: 2024), userCount: 8
+            classGroup: ClassGroup(name: "ひまわり組", ageGroup: "3歳児", year: 2024), userCount: 8
         ) {}
         ClassGroupListRowView(
-            classGroup: ClassGroup(name: "たんぽぽ組", ageGroup: 4, year: 2024), userCount: 12
+            classGroup: ClassGroup(name: "たんぽぽ組", ageGroup: "4歳児", year: 2024), userCount: 12
         ) {}
     }
 }

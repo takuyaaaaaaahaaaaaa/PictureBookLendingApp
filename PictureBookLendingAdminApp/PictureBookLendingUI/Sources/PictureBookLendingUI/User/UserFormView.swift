@@ -48,8 +48,8 @@ public struct UserFormView: View {
 #Preview {
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     let classGroups = [
-        ClassGroup(name: "きく", ageGroup: 1, year: 2025),
-        ClassGroup(name: "ひまわり", ageGroup: 2, year: 2025),
+        ClassGroup(name: "きく", ageGroup: "1歳児", year: 2025),
+        ClassGroup(name: "ひまわり", ageGroup: "2歳児", year: 2025),
     ]
     
     NavigationStack {
