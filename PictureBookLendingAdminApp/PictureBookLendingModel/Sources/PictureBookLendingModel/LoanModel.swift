@@ -340,4 +340,21 @@ public class LoanModel {
             return loans.filter { $0.bookId == bookId }
         }
     }
+    
+    /// 返却期限切れの貸出情報を取得する
+    ///
+    /// - Returns: 返却期限切れの貸出情報リスト
+    public func getOverdueLoans() -> [Loan] {
+        let today = Date()
+        return getActiveLoans().filter { loan in
+            loan.dueDate < today
+        }
+    }
+    
+    /// 返却期限切れの貸出件数を取得する
+    ///
+    /// - Returns: 返却期限切れの貸出件数
+    public func getOverdueLoansCount() -> Int {
+        return getOverdueLoans().count
+    }
 }

@@ -298,4 +298,51 @@ struct LoanModelTests {
         // アクティブな貸出は3冊のまま
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
     }
+    
+    /// 返却期限切れ貸出の取得機能テスト
+    @Test("返却期限切れ貸出の取得機能テスト")
+    @MainActor
+    func getOverdueLoans() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        // 貸出実行
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
+        
+        // 返却期限切れでない状態では、返却期限切れ貸出は0件
+        let overdueLoansBeforeExpiry = loanModel.getOverdueLoans()
+        let overdueCountBeforeExpiry = loanModel.getOverdueLoansCount()
+        #expect(overdueLoansBeforeExpiry.count == 0)
+        #expect(overdueCountBeforeExpiry == 0)
+        
+        // 返却期限切れの貸出を作成するため、過去の日付に設定された貸出を作成
+        let pastDate = Calendar.current.date(byAdding: .day, value: -15, to: Date())!
+        let expiredLoan = Loan(
+            id: UUID(),
+            bookId: UUID(), // 別の絵本ID
+            user: testUser,
+            loanDate: pastDate,
+            dueDate: Calendar.current.date(byAdding: .day, value: -1, to: Date())!, // 昨日が期限
+            returnedDate: nil
+        )
+        
+        // モックリポジトリに期限切れ貸出を追加
+        _ = try mockRepositoryFactory.loanRepository.save(expiredLoan)
+        
+        // LoanModelのキャッシュを更新
+        loanModel.refreshLoans()
+        
+        // 返却期限切れ貸出の確認
+        let overdueLoansAfterExpiry = loanModel.getOverdueLoans()
+        let overdueCountAfterExpiry = loanModel.getOverdueLoansCount()
+        #expect(overdueLoansAfterExpiry.count == 1)
+        #expect(overdueCountAfterExpiry == 1)
+        #expect(overdueLoansAfterExpiry.first?.id == expiredLoan.id)
+        
+        // アクティブな貸出は2件（期限内と期限切れ）
+        let activeLoans = loanModel.getActiveLoans()
+        #expect(activeLoans.count == 2)
+    }
 }
