@@ -112,7 +112,7 @@ struct LoanActionContainerButton: View {
     )
     let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
     
-    let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
+    let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
     
     VStack(spacing: 16) {
         LoanActionContainerButton(bookId: sampleBook.id)
