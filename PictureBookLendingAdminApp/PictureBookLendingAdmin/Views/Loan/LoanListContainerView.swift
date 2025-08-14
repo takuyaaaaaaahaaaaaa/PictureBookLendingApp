@@ -32,9 +32,22 @@ struct LoanListContainerView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 // 設定ボタン
-                SettingContainerButton()
+                // TODO: iOS26 beta6の不具合で動かない
+                //SettingContainerButton()
+                Button("設定", systemImage: "gearshape") {
+                    isSettingsPresented = true
+                }
             }
         }
+        #if os(macOS)
+            .sheet(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #else
+            .fullScreenCover(isPresented: $isSettingsPresented) {
+                SettingsContainerView()
+            }
+        #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {
