@@ -1,3 +1,4 @@
+import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
 
@@ -170,16 +171,14 @@ private struct LoanListRowView<Action: View>: View {
     var body: some View {
         HStack {
             // サムネイル画像
-            AsyncImage(url: URL(string: loan.bookThumbnail ?? loan.bookSmallThumbnail ?? "")) {
-                image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                Image(systemName: "book.closed")
-                    .foregroundStyle(.secondary)
-                    .font(.title2)
-            }
+            KFImage(URL(string: loan.bookThumbnail ?? loan.bookSmallThumbnail ?? ""))
+                .placeholder {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.title2)
+                }
+                .resizable()
+                .aspectRatio(contentMode: .fit)
             .frame(width: 50, height: 65)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
