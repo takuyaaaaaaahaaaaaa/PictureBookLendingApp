@@ -13,6 +13,7 @@ struct LoanFormContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(LoanSettingsModel.self) private var loanSettingModel
     @Environment(\.dismiss) private var dismiss
     
     /// 選択した絵本
@@ -29,6 +30,7 @@ struct LoanFormContainerView: View {
                 book: selectedBook,
                 classGroups: classGroupModel.getAllClassGroups(),
                 users: filteredUsersForSelectedClassGroup,
+                dueDate: dueDate,
                 selectedClassGroup: $selectedClassGroup,
                 selectedUser: $selectedUser,
                 isValidInput: isValidInput
@@ -70,6 +72,11 @@ struct LoanFormContainerView: View {
     }
     
     // MARK: - Computed Properties
+    
+    /// 返却予定日
+    private var dueDate: Date {
+        loanSettingModel.settings.calculateDueDate(from: Date())
+    }
     
     private var filteredUsersForSelectedClassGroup: [User] {
         guard let selectedClassGroup = selectedClassGroup else {
@@ -137,6 +144,8 @@ struct LoanFormContainerView: View {
         loanSettingsRepository: mockRepositoryFactory.loanSettingsRepository
     )
     let classGroupModel = ClassGroupModel(repository: mockRepositoryFactory.classGroupRepository)
+    let loanSettingModel = LoanSettingsModel(
+        repository: mockRepositoryFactory.loanSettingsRepository)
     
     let selectedBook = Book(title: "りんごかもしれない", author: "ヨシタケ・シンスケ")
     
@@ -144,4 +153,5 @@ struct LoanFormContainerView: View {
         .environment(userModel)
         .environment(loanModel)
         .environment(classGroupModel)
+        .environment(loanSettingModel)
 }
