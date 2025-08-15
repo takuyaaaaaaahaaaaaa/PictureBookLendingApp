@@ -15,27 +15,49 @@ struct BookListContainerView: View {
     @State private var searchText = ""
     @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
-    @State private var useSectionView = false
+    @State private var selectedKanaFilter: KanaGroup?
     
-    private var filteredBooks: [Book] {
+    private var filteredSections: [BookSection] {
         // 全絵本を表示（貸出可能・貸出中を含む）
         let allBooks = bookModel.books
         
         // 検索テキストでフィルタリング
-        return if searchText.isEmpty {
-            allBooks
-        } else {
-            allBooks.filter { book in
-                book.title.localizedCaseInsensitiveContains(searchText)
-                    || book.author.localizedCaseInsensitiveContains(searchText)
+        let filteredBooks: [Book] =
+            if searchText.isEmpty {
+                allBooks
+            } else {
+                allBooks.filter { book in
+                    book.title.localizedCaseInsensitiveContains(searchText)
+                        || book.author.localizedCaseInsensitiveContains(searchText)
+                }
             }
+
+        // 五十音グループごとに分類
+        let groupedBooks = Dictionary(grouping: filteredBooks) { book -> KanaGroup in
+            return book.kanaGroup ?? .other
         }
+        
+        // セクションを作成
+        var sections = groupedBooks.compactMap { (kanaGroup, books) in
+            BookSection(kanaGroup: kanaGroup, books: books.sorted { $0.title < $1.title })
+        }
+        
+        // 五十音順にソート
+        sections.sort { $0.kanaGroup.sortOrder < $1.kanaGroup.sortOrder }
+        
+        // 選択されたフィルターがある場合は該当セクションのみ表示
+        if let selectedKanaFilter = selectedKanaFilter {
+            return sections.filter { $0.kanaGroup == selectedKanaFilter }
+        }
+        
+        return sections
     }
     
     var body: some View {
         BookListView(
-            books: filteredBooks,
+            sections: filteredSections,
             searchText: $searchText,
+            selectedKanaFilter: $selectedKanaFilter,
             isEditMode: false,
             onSelect: handleSelectBook,
             onEdit: { _ in },  // 編集モードオフなので使用されない
