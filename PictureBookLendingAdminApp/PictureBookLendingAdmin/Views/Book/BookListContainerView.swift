@@ -86,6 +86,16 @@ struct BookListContainerView: View {
         ) { book in
             LoanActionContainerButton(bookId: book.id)
         }
+        #if os(iOS)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "絵本のタイトルまたは著者で検索")
+        #else
+            .searchable(
+                text: $searchText,
+                prompt: "絵本のタイトルまたは著者で検索")
+        #endif
         .navigationTitle("絵本")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

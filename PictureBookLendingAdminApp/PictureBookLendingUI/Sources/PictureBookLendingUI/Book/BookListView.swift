@@ -206,16 +206,6 @@ public struct BookListView<RowAction: View>: View {
                 }
             }
         }
-        #if os(iOS)
-            .searchable(
-                text: $searchText,
-                placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "絵本のタイトルまたは著者で検索")
-        #else
-            .searchable(
-                text: $searchText,
-                prompt: "絵本のタイトルまたは著者で検索")
-        #endif
     }
     
     /// 絵本行のコンテンツ
