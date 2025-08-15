@@ -48,9 +48,22 @@
 		EFF77F0A2DD66AAD009BD213 /* PictureBookLendingAdminUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PictureBookLendingAdminUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		EFFB37302E4ED7E9001D68FC /* Exceptions for "PictureBookLendingAdmin" folder in "PictureBookLendingAdmin" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = EFF77EEF2DD66AAB009BD213 /* PictureBookLendingAdmin */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		EFF77EF22DD66AAB009BD213 /* PictureBookLendingAdmin */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				EFFB37302E4ED7E9001D68FC /* Exceptions for "PictureBookLendingAdmin" folder in "PictureBookLendingAdmin" target */,
+			);
 			path = PictureBookLendingAdmin;
 			sourceTree = "<group>";
 		};
@@ -477,6 +490,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "絵本のサムネイル写真を撮影するためにカメラを使用しま";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -521,6 +536,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "絵本のサムネイル写真を撮影するためにカメラを使用しま";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

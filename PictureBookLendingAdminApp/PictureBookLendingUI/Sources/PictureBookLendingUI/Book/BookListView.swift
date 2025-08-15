@@ -240,17 +240,15 @@ public struct BookRowView<RowAction: View>: View {
     public var body: some View {
         HStack {
             // サムネイル画像
-            KFImage(URL(string: book.smallThumbnail ?? book.thumbnail ?? ""))
-                .placeholder {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                        .font(.title2)
-                }
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 50, height: 65)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            BookImageView(imageURL: book.smallThumbnail ?? book.thumbnail) {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(.secondary)
+                    .font(.title2)
+            }
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 50, height: 65)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)

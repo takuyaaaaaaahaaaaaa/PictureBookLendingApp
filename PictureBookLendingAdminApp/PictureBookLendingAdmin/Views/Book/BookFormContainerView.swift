@@ -20,6 +20,7 @@ struct BookFormContainerView: View {
     @State private var isConfirmationPresented = false
     @State private var isDuplicateConfirmationPresented = false
     @State private var duplicatedBook: Book?
+    @State private var isCameraPresented = false
     
     init(mode: BookFormMode, onSave: ((Book) -> Void)? = nil) {
         self.mode = mode
@@ -46,7 +47,8 @@ struct BookFormContainerView: View {
                     )
                 },
                 onSave: handleSave,
-                onCancel: handleCancel
+                onCancel: handleCancel,
+                onCameraTap: handleCameraTap
             )
             .navigationTitle(isEditMode ? "絵本を編集" : "絵本を追加")
             .interactiveDismissDisabled()
@@ -79,6 +81,14 @@ struct BookFormContainerView: View {
                 } else {
                     Text("この管理番号は既に使用されています。それでも保存しますか？")
                 }
+            }
+            .sheet(isPresented: $isCameraPresented) {
+                CameraImagePickerView(
+                    onImagePicked: handleImagePicked,
+                    onCancel: {
+                        isCameraPresented = false
+                    }
+                )
             }
         }
     }
@@ -158,6 +168,27 @@ struct BookFormContainerView: View {
     private func updateKanaGroup(for title: String) {
         let kanaGroup = KanaGroup.from(text: title)
         book.kanaGroup = kanaGroup
+    }
+    
+    /// カメラボタンタップ時の処理
+    private func handleCameraTap() {
+        isCameraPresented = true
+    }
+    
+    /// 撮影画像の処理
+    private func handleImagePicked(_ image: UIImage) {
+        isCameraPresented = false
+        
+        do {
+            // 画像をローカルに保存
+            let localPath = try ImageStorageUtility.saveImage(image)
+            
+            // Bookのthumbnailフィールドにローカルパスを設定
+            book.thumbnail = localPath
+            
+        } catch {
+            alertState = .error("画像の保存に失敗しました: \(error.localizedDescription)")
+        }
     }
 }
 

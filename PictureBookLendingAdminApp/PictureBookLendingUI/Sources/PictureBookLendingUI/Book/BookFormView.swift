@@ -3,6 +3,10 @@ import PictureBookLendingDomain
 import SwiftUI
 import TipKit
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+
 /// 自動入力機能の案内用Tip
 struct AutoFillTip: Tip {
     var title: Text {
@@ -28,6 +32,7 @@ public struct BookFormView<AutoFillButton: View>: View {
     let autoFillButton: AutoFillButton?
     let onSave: () -> Void
     let onCancel: () -> Void
+    let onCameraTap: (() -> Void)?
     
     private let autoFillTip = AutoFillTip()
     
@@ -36,26 +41,30 @@ public struct BookFormView<AutoFillButton: View>: View {
         mode: BookFormMode,
         @ViewBuilder autoFillButton: () -> AutoFillButton,
         onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onCameraTap: (() -> Void)? = nil
     ) {
         self._book = book
         self.mode = mode
         self.autoFillButton = autoFillButton()
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onCameraTap = onCameraTap
     }
     
     public init(
         book: Binding<Book>,
         mode: BookFormMode,
         onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onCameraTap: (() -> Void)? = nil
     ) where AutoFillButton == EmptyView {
         self._book = book
         self.mode = mode
         self.autoFillButton = nil
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onCameraTap = onCameraTap
     }
     
     public var body: some View {
@@ -197,29 +206,47 @@ public struct BookFormView<AutoFillButton: View>: View {
     
     @ViewBuilder
     private var thumbnailSection: some View {
-        HStack {
-            Spacer()
-            
-            if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
-                KFImage(URL(string: thumbnailURL))
-                    .placeholder {
+        VStack(spacing: 12) {
+            HStack {
+                Spacer()
+                
+                if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
+                    BookImageView(imageURL: thumbnailURL) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
                             .font(.system(size: 40))
                     }
-                    .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 150)
                     .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                    .frame(height: 100)
+                } else {
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.secondary)
+                        .frame(height: 100)
+                }
+                
+                Spacer()
             }
             
-            Spacer()
+            // カメラボタン
+            #if canImport(UIKit)
+                if let onCameraTap = onCameraTap, CameraUtility.isCameraAvailable {
+                    Button(action: onCameraTap) {
+                        HStack {
+                            Image(systemName: "camera")
+                            Text("写真を撮影")
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.accentColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            #endif
         }
     }
 }
@@ -239,9 +266,9 @@ public struct BookFormView<AutoFillButton: View>: View {
     )
     
     NavigationStack {
-        BookFormView(
+        BookFormView<EmptyView>(
             book: $sampleBook,
-            mode: .add,
+            mode: BookFormMode.add,
             onSave: {},
             onCancel: {}
         )
