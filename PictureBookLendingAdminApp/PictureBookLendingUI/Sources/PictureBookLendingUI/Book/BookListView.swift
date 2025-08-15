@@ -65,8 +65,6 @@ public struct BookListView<RowAction: View>: View {
     @Binding public var selectedSortType: BookSortType
     /// 編集モードかどうか
     public let isEditMode: Bool
-    /// 絵本選択時の動作
-    public let onSelect: (Book) -> Void
     /// 絵本編集時の動作
     public let onEdit: (Book) -> Void
     /// 絵本削除時の動作
@@ -82,7 +80,6 @@ public struct BookListView<RowAction: View>: View {
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
         selectedSortType: Binding<BookSortType>,
         isEditMode: Bool = false,
-        onSelect: @escaping (Book) -> Void,
         onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (Book) -> Void,
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
@@ -93,7 +90,6 @@ public struct BookListView<RowAction: View>: View {
         self.kanaFilterOptions = kanaFilterOptions
         self._selectedSortType = selectedSortType
         self.isEditMode = isEditMode
-        self.onSelect = onSelect
         self.onEdit = onEdit
         self.onDelete = onDelete
         self.rowAction = rowAction
@@ -232,10 +228,6 @@ public struct BookListView<RowAction: View>: View {
             NavigationLink(value: book) {
                 BookRowView(book: book, rowAction: rowAction)
             }
-            .simultaneousGesture(
-                TapGesture().onEnded {
-                    onSelect(book)
-                })
         }
     }
 }
@@ -302,7 +294,6 @@ public struct BookRowView<RowAction: View>: View {
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
             isEditMode: true,
-            onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }
         ) { book in

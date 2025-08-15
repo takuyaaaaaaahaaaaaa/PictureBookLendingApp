@@ -9,32 +9,38 @@ public struct UserDetailView: View {
     @Binding var userName: String
     @Binding var userClassGroupId: UUID
     let userId: UUID
+    let userType: UserType
     let availableClassGroups: [ClassGroup]
     let activeLoansCount: Int
     let loanHistory: [Loan]
     let getBookTitle: (UUID) -> String
     let getClassGroupName: (UUID) -> String
+    let getRelatedUserName: (UUID) -> String
     let onEdit: () -> Void
     
     public init(
         userName: Binding<String>,
         userClassGroupId: Binding<UUID>,
         userId: UUID,
+        userType: UserType,
         availableClassGroups: [ClassGroup],
         activeLoansCount: Int,
         loanHistory: [Loan],
         getBookTitle: @escaping (UUID) -> String,
         getClassGroupName: @escaping (UUID) -> String,
+        getRelatedUserName: @escaping (UUID) -> String = { _ in "不明な利用者" },
         onEdit: @escaping () -> Void
     ) {
         self._userName = userName
         self._userClassGroupId = userClassGroupId
         self.userId = userId
+        self.userType = userType
         self.availableClassGroups = availableClassGroups
         self.activeLoansCount = activeLoansCount
         self.loanHistory = loanHistory
         self.getBookTitle = getBookTitle
         self.getClassGroupName = getClassGroupName
+        self.getRelatedUserName = getRelatedUserName
         self.onEdit = onEdit
     }
     
@@ -49,6 +55,21 @@ public struct UserDetailView: View {
                     options: availableClassGroups.map(\.id),
                     displayText: getClassGroupName
                 )
+                
+                // 利用者種別表示
+                HStack {
+                    Text("利用者種別")
+                    Spacer()
+                    HStack {
+                        Text(userType.displayName)
+                        
+                        if case .guardian(let relatedChildId) = userType {
+                            Text("(\(getRelatedUserName(relatedChildId))の保護者)")
+                                .foregroundStyle(.secondary)
+                                .font(.caption)
+                        }
+                    }
+                }
                 
                 DetailRow(label: "管理ID", value: userId.uuidString)
             }
@@ -154,6 +175,7 @@ public struct UserLoanHistoryRow: View {
             userName: $userName,
             userClassGroupId: $userClassGroupId,
             userId: sampleUserId,
+            userType: .child,
             availableClassGroups: sampleClassGroups,
             activeLoansCount: 1,
             loanHistory: [sampleLoan],
@@ -161,6 +183,7 @@ public struct UserLoanHistoryRow: View {
             getClassGroupName: { id in
                 sampleClassGroups.first { $0.id == id }?.name ?? "不明"
             },
+            getRelatedUserName: { _ in "田中花子" },
             onEdit: {}
         )
         .navigationTitle(userName)

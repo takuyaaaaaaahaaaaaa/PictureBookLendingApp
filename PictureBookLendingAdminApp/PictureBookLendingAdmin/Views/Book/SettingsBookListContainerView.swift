@@ -78,7 +78,6 @@ struct SettingsBookListContainerView: View {
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
-            onSelect: handleSelectBook,
             onEdit: handleEditBook,
             onDelete: handleDeleteBook
         ) { book in
@@ -136,10 +135,6 @@ struct SettingsBookListContainerView: View {
     }
     
     // MARK: - Actions
-    
-    private func handleSelectBook(_ book: Book) {
-        // 絵本詳細画面に遷移（NavigationLinkで自動的に処理される）
-    }
     
     private func handleEditBook(_ book: Book) {
         editingBook = book

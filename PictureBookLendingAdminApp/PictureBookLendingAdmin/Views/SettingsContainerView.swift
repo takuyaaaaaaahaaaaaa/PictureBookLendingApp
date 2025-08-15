@@ -16,6 +16,8 @@ struct SettingsContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
+    @State private var isBookRegistrationSheetPresented = false
+    @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
@@ -30,6 +32,15 @@ struct SettingsContainerView: View {
                 maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
                 onSelectUser: {
                     navigationPath.append(SettingsDestination.user)
+                },
+                onSelectBook: {
+                    navigationPath.append(SettingsDestination.book)
+                },
+                onSelectBookRegistration: {
+                    isBookRegistrationSheetPresented = true
+                },
+                onSelectBookBulkRegistration: {
+                    isBookBulkRegistrationSheetPresented = true
                 },
                 onSelectLoanSettings: {
                     isLoanSettingsSheetPresented = true
@@ -54,6 +65,8 @@ struct SettingsContainerView: View {
                     }
                 case .userList(let classGroupId):
                     UserListContainerView(classGroupId: classGroupId)
+                case .book:
+                    SettingsBookListContainerView()
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -61,6 +74,23 @@ struct SettingsContainerView: View {
                     LoanSettingsContainerView()
                 }
             }
+            #if os(macOS)
+                .sheet(isPresented: $isBookRegistrationSheetPresented) {
+                    BookFormContainerView(mode: .add)
+                }
+                .sheet(isPresented: $isBookBulkRegistrationSheetPresented) {
+                    NavigationStack {
+                        BookBulkAddContainerView()
+                    }
+                }
+            #else
+                .fullScreenCover(isPresented: $isBookRegistrationSheetPresented) {
+                    BookFormContainerView(mode: .add)
+                }
+                .fullScreenCover(isPresented: $isBookBulkRegistrationSheetPresented) {
+                    BookBulkAddContainerView()
+                }
+            #endif
             .sheet(isPresented: $isDeviceResetDialogPresented) {
                 DeviceResetDialog(
                     isPresented: $isDeviceResetDialogPresented,
@@ -121,6 +151,7 @@ struct SettingsContainerView: View {
     private enum SettingsDestination: Hashable {
         case user
         case userList(UUID)
+        case book
     }
 }
 

@@ -7,12 +7,6 @@ public enum BookFormMode {
     case edit(Book)
 }
 
-/// 利用者フォームの操作モード
-public enum UserFormMode {
-    case add
-    case edit(User)
-}
-
 /// 詳細表示用の行コンポーネント
 public struct DetailRow: View {
     let label: String

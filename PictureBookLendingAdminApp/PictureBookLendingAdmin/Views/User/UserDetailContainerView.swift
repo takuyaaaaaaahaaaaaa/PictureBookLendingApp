@@ -32,11 +32,13 @@ struct UserDetailContainerView: View {
             userName: $user.name,
             userClassGroupId: $user.classGroupId,
             userId: user.id,
+            userType: user.userType,
             availableClassGroups: classGroupModel.classGroups,
             activeLoansCount: activeLoansCount,
             loanHistory: loanHistory,
             getBookTitle: getBookTitle,
             getClassGroupName: getClassGroupName,
+            getRelatedUserName: getRelatedUserName,
             onEdit: {}
         )
         .navigationTitle(user.name)
@@ -91,6 +93,16 @@ struct UserDetailContainerView: View {
         return classGroup.name
     }
     
+    /// 関連ユーザー名取得（保護者の場合の園児名）
+    /// - Parameter userId: ユーザーID
+    /// - Returns: ユーザー名
+    private func getRelatedUserName(for userId: UUID) -> String {
+        guard let relatedUser = userModel.users.first(where: { $0.id == userId }) else {
+            return "不明な利用者"
+        }
+        return relatedUser.name
+    }
+    
     /// 貸出情報取得
     private func loadUserData() {
         let activeLoans = loanModel.getActiveLoans()
@@ -111,7 +123,7 @@ struct UserDetailContainerView: View {
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
-    let sampleUser = User(name: "山田太郎", classGroupId: UUID())
+    let sampleUser = User(name: "山田太郎", classGroupId: UUID(), userType: .child)
     
     return NavigationStack {
         UserDetailContainerView(user: sampleUser)

@@ -16,6 +16,8 @@ struct UserListContainerView: View {
     let classGroupId: UUID?
     
     @State private var searchText = ""
+    @State private var showChildren = true
+    @State private var showGuardians = false
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
     @State private var navigationPath = NavigationPath()
@@ -32,10 +34,21 @@ struct UserListContainerView: View {
                 userModel.users
             }
         
+        // 利用者種別によるフィルタリング
+        let usersByType = usersInGroup.filter { user in
+            switch user.userType {
+            case .child:
+                return showChildren
+            case .guardian:
+                return showGuardians
+            }
+        }
+        
+        // 検索テキストによるフィルタリング
         return if searchText.isEmpty {
-            usersInGroup
+            usersByType
         } else {
-            usersInGroup.filter { user in
+            usersByType.filter { user in
                 user.name.localizedCaseInsensitiveContains(searchText)
             }
         }
@@ -55,6 +68,8 @@ struct UserListContainerView: View {
         UserListView(
             users: filteredUsers,
             searchText: $searchText,
+            showChildren: $showChildren,
+            showGuardians: $showGuardians,
             onDelete: handleDeleteUsers
         ) { user in
             UserRowContainerView(user: user)
@@ -74,7 +89,6 @@ struct UserListContainerView: View {
         }
         .sheet(isPresented: $isAddSheetPresented) {
             UserFormContainerView(
-                mode: .add,
                 initialClassGroupId: classGroupId,
                 onSave: { _ in
                     // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される

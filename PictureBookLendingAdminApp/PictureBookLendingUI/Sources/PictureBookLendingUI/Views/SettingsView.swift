@@ -11,6 +11,9 @@ public struct SettingsView: View {
     let loanPeriodDays: Int
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
+    let onSelectBook: () -> Void
+    let onSelectBookRegistration: () -> Void
+    let onSelectBookBulkRegistration: () -> Void
     let onSelectLoanSettings: () -> Void
     let onSelectDeviceReset: () -> Void
     
@@ -21,6 +24,9 @@ public struct SettingsView: View {
         loanPeriodDays: Int,
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
+        onSelectBook: @escaping () -> Void,
+        onSelectBookRegistration: @escaping () -> Void,
+        onSelectBookBulkRegistration: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void
     ) {
@@ -30,6 +36,9 @@ public struct SettingsView: View {
         self.loanPeriodDays = loanPeriodDays
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
+        self.onSelectBook = onSelectBook
+        self.onSelectBookRegistration = onSelectBookRegistration
+        self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
         self.onSelectLoanSettings = onSelectLoanSettings
         self.onSelectDeviceReset = onSelectDeviceReset
     }
@@ -43,25 +52,26 @@ public struct SettingsView: View {
                 action: onSelectUser
             )
             
-            HStack {
-                Image(systemName: "book")
-                    .font(.title2)
-                    .frame(width: 30)
-                    .foregroundStyle(.secondary)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("絵本管理")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                    Text("\(bookCount)冊登録済み・メイン画面で編集モードを利用してください")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .padding()
-            .background(.gray.opacity(0.05))
-            .cornerRadius(12)
+            SettingsMenuItem(
+                iconName: "book",
+                title: "絵本管理",
+                subtitle: "\(bookCount)冊登録済み",
+                action: onSelectBook
+            )
+            
+            SettingsMenuItem(
+                iconName: "book.badge.plus",
+                title: "絵本追加",
+                subtitle: "新しい絵本を個別に登録",
+                action: onSelectBookRegistration
+            )
+            
+            SettingsMenuItem(
+                iconName: "books.vertical",
+                title: "絵本一括登録",
+                subtitle: "CSVファイルから複数の絵本を一括登録",
+                action: onSelectBookBulkRegistration
+            )
             
             SettingsMenuItem(
                 iconName: "clock",
@@ -84,7 +94,7 @@ public struct SettingsView: View {
             Spacer()
         }
         .padding()
-        .background(.white)
+        .background(.regularMaterial)
     }
 }
 
@@ -163,6 +173,9 @@ private struct SettingsMenuItem: View {
             loanPeriodDays: 14,
             maxBooksPerUser: 1,
             onSelectUser: {},
+            onSelectBook: {},
+            onSelectBookRegistration: {},
+            onSelectBookBulkRegistration: {},
             onSelectLoanSettings: {},
             onSelectDeviceReset: {}
         )

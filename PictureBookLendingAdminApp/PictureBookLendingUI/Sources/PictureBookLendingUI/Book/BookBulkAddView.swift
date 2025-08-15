@@ -34,18 +34,19 @@ public struct BookBulkAddView: View {
     
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
-                // 入力エリア
-                inputSection
-                
-                // 処理結果エリア
-                if !processedBooks.isEmpty {
-                    resultsSection
+            ScrollView {
+                VStack(spacing: 16) {
+                    // 入力エリア
+                    inputSection
+                    
+                    // 処理結果エリア
+                    if !processedBooks.isEmpty {
+                        resultsSection
+                    }
                 }
-                
-                Spacer()
+                .padding()
             }
-            .padding()
+            .background(.regularMaterial)
             .navigationTitle("絵本一括追加")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.large)
@@ -77,7 +78,7 @@ public struct BookBulkAddView: View {
                 .foregroundStyle(.secondary)
             
             TextEditor(text: $inputText)
-                .frame(minHeight: 120)
+                .frame(idealHeight: 300)
                 .padding(8)
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -106,17 +107,14 @@ public struct BookBulkAddView: View {
             Text("処理結果 (\(processedBooks.count)件)")
                 .font(.headline)
             
-            ScrollView {
-                LazyVStack(spacing: 8) {
-                    ForEach(processedBooks, id: \.managementNumber) { entry in
-                        BookBulkAddRowView(
-                            entry: entry,
-                            onRegisterFailed: onRegisterFailed
-                        )
-                    }
+            LazyVStack(spacing: 8) {
+                ForEach(processedBooks, id: \.managementNumber) { entry in
+                    BookBulkAddRowView(
+                        entry: entry,
+                        onRegisterFailed: onRegisterFailed
+                    )
                 }
             }
-            .frame(maxHeight: 300)
         }
     }
 }
