@@ -72,7 +72,7 @@ public struct UserListView<RowContent: View>: View {
     
     var userFilterView: some View {
         HStack(spacing: 16) {
-            Toggle("本人", isOn: showChildren)
+            Toggle("園児", isOn: showChildren)
                 .toggleStyle(.button)
             
             Toggle("保護者", isOn: showGuardians)

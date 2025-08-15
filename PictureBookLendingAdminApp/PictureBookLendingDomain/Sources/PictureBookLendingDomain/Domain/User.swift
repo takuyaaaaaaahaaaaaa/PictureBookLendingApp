@@ -2,16 +2,16 @@ import Foundation
 
 /// 利用者の種別
 public enum UserType: Codable, Hashable {
-    /// 本人
+    /// 園児
     case child
-    /// 保護者（関連する本人のID）
+    /// 保護者（関連する園児のID）
     case guardian(relatedChildId: UUID)
     
     /// 表示用の日本語名
     public var displayName: String {
         switch self {
         case .child:
-            return "本人"
+            return "園児"
         case .guardian:
             return "保護者"
         }

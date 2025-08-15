@@ -93,7 +93,7 @@ struct UserDetailContainerView: View {
         return classGroup.name
     }
     
-    /// 関連ユーザー名取得（保護者の場合の本人名）
+    /// 関連ユーザー名取得（保護者の場合の園児名）
     /// - Parameter userId: ユーザーID
     /// - Returns: ユーザー名
     private func getRelatedUserName(for userId: UUID) -> String {

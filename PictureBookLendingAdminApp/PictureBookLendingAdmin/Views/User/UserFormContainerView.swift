@@ -27,9 +27,9 @@ struct UserFormContainerView: View {
     @State private var userTypeForPicker: UserTypeForPicker = .child
     /// 保護者も一緒に登録するか
     @State private var shouldRegisterGuardians = true
-    /// 保護者登録時に選択する本人
+    /// 保護者登録時に選択する園児
     @State private var selectedChild: User?
-    /// 本人の一覧（保護者登録時に使用）
+    /// 園児の一覧（保護者登録時に使用）
     @State private var availableChildren: [User] = []
     /// 組一覧
     @State private var classGroups: [ClassGroup] = []
@@ -105,7 +105,7 @@ struct UserFormContainerView: View {
         case .child:
             userType = .child
         case .guardian:
-            // 新規登録で保護者を直接登録する場合は、選択された本人のIDを使用
+            // 新規登録で保護者を直接登録する場合は、選択された園児のIDを使用
             guard let selectedChild = selectedChild else {
                 alertState = .error("保護者を登録する場合は関連する利用者を選択してください")
                 return
@@ -122,7 +122,7 @@ struct UserFormContainerView: View {
             )
             let savedUser = try userModel.registerUser(newUser)
             
-            // 本人を登録する場合で保護者も一緒に登録するオプションが有効の場合
+            // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
                 let guardianCount = loanSettingsModel.settings.guardianCountPerChild
                 for i in 1...guardianCount {
@@ -146,7 +146,7 @@ struct UserFormContainerView: View {
     private func loadInitialData() {
         classGroups = classGroupModel.getAllClassGroups()
         
-        // 本人一覧を取得（保護者登録時に使用）
+        // 園児一覧を取得（保護者登録時に使用）
         availableChildren = userModel.users.filter { user in
             if case .child = user.userType {
                 return true

@@ -3,7 +3,7 @@ import SwiftUI
 
 /// UI用のシンプルな利用者種別（Associated Valueなし）
 public enum UserTypeForPicker: String, CaseIterable, Codable, Hashable {
-    /// 本人
+    /// 園児
     case child = "child"
     /// 保護者
     case guardian = "guardian"
@@ -12,7 +12,7 @@ public enum UserTypeForPicker: String, CaseIterable, Codable, Hashable {
     public var displayName: String {
         switch self {
         case .child:
-            return "本人"
+            return "園児"
         case .guardian:
             return "保護者"
         }
