@@ -139,7 +139,7 @@ struct BookFormContainerView: View {
         
         // 管理番号が未入力または空の場合は確認モーダルを表示
         let hasManagementNumber =
-            book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            !(book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
         
         if !hasManagementNumber {
             isConfirmationPresented = true
