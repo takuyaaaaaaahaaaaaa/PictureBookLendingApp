@@ -130,37 +130,75 @@ struct BookBulkAddContainerView: View {
     }
     
     private func handleIndividualBookSaved(_ savedBook: Book) {
+        // 保存された本に基づいてprocessedBooksを更新
+        updateProcessedBooksStatus(savedBook: savedBook)
+        
         // 現在の本を次へ進める
         currentBookIndex += 1
         
+        // 残りの未登録本を再計算
+        let remainingFailedBooks = processedBooks.filter { $0.foundBook == nil }
+        
         // まだ登録する本があるかチェック
-        if currentBookIndex < failedBooks.count {
-            // 次の本を設定
-            activeFailedBook = FailedBookItem(
-                entry: failedBooks[currentBookIndex],
-                currentIndex: currentBookIndex,
-                totalCount: failedBooks.count
-            )
+        if currentBookIndex < failedBooks.count && !remainingFailedBooks.isEmpty {
+            // 次の未登録本を探す
+            if let nextFailedEntry = remainingFailedBooks.first,
+                let nextIndex = failedBooks.firstIndex(where: {
+                    $0.managementNumber == nextFailedEntry.managementNumber
+                }),
+                nextIndex >= currentBookIndex
+            {
+                
+                // 次の本を設定
+                activeFailedBook = FailedBookItem(
+                    entry: nextFailedEntry,
+                    currentIndex: remainingFailedBooks.count - remainingFailedBooks.count + 1,
+                    totalCount: remainingFailedBooks.count
+                )
+            } else {
+                // 登録可能な本がない場合は終了
+                activeFailedBook = nil
+                alertState = .info("登録可能な絵本がありません")
+            }
         } else {
             // 全ての本の登録が完了
             activeFailedBook = nil
-            alertState = .info("失敗した絵本の登録が完了しました")
-            
-            // processedBooksを更新して成功状態にする
-            refreshProcessedBooks()
+            let successMessage =
+                remainingFailedBooks.isEmpty ? "全ての絵本の登録が完了しました" : "失敗した絵本の登録が完了しました"
+            alertState = .info(successMessage)
         }
     }
     
     private func handleSkipCurrentBook() {
         currentBookIndex += 1
         
-        if currentBookIndex < failedBooks.count {
-            // 次の本を設定
-            activeFailedBook = FailedBookItem(
-                entry: failedBooks[currentBookIndex],
-                currentIndex: currentBookIndex,
-                totalCount: failedBooks.count
-            )
+        // 残りの未登録本を再計算
+        let remainingFailedBooks = processedBooks.filter { $0.foundBook == nil }
+        
+        if currentBookIndex < failedBooks.count && !remainingFailedBooks.isEmpty {
+            // 次の未登録本を探す
+            if let nextFailedEntry = remainingFailedBooks.first(where: { entry in
+                failedBooks.firstIndex(where: { $0.managementNumber == entry.managementNumber })
+                    ?? 0 >= currentBookIndex
+            }) {
+                // 次の本を設定
+                let currentProgress =
+                    remainingFailedBooks.count
+                    - remainingFailedBooks.filter { entry in
+                        failedBooks.firstIndex(where: {
+                            $0.managementNumber == entry.managementNumber
+                        }) ?? 0 >= currentBookIndex
+                    }.count + 1
+                
+                activeFailedBook = FailedBookItem(
+                    entry: nextFailedEntry,
+                    currentIndex: currentProgress,
+                    totalCount: remainingFailedBooks.count
+                )
+            } else {
+                // スキップできる本がない場合は終了
+                activeFailedBook = nil
+            }
         } else {
             // 全てスキップまたは完了
             activeFailedBook = nil
@@ -178,9 +216,35 @@ struct BookBulkAddContainerView: View {
         )
     }
     
+    private func updateProcessedBooksStatus(savedBook: Book) {
+        // 保存された本の管理番号に対応するprocessedBooksのエントリを更新
+        if let managementNumber = savedBook.managementNumber,
+            let index = processedBooks.firstIndex(where: {
+                $0.managementNumber == managementNumber
+            })
+        {
+            // 既存のエントリを保存された本で更新
+            processedBooks[index] = ParsedBookEntry(
+                managementNumber: managementNumber,
+                inputTitle: processedBooks[index].inputTitle,
+                foundBook: savedBook
+            )
+        }
+    }
+    
     private func refreshProcessedBooks() {
-        // 現在の処理済み本のリストを再読み込み
-        // （実際の実装では、保存された本をデータベースから確認する）
+        // 全ての処理済み本のステータスをデータベースから確認して更新
+        for (index, entry) in processedBooks.enumerated() {
+            // 管理番号で既存の本を検索
+            if let existingBook = bookModel.findBookByManagementNumber(entry.managementNumber) {
+                // 既に登録済みの場合はステータスを更新
+                processedBooks[index] = ParsedBookEntry(
+                    managementNumber: entry.managementNumber,
+                    inputTitle: entry.inputTitle,
+                    foundBook: existingBook
+                )
+            }
+        }
     }
     
     // MARK: - Business Logic
@@ -212,6 +276,9 @@ struct BookBulkAddContainerView: View {
             }
             
             processedBooks = processedEntries
+            
+            // 初期処理後に既存の登録状況をチェック
+            refreshProcessedBooks()
             
         } catch {
             alertState = .error("テキスト解析でエラーが発生しました: \(error.localizedDescription)")

@@ -14,6 +14,10 @@ struct BookListContainerView: View {
     
     @State private var searchText = ""
     @State private var isSettingsPresented = false
+    @State private var isEditMode = false
+    @State private var isAddSheetPresented = false
+    @State private var isBulkAddSheetPresented = false
+    @State private var editingBook: Book?
     @State private var alertState = AlertState()
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
@@ -79,12 +83,16 @@ struct BookListContainerView: View {
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
-            isEditMode: false,
+            isEditMode: isEditMode,
             onSelect: handleSelectBook,
-            onEdit: { _ in },  // 編集モードオフなので使用されない
-            onDelete: { _ in }  // 編集モードオフなので削除不可
+            onEdit: handleEditBook,
+            onDelete: handleDeleteBook
         ) { book in
-            LoanActionContainerButton(bookId: book.id)
+            if isEditMode {
+                BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
+            } else {
+                LoanActionContainerButton(bookId: book.id)
+            }
         }
         #if os(iOS)
             .searchable(
@@ -98,6 +106,30 @@ struct BookListContainerView: View {
         #endif
         .navigationTitle("絵本")
         .toolbar {
+            ToolbarItem(placement: .secondaryAction) {
+                Button(isEditMode ? "編集モード完了" : "編集モード") {
+                    isEditMode.toggle()
+                }
+            }
+            
+            if isEditMode {
+                ToolbarItem(placement: .secondaryAction) {
+                    Button(action: {
+                        isAddSheetPresented = true
+                    }) {
+                        Label("絵本追加", systemImage: "plus")
+                    }
+                }
+                
+                ToolbarItem(placement: .secondaryAction) {
+                    Button(action: {
+                        isBulkAddSheetPresented = true
+                    }) {
+                        Label("絵本一括追加", systemImage: "plus.rectangle.on.folder")
+                    }
+                }
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 // 設定ボタン
                 // TODO: iOS26 beta6のバグで以下が効かない
@@ -111,9 +143,27 @@ struct BookListContainerView: View {
             .sheet(isPresented: $isSettingsPresented) {
                 SettingsContainerView()
             }
+            .sheet(isPresented: $isAddSheetPresented) {
+                BookFormContainerView(mode: .add)
+            }
+            .sheet(isPresented: $isBulkAddSheetPresented) {
+                BookBulkAddContainerView()
+            }
+            .sheet(item: $editingBook) { book in
+                BookFormContainerView(mode: .edit(book))
+            }
         #else
             .fullScreenCover(isPresented: $isSettingsPresented) {
                 SettingsContainerView()
+            }
+            .fullScreenCover(isPresented: $isAddSheetPresented) {
+                BookFormContainerView(mode: .add)
+            }
+            .fullScreenCover(isPresented: $isBulkAddSheetPresented) {
+                BookBulkAddContainerView()
+            }
+            .fullScreenCover(item: $editingBook) { book in
+                BookFormContainerView(mode: .edit(book))
             }
         #endif
         .navigationDestination(for: Book.self) { book in
@@ -126,9 +176,11 @@ struct BookListContainerView: View {
         }
         .onAppear {
             bookModel.refreshBooks()
+            loanModel.refreshLoans()
         }
         .refreshable {
             bookModel.refreshBooks()
+            loanModel.refreshLoans()
         }
     }
     
@@ -136,6 +188,18 @@ struct BookListContainerView: View {
     
     private func handleSelectBook(_ book: Book) {
         // 絵本詳細画面に遷移（NavigationLinkで自動的に処理される）
+    }
+    
+    private func handleEditBook(_ book: Book) {
+        editingBook = book
+    }
+    
+    private func handleDeleteBook(_ book: Book) {
+        do {
+            _ = try bookModel.deleteBook(book.id)
+        } catch {
+            alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
+        }
     }
 }
 

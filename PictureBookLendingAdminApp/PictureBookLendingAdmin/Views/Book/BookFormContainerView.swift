@@ -58,6 +58,7 @@ struct BookFormContainerView: View {
                 },
                 onSave: handleSave,
                 onCancel: handleCancel,
+                onReset: handleReset,
                 onCameraTap: handleCameraTap
             )
             .navigationTitle(isEditMode ? "絵本を編集" : "絵本を追加")
@@ -139,7 +140,7 @@ struct BookFormContainerView: View {
         
         // 管理番号が未入力または空の場合は確認モーダルを表示
         let hasManagementNumber =
-            book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            !(book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
         
         if !hasManagementNumber {
             isConfirmationPresented = true
@@ -185,6 +186,21 @@ struct BookFormContainerView: View {
     /// カメラボタンタップ時の処理
     private func handleCameraTap() {
         isCameraPresented = true
+    }
+    
+    /// フォームリセット処理
+    private func handleReset() {
+        print("🔄 リセット処理開始")
+        // IDを保持したまま他のフィールドをリセット
+        let currentId = book.id
+        book = Book(id: currentId, title: "")
+        print("🔄 リセット完了 - ID: \(currentId)")
+        // エラー状態もクリア
+        alertState = AlertState()
+        // 確認ダイアログの状態もリセット
+        isConfirmationPresented = false
+        isDuplicateConfirmationPresented = false
+        duplicatedBook = nil
     }
     
     /// 撮影画像の処理

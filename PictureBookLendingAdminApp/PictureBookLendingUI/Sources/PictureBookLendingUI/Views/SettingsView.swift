@@ -11,9 +11,6 @@ public struct SettingsView: View {
     let loanPeriodDays: Int
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
-    let onSelectBook: () -> Void
-    let onSelectAddBook: () -> Void
-    let onSelectBulkAdd: () -> Void
     let onSelectLoanSettings: () -> Void
     let onSelectDeviceReset: () -> Void
     
@@ -24,9 +21,6 @@ public struct SettingsView: View {
         loanPeriodDays: Int,
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
-        onSelectBook: @escaping () -> Void,
-        onSelectAddBook: @escaping () -> Void,
-        onSelectBulkAdd: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void
     ) {
@@ -36,9 +30,6 @@ public struct SettingsView: View {
         self.loanPeriodDays = loanPeriodDays
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
-        self.onSelectBook = onSelectBook
-        self.onSelectAddBook = onSelectAddBook
-        self.onSelectBulkAdd = onSelectBulkAdd
         self.onSelectLoanSettings = onSelectLoanSettings
         self.onSelectDeviceReset = onSelectDeviceReset
     }
@@ -52,26 +43,25 @@ public struct SettingsView: View {
                 action: onSelectUser
             )
             
-            SettingsMenuItem(
-                iconName: "book",
-                title: "絵本管理",
-                subtitle: "\(bookCount)冊登録済み",
-                action: onSelectBook
-            )
-            
-            SettingsMenuItem(
-                iconName: "plus",
-                title: "絵本追加",
-                subtitle: "新しい絵本を1冊ずつ追加",
-                action: onSelectAddBook
-            )
-            
-            SettingsMenuItem(
-                iconName: "plus.rectangle.on.rectangle",
-                title: "絵本一括追加",
-                subtitle: "テキストから複数の絵本を一度に登録",
-                action: onSelectBulkAdd
-            )
+            HStack {
+                Image(systemName: "book")
+                    .font(.title2)
+                    .frame(width: 30)
+                    .foregroundStyle(.secondary)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("絵本管理")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                    Text("\(bookCount)冊登録済み・メイン画面で編集モードを利用してください")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .padding()
+            .background(.gray.opacity(0.05))
+            .cornerRadius(12)
             
             SettingsMenuItem(
                 iconName: "clock",
@@ -173,9 +163,6 @@ private struct SettingsMenuItem: View {
             loanPeriodDays: 14,
             maxBooksPerUser: 1,
             onSelectUser: {},
-            onSelectBook: {},
-            onSelectAddBook: {},
-            onSelectBulkAdd: {},
             onSelectLoanSettings: {},
             onSelectDeviceReset: {}
         )
