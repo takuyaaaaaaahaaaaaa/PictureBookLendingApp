@@ -17,6 +17,9 @@ struct SettingsContainerView: View {
     @State private var isLoanSettingsSheetPresented = false
     @State private var isAddBookSheetPresented = false
     @State private var isBulkAddSheetPresented = false
+    @State private var isDeviceResetDialogPresented = false
+    @State private var deviceResetOptions = DeviceResetOptions()
+    @State private var alertState = AlertState()
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -40,6 +43,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectLoanSettings: {
                     isLoanSettingsSheetPresented = true
+                },
+                onSelectDeviceReset: {
+                    isDeviceResetDialogPresented = true
                 }
             )
             .navigationTitle("設定")
@@ -82,6 +88,63 @@ struct SettingsContainerView: View {
                     BookBulkAddContainerView()
                 }
             #endif
+            .sheet(isPresented: $isDeviceResetDialogPresented) {
+                DeviceResetDialog(
+                    isPresented: $isDeviceResetDialogPresented,
+                    selectedOptions: $deviceResetOptions,
+                    onConfirm: handleDeviceReset
+                )
+            }
+            .alert(alertState.title, isPresented: $alertState.isPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertState.message)
+            }
+        }
+    }
+    
+    // MARK: - Action Handlers
+    
+    private func handleDeviceReset(_ options: DeviceResetOptions) {
+        Task {
+            await performDeviceReset(options)
+        }
+    }
+    
+    private func performDeviceReset(_ options: DeviceResetOptions) async {
+        do {
+            var deletedItems: [String] = []
+            
+            if options.deleteUsers {
+                // TODO: UserModelとClassGroupModelにdeleteAllメソッドを追加
+                // try await userModel.deleteAllUsers()
+                // try await classGroupModel.deleteAllClassGroups()
+                deletedItems.append("利用者データ")
+            }
+            
+            if options.deleteBooks {
+                // TODO: BookModelにdeleteAllBooksメソッドを追加
+                // try await bookModel.deleteAllBooks()
+                deletedItems.append("絵本データ")
+            }
+            
+            if options.deleteLoanRecords {
+                // TODO: LoanModelにdeleteAllLoansメソッドを追加
+                // try await loanModel.deleteAllLoans()
+                deletedItems.append("貸出記録")
+            }
+            
+            let message =
+                if !deletedItems.isEmpty {
+                    "以下のデータを削除しました: \(deletedItems.joined(separator: "、"))"
+                } else {
+                    "削除するデータが選択されていません"
+                }
+            
+            alertState = .info(message)
+            
+        } catch {
+            alertState = .error("削除中にエラーが発生しました: \(error.localizedDescription)")
         }
     }
     

@@ -42,7 +42,7 @@ public struct LoanConfirmationView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(book.title)
                                 .font(.headline)
-                            Text("著者: \(book.author)")
+                            Text("著者: \(book.author ?? "不明")")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }

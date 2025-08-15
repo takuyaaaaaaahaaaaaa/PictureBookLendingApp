@@ -259,14 +259,7 @@ public struct BookRowView<RowAction: View>: View {
                     .foregroundStyle(.secondary)
                 
                 if let managementNumber = book.managementNumber {
-                    Text("管理番号: \(managementNumber)")
-                        .font(.caption)
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.blue.opacity(0.1))
-                        .foregroundStyle(.blue)
-                        .clipShape(.capsule)
+                    ManagementNumberBadge(text: managementNumber)
                 }
             }
             

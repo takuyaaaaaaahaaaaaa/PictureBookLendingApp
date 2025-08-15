@@ -130,12 +130,7 @@ struct BookBulkAddRowView: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(entry.managementNumber)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(.blue.opacity(0.1))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                    ManagementNumberBadge(text: entry.managementNumber)
                     
                     Text(entry.inputTitle)
                         .font(.subheadline)

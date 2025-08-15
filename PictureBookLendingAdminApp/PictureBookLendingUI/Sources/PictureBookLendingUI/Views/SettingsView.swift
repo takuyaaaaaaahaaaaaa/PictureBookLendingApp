@@ -15,6 +15,7 @@ public struct SettingsView: View {
     let onSelectAddBook: () -> Void
     let onSelectBulkAdd: () -> Void
     let onSelectLoanSettings: () -> Void
+    let onSelectDeviceReset: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -26,7 +27,8 @@ public struct SettingsView: View {
         onSelectBook: @escaping () -> Void,
         onSelectAddBook: @escaping () -> Void,
         onSelectBulkAdd: @escaping () -> Void,
-        onSelectLoanSettings: @escaping () -> Void
+        onSelectLoanSettings: @escaping () -> Void,
+        onSelectDeviceReset: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -38,6 +40,7 @@ public struct SettingsView: View {
         self.onSelectAddBook = onSelectAddBook
         self.onSelectBulkAdd = onSelectBulkAdd
         self.onSelectLoanSettings = onSelectLoanSettings
+        self.onSelectDeviceReset = onSelectDeviceReset
     }
     
     public var body: some View {
@@ -77,6 +80,17 @@ public struct SettingsView: View {
                 action: onSelectLoanSettings
             )
             
+            Divider()
+                .padding(.vertical, 8)
+            
+            SettingsMenuItem(
+                iconName: "trash.circle",
+                title: "端末初期化",
+                subtitle: "利用者・絵本・貸出記録のデータを削除",
+                action: onSelectDeviceReset,
+                style: .destructive
+            )
+            
             Spacer()
         }
         .padding()
@@ -90,6 +104,37 @@ private struct SettingsMenuItem: View {
     let title: String
     let subtitle: String
     let action: () -> Void
+    let style: Style
+    
+    enum Style {
+        case normal
+        case destructive
+        
+        var iconColor: Color {
+            switch self {
+            case .normal: return .primary
+            case .destructive: return .red
+            }
+        }
+        
+        var titleColor: Color {
+            switch self {
+            case .normal: return .primary
+            case .destructive: return .red
+            }
+        }
+    }
+    
+    init(
+        iconName: String, title: String, subtitle: String, action: @escaping () -> Void,
+        style: Style = .normal
+    ) {
+        self.iconName = iconName
+        self.title = title
+        self.subtitle = subtitle
+        self.action = action
+        self.style = style
+    }
     
     var body: some View {
         Button(action: action) {
@@ -97,9 +142,11 @@ private struct SettingsMenuItem: View {
                 Image(systemName: iconName)
                     .font(.title2)
                     .frame(width: 30)
+                    .foregroundStyle(style.iconColor)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.headline)
+                        .foregroundStyle(style.titleColor)
                     Text(subtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -129,7 +176,8 @@ private struct SettingsMenuItem: View {
             onSelectBook: {},
             onSelectAddBook: {},
             onSelectBulkAdd: {},
-            onSelectLoanSettings: {}
+            onSelectLoanSettings: {},
+            onSelectDeviceReset: {}
         )
         .navigationTitle("設定")
     }
