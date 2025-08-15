@@ -114,18 +114,13 @@ public struct BookFormView<AutoFillButton: View>: View {
             }
             
             Section(header: Text("その他（任意）")) {
-                HStack {
-                    Text("対象読者")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Picker("対象読者", selection: $book.targetAge) {
-                        Text("未選択").tag(nil as Const.TargetAudience?)
-                        ForEach(Const.TargetAudience.sortedCases, id: \.self) { audience in
-                            Text(audience.displayText).tag(audience as Const.TargetAudience?)
-                        }
+                Picker("対象読者", selection: $book.targetAge) {
+                    Text("未選択").tag(nil as Const.TargetAudience?)
+                    ForEach(Const.TargetAudience.allCases, id: \.self) { audience in
+                        Text(audience.displayText).tag(audience as Const.TargetAudience?)
                     }
-                    .pickerStyle(.menu)
                 }
+                .pickerStyle(.menu)
                 
                 TextField(
                     "ページ数",
@@ -143,6 +138,15 @@ public struct BookFormView<AutoFillButton: View>: View {
                 #if os(iOS)
                     .keyboardType(.numberPad)
                 #endif
+                
+                Picker("ひらがなグループ", selection: $book.kanaGroup) {
+                    Text("未選択").tag(nil as KanaGroup?)
+                    ForEach(KanaGroup.allCases, id: \.self) { kana in
+                        Text(kana.displayName).tag(kana as KanaGroup?)
+                    }
+                }
+                .pickerStyle(.menu)
+                
             }
             
             Section(header: Text("説明（任意）")) {

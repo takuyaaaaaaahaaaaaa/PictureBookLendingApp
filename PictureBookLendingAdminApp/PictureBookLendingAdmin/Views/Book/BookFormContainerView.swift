@@ -48,6 +48,9 @@ struct BookFormContainerView: View {
             )
             .navigationTitle(isEditMode ? "絵本を編集" : "絵本を追加")
             .interactiveDismissDisabled()
+            .onChange(of: book.title) { _, newTitle in
+                updateKanaGroup(for: newTitle)
+            }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -111,6 +114,15 @@ struct BookFormContainerView: View {
     
     private func handleAutoFill(_ filledBook: Book) {
         book = filledBook
+        // 自動入力後も五十音分類を更新
+        updateKanaGroup(for: book.title)
+    }
+    
+    /// タイトルに基づいて五十音グループを自動設定
+    /// - Parameter title: 絵本のタイトル
+    private func updateKanaGroup(for title: String) {
+        let kanaGroup = KanaGroup.from(text: title)
+        book.kanaGroup = kanaGroup
     }
 }
 

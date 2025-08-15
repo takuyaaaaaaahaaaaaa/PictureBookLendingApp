@@ -117,7 +117,8 @@ struct BookBulkAddContainerView: View {
             
             for entry in processedBooks {
                 if let book = entry.foundBook {
-                    // 管理番号を設定
+                    // 管理番号と五十音グループを設定
+                    let kanaGroup = KanaGroup.from(text: book.title)
                     let bookWithManagementNumber = Book(
                         id: book.id,
                         title: book.title,
@@ -131,7 +132,8 @@ struct BookBulkAddContainerView: View {
                         targetAge: book.targetAge,
                         pageCount: book.pageCount,
                         categories: book.categories,
-                        managementNumber: entry.managementNumber
+                        managementNumber: entry.managementNumber,
+                        kanaGroup: kanaGroup
                     )
                     
                     _ = try bookModel.registerBook(bookWithManagementNumber)

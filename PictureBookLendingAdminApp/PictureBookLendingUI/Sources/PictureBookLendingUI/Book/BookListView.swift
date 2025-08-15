@@ -2,19 +2,37 @@ import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
 
+/// 絵本セクション情報
+/// 五十音順グループごとの絵本分類を表現
+public struct BookSection: Identifiable, Hashable {
+    public let id: String
+    public let title: String
+    public let books: [Book]
+    
+    public init(id: String, title: String, books: [Book]) {
+        self.id = id
+        self.title = title
+        self.books = books
+    }
+}
+
 /// 絵本一覧のPresentation View
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
+/// セクション表示と通常のリスト表示の両方に対応
 public struct BookListView<RowAction: View>: View {
     let books: [Book]
+    let sections: [BookSection]
     let searchText: Binding<String>
     let isEditMode: Bool
+    let useSections: Bool
     let onSelect: (Book) -> Void
     let onEdit: (Book) -> Void
     let onDelete: (IndexSet) -> Void
     let rowAction: (Book) -> RowAction
     
+    /// 通常のリスト表示用イニシャライザ
     public init(
         books: [Book],
         searchText: Binding<String>,
@@ -25,8 +43,31 @@ public struct BookListView<RowAction: View>: View {
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
         self.books = books
+        self.sections = []
         self.searchText = searchText
         self.isEditMode = isEditMode
+        self.useSections = false
+        self.onSelect = onSelect
+        self.onEdit = onEdit
+        self.onDelete = onDelete
+        self.rowAction = rowAction
+    }
+    
+    /// セクション表示用イニシャライザ
+    public init(
+        sections: [BookSection],
+        searchText: Binding<String>,
+        isEditMode: Bool = false,
+        onSelect: @escaping (Book) -> Void,
+        onEdit: @escaping (Book) -> Void,
+        onDelete: @escaping (IndexSet) -> Void,
+        @ViewBuilder rowAction: @escaping (Book) -> RowAction
+    ) {
+        self.books = []
+        self.sections = sections
+        self.searchText = searchText
+        self.isEditMode = isEditMode
+        self.useSections = true
         self.onSelect = onSelect
         self.onEdit = onEdit
         self.onDelete = onDelete
@@ -34,7 +75,9 @@ public struct BookListView<RowAction: View>: View {
     }
     
     public var body: some View {
-        if books.isEmpty {
+        let isEmpty = useSections ? sections.allSatisfy { $0.books.isEmpty } : books.isEmpty
+        
+        if isEmpty {
             ContentUnavailableView(
                 "絵本が登録されていません",
                 systemImage: "book.closed",
@@ -42,25 +85,26 @@ public struct BookListView<RowAction: View>: View {
             )
         } else {
             List {
-                ForEach(books) { book in
-                    if isEditMode {
-                        Button {
-                            onEdit(book)
-                        } label: {
-                            BookRowView(book: book, rowAction: rowAction)
+                if useSections {
+                    ForEach(sections) { section in
+                        Section(header: Text(section.title)) {
+                            ForEach(section.books) { book in
+                                bookRowContent(for: book)
+                            }
+                            .onDelete { indexSet in
+                                if isEditMode {
+                                    // セクション内の削除処理は上位のContainerViewで処理
+                                    onDelete(indexSet)
+                                }
+                            }
                         }
-                        .buttonStyle(.plain)
-                    } else {
-                        NavigationLink(value: book) {
-                            BookRowView(book: book, rowAction: rowAction)
-                        }
-                        .simultaneousGesture(
-                            TapGesture().onEnded {
-                                onSelect(book)
-                            })
                     }
+                } else {
+                    ForEach(books) { book in
+                        bookRowContent(for: book)
+                    }
+                    .onDelete(perform: isEditMode ? onDelete : nil)
                 }
-                .onDelete(perform: isEditMode ? onDelete : nil)
             }
             #if os(iOS)
                 .searchable(
@@ -72,6 +116,27 @@ public struct BookListView<RowAction: View>: View {
                     text: searchText,
                     prompt: "絵本のタイトルまたは著者で検索")
             #endif
+        }
+    }
+    
+    /// 絵本行のコンテンツ
+    @ViewBuilder
+    private func bookRowContent(for book: Book) -> some View {
+        if isEditMode {
+            Button {
+                onEdit(book)
+            } label: {
+                BookRowView(book: book, rowAction: rowAction)
+            }
+            .buttonStyle(.plain)
+        } else {
+            NavigationLink(value: book) {
+                BookRowView(book: book, rowAction: rowAction)
+            }
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    onSelect(book)
+                })
         }
     }
 }

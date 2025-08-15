@@ -1,4 +1,5 @@
 import Foundation
+import PictureBookLendingDomain
 import SwiftData
 
 /// SwiftData用の絵本モデル
@@ -50,6 +51,9 @@ final public class SwiftDataBook {
     /// カテゴリ・ジャンルの配列
     public var categories: [String]
     
+    /// 五十音順グループ
+    public var kanaGroup: KanaGroup?
+    
     /// イニシャライザ
     ///
     /// - Parameters:
@@ -66,6 +70,7 @@ final public class SwiftDataBook {
     ///   - targetAge: 対象年齢
     ///   - pageCount: ページ数
     ///   - categories: カテゴリ・ジャンルの配列
+    ///   - kanaGroup: 五十音順グループ
     public init(
         id: UUID,
         title: String,
@@ -79,7 +84,8 @@ final public class SwiftDataBook {
         targetAge: String? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
-        managementNumber: String? = nil
+        managementNumber: String? = nil,
+        kanaGroup: KanaGroup? = nil
     ) {
         self.id = id
         self.title = title
@@ -94,5 +100,6 @@ final public class SwiftDataBook {
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories
+        self.kanaGroup = kanaGroup
     }
 }

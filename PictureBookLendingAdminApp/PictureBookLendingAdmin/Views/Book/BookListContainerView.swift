@@ -15,6 +15,7 @@ struct BookListContainerView: View {
     @State private var searchText = ""
     @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
+    @State private var useSectionView = false
     
     private var filteredBooks: [Book] {
         // 全絵本を表示（貸出可能・貸出中を含む）

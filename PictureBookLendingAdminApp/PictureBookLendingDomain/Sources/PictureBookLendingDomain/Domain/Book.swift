@@ -29,6 +29,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var categories: [String]
     /// 組織がすでに管理している独自の管理番号
     public var managementNumber: String?
+    /// 五十音順グループ
+    public var kanaGroup: KanaGroup?
     
     /// 絵本モデルの初期化（完全版）
     /// - Parameters:
@@ -45,6 +47,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     ///   - pageCount: ページ数（任意）
     ///   - categories: カテゴリ・ジャンル（デフォルトは空配列）
     ///   - managementNumber: 独自の管理番号（任意）
+    ///   - kanaGroup: 五十音順グループ（任意）
     public init(
         id: UUID = UUID(),
         title: String,
@@ -58,7 +61,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         targetAge: Const.TargetAudience? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
-        managementNumber: String? = nil
+        managementNumber: String? = nil,
+        kanaGroup: KanaGroup? = nil
     ) {
         self.id = id
         self.title = title
@@ -73,26 +77,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories
+        self.kanaGroup = kanaGroup
     }
     
-    /// 絵本モデルの初期化（基本版・後方互換性のため）
-    /// - Parameters:
-    ///   - id: 絵本の一意識別子（デフォルトでは新しいUUIDが生成されます）
-    ///   - title: 絵本のタイトル
-    ///   - author: 絵本の著者名
-    public init(id: UUID = UUID(), title: String, author: String) {
-        self.id = id
-        self.title = title
-        self.author = author
-        self.isbn13 = nil
-        self.publisher = nil
-        self.publishedDate = nil
-        self.description = nil
-        self.smallThumbnail = nil
-        self.thumbnail = nil
-        self.targetAge = nil
-        self.pageCount = nil
-        self.categories = []
-        self.managementNumber = nil
-    }
 }
