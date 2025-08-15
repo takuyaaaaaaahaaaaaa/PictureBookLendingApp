@@ -42,7 +42,7 @@ public struct BookListView<RowAction: View>: View {
     /// 絵本編集時の動作
     public let onEdit: (Book) -> Void
     /// 絵本削除時の動作
-    public let onDelete: (IndexSet) -> Void
+    public let onDelete: (Book) -> Void
     /// 各行に表示するアクションビューを生成するクロージャ
     public let rowAction: (Book) -> RowAction
     
@@ -55,7 +55,7 @@ public struct BookListView<RowAction: View>: View {
         isEditMode: Bool = false,
         onSelect: @escaping (Book) -> Void,
         onEdit: @escaping (Book) -> Void,
-        onDelete: @escaping (IndexSet) -> Void,
+        onDelete: @escaping (Book) -> Void,
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
         self.sections = sections
@@ -128,12 +128,15 @@ public struct BookListView<RowAction: View>: View {
                     ForEach(section.books) { book in
                         bookRowContent(for: book)
                     }
-                    .onDelete { indexSet in
-                        if isEditMode {
-                            // セクション内の削除処理は上位のContainerViewで処理
-                            onDelete(indexSet)
-                        }
-                    }
+                    .onDelete(
+                        perform: isEditMode
+                            ? { indexSet in
+                                // セクション内の削除処理
+                                for index in indexSet {
+                                    let book = section.books[index]
+                                    onDelete(book)
+                                }
+                            } : nil)
                 }
             }
         }
@@ -226,6 +229,7 @@ public struct BookRowView<RowAction: View>: View {
             sections: sections,
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
+            isEditMode: true,
             onSelect: { _ in },
             onEdit: { _ in },
             onDelete: { _ in }

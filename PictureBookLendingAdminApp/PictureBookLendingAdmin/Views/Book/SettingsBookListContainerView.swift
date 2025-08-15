@@ -59,7 +59,7 @@ struct SettingsBookListContainerView: View {
             isEditMode: isEditMode,
             onSelect: handleSelectBook,
             onEdit: handleEditBook,
-            onDelete: handleDeleteBooks
+            onDelete: handleDeleteBook
         ) { book in
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
@@ -144,11 +144,12 @@ struct SettingsBookListContainerView: View {
         editingBook = book
     }
     
-    private func handleDeleteBooks(at offsets: IndexSet) {
-        // セクション内での削除処理はより複雑になるため、
-        // 現在は削除機能を無効化します
-        // TODO: セクション対応の削除処理を実装
-        alertState = .info("セクション表示では削除機能は現在無効です")
+    private func handleDeleteBook(_ book: Book) {
+        do {
+            _ = try bookModel.deleteBook(book.id)
+        } catch {
+            alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
+        }
     }
 }
 
