@@ -109,6 +109,16 @@ public struct BookListView<RowAction: View>: View {
                 bookListSection
             }
         }
+        #if os(iOS)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "絵本のタイトルまたは著者で検索")
+        #else
+            .searchable(
+                text: $searchText,
+                prompt: "絵本のタイトルまたは著者で検索")
+        #endif
     }
     
     // MARK: - Private Views

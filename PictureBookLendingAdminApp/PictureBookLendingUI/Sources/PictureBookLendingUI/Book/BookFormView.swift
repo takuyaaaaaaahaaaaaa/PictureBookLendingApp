@@ -180,31 +180,30 @@ public struct BookFormView<AutoFillButton: View>: View {
                 .lineLimit(3...6)
             }
             
-            // リセットボタン（新規追加時のみ表示）
-            if !isEditMode {
-                Section {
-                    VStack(spacing: 12) {
-                        HStack {
-                            Spacer()
-                            Button(action: {
-                                print("🔘 リセットボタンがタップされました")
-                                onReset()
-                            }) {
-                                Label("入力項目をリセット", systemImage: "arrow.counterclockwise")
-                                    .font(.footnote)
-                            }
-                            .buttonStyle(.bordered)
-                            .tint(.orange)
-                            .controlSize(.small)
-                            Spacer()
+            // リセットボタン
+            Section {
+                VStack(spacing: 12) {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            print("🔘 リセットボタンがタップされました")
+                            onReset()
+                        }) {
+                            Label("入力項目をリセット", systemImage: "arrow.counterclockwise")
+                                .font(.footnote)
                         }
-                        
-                        Text("フォームの内容をすべてクリアします")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                        .buttonStyle(.bordered)
+                        .tint(.orange)
+                        .controlSize(.small)
+                        Spacer()
                     }
-                    .padding(.vertical, 8)
+                    
+                    Text("フォームの内容をすべてクリアします")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 8)
+                
             }
         }
         .toolbar {

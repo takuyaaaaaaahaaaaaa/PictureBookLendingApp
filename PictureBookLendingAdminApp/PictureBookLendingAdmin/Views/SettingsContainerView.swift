@@ -16,8 +16,6 @@ struct SettingsContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
-    @State private var isAddBookSheetPresented = false
-    @State private var isBulkAddSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
@@ -32,15 +30,6 @@ struct SettingsContainerView: View {
                 maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
                 onSelectUser: {
                     navigationPath.append(SettingsDestination.user)
-                },
-                onSelectBook: {
-                    navigationPath.append(SettingsDestination.book)
-                },
-                onSelectAddBook: {
-                    isAddBookSheetPresented = true
-                },
-                onSelectBulkAdd: {
-                    isBulkAddSheetPresented = true
                 },
                 onSelectLoanSettings: {
                     isLoanSettingsSheetPresented = true
@@ -63,8 +52,6 @@ struct SettingsContainerView: View {
                     ClassGroupListContainerView { classGroupId in
                         navigationPath.append(SettingsDestination.userList(classGroupId))
                     }
-                case .book:
-                    SettingsBookListContainerView()
                 case .userList(let classGroupId):
                     UserListContainerView(classGroupId: classGroupId)
                 }
@@ -74,21 +61,6 @@ struct SettingsContainerView: View {
                     LoanSettingsContainerView()
                 }
             }
-            #if os(macOS)
-                .sheet(isPresented: $isAddBookSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
-                .sheet(isPresented: $isBulkAddSheetPresented) {
-                    BookBulkAddContainerView()
-                }
-            #else
-                .fullScreenCover(isPresented: $isAddBookSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
-                .fullScreenCover(isPresented: $isBulkAddSheetPresented) {
-                    BookBulkAddContainerView()
-                }
-            #endif
             .sheet(isPresented: $isDeviceResetDialogPresented) {
                 DeviceResetDialog(
                     isPresented: $isDeviceResetDialogPresented,
@@ -148,7 +120,6 @@ struct SettingsContainerView: View {
     
     private enum SettingsDestination: Hashable {
         case user
-        case book
         case userList(UUID)
     }
 }
