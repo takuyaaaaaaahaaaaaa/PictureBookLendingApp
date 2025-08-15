@@ -22,7 +22,7 @@ struct GoogleBookSearchGatewayTests {
         
         // 基本情報が取得できていることを確認
         #expect(!book.title.isEmpty)
-        #expect(!book.author.isEmpty)
+        #expect(!(book.author?.isEmpty ?? true))
         #expect(book.isbn13 != nil)
         
         print("取得した書籍情報:")
@@ -40,7 +40,7 @@ struct GoogleBookSearchGatewayTests {
         let book = try await gateway.searchBook(by: isbn)
         
         #expect(!book.title.isEmpty)
-        #expect(!book.author.isEmpty)
+        #expect(!(book.author?.isEmpty ?? true))
         
         print("取得した書籍情報（2冊目）:")
         print("タイトル: \(book.title)")
@@ -72,7 +72,7 @@ struct GoogleBookSearchGatewayTests {
         let book = try await gateway.searchBook(by: isbn10)
         
         #expect(!book.title.isEmpty)
-        #expect(!book.author.isEmpty)
+        #expect(!(book.author?.isEmpty ?? true))
         
         print("ISBN-10で取得した書籍情報:")
         print("タイトル: \(book.title)")
@@ -85,7 +85,7 @@ struct GoogleBookSearchGatewayTests {
         let book = try await gateway.searchBook(by: hyphenatedISBN)
         
         #expect(!book.title.isEmpty)
-        #expect(!book.author.isEmpty)
+        #expect(!(book.author?.isEmpty ?? true))
         
         print("ハイフン付きISBNで取得した書籍情報:")
         print("タイトル: \(book.title)")
@@ -169,7 +169,7 @@ struct GoogleBookSearchGatewayTests {
         let book = try await gateway.searchBook(by: isbn)
         
         #expect(!book.title.isEmpty)
-        #expect(!book.author.isEmpty)
+        #expect(!(book.author?.isEmpty ?? true))
         
         print("BookSearchGatewayProtocol経由で取得:")
         print("タイトル: \(book.title)")
