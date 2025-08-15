@@ -164,7 +164,8 @@ struct BookBulkAddContainerView: View {
             // 全ての本の登録が完了
             activeFailedBook = nil
             let successMessage =
-                remainingFailedBooks.isEmpty ? "全ての絵本の登録が完了しました" : "失敗した絵本の登録が完了しました"
+                remainingFailedBooks.isEmpty
+                ? "個別登録が必要な絵本の登録が全て完了しました。\n※最後に画面右上の保存ボタンを押し忘れないようにお気をつけください。" : "絵本の個別登録が完了しました"
             alertState = .info(successMessage)
         }
     }
