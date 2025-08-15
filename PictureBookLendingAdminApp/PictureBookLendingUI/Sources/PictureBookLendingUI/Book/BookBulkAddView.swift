@@ -148,7 +148,7 @@ struct BookBulkAddRowView: View {
                             .font(.caption)
                             .foregroundStyle(.green)
                         
-                        Text("著者: \(book.author)")
+                        Text("著者: \(book.author ?? "不明")")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }

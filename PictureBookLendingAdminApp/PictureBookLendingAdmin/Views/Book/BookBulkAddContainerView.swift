@@ -4,6 +4,14 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
+/// 連続登録用のアイテム
+struct FailedBookItem: Identifiable {
+    let id = UUID()
+    let entry: ParsedBookEntry
+    let currentIndex: Int
+    let totalCount: Int
+}
+
 /// 絵本一括追加のContainer View
 struct BookBulkAddContainerView: View {
     @Environment(BookModel.self) private var bookModel
@@ -17,7 +25,7 @@ struct BookBulkAddContainerView: View {
     // 連続登録用の状態
     @State private var failedBooks: [ParsedBookEntry] = []
     @State private var currentBookIndex = 0
-    @State private var isShowingIndividualForm = false
+    @State private var activeFailedBook: FailedBookItem?
     
     // RegisterModelを使用して検索機能を利用
     @State private var registerModel: RegisterModel
@@ -54,24 +62,23 @@ struct BookBulkAddContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .sheet(isPresented: $isShowingIndividualForm) {
-            if currentBookIndex < failedBooks.count {
-                let failedBook = failedBooks[currentBookIndex]
-                NavigationStack {
-                    BookFormContainerView(
-                        mode: .add,
-                        initialBook: createBookFromFailedEntry(failedBook),
-                        onSave: { savedBook in
-                            handleIndividualBookSaved(savedBook)
-                        }
-                    )
-                    .navigationTitle("絵本を追加 (\(currentBookIndex + 1)/\(failedBooks.count))")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("スキップ") {
-                                handleSkipCurrentBook()
-                            }
+        .sheet(item: $activeFailedBook) { failedBookItem in
+            NavigationStack {
+                BookFormContainerView(
+                    mode: .add,
+                    initialBook: createBookFromFailedEntry(failedBookItem.entry),
+                    onSave: { savedBook in
+                        handleIndividualBookSaved(savedBook)
+                    }
+                )
+                .navigationTitle(
+                    "絵本を追加 (\(failedBookItem.currentIndex + 1)/\(failedBookItem.totalCount))"
+                )
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("スキップ") {
+                            handleSkipCurrentBook()
                         }
                     }
                 }
@@ -112,7 +119,11 @@ struct BookBulkAddContainerView: View {
             $0.managementNumber == entry.managementNumber
         }) {
             currentBookIndex = index
-            isShowingIndividualForm = true
+            activeFailedBook = FailedBookItem(
+                entry: failedBooks[currentBookIndex],
+                currentIndex: currentBookIndex,
+                totalCount: failedBooks.count
+            )
         }
     }
     
@@ -122,11 +133,15 @@ struct BookBulkAddContainerView: View {
         
         // まだ登録する本があるかチェック
         if currentBookIndex < failedBooks.count {
-            // 次の本の登録へ
-            // sheetは既に表示されているので、次の本が自動で表示される
+            // 次の本を設定
+            activeFailedBook = FailedBookItem(
+                entry: failedBooks[currentBookIndex],
+                currentIndex: currentBookIndex,
+                totalCount: failedBooks.count
+            )
         } else {
             // 全ての本の登録が完了
-            isShowingIndividualForm = false
+            activeFailedBook = nil
             alertState = .info("失敗した絵本の登録が完了しました")
             
             // processedBooksを更新して成功状態にする
@@ -138,10 +153,15 @@ struct BookBulkAddContainerView: View {
         currentBookIndex += 1
         
         if currentBookIndex < failedBooks.count {
-            // 次の本へ
+            // 次の本を設定
+            activeFailedBook = FailedBookItem(
+                entry: failedBooks[currentBookIndex],
+                currentIndex: currentBookIndex,
+                totalCount: failedBooks.count
+            )
         } else {
             // 全てスキップまたは完了
-            isShowingIndividualForm = false
+            activeFailedBook = nil
         }
     }
     
