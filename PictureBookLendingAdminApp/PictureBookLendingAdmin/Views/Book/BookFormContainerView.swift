@@ -4,6 +4,10 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+
 /// 絵本フォームのContainer View
 ///
 /// ビジネスロジック、状態管理、データ永続化を担当し、
@@ -88,14 +92,16 @@ struct BookFormContainerView: View {
                     Text("この管理番号は既に使用されています。それでも保存しますか？")
                 }
             }
-            .sheet(isPresented: $isCameraPresented) {
-                CameraImagePickerView(
-                    onImagePicked: handleImagePicked,
-                    onCancel: {
-                        isCameraPresented = false
-                    }
-                )
-            }
+            #if canImport(UIKit)
+                .sheet(isPresented: $isCameraPresented) {
+                    CameraImagePickerView(
+                        onImagePicked: handleImagePicked,
+                        onCancel: {
+                            isCameraPresented = false
+                        }
+                    )
+                }
+            #endif
         }
     }
     
@@ -182,20 +188,22 @@ struct BookFormContainerView: View {
     }
     
     /// 撮影画像の処理
-    private func handleImagePicked(_ image: UIImage) {
-        isCameraPresented = false
-        
-        do {
-            // 画像をローカルに保存
-            let localPath = try ImageStorageUtility.saveImage(image)
+    #if canImport(UIKit)
+        private func handleImagePicked(_ image: UIImage) {
+            isCameraPresented = false
             
-            // Bookのthumbnailフィールドにローカルパスを設定
-            book.thumbnail = localPath
-            
-        } catch {
-            alertState = .error("画像の保存に失敗しました: \(error.localizedDescription)")
+            do {
+                // 画像をローカルに保存
+                let localPath = try ImageStorageUtility.saveImage(image)
+                
+                // Bookのthumbnailフィールドにローカルパスを設定
+                book.thumbnail = localPath
+                
+            } catch {
+                alertState = .error("画像の保存に失敗しました: \(error.localizedDescription)")
+            }
         }
-    }
+    #endif
 }
 
 #Preview {

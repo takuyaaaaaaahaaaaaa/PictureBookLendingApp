@@ -10,6 +10,7 @@ struct SettingsContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(UserModel.self) private var userModel
     @Environment(BookModel.self) private var bookModel
+    @Environment(LoanModel.self) private var loanModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(\.dismiss) private var dismiss
     
@@ -113,30 +114,27 @@ struct SettingsContainerView: View {
     
     private func performDeviceReset(_ options: DeviceResetOptions) async {
         do {
-            var deletedItems: [String] = []
+            var deletedDetails: [String] = []
             
             if options.deleteUsers {
-                // TODO: UserModelとClassGroupModelにdeleteAllメソッドを追加
-                // try await userModel.deleteAllUsers()
-                // try await classGroupModel.deleteAllClassGroups()
-                deletedItems.append("利用者データ")
+                let userCount = try userModel.deleteAllUsers()
+                let classGroupCount = try classGroupModel.deleteAllClassGroups()
+                deletedDetails.append("利用者データ(\(userCount)人)・クラス(\(classGroupCount)組)")
             }
             
             if options.deleteBooks {
-                // TODO: BookModelにdeleteAllBooksメソッドを追加
-                // try await bookModel.deleteAllBooks()
-                deletedItems.append("絵本データ")
+                let bookCount = try bookModel.deleteAllBooks()
+                deletedDetails.append("絵本データ(\(bookCount)冊)")
             }
             
             if options.deleteLoanRecords {
-                // TODO: LoanModelにdeleteAllLoansメソッドを追加
-                // try await loanModel.deleteAllLoans()
-                deletedItems.append("貸出記録")
+                let loanCount = try loanModel.deleteAllLoans()
+                deletedDetails.append("貸出記録(\(loanCount)件)")
             }
             
             let message =
-                if !deletedItems.isEmpty {
-                    "以下のデータを削除しました: \(deletedItems.joined(separator: "、"))"
+                if !deletedDetails.isEmpty {
+                    "以下のデータを削除しました:\n\(deletedDetails.joined(separator: "\n"))"
                 } else {
                     "削除するデータが選択されていません"
                 }

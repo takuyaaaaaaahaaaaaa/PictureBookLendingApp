@@ -74,7 +74,9 @@ struct BookBulkAddContainerView: View {
                 .navigationTitle(
                     "絵本を追加 (\(failedBookItem.currentIndex + 1)/\(failedBookItem.totalCount))"
                 )
-                .navigationBarTitleDisplayMode(.inline)
+                #if !os(macOS)
+                    .navigationBarTitleDisplayMode(.inline)
+                #endif
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("スキップ") {

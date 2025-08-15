@@ -350,4 +350,28 @@ public class LoanModel {
             return loans.filter { $0.bookId == bookId }
         }
     }
+    
+    /// 全ての貸出記録を削除する
+    ///
+    /// 全貸出記録データを削除します。端末初期化時に使用されます。
+    ///
+    /// - Returns: 削除された貸出記録の数
+    /// - Throws: 削除に失敗した場合は `LoanModelError` を投げます
+    public func deleteAllLoans() throws -> Int {
+        do {
+            let currentLoans = loans
+            
+            // 全ての貸出記録を削除
+            for loan in currentLoans {
+                _ = try repository.delete(loan.id)
+            }
+            
+            // キャッシュもクリア
+            loans.removeAll()
+            
+            return currentLoans.count
+        } catch {
+            throw LoanModelError.returnFailed
+        }
+    }
 }

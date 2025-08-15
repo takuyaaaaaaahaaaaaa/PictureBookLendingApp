@@ -197,4 +197,28 @@ public class BookModel {
                 == managementNumber.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         }
     }
+    
+    /// 全ての絵本を削除する
+    ///
+    /// 全絵本データを削除します。端末初期化時に使用されます。
+    ///
+    /// - Returns: 削除された絵本の数
+    /// - Throws: 削除に失敗した場合は `BookModelError` を投げます
+    public func deleteAllBooks() throws -> Int {
+        do {
+            let currentBooks = books
+            
+            // 全ての絵本を削除
+            for book in currentBooks {
+                _ = try repository.delete(book.id)
+            }
+            
+            // キャッシュもクリア
+            books.removeAll()
+            
+            return currentBooks.count
+        } catch {
+            throw BookModelError.updateFailed
+        }
+    }
 }

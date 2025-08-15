@@ -29,7 +29,9 @@ public struct DeviceResetDialog: View {
             }
             .padding()
             .navigationTitle("端末初期化")
-            .navigationBarTitleDisplayMode(.inline)
+            #if !os(macOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
