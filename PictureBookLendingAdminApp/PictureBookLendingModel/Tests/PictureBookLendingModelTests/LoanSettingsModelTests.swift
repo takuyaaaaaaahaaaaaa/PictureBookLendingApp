@@ -27,7 +27,7 @@ final class LoanSettingsModelTests: XCTestCase {
         
         // 初期設定がデフォルト値になっていることを確認
         XCTAssertEqual(model.settings, .default)
-        XCTAssertEqual(model.settings.defaultLoanPeriodDays, 14)
+        XCTAssertEqual(model.settings.defaultLoanPeriodDays, 7)
     }
     
     @MainActor
