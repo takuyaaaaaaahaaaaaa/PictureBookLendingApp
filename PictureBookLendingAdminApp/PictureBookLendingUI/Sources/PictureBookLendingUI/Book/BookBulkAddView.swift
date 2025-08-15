@@ -46,6 +46,7 @@ public struct BookBulkAddView: View {
                 Spacer()
             }
             .padding()
+            .background(.regularMaterial)
             .navigationTitle("絵本一括追加")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.large)

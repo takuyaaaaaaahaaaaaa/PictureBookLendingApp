@@ -94,7 +94,7 @@ public struct SettingsView: View {
             Spacer()
         }
         .padding()
-        .background(.white)
+        .background(.regularMaterial)
     }
 }
 
