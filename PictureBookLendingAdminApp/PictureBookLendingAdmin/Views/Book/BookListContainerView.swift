@@ -84,7 +84,6 @@ struct BookListContainerView: View {
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
-            onSelect: handleSelectBook,
             onEdit: handleEditBook,
             onDelete: handleDeleteBook
         ) { book in
@@ -106,30 +105,6 @@ struct BookListContainerView: View {
         #endif
         .navigationTitle("絵本")
         .toolbar {
-            ToolbarItem(placement: .secondaryAction) {
-                Button(isEditMode ? "編集モード完了" : "編集モード") {
-                    isEditMode.toggle()
-                }
-            }
-            
-            if isEditMode {
-                ToolbarItem(placement: .secondaryAction) {
-                    Button(action: {
-                        isAddSheetPresented = true
-                    }) {
-                        Label("絵本追加", systemImage: "plus")
-                    }
-                }
-                
-                ToolbarItem(placement: .secondaryAction) {
-                    Button(action: {
-                        isBulkAddSheetPresented = true
-                    }) {
-                        Label("絵本一括追加", systemImage: "plus.rectangle.on.folder")
-                    }
-                }
-            }
-            
             ToolbarItem(placement: .primaryAction) {
                 // 設定ボタン
                 // TODO: iOS26 beta6のバグで以下が効かない
@@ -143,27 +118,9 @@ struct BookListContainerView: View {
             .sheet(isPresented: $isSettingsPresented) {
                 SettingsContainerView()
             }
-            .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(mode: .add)
-            }
-            .sheet(isPresented: $isBulkAddSheetPresented) {
-                BookBulkAddContainerView()
-            }
-            .sheet(item: $editingBook) { book in
-                BookFormContainerView(mode: .edit(book))
-            }
         #else
             .fullScreenCover(isPresented: $isSettingsPresented) {
                 SettingsContainerView()
-            }
-            .fullScreenCover(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(mode: .add)
-            }
-            .fullScreenCover(isPresented: $isBulkAddSheetPresented) {
-                BookBulkAddContainerView()
-            }
-            .fullScreenCover(item: $editingBook) { book in
-                BookFormContainerView(mode: .edit(book))
             }
         #endif
         .navigationDestination(for: Book.self) { book in
@@ -185,10 +142,6 @@ struct BookListContainerView: View {
     }
     
     // MARK: - Actions
-    
-    private func handleSelectBook(_ book: Book) {
-        // 絵本詳細画面に遷移（NavigationLinkで自動的に処理される）
-    }
     
     private func handleEditBook(_ book: Book) {
         editingBook = book
