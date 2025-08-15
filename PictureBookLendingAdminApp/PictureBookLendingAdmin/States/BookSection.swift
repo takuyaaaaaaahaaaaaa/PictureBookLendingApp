@@ -22,9 +22,7 @@ struct AdminBookSection: Identifiable, Hashable {
     var isEmpty: Bool {
         books.isEmpty
     }
-}
-
-extension AdminBookSection {
+    
     /// 絵本リストから五十音順セクションを作成
     /// - Parameter books: 分類対象の絵本リスト
     /// - Returns: 五十音順にソートされたセクションリスト
