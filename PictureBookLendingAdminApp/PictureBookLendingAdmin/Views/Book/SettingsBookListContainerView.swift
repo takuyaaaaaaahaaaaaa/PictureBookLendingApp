@@ -107,37 +107,17 @@ struct SettingsBookListContainerView: View {
         }
         #if os(macOS)
             .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .add)
             }
             .sheet(item: $editingBook) { book in
-                BookFormContainerView(
-                    mode: .edit(book),
-                    onSave: { _ in
-                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .edit(book))
             }
         #else
             .fullScreenCover(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .add)
             }
             .fullScreenCover(item: $editingBook) { book in
-                BookFormContainerView(
-                    mode: .edit(book),
-                    onSave: { _ in
-                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .edit(book))
             }
         #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {

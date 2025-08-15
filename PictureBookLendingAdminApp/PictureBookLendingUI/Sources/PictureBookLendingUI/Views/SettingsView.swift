@@ -12,6 +12,7 @@ public struct SettingsView: View {
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
+    let onSelectAddBook: () -> Void
     let onSelectBulkAdd: () -> Void
     let onSelectLoanSettings: () -> Void
     
@@ -23,6 +24,7 @@ public struct SettingsView: View {
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
+        onSelectAddBook: @escaping () -> Void,
         onSelectBulkAdd: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void
     ) {
@@ -33,6 +35,7 @@ public struct SettingsView: View {
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
+        self.onSelectAddBook = onSelectAddBook
         self.onSelectBulkAdd = onSelectBulkAdd
         self.onSelectLoanSettings = onSelectLoanSettings
     }
@@ -51,6 +54,13 @@ public struct SettingsView: View {
                 title: "絵本管理",
                 subtitle: "\(bookCount)冊登録済み",
                 action: onSelectBook
+            )
+            
+            SettingsMenuItem(
+                iconName: "plus",
+                title: "絵本追加",
+                subtitle: "新しい絵本を1冊ずつ追加",
+                action: onSelectAddBook
             )
             
             SettingsMenuItem(
@@ -117,6 +127,7 @@ private struct SettingsMenuItem: View {
             maxBooksPerUser: 1,
             onSelectUser: {},
             onSelectBook: {},
+            onSelectAddBook: {},
             onSelectBulkAdd: {},
             onSelectLoanSettings: {}
         )

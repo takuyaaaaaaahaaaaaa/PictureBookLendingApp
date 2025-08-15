@@ -15,6 +15,7 @@ struct SettingsContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
+    @State private var isAddBookSheetPresented = false
     @State private var isBulkAddSheetPresented = false
     
     var body: some View {
@@ -30,6 +31,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectBook: {
                     navigationPath.append(SettingsDestination.book)
+                },
+                onSelectAddBook: {
+                    isAddBookSheetPresented = true
                 },
                 onSelectBulkAdd: {
                     isBulkAddSheetPresented = true
@@ -63,6 +67,15 @@ struct SettingsContainerView: View {
                     LoanSettingsContainerView()
                 }
             }
+            #if os(macOS)
+                .sheet(isPresented: $isAddBookSheetPresented) {
+                    BookFormContainerView(mode: .add)
+                }
+            #else
+                .fullScreenCover(isPresented: $isAddBookSheetPresented) {
+                    BookFormContainerView(mode: .add)
+                }
+            #endif
             .sheet(isPresented: $isBulkAddSheetPresented) {
                 BookBulkAddContainerView()
             }
