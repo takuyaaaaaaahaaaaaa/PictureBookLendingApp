@@ -18,7 +18,7 @@ final public class SwiftDataBook {
     public var title: String
     
     /// 著者名
-    public var author: String
+    public var author: String?
     
     /// 独自の管理番号
     public var managementNumber: String?
@@ -59,7 +59,7 @@ final public class SwiftDataBook {
     /// - Parameters:
     ///   - id: 絵本の一意識別子
     ///   - title: 絵本のタイトル
-    ///   - author: 著者名
+    ///   - author: 著者名（任意）
     ///   - managementNumber: 独自の管理番号
     ///   - isbn13: ISBN-13コード
     ///   - publisher: 出版社名
@@ -74,7 +74,7 @@ final public class SwiftDataBook {
     public init(
         id: UUID,
         title: String,
-        author: String,
+        author: String? = nil,
         isbn13: String? = nil,
         publisher: String? = nil,
         publishedDate: String? = nil,

@@ -8,7 +8,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     /// 絵本のタイトル
     public var title: String
     /// 絵本の著者名
-    public var author: String
+    public var author: String?
     /// ISBN-13コード（13桁の数字文字列）
     public var isbn13: String?
     /// 出版社名
@@ -36,7 +36,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     /// - Parameters:
     ///   - id: 絵本の一意識別子（デフォルトでは新しいUUIDが生成されます）
     ///   - title: 絵本のタイトル
-    ///   - author: 絵本の著者名
+    ///   - author: 絵本の著者名（任意）
     ///   - isbn13: ISBN-13コード（任意）
     ///   - publisher: 出版社名（任意）
     ///   - publishedDate: 出版日（任意）
@@ -51,7 +51,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public init(
         id: UUID = UUID(),
         title: String,
-        author: String,
+        author: String? = nil,
         isbn13: String? = nil,
         publisher: String? = nil,
         publishedDate: String? = nil,

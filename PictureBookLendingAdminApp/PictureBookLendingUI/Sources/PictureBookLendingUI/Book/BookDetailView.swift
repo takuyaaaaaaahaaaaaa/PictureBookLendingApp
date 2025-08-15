@@ -53,7 +53,13 @@ public struct BookDetailView<ActionButton: View>: View {
             
             Section("基本情報") {
                 EditableDetailRow(label: "タイトル", value: $book.title)
-                EditableDetailRow(label: "著者", value: $book.author)
+                EditableDetailRow(
+                    label: "著者",
+                    value: Binding(
+                        get: { book.author ?? "" },
+                        set: { book.author = $0.isEmpty ? nil : $0 }
+                    )
+                )
                 if let publisher = book.publisher, !publisher.isEmpty {
                     DetailRow(label: "出版社", value: publisher)
                 }

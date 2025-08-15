@@ -219,12 +219,12 @@ public struct BookSearchView: View {
                         TextField(
                             "著者を入力",
                             text: Binding(
-                                get: { manualBook.author },
+                                get: { manualBook.author ?? "" },
                                 set: { newAuthor in
                                     let updatedBook = Book(
                                         id: manualBook.id,
                                         title: manualBook.title,
-                                        author: newAuthor,
+                                        author: newAuthor.isEmpty ? nil : newAuthor,
                                         isbn13: manualBook.isbn13,
                                         publisher: manualBook.publisher,
                                         publishedDate: manualBook.publishedDate,
@@ -347,7 +347,7 @@ struct SearchResultRow: View {
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
                     
-                    Text(scoredBook.book.author)
+                    Text(scoredBook.book.author ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     

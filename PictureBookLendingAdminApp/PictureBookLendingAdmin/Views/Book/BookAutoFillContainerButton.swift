@@ -68,7 +68,7 @@ struct BookAutoFillContainerButton: View {
     private func handleSearch() {
         // BookFormViewのタイトルと著者名を使用して検索
         registerModel.searchTitle = targetBook.title
-        registerModel.searchAuthor = targetBook.author
+        registerModel.searchAuthor = targetBook.author ?? ""
         
         do {
             try registerModel.searchBooks()
@@ -82,7 +82,7 @@ struct BookAutoFillContainerButton: View {
         let updatedBook = Book(
             id: targetBook.id,  // 既存のIDを保持
             title: book.title.isEmpty ? targetBook.title : book.title,
-            author: book.author.isEmpty ? targetBook.author : book.author,
+            author: book.author?.isEmpty == false ? book.author : targetBook.author,
             isbn13: book.isbn13 ?? targetBook.isbn13,
             publisher: book.publisher ?? targetBook.publisher,
             publishedDate: book.publishedDate ?? targetBook.publishedDate,

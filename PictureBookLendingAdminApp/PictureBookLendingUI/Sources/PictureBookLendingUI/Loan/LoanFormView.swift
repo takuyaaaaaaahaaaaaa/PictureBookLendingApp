@@ -41,7 +41,7 @@ public struct LoanFormView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     
-                    Text(book.author)
+                    Text(book.author ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

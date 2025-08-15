@@ -27,7 +27,7 @@ struct SettingsBookListContainerView: View {
             } else {
                 bookModel.books.filter { book in
                     book.title.localizedCaseInsensitiveContains(searchText)
-                        || book.author.localizedCaseInsensitiveContains(searchText)
+                        || book.author?.localizedCaseInsensitiveContains(searchText) == true
                 }
             }
 

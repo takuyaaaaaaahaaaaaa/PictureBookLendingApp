@@ -48,11 +48,13 @@ public struct BookSearchScorer: Sendable {
         }
         
         // 著者マッチスコア（重み: 30%）
-        if let searchAuthor = searchQuery.author {
+        if let searchAuthor = searchQuery.author,
+            let bookAuthor = book.author
+        {
             let authorWeight = 0.3
             let authorScore = calculateAuthorMatchScore(
                 searchAuthor: searchAuthor,
-                bookAuthor: book.author
+                bookAuthor: bookAuthor
             )
             totalScore += authorScore * authorWeight
             totalWeight += authorWeight

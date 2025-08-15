@@ -123,7 +123,7 @@ struct LoanActionContainerButton: View {
                 VStack(alignment: .leading) {
                     Text(sampleBook.title)
                         .font(.headline)
-                    Text(sampleBook.author)
+                    Text(sampleBook.author ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

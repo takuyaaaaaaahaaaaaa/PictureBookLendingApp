@@ -266,7 +266,7 @@ public struct BookRowView<RowAction: View>: View {
                 Text(book.title)
                     .font(.headline)
                 
-                Text(book.author)
+                Text(book.author ?? "")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 

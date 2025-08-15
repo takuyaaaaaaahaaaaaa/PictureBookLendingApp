@@ -29,7 +29,7 @@ struct BookListContainerView: View {
             } else {
                 allBooks.filter { book in
                     book.title.localizedCaseInsensitiveContains(searchText)
-                        || book.author.localizedCaseInsensitiveContains(searchText)
+                        || book.author?.localizedCaseInsensitiveContains(searchText) == true
                 }
             }
 

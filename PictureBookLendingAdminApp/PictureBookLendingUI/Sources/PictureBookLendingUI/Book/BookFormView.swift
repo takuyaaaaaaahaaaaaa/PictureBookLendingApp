@@ -67,7 +67,13 @@ public struct BookFormView<AutoFillButton: View>: View {
             
             Section(header: Text("基本情報（*は必須）")) {
                 TextField("タイトル *", text: $book.title)
-                TextField("著者 *", text: $book.author)
+                TextField(
+                    "著者",
+                    text: Binding(
+                        get: { book.author ?? "" },
+                        set: { book.author = $0.isEmpty ? nil : $0 }
+                    )
+                )
                 
                 // 自動入力ボタン（タイトル・著者名の下に配置）
                 if let autoFillButton = autoFillButton {
@@ -187,7 +193,6 @@ public struct BookFormView<AutoFillButton: View>: View {
     
     private var isValidInput: Bool {
         !book.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !book.author.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     @ViewBuilder
