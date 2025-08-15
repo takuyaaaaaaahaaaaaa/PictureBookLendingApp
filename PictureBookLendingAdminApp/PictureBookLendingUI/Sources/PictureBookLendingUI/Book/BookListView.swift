@@ -199,9 +199,21 @@ public struct BookRowView<RowAction: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(.headline)
+                
                 Text(book.author)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                
+                if let managementNumber = book.managementNumber {
+                    Text("管理番号: \(managementNumber)")
+                        .font(.caption)
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.blue.opacity(0.1))
+                        .foregroundStyle(.blue)
+                        .clipShape(.capsule)
+                }
             }
             
             Spacer()
@@ -216,8 +228,9 @@ public struct BookRowView<RowAction: View>: View {
     @Previewable @State var searchText = ""
     @Previewable @State var selectedKanaFilter: KanaGroup?
     
-    let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール", kanaGroup: .ha)
-    let book2 = Book(title: "ぐりとぐら", author: "中川李枝子", kanaGroup: .ka)
+    let book1 = Book(
+        title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "は001", kanaGroup: .ha)
+    let book2 = Book(title: "ぐりとぐら", author: "中川李枝子", managementNumber: "く002", kanaGroup: .ka)
     
     let sections = [
         BookSection(kanaGroup: .ka, books: [book2]),
