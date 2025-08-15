@@ -32,6 +32,7 @@ public struct BookFormView<AutoFillButton: View>: View {
     let autoFillButton: AutoFillButton?
     let onSave: () -> Void
     let onCancel: () -> Void
+    let onReset: (() -> Void)
     let onCameraTap: (() -> Void)?
     
     private let autoFillTip = AutoFillTip()
@@ -42,6 +43,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         @ViewBuilder autoFillButton: () -> AutoFillButton,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void,
+        onReset: @escaping () -> Void,
         onCameraTap: (() -> Void)? = nil
     ) {
         self._book = book
@@ -49,6 +51,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.autoFillButton = autoFillButton()
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onReset = onReset
         self.onCameraTap = onCameraTap
     }
     
@@ -57,6 +60,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         mode: BookFormMode,
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void,
+        onReset: @escaping () -> Void,
         onCameraTap: (() -> Void)? = nil
     ) where AutoFillButton == EmptyView {
         self._book = book
@@ -64,6 +68,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.autoFillButton = nil
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onReset = onReset
         self.onCameraTap = onCameraTap
     }
     
@@ -174,6 +179,33 @@ public struct BookFormView<AutoFillButton: View>: View {
                 )
                 .lineLimit(3...6)
             }
+            
+            // リセットボタン（新規追加時のみ表示）
+            if !isEditMode {
+                Section {
+                    VStack(spacing: 12) {
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                print("🔘 リセットボタンがタップされました")
+                                onReset()
+                            }) {
+                                Label("入力項目をリセット", systemImage: "arrow.counterclockwise")
+                                    .font(.footnote)
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.orange)
+                            .controlSize(.small)
+                            Spacer()
+                        }
+                        
+                        Text("フォームの内容をすべてクリアします")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
         }
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -270,7 +302,8 @@ public struct BookFormView<AutoFillButton: View>: View {
             book: $sampleBook,
             mode: BookFormMode.add,
             onSave: {},
-            onCancel: {}
+            onCancel: {},
+            onReset: {}
         )
         .navigationTitle("絵本を追加")
     }
