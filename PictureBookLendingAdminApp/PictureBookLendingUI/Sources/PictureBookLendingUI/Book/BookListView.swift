@@ -2,6 +2,32 @@ import Kingfisher
 import PictureBookLendingDomain
 import SwiftUI
 
+/// 絵本のソート方法
+public enum BookSortType: String, CaseIterable, Identifiable {
+    case title = "title"
+    case managementNumber = "managementNumber"
+    
+    public var id: String { rawValue }
+    
+    public var displayName: String {
+        switch self {
+        case .title:
+            return "あいうえお順"
+        case .managementNumber:
+            return "管理番号順"
+        }
+    }
+    
+    public var iconName: String {
+        switch self {
+        case .title:
+            return "textformat.abc"
+        case .managementNumber:
+            return "number"
+        }
+    }
+}
+
 /// 絵本セクション情報
 /// 五十音順グループごとの絵本分類を表現
 public struct BookSection: Identifiable, Hashable {
@@ -35,6 +61,8 @@ public struct BookListView<RowAction: View>: View {
     @Binding public var selectedKanaFilter: KanaGroup?
     /// 五十音フィルタの選択肢
     public let kanaFilterOptions: [KanaGroup]
+    /// 選択中のソート方法
+    @Binding public var selectedSortType: BookSortType
     /// 編集モードかどうか
     public let isEditMode: Bool
     /// 絵本選択時の動作
@@ -52,6 +80,7 @@ public struct BookListView<RowAction: View>: View {
         searchText: Binding<String>,
         selectedKanaFilter: Binding<KanaGroup?>,
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
+        selectedSortType: Binding<BookSortType>,
         isEditMode: Bool = false,
         onSelect: @escaping (Book) -> Void,
         onEdit: @escaping (Book) -> Void,
@@ -62,6 +91,7 @@ public struct BookListView<RowAction: View>: View {
         self._searchText = searchText
         self._selectedKanaFilter = selectedKanaFilter
         self.kanaFilterOptions = kanaFilterOptions
+        self._selectedSortType = selectedSortType
         self.isEditMode = isEditMode
         self.onSelect = onSelect
         self.onEdit = onEdit
@@ -85,22 +115,58 @@ public struct BookListView<RowAction: View>: View {
     
     /// 五十音フィルター
     private var kanaFilterSection: some View {
-        ScrollView(.horizontal) {
-            HStack {
-                ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
-                    Button(kanaGroup.displayName) {
-                        // 未選択の場合は選択、選択中の場合は解除
-                        if selectedKanaFilter == kanaGroup {
-                            selectedKanaFilter = nil
-                        } else {
-                            selectedKanaFilter = kanaGroup
+        HStack {
+            ScrollView(.horizontal) {
+                HStack {
+                    ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
+                        Button(kanaGroup.displayName) {
+                            // 未選択の場合は選択、選択中の場合は解除
+                            if selectedKanaFilter == kanaGroup {
+                                selectedKanaFilter = nil
+                            } else {
+                                selectedKanaFilter = kanaGroup
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
+                    }
+                }
+                .padding(.leading)
+            }
+            
+            Spacer()
+            
+            // ソート選択メニュー
+            Menu {
+                ForEach(BookSortType.allCases) { sortType in
+                    Button {
+                        selectedSortType = sortType
+                    } label: {
+                        HStack {
+                            Image(systemName: sortType.iconName)
+                            Text(sortType.displayName)
+                            if selectedSortType == sortType {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                            }
                         }
                     }
-                    .buttonStyle(.bordered)
-                    .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
                 }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: selectedSortType.iconName)
+                    Text(selectedSortType.displayName)
+                    Image(systemName: "chevron.down")
+                        .font(.caption)
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
             }
-            .padding()
+            .padding(.trailing)
         }
     }
     
@@ -227,6 +293,7 @@ public struct BookRowView<RowAction: View>: View {
 #Preview {
     @Previewable @State var searchText = ""
     @Previewable @State var selectedKanaFilter: KanaGroup?
+    @Previewable @State var selectedSortType: BookSortType = .title
     
     let book1 = Book(
         title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "は001", kanaGroup: .ha)
@@ -242,6 +309,7 @@ public struct BookRowView<RowAction: View>: View {
             sections: sections,
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
+            selectedSortType: $selectedSortType,
             isEditMode: true,
             onSelect: { _ in },
             onEdit: { _ in },

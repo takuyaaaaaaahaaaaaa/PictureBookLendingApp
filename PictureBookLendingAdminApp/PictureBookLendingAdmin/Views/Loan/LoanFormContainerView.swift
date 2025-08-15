@@ -47,12 +47,22 @@ struct LoanFormContainerView: View {
                     }
                 }
                 
-                ToolbarItem(placement: .automatic) {
-                    Button("登録") {
-                        handleRegister()
+                #if os(iOS)
+                    ToolbarItem(placement: .bottomBar) {
+                        Button("登録") {
+                            handleRegister()
+                        }
+                        .tint(.accentColor)
+                        .disabled(!isValidInput)
                     }
-                    .disabled(!isValidInput)
-                }
+                #else
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("登録") {
+                            handleRegister()
+                        }
+                        .disabled(!isValidInput)
+                    }
+                #endif
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 if alertState.type == .success {

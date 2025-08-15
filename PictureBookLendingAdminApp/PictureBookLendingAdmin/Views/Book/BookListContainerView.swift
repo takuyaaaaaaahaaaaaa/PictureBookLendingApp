@@ -16,6 +16,7 @@ struct BookListContainerView: View {
     @State private var isSettingsPresented = false
     @State private var alertState = AlertState()
     @State private var selectedKanaFilter: KanaGroup?
+    @State private var selectedSortType: BookSortType = .title
     
     private var filteredSections: [BookSection] {
         // 全絵本を表示（貸出可能・貸出中を含む）
@@ -37,9 +38,28 @@ struct BookListContainerView: View {
             return book.kanaGroup ?? .other
         }
         
-        // セクションを作成
+        // セクションを作成（ソート指定に基づいて）
         var sections = groupedBooks.compactMap { (kanaGroup, books) in
-            BookSection(kanaGroup: kanaGroup, books: books.sorted { $0.title < $1.title })
+            let sortedBooks: [Book]
+            switch selectedSortType {
+            case .title:
+                sortedBooks = books.sorted { $0.title < $1.title }
+            case .managementNumber:
+                sortedBooks = books.sorted { book1, book2 in
+                    // 管理番号がない場合は最後に配置
+                    switch (book1.managementNumber, book2.managementNumber) {
+                    case (nil, nil):
+                        return book1.title < book2.title
+                    case (nil, _):
+                        return false
+                    case (_, nil):
+                        return true
+                    case (let num1?, let num2?):
+                        return num1 < num2
+                    }
+                }
+            }
+            return BookSection(kanaGroup: kanaGroup, books: sortedBooks)
         }
         
         // 五十音順にソート
@@ -58,6 +78,7 @@ struct BookListContainerView: View {
             sections: filteredSections,
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
+            selectedSortType: $selectedSortType,
             isEditMode: false,
             onSelect: handleSelectBook,
             onEdit: { _ in },  // 編集モードオフなので使用されない

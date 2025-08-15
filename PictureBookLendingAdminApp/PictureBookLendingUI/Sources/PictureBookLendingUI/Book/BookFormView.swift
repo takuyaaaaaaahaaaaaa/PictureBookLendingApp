@@ -74,7 +74,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                     HStack {
                         Image(systemName: "wand.and.stars")
                             .foregroundStyle(.secondary)
-                        Text("タイトルと著者名から情報を自動入力")
+                        Text("タイトルと著者名から情報を自動入力※実行回数には制限がございます。")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
