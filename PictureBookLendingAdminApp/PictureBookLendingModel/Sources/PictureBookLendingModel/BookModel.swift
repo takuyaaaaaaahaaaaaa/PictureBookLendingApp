@@ -10,6 +10,8 @@ public enum BookModelError: Error, Equatable, LocalizedError {
     case registrationFailed
     /// 絵本更新に失敗した場合のエラー
     case updateFailed
+    /// 管理番号が重複している場合のエラー
+    case managementNumberDuplicated(String)
     
     public var errorDescription: String? {
         switch self {
@@ -19,6 +21,8 @@ public enum BookModelError: Error, Equatable, LocalizedError {
             return "絵本の登録に失敗しました"
         case .updateFailed:
             return "絵本の更新に失敗しました"
+        case .managementNumberDuplicated(let managementNumber):
+            return "管理番号「\(managementNumber)」は既に使用されています"
         }
     }
 }
@@ -165,6 +169,54 @@ public class BookModel {
             return result
         } catch RepositoryError.notFound {
             throw BookModelError.bookNotFound
+        } catch {
+            throw BookModelError.updateFailed
+        }
+    }
+    
+    /// 管理番号の重複をチェックする
+    ///
+    /// 指定された管理番号が既に他の絵本で使用されているかをチェックします。
+    ///
+    /// - Parameters:
+    ///   - managementNumber: チェックする管理番号
+    ///   - excludeBookId: チェックから除外する絵本のID（編集時に使用）
+    /// - Returns: 重複している場合はその絵本、重複していない場合はnil
+    public func findBookByManagementNumber(
+        _ managementNumber: String, excluding excludeBookId: UUID? = nil
+    ) -> Book? {
+        return books.first { book in
+            // 除外IDが指定されている場合はそれを除外
+            if let excludeId = excludeBookId, book.id == excludeId {
+                return false
+            }
+            
+            // 管理番号が一致するかチェック
+            return book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+                == managementNumber.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        }
+    }
+    
+    /// 全ての絵本を削除する
+    ///
+    /// 全絵本データを削除します。端末初期化時に使用されます。
+    ///
+    /// - Returns: 削除された絵本の数
+    /// - Throws: 削除に失敗した場合は `BookModelError` を投げます
+    public func deleteAllBooks() throws -> Int {
+        do {
+            let currentBooks = books
+            
+            // 全ての絵本を削除
+            for book in currentBooks {
+                _ = try repository.delete(book.id)
+            }
+            
+            // キャッシュもクリア
+            books.removeAll()
+            
+            return currentBooks.count
         } catch {
             throw BookModelError.updateFailed
         }

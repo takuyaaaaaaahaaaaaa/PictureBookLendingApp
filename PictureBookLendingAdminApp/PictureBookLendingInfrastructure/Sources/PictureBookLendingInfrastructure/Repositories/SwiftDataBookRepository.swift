@@ -35,7 +35,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             targetAge: book.targetAge?.rawValue,
             pageCount: book.pageCount,
             categories: book.categories,
-            managementNumber: book.managementNumber
+            managementNumber: book.managementNumber,
+            kanaGroup: book.kanaGroup
         )
         
         modelContext.insert(swiftDataBook)
@@ -74,7 +75,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     },
                     pageCount: swiftDataBook.pageCount,
                     categories: swiftDataBook.categories,
-                    managementNumber: swiftDataBook.managementNumber
+                    managementNumber: swiftDataBook.managementNumber,
+                    kanaGroup: swiftDataBook.kanaGroup
                 )
             }
         } catch {
@@ -110,7 +112,8 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 targetAge: swiftDataBook.targetAge.flatMap { Const.TargetAudience(rawValue: $0) },
                 pageCount: swiftDataBook.pageCount,
                 categories: swiftDataBook.categories,
-                managementNumber: swiftDataBook.managementNumber
+                managementNumber: swiftDataBook.managementNumber,
+                kanaGroup: swiftDataBook.kanaGroup
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -145,6 +148,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.targetAge = book.targetAge?.rawValue
             swiftDataBook.pageCount = book.pageCount
             swiftDataBook.categories = book.categories
+            swiftDataBook.kanaGroup = book.kanaGroup
             
             try modelContext.save()
             

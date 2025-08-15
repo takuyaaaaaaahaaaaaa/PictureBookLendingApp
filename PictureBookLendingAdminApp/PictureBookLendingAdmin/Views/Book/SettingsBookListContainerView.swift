@@ -16,26 +16,71 @@ struct SettingsBookListContainerView: View {
     @State private var editingBook: Book?
     @State private var isEditMode = false
     @State private var alertState = AlertState()
+    @State private var selectedKanaFilter: KanaGroup?
+    @State private var selectedSortType: BookSortType = .title
     
-    private var filteredBooks: [Book] {
-        return if searchText.isEmpty {
-            bookModel.books
-        } else {
-            bookModel.books.filter { book in
-                book.title.localizedCaseInsensitiveContains(searchText)
-                    || book.author.localizedCaseInsensitiveContains(searchText)
+    private var filteredSections: [BookSection] {
+        // 検索テキストでフィルタリング
+        let filteredBooks: [Book] =
+            if searchText.isEmpty {
+                bookModel.books
+            } else {
+                bookModel.books.filter { book in
+                    book.title.localizedCaseInsensitiveContains(searchText)
+                        || book.author?.localizedCaseInsensitiveContains(searchText) == true
+                }
             }
+
+        // 五十音グループごとに分類
+        let groupedBooks = Dictionary(grouping: filteredBooks) { book -> KanaGroup in
+            return book.kanaGroup ?? .other
         }
+        
+        // セクションを作成（ソート指定に基づいて）
+        var sections = groupedBooks.compactMap { (kanaGroup, books) in
+            let sortedBooks: [Book]
+            switch selectedSortType {
+            case .title:
+                sortedBooks = books.sorted { $0.title < $1.title }
+            case .managementNumber:
+                sortedBooks = books.sorted { book1, book2 in
+                    // 管理番号がない場合は最後に配置
+                    switch (book1.managementNumber, book2.managementNumber) {
+                    case (nil, nil):
+                        return book1.title < book2.title
+                    case (nil, _):
+                        return false
+                    case (_, nil):
+                        return true
+                    case (let num1?, let num2?):
+                        return num1 < num2
+                    }
+                }
+            }
+            return BookSection(kanaGroup: kanaGroup, books: sortedBooks)
+        }
+        
+        // 五十音順にソート
+        sections.sort { $0.kanaGroup.sortOrder < $1.kanaGroup.sortOrder }
+        
+        // 選択されたフィルターがある場合は該当セクションのみ表示
+        if let selectedKanaFilter = selectedKanaFilter {
+            return sections.filter { $0.kanaGroup == selectedKanaFilter }
+        }
+        
+        return sections
     }
     
     var body: some View {
         BookListView(
-            books: filteredBooks,
+            sections: filteredSections,
             searchText: $searchText,
+            selectedKanaFilter: $selectedKanaFilter,
+            selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onSelect: handleSelectBook,
             onEdit: handleEditBook,
-            onDelete: handleDeleteBooks
+            onDelete: handleDeleteBook
         ) { book in
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
@@ -62,37 +107,17 @@ struct SettingsBookListContainerView: View {
         }
         #if os(macOS)
             .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .add)
             }
             .sheet(item: $editingBook) { book in
-                BookFormContainerView(
-                    mode: .edit(book),
-                    onSave: { _ in
-                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .edit(book))
             }
         #else
             .fullScreenCover(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(
-                    mode: .add,
-                    onSave: { _ in
-                        // 追加成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .add)
             }
             .fullScreenCover(item: $editingBook) { book in
-                BookFormContainerView(
-                    mode: .edit(book),
-                    onSave: { _ in
-                        // 編集成功時にシートを閉じる処理は既にContainerView内で実行される
-                    }
-                )
+                BookFormContainerView(mode: .edit(book))
             }
         #endif
         .alert(alertState.title, isPresented: $alertState.isPresented) {
@@ -120,14 +145,11 @@ struct SettingsBookListContainerView: View {
         editingBook = book
     }
     
-    private func handleDeleteBooks(at offsets: IndexSet) {
-        for index in offsets {
-            let book = filteredBooks[index]
-            do {
-                _ = try bookModel.deleteBook(book.id)
-            } catch {
-                alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
-            }
+    private func handleDeleteBook(_ book: Book) {
+        do {
+            _ = try bookModel.deleteBook(book.id)
+        } catch {
+            alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
         }
     }
 }

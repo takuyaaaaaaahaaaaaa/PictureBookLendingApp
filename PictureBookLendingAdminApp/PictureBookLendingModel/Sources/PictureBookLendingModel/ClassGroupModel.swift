@@ -160,4 +160,28 @@ public class ClassGroupModel {
             print("クラスリストの更新に失敗しました: \(error)")
         }
     }
+    
+    /// 全てのクラスグループを削除する
+    ///
+    /// 全クラスグループデータを削除します。端末初期化時に使用されます。
+    ///
+    /// - Returns: 削除されたクラスグループの数
+    /// - Throws: 削除に失敗した場合は `ClassGroupModelError` を投げます
+    public func deleteAllClassGroups() throws -> Int {
+        do {
+            let currentClassGroups = classGroups
+            
+            // 全てのクラスグループを削除
+            for classGroup in currentClassGroups {
+                try repository.delete(by: classGroup.id)
+            }
+            
+            // キャッシュもクリア
+            classGroups.removeAll()
+            
+            return currentClassGroups.count
+        } catch {
+            throw ClassGroupModelError.deletionFailed
+        }
+    }
 }

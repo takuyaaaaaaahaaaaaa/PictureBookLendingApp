@@ -13,6 +13,8 @@ struct AlertState {
         case success
         /// 確認ダイアログ
         case confirmation
+        /// 情報ダイアログ
+        case info
     }
     
     static func error(_ message: String) -> AlertState {
@@ -25,5 +27,9 @@ struct AlertState {
     
     static func confirmation(_ title: String, message: String) -> AlertState {
         AlertState(isPresented: true, title: title, message: message, type: .confirmation)
+    }
+    
+    static func info(_ message: String) -> AlertState {
+        AlertState(isPresented: true, title: "情報", message: message, type: .info)
     }
 }

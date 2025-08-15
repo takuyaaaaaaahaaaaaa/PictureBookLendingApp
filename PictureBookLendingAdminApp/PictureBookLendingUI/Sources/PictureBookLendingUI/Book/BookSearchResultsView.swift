@@ -83,7 +83,7 @@ public struct BookSearchResultRowView: View {
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
                 
-                Text(scoredBook.book.author)
+                Text(scoredBook.book.author ?? "")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 

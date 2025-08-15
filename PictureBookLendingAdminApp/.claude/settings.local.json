@@ -5,7 +5,9 @@
       "Bash(afplay:*)",
       "Bash(git add:*)",
       "Bash(git merge:*)",
-      "Bash(swift test)"
+      "Bash(swift test)",
+      "Bash(swift build)",
+      "Bash(swift:*)"
     ],
     "deny": []
   }

@@ -256,6 +256,7 @@ struct BookListContainerView: View {
 * `overlay` を優先し、`ZStack` は必要時のみ
 * 間隔調整は `spacing` を優先し、`padding` は必要最小限に
 * 命名は **Swift API Design Guidelines**／標準ライブラリに従う
+* **AnyViewは使用禁止**: 型消去が必要な場合はジェネリクスまたは@ViewBuilderを使用する
 * **マジックナンバーを使用しない**: 数値リテラルが意味を持つ場合はenum、定数、computed propertyで定義する
   * **画面固有の状態**: ContainerView内にprivate enumを定義
   * **ドメイン共通の定数**: Domainモジュールに定義  

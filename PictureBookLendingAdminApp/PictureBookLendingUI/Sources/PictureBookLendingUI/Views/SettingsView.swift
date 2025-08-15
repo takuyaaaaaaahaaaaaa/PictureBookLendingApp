@@ -12,7 +12,10 @@ public struct SettingsView: View {
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
+    let onSelectAddBook: () -> Void
+    let onSelectBulkAdd: () -> Void
     let onSelectLoanSettings: () -> Void
+    let onSelectDeviceReset: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -22,7 +25,10 @@ public struct SettingsView: View {
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
-        onSelectLoanSettings: @escaping () -> Void
+        onSelectAddBook: @escaping () -> Void,
+        onSelectBulkAdd: @escaping () -> Void,
+        onSelectLoanSettings: @escaping () -> Void,
+        onSelectDeviceReset: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -31,7 +37,10 @@ public struct SettingsView: View {
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
+        self.onSelectAddBook = onSelectAddBook
+        self.onSelectBulkAdd = onSelectBulkAdd
         self.onSelectLoanSettings = onSelectLoanSettings
+        self.onSelectDeviceReset = onSelectDeviceReset
     }
     
     public var body: some View {
@@ -51,10 +60,35 @@ public struct SettingsView: View {
             )
             
             SettingsMenuItem(
+                iconName: "plus",
+                title: "絵本追加",
+                subtitle: "新しい絵本を1冊ずつ追加",
+                action: onSelectAddBook
+            )
+            
+            SettingsMenuItem(
+                iconName: "plus.rectangle.on.rectangle",
+                title: "絵本一括追加",
+                subtitle: "テキストから複数の絵本を一度に登録",
+                action: onSelectBulkAdd
+            )
+            
+            SettingsMenuItem(
                 iconName: "clock",
                 title: "貸出設定",
                 subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
                 action: onSelectLoanSettings
+            )
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            SettingsMenuItem(
+                iconName: "trash.circle",
+                title: "端末初期化",
+                subtitle: "利用者・絵本・貸出記録のデータを削除",
+                action: onSelectDeviceReset,
+                style: .destructive
             )
             
             Spacer()
@@ -70,6 +104,37 @@ private struct SettingsMenuItem: View {
     let title: String
     let subtitle: String
     let action: () -> Void
+    let style: Style
+    
+    enum Style {
+        case normal
+        case destructive
+        
+        var iconColor: Color {
+            switch self {
+            case .normal: return .primary
+            case .destructive: return .red
+            }
+        }
+        
+        var titleColor: Color {
+            switch self {
+            case .normal: return .primary
+            case .destructive: return .red
+            }
+        }
+    }
+    
+    init(
+        iconName: String, title: String, subtitle: String, action: @escaping () -> Void,
+        style: Style = .normal
+    ) {
+        self.iconName = iconName
+        self.title = title
+        self.subtitle = subtitle
+        self.action = action
+        self.style = style
+    }
     
     var body: some View {
         Button(action: action) {
@@ -77,9 +142,11 @@ private struct SettingsMenuItem: View {
                 Image(systemName: iconName)
                     .font(.title2)
                     .frame(width: 30)
+                    .foregroundStyle(style.iconColor)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.headline)
+                        .foregroundStyle(style.titleColor)
                     Text(subtitle)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -107,7 +174,10 @@ private struct SettingsMenuItem: View {
             maxBooksPerUser: 1,
             onSelectUser: {},
             onSelectBook: {},
-            onSelectLoanSettings: {}
+            onSelectAddBook: {},
+            onSelectBulkAdd: {},
+            onSelectLoanSettings: {},
+            onSelectDeviceReset: {}
         )
         .navigationTitle("設定")
     }

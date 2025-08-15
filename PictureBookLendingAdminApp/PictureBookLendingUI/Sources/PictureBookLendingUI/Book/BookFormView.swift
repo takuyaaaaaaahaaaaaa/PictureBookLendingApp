@@ -3,6 +3,10 @@ import PictureBookLendingDomain
 import SwiftUI
 import TipKit
 
+#if canImport(UIKit)
+    import UIKit
+#endif
+
 /// 自動入力機能の案内用Tip
 struct AutoFillTip: Tip {
     var title: Text {
@@ -28,6 +32,7 @@ public struct BookFormView<AutoFillButton: View>: View {
     let autoFillButton: AutoFillButton?
     let onSave: () -> Void
     let onCancel: () -> Void
+    let onCameraTap: (() -> Void)?
     
     private let autoFillTip = AutoFillTip()
     
@@ -36,26 +41,30 @@ public struct BookFormView<AutoFillButton: View>: View {
         mode: BookFormMode,
         @ViewBuilder autoFillButton: () -> AutoFillButton,
         onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onCameraTap: (() -> Void)? = nil
     ) {
         self._book = book
         self.mode = mode
         self.autoFillButton = autoFillButton()
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onCameraTap = onCameraTap
     }
     
     public init(
         book: Binding<Book>,
         mode: BookFormMode,
         onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onCameraTap: (() -> Void)? = nil
     ) where AutoFillButton == EmptyView {
         self._book = book
         self.mode = mode
         self.autoFillButton = nil
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onCameraTap = onCameraTap
     }
     
     public var body: some View {
@@ -67,14 +76,20 @@ public struct BookFormView<AutoFillButton: View>: View {
             
             Section(header: Text("基本情報（*は必須）")) {
                 TextField("タイトル *", text: $book.title)
-                TextField("著者 *", text: $book.author)
+                TextField(
+                    "著者",
+                    text: Binding(
+                        get: { book.author ?? "" },
+                        set: { book.author = $0.isEmpty ? nil : $0 }
+                    )
+                )
                 
                 // 自動入力ボタン（タイトル・著者名の下に配置）
                 if let autoFillButton = autoFillButton {
                     HStack {
                         Image(systemName: "wand.and.stars")
                             .foregroundStyle(.secondary)
-                        Text("タイトルと著者名から情報を自動入力")
+                        Text("タイトルと著者名から情報を自動入力※実行回数には制限がございます。")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
@@ -114,18 +129,13 @@ public struct BookFormView<AutoFillButton: View>: View {
             }
             
             Section(header: Text("その他（任意）")) {
-                HStack {
-                    Text("対象読者")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Picker("対象読者", selection: $book.targetAge) {
-                        Text("未選択").tag(nil as Const.TargetAudience?)
-                        ForEach(Const.TargetAudience.sortedCases, id: \.self) { audience in
-                            Text(audience.displayText).tag(audience as Const.TargetAudience?)
-                        }
+                Picker("対象読者", selection: $book.targetAge) {
+                    Text("未選択").tag(nil as Const.TargetAudience?)
+                    ForEach(Const.TargetAudience.allCases, id: \.self) { audience in
+                        Text(audience.displayText).tag(audience as Const.TargetAudience?)
                     }
-                    .pickerStyle(.menu)
                 }
+                .pickerStyle(.menu)
                 
                 TextField(
                     "ページ数",
@@ -143,6 +153,15 @@ public struct BookFormView<AutoFillButton: View>: View {
                 #if os(iOS)
                     .keyboardType(.numberPad)
                 #endif
+                
+                Picker("ひらがなグループ", selection: $book.kanaGroup) {
+                    Text("未選択").tag(nil as KanaGroup?)
+                    ForEach(KanaGroup.allCases, id: \.self) { kana in
+                        Text(kana.displayName).tag(kana as KanaGroup?)
+                    }
+                }
+                .pickerStyle(.menu)
+                
             }
             
             Section(header: Text("説明（任意）")) {
@@ -183,34 +202,51 @@ public struct BookFormView<AutoFillButton: View>: View {
     
     private var isValidInput: Bool {
         !book.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !book.author.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     @ViewBuilder
     private var thumbnailSection: some View {
-        HStack {
-            Spacer()
-            
-            if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
-                KFImage(URL(string: thumbnailURL))
-                    .placeholder {
+        VStack(spacing: 12) {
+            HStack {
+                Spacer()
+                
+                if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
+                    BookImageView(imageURL: thumbnailURL) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
                             .font(.system(size: 40))
                     }
-                    .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 150)
                     .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-            } else {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 60))
-                    .foregroundStyle(.secondary)
-                    .frame(height: 100)
+                } else {
+                    Image(systemName: "book.closed")
+                        .font(.system(size: 60))
+                        .foregroundStyle(.secondary)
+                        .frame(height: 100)
+                }
+                
+                Spacer()
             }
             
-            Spacer()
+            // カメラボタン
+            #if canImport(UIKit)
+                if let onCameraTap = onCameraTap, CameraUtility.isCameraAvailable {
+                    Button(action: onCameraTap) {
+                        HStack {
+                            Image(systemName: "camera")
+                            Text("写真を撮影")
+                        }
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 8)
+                        .background(Color.accentColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            #endif
         }
     }
 }
@@ -230,9 +266,9 @@ public struct BookFormView<AutoFillButton: View>: View {
     )
     
     NavigationStack {
-        BookFormView(
+        BookFormView<EmptyView>(
             book: $sampleBook,
-            mode: .add,
+            mode: BookFormMode.add,
             onSave: {},
             onCancel: {}
         )

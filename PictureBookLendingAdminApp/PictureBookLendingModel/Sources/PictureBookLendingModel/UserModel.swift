@@ -169,4 +169,28 @@ public class UserModel {
             throw UserModelError.updateFailed
         }
     }
+    
+    /// 全ての利用者を削除する
+    ///
+    /// 全利用者データを削除します。端末初期化時に使用されます。
+    ///
+    /// - Returns: 削除された利用者の数
+    /// - Throws: 削除に失敗した場合は `UserModelError` を投げます
+    public func deleteAllUsers() throws -> Int {
+        do {
+            let currentUsers = users
+            
+            // 全ての利用者を削除
+            for user in currentUsers {
+                _ = try repository.delete(user.id)
+            }
+            
+            // キャッシュもクリア
+            users.removeAll()
+            
+            return currentUsers.count
+        } catch {
+            throw UserModelError.updateFailed
+        }
+    }
 }
