@@ -27,7 +27,8 @@ public final class SwiftDataUserRepository: UserRepositoryProtocol, @unchecked S
         let swiftDataUser = SwiftDataUser(
             id: user.id,
             name: user.name,
-            classGroupId: user.classGroupId
+            classGroupId: user.classGroupId,
+            userType: user.userType
         )
         
         modelContext.insert(swiftDataUser)
@@ -52,10 +53,22 @@ public final class SwiftDataUserRepository: UserRepositoryProtocol, @unchecked S
             
             // SwiftDataモデルからドメインモデルに変換
             return swiftDataUsers.map { swiftDataUser in
-                User(
+                let userType: UserType
+                if swiftDataUser.userTypeRawValue == "child" {
+                    userType = .child
+                } else if swiftDataUser.userTypeRawValue == "guardian",
+                    let relatedChildId = swiftDataUser.relatedChildId
+                {
+                    userType = .guardian(relatedChildId: relatedChildId)
+                } else {
+                    userType = .child  // fallback
+                }
+                
+                return User(
                     id: swiftDataUser.id,
                     name: swiftDataUser.name,
-                    classGroupId: swiftDataUser.classGroupId
+                    classGroupId: swiftDataUser.classGroupId,
+                    userType: userType
                 )
             }
         } catch {
@@ -79,10 +92,22 @@ public final class SwiftDataUserRepository: UserRepositoryProtocol, @unchecked S
                 return nil
             }
             
+            let userType: UserType
+            if swiftDataUser.userTypeRawValue == "child" {
+                userType = .child
+            } else if swiftDataUser.userTypeRawValue == "guardian",
+                let relatedChildId = swiftDataUser.relatedChildId
+            {
+                userType = .guardian(relatedChildId: relatedChildId)
+            } else {
+                userType = .child  // fallback
+            }
+            
             return User(
                 id: swiftDataUser.id,
                 name: swiftDataUser.name,
-                classGroupId: swiftDataUser.classGroupId
+                classGroupId: swiftDataUser.classGroupId,
+                userType: userType
             )
         } catch {
             throw RepositoryError.fetchFailed
@@ -108,6 +133,15 @@ public final class SwiftDataUserRepository: UserRepositoryProtocol, @unchecked S
             // プロパティを更新
             swiftDataUser.name = user.name
             swiftDataUser.classGroupId = user.classGroupId
+            
+            switch user.userType {
+            case .child:
+                swiftDataUser.userTypeRawValue = "child"
+                swiftDataUser.relatedChildId = nil
+            case .guardian(let relatedChildId):
+                swiftDataUser.userTypeRawValue = "guardian"
+                swiftDataUser.relatedChildId = relatedChildId
+            }
             
             try modelContext.save()
             

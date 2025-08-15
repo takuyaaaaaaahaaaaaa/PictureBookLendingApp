@@ -11,9 +11,9 @@ import SwiftUI
 struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(\.dismiss) private var dismiss
     
-    let mode: UserFormMode
     let initialClassGroupId: UUID?
     var onSave: ((User) -> Void)? = nil
     
@@ -21,12 +21,23 @@ struct UserFormContainerView: View {
     @State private var name = ""
     /// 所属している組
     @State private var classGroup: ClassGroup?
+    /// 利用者種別
+    @State private var userType: UserType = .child
+    /// 利用者種別（ピッカー用）
+    @State private var userTypeForPicker: UserTypeForPicker = .child
+    /// 保護者も一緒に登録するか
+    @State private var shouldRegisterGuardians = true
+    /// 保護者登録時に選択する本人
+    @State private var selectedChild: User?
+    /// 本人の一覧（保護者登録時に使用）
+    @State private var availableChildren: [User] = []
     /// 組一覧
     @State private var classGroups: [ClassGroup] = []
     @State private var alertState = AlertState()
     
-    init(mode: UserFormMode, initialClassGroupId: UUID? = nil, onSave: ((User) -> Void)? = nil) {
-        self.mode = mode
+    init(
+        initialClassGroupId: UUID? = nil, onSave: ((User) -> Void)? = nil
+    ) {
         self.initialClassGroupId = initialClassGroupId
         self.onSave = onSave
     }
@@ -34,12 +45,18 @@ struct UserFormContainerView: View {
     var body: some View {
         NavigationStack {
             UserFormView(
-                mode: mode,
+                editingUser: nil,
                 name: $name,
                 classGroup: $classGroup,
-                classGroups: classGroups
+                classGroups: classGroups,
+                userType: $userType,
+                userTypeForPicker: $userTypeForPicker,
+                shouldRegisterGuardians: $shouldRegisterGuardians,
+                guardianCount: loanSettingsModel.settings.guardianCountPerChild,
+                availableChildren: availableChildren,
+                selectedChild: $selectedChild
             )
-            .navigationTitle(isEditMode ? "利用者情報を編集" : "利用者を登録")
+            .navigationTitle("利用者を登録")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
@@ -48,7 +65,7 @@ struct UserFormContainerView: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditMode ? "保存" : "登録") {
+                    Button("登録") {
                         handleSave()
                     }
                     .disabled(!isValidInput)
@@ -67,14 +84,6 @@ struct UserFormContainerView: View {
     
     // MARK: - Computed Properties
     
-    private var isEditMode: Bool {
-        if case .edit = mode {
-            true
-        } else {
-            false
-        }
-    }
-    
     private var isValidInput: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && classGroup != nil
     }
@@ -91,21 +100,40 @@ struct UserFormContainerView: View {
             return
         }
         
+        // userTypeForPickerからuserTypeを設定
+        switch userTypeForPicker {
+        case .child:
+            userType = .child
+        case .guardian:
+            // 新規登録で保護者を直接登録する場合は、選択された本人のIDを使用
+            guard let selectedChild = selectedChild else {
+                alertState = .error("保護者を登録する場合は関連する利用者を選択してください")
+                return
+            }
+            userType = .guardian(relatedChildId: selectedChild.id)
+        }
+        
         do {
-            let savedUser: User
+            // 新規登録
+            let newUser = User(
+                name: name,
+                classGroupId: selectedClassGroup.id,
+                userType: userType
+            )
+            let savedUser = try userModel.registerUser(newUser)
             
-            switch mode {
-            case .add:
-                let newUser = User(name: name, classGroupId: selectedClassGroup.id)
-                savedUser = try userModel.registerUser(newUser)
-
-            case .edit(let user):
-                let updatedUser = User(
-                    id: user.id,
-                    name: name,
-                    classGroupId: selectedClassGroup.id
-                )
-                savedUser = try userModel.updateUser(updatedUser)
+            // 本人を登録する場合で保護者も一緒に登録するオプションが有効の場合
+            if userType == .child && shouldRegisterGuardians {
+                let guardianCount = loanSettingsModel.settings.guardianCountPerChild
+                for i in 1...guardianCount {
+                    let guardianName = "\(name)の保護者\(i)"
+                    let guardian = User(
+                        name: guardianName,
+                        classGroupId: selectedClassGroup.id,
+                        userType: .guardian(relatedChildId: newUser.id)
+                    )
+                    _ = try userModel.registerUser(guardian)
+                }
             }
             
             onSave?(savedUser)
@@ -118,10 +146,17 @@ struct UserFormContainerView: View {
     private func loadInitialData() {
         classGroups = classGroupModel.getAllClassGroups()
         
-        if case .edit(let user) = mode {
-            name = user.name
-            classGroup = classGroupModel.findClassGroupById(user.classGroupId)
-        } else if let initialClassGroupId = initialClassGroupId {
+        // 本人一覧を取得（保護者登録時に使用）
+        availableChildren = userModel.users.filter { user in
+            if case .child = user.userType {
+                return true
+            }
+            return false
+        }
+        
+        // 新規登録時のデフォルト値設定
+        shouldRegisterGuardians = loanSettingsModel.settings.defaultRegisterGuardians
+        if let initialClassGroupId = initialClassGroupId {
             classGroup = classGroupModel.findClassGroupById(initialClassGroupId)
         }
     }
@@ -131,8 +166,10 @@ struct UserFormContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
+    let loanSettingsModel = LoanSettingsModel(repository: mockFactory.loanSettingsRepository)
     
-    return UserFormContainerView(mode: .add)
+    return UserFormContainerView()
         .environment(userModel)
         .environment(classGroupModel)
+        .environment(loanSettingsModel)
 }
