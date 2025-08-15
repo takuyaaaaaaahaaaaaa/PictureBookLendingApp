@@ -11,7 +11,6 @@ import SwiftUI
 struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
-    @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(\.dismiss) private var dismiss
     
     let initialClassGroupId: UUID?
@@ -27,6 +26,8 @@ struct UserFormContainerView: View {
     @State private var userTypeForPicker: UserTypeForPicker = .child
     /// 保護者も一緒に登録するか
     @State private var shouldRegisterGuardians = true
+    /// 登録する保護者の数
+    @State private var guardianCount = 1
     /// 保護者登録時に選択する園児
     @State private var selectedChild: User?
     /// 園児の一覧（保護者登録時に使用）
@@ -52,7 +53,7 @@ struct UserFormContainerView: View {
                 userType: $userType,
                 userTypeForPicker: $userTypeForPicker,
                 shouldRegisterGuardians: $shouldRegisterGuardians,
-                guardianCount: loanSettingsModel.settings.guardianCountPerChild,
+                guardianCount: $guardianCount,
                 availableChildren: availableChildren,
                 selectedChild: $selectedChild
             )
@@ -124,7 +125,6 @@ struct UserFormContainerView: View {
             
             // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
-                let guardianCount = loanSettingsModel.settings.guardianCountPerChild
                 for i in 1...guardianCount {
                     let guardianName = "\(name)の保護者\(i)"
                     let guardian = User(
@@ -154,8 +154,6 @@ struct UserFormContainerView: View {
             return false
         }
         
-        // 新規登録時のデフォルト値設定
-        shouldRegisterGuardians = loanSettingsModel.settings.defaultRegisterGuardians
         if let initialClassGroupId = initialClassGroupId {
             classGroup = classGroupModel.findClassGroupById(initialClassGroupId)
         }
@@ -166,10 +164,8 @@ struct UserFormContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
-    let loanSettingsModel = LoanSettingsModel(repository: mockFactory.loanSettingsRepository)
     
     return UserFormContainerView()
         .environment(userModel)
         .environment(classGroupModel)
-        .environment(loanSettingsModel)
 }

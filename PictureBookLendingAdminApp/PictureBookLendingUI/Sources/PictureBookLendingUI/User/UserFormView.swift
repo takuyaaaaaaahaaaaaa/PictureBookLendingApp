@@ -51,7 +51,7 @@ public struct UserFormView: View {
     let userType: Binding<UserType>
     let userTypeForPicker: Binding<UserTypeForPicker>
     let shouldRegisterGuardians: Binding<Bool>
-    let guardianCount: Int
+    let guardianCount: Binding<Int>
     let availableChildren: [User]
     let selectedChild: Binding<User?>
     
@@ -63,7 +63,7 @@ public struct UserFormView: View {
         userType: Binding<UserType>,
         userTypeForPicker: Binding<UserTypeForPicker>,
         shouldRegisterGuardians: Binding<Bool>,
-        guardianCount: Int,
+        guardianCount: Binding<Int>,
         availableChildren: [User] = [],
         selectedChild: Binding<User?> = .constant(nil)
     ) {
@@ -128,12 +128,17 @@ public struct UserFormView: View {
                         HStack {
                             Text("登録する保護者数")
                             Spacer()
-                            Text("\(guardianCount)人")
-                                .foregroundStyle(.secondary)
+                            Stepper(
+                                "\(guardianCount.wrappedValue)人",
+                                value: guardianCount,
+                                in: 1...5
+                            )
                         }
                         
                         Text(
-                            "保護者名は「\(name.wrappedValue)の保護者1」「\(name.wrappedValue)の保護者2」として自動設定されます"
+                            guardianCount.wrappedValue == 1
+                                ? "保護者名は「\(name.wrappedValue)の保護者1」として自動設定されます"
+                                : "保護者名は「\(name.wrappedValue)の保護者1」から「\(name.wrappedValue)の保護者\(guardianCount.wrappedValue)」として自動設定されます"
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -146,6 +151,7 @@ public struct UserFormView: View {
 
 #Preview {
     @Previewable @State var userTypeForPicker: UserTypeForPicker = .child
+    @Previewable @State var guardianCount = 1
     
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     let classGroups = [
@@ -162,7 +168,7 @@ public struct UserFormView: View {
             userType: .constant(.child),
             userTypeForPicker: $userTypeForPicker,
             shouldRegisterGuardians: .constant(true),
-            guardianCount: 2,
+            guardianCount: $guardianCount,
             availableChildren: [],
             selectedChild: .constant(nil)
         )
