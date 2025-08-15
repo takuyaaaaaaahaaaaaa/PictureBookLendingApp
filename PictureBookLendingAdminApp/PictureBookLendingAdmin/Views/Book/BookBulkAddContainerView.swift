@@ -14,6 +14,11 @@ struct BookBulkAddContainerView: View {
     @State private var isProcessing = false
     @State private var alertState = AlertState()
     
+    // 連続登録用の状態
+    @State private var failedBooks: [ParsedBookEntry] = []
+    @State private var currentBookIndex = 0
+    @State private var isShowingIndividualForm = false
+    
     // RegisterModelを使用して検索機能を利用
     @State private var registerModel: RegisterModel
     
@@ -41,12 +46,36 @@ struct BookBulkAddContainerView: View {
             onTextChange: handleTextChange,
             onStartProcessing: handleStartProcessing,
             onSave: handleSave,
-            onCancel: handleCancel
+            onCancel: handleCancel,
+            onRegisterFailed: handleRegisterFailed
         )
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
+        }
+        .sheet(isPresented: $isShowingIndividualForm) {
+            if currentBookIndex < failedBooks.count {
+                let failedBook = failedBooks[currentBookIndex]
+                NavigationStack {
+                    BookFormContainerView(
+                        mode: .add,
+                        initialBook: createBookFromFailedEntry(failedBook),
+                        onSave: { savedBook in
+                            handleIndividualBookSaved(savedBook)
+                        }
+                    )
+                    .navigationTitle("絵本を追加 (\(currentBookIndex + 1)/\(failedBooks.count))")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("スキップ") {
+                                handleSkipCurrentBook()
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -74,6 +103,62 @@ struct BookBulkAddContainerView: View {
     
     private func handleCancel() {
         dismiss()
+    }
+    
+    private func handleRegisterFailed(_ entry: ParsedBookEntry) {
+        // 失敗した本のみをリストアップして連続登録を開始
+        failedBooks = processedBooks.filter { $0.foundBook == nil }
+        if let index = failedBooks.firstIndex(where: {
+            $0.managementNumber == entry.managementNumber
+        }) {
+            currentBookIndex = index
+            isShowingIndividualForm = true
+        }
+    }
+    
+    private func handleIndividualBookSaved(_ savedBook: Book) {
+        // 現在の本を次へ進める
+        currentBookIndex += 1
+        
+        // まだ登録する本があるかチェック
+        if currentBookIndex < failedBooks.count {
+            // 次の本の登録へ
+            // sheetは既に表示されているので、次の本が自動で表示される
+        } else {
+            // 全ての本の登録が完了
+            isShowingIndividualForm = false
+            alertState = .info("失敗した絵本の登録が完了しました")
+            
+            // processedBooksを更新して成功状態にする
+            refreshProcessedBooks()
+        }
+    }
+    
+    private func handleSkipCurrentBook() {
+        currentBookIndex += 1
+        
+        if currentBookIndex < failedBooks.count {
+            // 次の本へ
+        } else {
+            // 全てスキップまたは完了
+            isShowingIndividualForm = false
+        }
+    }
+    
+    private func createBookFromFailedEntry(_ entry: ParsedBookEntry) -> Book {
+        // 失敗したエントリから初期値として本を作成
+        let kanaGroup = KanaGroup.from(text: entry.inputTitle)
+        return Book(
+            title: entry.inputTitle,
+            author: "",
+            managementNumber: entry.managementNumber,
+            kanaGroup: kanaGroup
+        )
+    }
+    
+    private func refreshProcessedBooks() {
+        // 現在の処理済み本のリストを再読み込み
+        // （実際の実装では、保存された本をデータベースから確認する）
     }
     
     // MARK: - Business Logic

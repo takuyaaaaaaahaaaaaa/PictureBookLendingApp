@@ -10,6 +10,7 @@ public struct BookBulkAddView: View {
     let onStartProcessing: () -> Void
     let onSave: () -> Void
     let onCancel: () -> Void
+    let onRegisterFailed: ((ParsedBookEntry) -> Void)?
     
     public init(
         inputText: Binding<String>,
@@ -18,7 +19,8 @@ public struct BookBulkAddView: View {
         onTextChange: @escaping (String) -> Void,
         onStartProcessing: @escaping () -> Void,
         onSave: @escaping () -> Void,
-        onCancel: @escaping () -> Void
+        onCancel: @escaping () -> Void,
+        onRegisterFailed: ((ParsedBookEntry) -> Void)? = nil
     ) {
         self._inputText = inputText
         self.processedBooks = processedBooks
@@ -27,6 +29,7 @@ public struct BookBulkAddView: View {
         self.onStartProcessing = onStartProcessing
         self.onSave = onSave
         self.onCancel = onCancel
+        self.onRegisterFailed = onRegisterFailed
     }
     
     public var body: some View {
@@ -106,7 +109,10 @@ public struct BookBulkAddView: View {
             ScrollView {
                 LazyVStack(spacing: 8) {
                     ForEach(processedBooks, id: \.managementNumber) { entry in
-                        BookBulkAddRowView(entry: entry)
+                        BookBulkAddRowView(
+                            entry: entry,
+                            onRegisterFailed: onRegisterFailed
+                        )
                     }
                 }
             }
@@ -118,6 +124,7 @@ public struct BookBulkAddView: View {
 /// 一括追加の個別行表示
 struct BookBulkAddRowView: View {
     let entry: ParsedBookEntry
+    let onRegisterFailed: ((ParsedBookEntry) -> Void)?
     
     var body: some View {
         HStack {
@@ -153,6 +160,15 @@ struct BookBulkAddRowView: View {
             }
             
             Spacer()
+            
+            // 失敗した場合は個別登録ボタンを表示
+            if entry.foundBook == nil, let onRegisterFailed = onRegisterFailed {
+                Button("個別登録") {
+                    onRegisterFailed(entry)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
             
             statusIcon
         }
@@ -215,6 +231,9 @@ public struct ParsedBookEntry: Identifiable {
         onTextChange: { _ in },
         onStartProcessing: {},
         onSave: {},
-        onCancel: {}
+        onCancel: {},
+        onRegisterFailed: { entry in
+            print("個別登録: \(entry.managementNumber) - \(entry.inputTitle)")
+        }
     )
 }

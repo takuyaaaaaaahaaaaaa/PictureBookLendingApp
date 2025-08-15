@@ -35,6 +35,12 @@ struct BookFormContainerView: View {
         }
     }
     
+    init(mode: BookFormMode, initialBook: Book, onSave: ((Book) -> Void)? = nil) {
+        self.mode = mode
+        self.onSave = onSave
+        self._book = State(initialValue: initialBook)
+    }
+    
     var body: some View {
         NavigationStack {
             BookFormView(

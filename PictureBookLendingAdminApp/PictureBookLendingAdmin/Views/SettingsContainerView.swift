@@ -71,14 +71,17 @@ struct SettingsContainerView: View {
                 .sheet(isPresented: $isAddBookSheetPresented) {
                     BookFormContainerView(mode: .add)
                 }
+                .sheet(isPresented: $isBulkAddSheetPresented) {
+                    BookBulkAddContainerView()
+                }
             #else
                 .fullScreenCover(isPresented: $isAddBookSheetPresented) {
                     BookFormContainerView(mode: .add)
                 }
+                .fullScreenCover(isPresented: $isBulkAddSheetPresented) {
+                    BookBulkAddContainerView()
+                }
             #endif
-            .sheet(isPresented: $isBulkAddSheetPresented) {
-                BookBulkAddContainerView()
-            }
         }
     }
     
