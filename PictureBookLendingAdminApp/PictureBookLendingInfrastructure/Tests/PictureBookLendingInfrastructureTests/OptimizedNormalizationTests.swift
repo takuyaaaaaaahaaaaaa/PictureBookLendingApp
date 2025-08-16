@@ -101,10 +101,10 @@ struct OptimizedNormalizationTests {
             
             // 期待する著者名が含まれているか確認
             let originalHasExpected = originalResult.books.contains {
-                $0.author.contains(expectedAuthor)
+                $0.author?.contains(expectedAuthor) ?? false
             }
             let optimizedHasExpected = optimizedResult.books.contains {
-                $0.author.contains(expectedAuthor)
+                $0.author?.contains(expectedAuthor) ?? false
             }
             
             if originalHasExpected { originalSuccessCount += 1 }
