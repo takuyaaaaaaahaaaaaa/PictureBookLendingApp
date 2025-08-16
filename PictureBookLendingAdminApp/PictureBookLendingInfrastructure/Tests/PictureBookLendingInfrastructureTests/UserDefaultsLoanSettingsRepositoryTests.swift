@@ -28,7 +28,7 @@ final class UserDefaultsLoanSettingsRepositoryTests: XCTestCase {
         let settings = repository.fetch()
         
         XCTAssertEqual(settings, .default)
-        XCTAssertEqual(settings.defaultLoanPeriodDays, 14)
+        XCTAssertEqual(settings.defaultLoanPeriodDays, 7)
     }
     
     @MainActor
