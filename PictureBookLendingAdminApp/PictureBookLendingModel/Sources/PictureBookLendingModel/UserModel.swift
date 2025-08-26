@@ -150,24 +150,37 @@ public class UserModel {
     /// 利用者を削除する
     ///
     /// 指定されたIDの利用者を削除します。
+    /// 園児を削除する場合は、関連する保護者も併せて削除されます。
     ///
     /// - Parameter id: 削除する利用者のID
     /// - Returns: 削除に成功したかどうか
     /// - Throws: 削除対象が見つからない場合は `UserModelError.userNotFound` を投げます
     public func deleteUser(_ id: UUID) throws -> Bool {
-        do {
-            // リポジトリから削除
-            let result = try repository.delete(id)
-            
-            // キャッシュからも削除
-            users.removeAll(where: { $0.id == id })
-            
-            return result
-        } catch RepositoryError.notFound {
+        // 削除対象の利用者を特定
+        guard let targetUser = users.first(where: { $0.id == id }) else {
             throw UserModelError.userNotFound
-        } catch {
-            throw UserModelError.updateFailed
         }
+        
+        // 対象利用者をリポジトリから削除
+        let result = try repository.delete(id)
+        
+        // キャッシュからも削除
+        users.removeAll(where: { $0.id == id })
+        
+        // 園児を削除する場合は、関連する保護者も削除
+        if case .child = targetUser.userType {
+            let relatedGuardianIds = users.compactMap { user in
+                if case .guardian(let relatedChildId) = user.userType, relatedChildId == id {
+                    return user.id
+                }
+                return nil
+            }
+            for guardianId in relatedGuardianIds {
+                _ = try deleteUser(guardianId)
+            }
+        }
+        
+        return result
     }
     
     /// 全ての利用者を削除する
