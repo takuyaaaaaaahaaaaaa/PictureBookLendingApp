@@ -22,7 +22,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
     /// 対象読者
-    public var targetAge: Const.TargetAudience?
+    public var targetAge: TargetAudience?
     /// ページ数
     public var pageCount: Int?
     /// カテゴリ・ジャンル
@@ -58,7 +58,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         description: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
-        targetAge: Const.TargetAudience? = nil,
+        targetAge: TargetAudience? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
         managementNumber: String? = nil,

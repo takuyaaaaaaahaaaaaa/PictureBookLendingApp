@@ -136,7 +136,7 @@ private struct LoanInfoSection<Content: View>: View {
             managementNumber: "あ13"
         ),
         user: User(name: "山田太郎", classGroupId: UUID()),
-        classGroup: ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025),
+        classGroup: ClassGroup(name: "ひよこ組", ageGroup: AgeGroup.age(0), year: 2025),
         dueDate: Date().addingTimeInterval(7 * 24 * 60 * 60),
         onConfirm: {},
         onCancel: {}

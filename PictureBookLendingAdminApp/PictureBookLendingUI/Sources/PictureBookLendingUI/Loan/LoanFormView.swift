@@ -95,10 +95,11 @@ public struct LoanFormView: View {
     
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
-    let sampleClassGroup = ClassGroup(id: UUID(), name: "きく組", ageGroup: "4歳児", year: 2025)
+    let sampleClassGroup = ClassGroup(
+        id: UUID(), name: "きく組", ageGroup: AgeGroup.age(4), year: 2025)
     let sampleClassGroups = [
         sampleClassGroup,
-        ClassGroup(id: UUID(), name: "ばら組", ageGroup: "5歳児", year: 2025),
+        ClassGroup(id: UUID(), name: "ばら組", ageGroup: AgeGroup.age(5), year: 2025),
     ]
     
     let sampleUsers = [

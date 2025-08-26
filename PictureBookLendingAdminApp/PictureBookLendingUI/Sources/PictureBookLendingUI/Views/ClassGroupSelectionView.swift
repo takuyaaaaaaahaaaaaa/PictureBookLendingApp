@@ -67,9 +67,9 @@ private struct ClassGroupRowView: View {
 #Preview {
     ClassGroupSelectionView(
         classGroups: [
-            ClassGroup(name: "ひよこ組", ageGroup: "0歳児", year: 2025),
-            ClassGroup(name: "りす組", ageGroup: "1歳児", year: 2025),
-            ClassGroup(name: "うさぎ組", ageGroup: "2歳児", year: 2025),
+            ClassGroup(name: "ひよこ組", ageGroup: AgeGroup.age(0), year: 2025),
+            ClassGroup(name: "りす組", ageGroup: AgeGroup.age(1), year: 2025),
+            ClassGroup(name: "うさぎ組", ageGroup: AgeGroup.age(2), year: 2025),
         ],
         onSelect: { _ in }
     )

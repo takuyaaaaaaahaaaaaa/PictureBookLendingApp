@@ -87,7 +87,7 @@ public struct ClassGroupListRowView: View {
                         .font(.headline)
                         .foregroundStyle(.primary)
                     
-                    let ageGroupText = Text("\(classGroup.ageGroup) ")
+                    let ageGroupText = Text("\(classGroup.ageGroup.displayText) ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
                     let childCountText = Text(" • 園児\(childCount)人")
                     let guardianCountText = Text(" • 保護者\(guardianCount)人")
@@ -112,9 +112,9 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [
-                ClassGroup(name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024),
-                ClassGroup(name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024),
-                ClassGroup(name: "さくら組", ageGroup: Const.AgeGroup.infant5.rawValue, year: 2024),
+                ClassGroup(name: "ひまわり組", ageGroup: AgeGroup.age(3), year: 2024),
+                ClassGroup(name: "たんぽぽ組", ageGroup: AgeGroup.age(4), year: 2024),
+                ClassGroup(name: "さくら組", ageGroup: AgeGroup.age(5), year: 2024),
             ],
             getChildCount: { _ in 8 },
             getGuardianCount: { _ in 16 },
@@ -146,12 +146,12 @@ public struct ClassGroupListRowView: View {
     List {
         ClassGroupListRowView(
             classGroup: ClassGroup(
-                name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024),
+                name: "ひまわり組", ageGroup: AgeGroup.age(3), year: 2024),
             childCount: 8, guardianCount: 16
         ) {}
         ClassGroupListRowView(
             classGroup: ClassGroup(
-                name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024),
+                name: "たんぽぽ組", ageGroup: AgeGroup.age(4), year: 2024),
             childCount: 12, guardianCount: 24
         ) {}
     }

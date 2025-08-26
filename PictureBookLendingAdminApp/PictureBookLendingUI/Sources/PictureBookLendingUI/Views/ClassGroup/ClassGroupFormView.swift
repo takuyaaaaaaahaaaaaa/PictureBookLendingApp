@@ -8,13 +8,13 @@ import SwiftUI
 public struct ClassGroupFormView: View {
     let mode: ClassGroupFormMode
     @Binding var name: String
-    @Binding var ageGroup: String
+    @Binding var ageGroup: AgeGroup
     @Binding var year: Int
     
     public init(
         mode: ClassGroupFormMode,
         name: Binding<String>,
-        ageGroup: Binding<String>,
+        ageGroup: Binding<AgeGroup>,
         year: Binding<Int>
     ) {
         self.mode = mode
@@ -29,8 +29,8 @@ public struct ClassGroupFormView: View {
                 TextField("組名", text: $name)
                 
                 Picker("年齢区分", selection: $ageGroup) {
-                    ForEach(Const.AgeGroup.sortedCases, id: \.self) { ageGroupCase in
-                        Text(ageGroupCase.displayText).tag(ageGroupCase.rawValue)
+                    ForEach(AgeGroup.sortedCases, id: \.self) { ageGroupCase in
+                        Text(ageGroupCase.displayText).tag(ageGroupCase)
                     }
                 }
                 
@@ -64,7 +64,7 @@ public enum ClassGroupFormMode {
         ClassGroupFormView(
             mode: .add,
             name: .constant(""),
-            ageGroup: .constant(Const.AgeGroup.infant3.rawValue),
+            ageGroup: .constant(AgeGroup.age(3)),
             year: .constant(2024)
         )
         .navigationTitle("組を追加")
@@ -78,9 +78,9 @@ public enum ClassGroupFormMode {
     NavigationStack {
         ClassGroupFormView(
             mode: .edit(
-                ClassGroup(name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024)),
+                ClassGroup(name: "ひまわり組", ageGroup: AgeGroup.age(3), year: 2024)),
             name: .constant("ひまわり組"),
-            ageGroup: .constant(Const.AgeGroup.infant3.rawValue),
+            ageGroup: .constant(AgeGroup.age(3)),
             year: .constant(2024)
         )
         .navigationTitle("組を編集")

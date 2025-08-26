@@ -181,7 +181,7 @@ public struct BookDetailView<ActionButton: View>: View {
         description: "おなかがぺこぺこのあおむしが、美味しそうな食べ物をパクパク食べて成長していく物語。穴あきのしかけ絵本として世界中で愛されています。",
         smallThumbnail: "https://example.com/small-thumbnail.jpg",
         thumbnail: "https://example.com/thumbnail.jpg",
-        targetAge: PictureBookLendingDomain.Const.TargetAudience.juniorHighSchool,
+        targetAge: PictureBookLendingDomain.TargetAudience.juniorHighSchool,
         pageCount: 25,
         categories: ["絵本", "しかけ絵本"],
         managementNumber: "PB-001"

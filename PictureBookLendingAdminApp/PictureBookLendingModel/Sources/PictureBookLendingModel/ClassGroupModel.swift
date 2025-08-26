@@ -206,27 +206,24 @@ public class ClassGroupModel {
             }
             
             // 各年齢区分の代表クラス名を取得（既存の並び順で最初のもの）
-            func getRepresentativeClassName(for ageGroup: Const.AgeGroup) -> String? {
-                return classGroupsByAgeGroup[ageGroup.rawValue]?.first?.name
+            func getRepresentativeClassName(for ageGroup: AgeGroup) -> String? {
+                return classGroupsByAgeGroup[ageGroup]?.first?.name
             }
             
             // 各クラスグループを処理
             for classGroup in currentClassGroups {
-                // 年齢グループを解析
-                guard let ageGroup = Const.AgeGroup(rawValue: classGroup.ageGroup) else {
-                    // 不明な年齢グループはスキップ
-                    continue
-                }
+                let ageGroup = classGroup.ageGroup
                 
-                // 次の年齢区分に既存クラスがあるかチェック
-                if let nextAgeGroup = ageGroup.nextAgeGroup(),
+                // 進級可能かどうかをチェック
+                if ageGroup.canPromote,
+                    let nextAgeGroup = ageGroup.nextAgeGroup(),
                     let nextClassName = getRepresentativeClassName(for: nextAgeGroup)
                 {
                     // 既存の上位年齢区分のクラス名に変更して進級
                     let updatedClassGroup = ClassGroup(
                         id: classGroup.id,
                         name: nextClassName,
-                        ageGroup: nextAgeGroup.rawValue,
+                        ageGroup: nextAgeGroup,
                         year: classGroup.year + 1
                     )
                     
@@ -235,9 +232,23 @@ public class ClassGroupModel {
                     promotedCount += 1
                     
                 } else {
-                    // 卒業（5歳児クラスを削除）
-                    try repository.delete(by: classGroup.id)
-                    deletedCount += 1
+                    // 卒業（5歳児クラス）または変更なし（大人クラス）
+                    if case .age(5) = ageGroup {
+                        // 5歳児は卒業で削除
+                        try repository.delete(by: classGroup.id)
+                        deletedCount += 1
+                    } else {
+                        // 大人クラスは年度のみ更新して継続
+                        let updatedClassGroup = ClassGroup(
+                            id: classGroup.id,
+                            name: classGroup.name,
+                            ageGroup: classGroup.ageGroup,
+                            year: classGroup.year + 1
+                        )
+                        
+                        try repository.save(updatedClassGroup)
+                        updatedClassGroups.append(updatedClassGroup)
+                    }
                 }
             }
             

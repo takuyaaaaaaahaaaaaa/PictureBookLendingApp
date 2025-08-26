@@ -26,11 +26,14 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             let swiftDataClassGroups = try modelContext.fetch(descriptor)
             
             // SwiftDataモデルからドメインモデルに変換
-            return swiftDataClassGroups.map { swiftDataClassGroup in
-                ClassGroup(
+            return swiftDataClassGroups.compactMap { swiftDataClassGroup in
+                guard let ageGroup = AgeGroup(rawValue: swiftDataClassGroup.ageGroup) else {
+                    return nil
+                }
+                return ClassGroup(
                     id: swiftDataClassGroup.id,
                     name: swiftDataClassGroup.name,
-                    ageGroup: swiftDataClassGroup.ageGroup,
+                    ageGroup: ageGroup,
                     year: swiftDataClassGroup.year
                 )
             }
@@ -54,10 +57,14 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
                 return nil
             }
             
+            guard let ageGroup = AgeGroup(rawValue: swiftDataClassGroup.ageGroup) else {
+                return nil
+            }
+            
             return ClassGroup(
                 id: swiftDataClassGroup.id,
                 name: swiftDataClassGroup.name,
-                ageGroup: swiftDataClassGroup.ageGroup,
+                ageGroup: ageGroup,
                 year: swiftDataClassGroup.year
             )
         } catch {
@@ -79,14 +86,14 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             if let existingClassGroup = existingClassGroups.first {
                 // 更新
                 existingClassGroup.name = classGroup.name
-                existingClassGroup.ageGroup = classGroup.ageGroup
+                existingClassGroup.ageGroup = classGroup.ageGroup.rawValue
                 existingClassGroup.year = classGroup.year
             } else {
                 // 新規作成
                 let swiftDataClassGroup = SwiftDataClassGroup(
                     id: classGroup.id,
                     name: classGroup.name,
-                    ageGroup: classGroup.ageGroup,
+                    ageGroup: classGroup.ageGroup.rawValue,
                     year: classGroup.year
                 )
                 modelContext.insert(swiftDataClassGroup)

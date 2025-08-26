@@ -71,7 +71,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     smallThumbnail: swiftDataBook.smallThumbnail,
                     thumbnail: swiftDataBook.thumbnail,
                     targetAge: swiftDataBook.targetAge.flatMap {
-                        Const.TargetAudience(rawValue: $0)
+                        TargetAudience(rawValue: $0)
                     },
                     pageCount: swiftDataBook.pageCount,
                     categories: swiftDataBook.categories,
@@ -109,7 +109,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 description: swiftDataBook.bookDescription,
                 smallThumbnail: swiftDataBook.smallThumbnail,
                 thumbnail: swiftDataBook.thumbnail,
-                targetAge: swiftDataBook.targetAge.flatMap { Const.TargetAudience(rawValue: $0) },
+                targetAge: swiftDataBook.targetAge.flatMap { TargetAudience(rawValue: $0) },
                 pageCount: swiftDataBook.pageCount,
                 categories: swiftDataBook.categories,
                 managementNumber: swiftDataBook.managementNumber,
