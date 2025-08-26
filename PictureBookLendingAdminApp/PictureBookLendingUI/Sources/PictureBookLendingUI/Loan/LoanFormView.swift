@@ -13,6 +13,7 @@ public struct LoanFormView: View {
     let dueDate: Date
     @Binding var selectedClassGroup: ClassGroup?
     @Binding var selectedUser: User?
+    @Binding var selectedUserTypeCategory: UserTypeCategory
     let isValidInput: Bool
     
     public init(
@@ -22,6 +23,7 @@ public struct LoanFormView: View {
         dueDate: Date,
         selectedClassGroup: Binding<ClassGroup?>,
         selectedUser: Binding<User?>,
+        selectedUserTypeCategory: Binding<UserTypeCategory>,
         isValidInput: Bool
     ) {
         self.book = book
@@ -30,6 +32,7 @@ public struct LoanFormView: View {
         self.dueDate = dueDate
         self._selectedClassGroup = selectedClassGroup
         self._selectedUser = selectedUser
+        self._selectedUserTypeCategory = selectedUserTypeCategory
         self.isValidInput = isValidInput
     }
     
@@ -70,16 +73,35 @@ public struct LoanFormView: View {
             }
             
             if selectedClassGroup != nil {
+                Section(header: Text("利用者種別")) {
+                    Picker("利用者種別", selection: $selectedUserTypeCategory) {
+                        Text("園児").tag(UserTypeCategory.child)
+                        Text("保護者").tag(UserTypeCategory.guardian)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
                 Section(header: Text("利用者を選択")) {
                     if users.isEmpty {
-                        Text("この組には利用者が登録されていません")
-                            .italic()
-                            .foregroundStyle(.secondary)
+                        Text(
+                            selectedUserTypeCategory == .child
+                                ? "この組には園児が登録されていません"
+                                : "この組には保護者が登録されていません"
+                        )
+                        .italic()
+                        .foregroundStyle(.secondary)
                     } else {
                         Picker("利用者", selection: $selectedUser) {
                             Text("利用者を選択してください").tag(nil as User?)
                             ForEach(users) { user in
-                                Text(user.name).tag(user as User?)
+                                HStack {
+                                    Text(user.name)
+                                    Spacer()
+                                    Text(user.userType.displayName)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .tag(user as User?)
                             }
                         }
                     }
@@ -92,6 +114,7 @@ public struct LoanFormView: View {
 #Preview {
     @Previewable @State var selectedClassGroup: ClassGroup? = nil
     @Previewable @State var selectedUser: User? = nil
+    @Previewable @State var selectedUserTypeCategory: UserTypeCategory = .child
     
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
     
@@ -115,6 +138,7 @@ public struct LoanFormView: View {
             dueDate: Date(),
             selectedClassGroup: $selectedClassGroup,
             selectedUser: $selectedUser,
+            selectedUserTypeCategory: $selectedUserTypeCategory,
             isValidInput: selectedClassGroup != nil && selectedUser != nil
         )
         .navigationTitle("貸出登録")

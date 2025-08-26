@@ -22,6 +22,8 @@ struct LoanFormContainerView: View {
     @State private var selectedClassGroup: ClassGroup?
     /// 選択した利用者
     @State private var selectedUser: User?
+    /// 利用者種別選択（デフォルトは園児）
+    @State private var selectedUserTypeCategory: UserTypeCategory = .child
     @State private var alertState = AlertState()
     
     var body: some View {
@@ -33,10 +35,15 @@ struct LoanFormContainerView: View {
                 dueDate: dueDate,
                 selectedClassGroup: $selectedClassGroup,
                 selectedUser: $selectedUser,
+                selectedUserTypeCategory: $selectedUserTypeCategory,
                 isValidInput: isValidInput
             )
             // 選択中の組が変化した場合、選択中の利用者情報を初期化
             .onChange(of: selectedClassGroup) { _, _ in
+                selectedUser = nil
+            }
+            // 利用者種別が変化した場合も選択中の利用者情報を初期化
+            .onChange(of: selectedUserTypeCategory) { _, _ in
                 selectedUser = nil
             }
             .navigationTitle("貸出登録")
@@ -93,9 +100,17 @@ struct LoanFormContainerView: View {
             return []
         }
         
-        return userModel.getAllUsers().filter { user in
+        let usersInClass = userModel.getAllUsers().filter { user in
             user.classGroupId == selectedClassGroup.id
         }
+        
+        // 利用者種別フィルタを適用
+        let filteredUsers = usersInClass.filter { user in
+            user.userType.category == selectedUserTypeCategory
+        }
+        
+        // 名前でソート
+        return filteredUsers.sorted { $0.name < $1.name }
     }
     
     private var isValidInput: Bool {
