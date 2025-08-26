@@ -28,7 +28,7 @@ public struct ClassGroupFormView: View {
             Section("組情報") {
                 TextField("組名", text: $name)
                 
-                Picker("年齢", selection: $ageGroup) {
+                Picker("年齢区分", selection: $ageGroup) {
                     ForEach(Const.AgeGroup.sortedCases, id: \.self) { ageGroupCase in
                         Text(ageGroupCase.displayText).tag(ageGroupCase.rawValue)
                     }
