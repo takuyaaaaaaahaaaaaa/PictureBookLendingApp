@@ -211,7 +211,7 @@ public class ClassGroupModel {
                     
                     try repository.save(updatedClassGroup)
                     updatedClassGroups.append(updatedClassGroup)
-                } else if ageGroup.canPromote, let nextAgeGroup = ageGroup.nextAgeGroup() {
+                } else if let nextAgeGroup = ageGroup.nextAgeGroup() {
                     // 進級可能：年齢区分を1つ上げて年度を更新
                     let updatedClassGroup = ClassGroup(
                         id: classGroup.id,
@@ -223,7 +223,7 @@ public class ClassGroupModel {
                     try repository.save(updatedClassGroup)
                     updatedClassGroups.append(updatedClassGroup)
                 } else {
-                    // それ以外（5歳児など）は削除
+                    // 進級不可（5歳児など）は削除
                     try repository.delete(by: classGroup.id)
                 }
             }
