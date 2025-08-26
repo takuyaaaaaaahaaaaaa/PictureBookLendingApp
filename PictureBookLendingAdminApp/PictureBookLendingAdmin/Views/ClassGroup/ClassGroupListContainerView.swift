@@ -27,7 +27,8 @@ struct ClassGroupListContainerView: View {
     var body: some View {
         ClassGroupListView(
             classGroups: classGroupModel.classGroups,
-            getUserCount: getUserCountForClassGroup,
+            getChildCount: getChildCountForClassGroup,
+            getGuardianCount: getGuardianCountForClassGroup,
             isEditMode: isEditMode,
             onAdd: handleAdd,
             onSelect: handleSelectClassGroup,
@@ -48,8 +49,10 @@ struct ClassGroupListContainerView: View {
             ToolbarSpacer(.fixed)
             
             ToolbarItem(id: "add") {
-                Button("組追加") {
+                Button {
                     handleAdd()
+                } label: {
+                    Label("組を追加", systemImage: "plus")
                 }
             }
         }
@@ -89,8 +92,22 @@ struct ClassGroupListContainerView: View {
         editingClassGroup = classGroup
     }
     
-    private func getUserCountForClassGroup(_ classGroupId: UUID) -> Int {
-        userModel.users.filter { $0.classGroupId == classGroupId }.count
+    private func getChildCountForClassGroup(_ classGroupId: UUID) -> Int {
+        userModel.users.filter { user in
+            user.classGroupId == classGroupId && user.userType == .child
+        }.count
+    }
+    
+    private func getGuardianCountForClassGroup(_ classGroupId: UUID) -> Int {
+        userModel.users.filter { user in
+            user.classGroupId == classGroupId
+                && {
+                    if case .guardian = user.userType {
+                        return true
+                    }
+                    return false
+                }()
+        }.count
     }
     
     private func handleDelete(at offsets: IndexSet) {

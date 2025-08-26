@@ -90,26 +90,35 @@ public struct UserFormView: View {
                 .pickerStyle(.segmented)
                 
                 TextField("名前", text: name)
-                Picker("組", selection: classGroup) {
-                    Text("組を選択してください").tag(nil as ClassGroup?)
-                    ForEach(classGroups) { group in
-                        Text(group.name).tag(group as ClassGroup?)
+                
+                if classGroups.count == 1 {
+                    HStack {
+                        Text("組")
+                        Spacer()
+                        Text(classGroup.wrappedValue?.name ?? "選択されていません")
+                    }
+                } else {
+                    Picker("組", selection: classGroup) {
+                        Text("組を選択してください").tag(nil as ClassGroup?)
+                        ForEach(classGroups) { group in
+                            Text(group.name).tag(group as ClassGroup?)
+                        }
                     }
                 }
             }
             
             // 保護者を選択した場合は関連する園児を選択
             if editingUser == nil && userTypeForPicker.wrappedValue == .guardian {
-                Section(header: Text("関連する利用者")) {
-                    Picker("利用者を選択", selection: selectedChild) {
-                        Text("利用者を選択してください").tag(nil as User?)
+                Section(header: Text("関連する園児")) {
+                    Picker("園児を選択", selection: selectedChild) {
+                        Text("園児を選択してください").tag(nil as User?)
                         ForEach(availableChildren) { child in
                             Text(child.name).tag(child as User?)
                         }
                     }
                     
                     if selectedChild.wrappedValue != nil {
-                        Text("選択した利用者の保護者として登録されます")
+                        Text("選択した園児の保護者として登録されます")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -137,8 +146,8 @@ public struct UserFormView: View {
                         
                         Text(
                             guardianCount.wrappedValue == 1
-                                ? "保護者名は「\(name.wrappedValue)の保護者1」として自動設定されます"
-                                : "保護者名は「\(name.wrappedValue)の保護者1」から「\(name.wrappedValue)の保護者\(guardianCount.wrappedValue)」として自動設定されます"
+                                ? "保護者名は「\(name.wrappedValue)の保護者」として自動設定されます"
+                                : "保護者名は「\(name.wrappedValue)の保護者」「\(name.wrappedValue)の保護者(2)」...「\(name.wrappedValue)の保護者(\(guardianCount.wrappedValue))」として自動設定されます"
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -155,8 +164,8 @@ public struct UserFormView: View {
     
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     let classGroups = [
-        ClassGroup(name: "きく", ageGroup: "1歳児", year: 2025),
-        ClassGroup(name: "ひまわり", ageGroup: "2歳児", year: 2025),
+        ClassGroup(name: "きく", ageGroup: AgeGroup.age(1), year: 2025),
+        ClassGroup(name: "ひまわり", ageGroup: AgeGroup.age(2), year: 2025),
     ]
     
     NavigationStack {

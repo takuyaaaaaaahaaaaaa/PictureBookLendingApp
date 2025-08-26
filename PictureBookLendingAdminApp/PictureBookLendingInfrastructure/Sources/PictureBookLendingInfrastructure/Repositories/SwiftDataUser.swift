@@ -2,7 +2,7 @@ import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
-/// SwiftData用の利用者モデル
+/// SwiftData用の利用者モデル（スキーマV2）
 ///
 /// SwiftDataで永続化するための利用者モデル。
 /// ドメインモデルのUserと1対1で対応し、園児や児童の情報を保存します。
@@ -18,7 +18,7 @@ final public class SwiftDataUser {
     public var classGroupId: UUID
     
     /// 利用者種別（本人・保護者）
-    public var userTypeRawValue: String
+    public var userTypeRawValue: String = "child"
     
     /// 関連する本人のID（保護者の場合のみ設定）
     public var relatedChildId: UUID?

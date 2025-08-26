@@ -271,9 +271,9 @@ public struct BookSearchView: View {
                                 }
                             )
                         ) {
-                            Text("未選択").tag(nil as Const.TargetAudience?)
-                            ForEach(Const.TargetAudience.sortedCases, id: \.self) { audience in
-                                Text(audience.displayText).tag(audience as Const.TargetAudience?)
+                            Text("未選択").tag(nil as TargetAudience?)
+                            ForEach(TargetAudience.sortedCases, id: \.self) { audience in
+                                Text(audience.displayText).tag(audience as TargetAudience?)
                             }
                         }
                         .pickerStyle(.menu)

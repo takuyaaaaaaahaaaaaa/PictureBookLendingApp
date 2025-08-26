@@ -135,9 +135,9 @@ public struct BookFormView<AutoFillButton: View>: View {
             
             Section(header: Text("その他（任意）")) {
                 Picker("対象読者", selection: $book.targetAge) {
-                    Text("未選択").tag(nil as Const.TargetAudience?)
-                    ForEach(Const.TargetAudience.allCases, id: \.self) { audience in
-                        Text(audience.displayText).tag(audience as Const.TargetAudience?)
+                    Text("未選択").tag(nil as TargetAudience?)
+                    ForEach(TargetAudience.allCases, id: \.self) { audience in
+                        Text(audience.displayText).tag(audience as TargetAudience?)
                     }
                 }
                 .pickerStyle(.menu)

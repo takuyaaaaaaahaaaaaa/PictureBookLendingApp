@@ -14,7 +14,6 @@ struct UserFormContainerView: View {
     @Environment(\.dismiss) private var dismiss
     
     let initialClassGroupId: UUID?
-    var onSave: ((User) -> Void)? = nil
     
     /// 利用者名
     @State private var name = ""
@@ -37,10 +36,9 @@ struct UserFormContainerView: View {
     @State private var alertState = AlertState()
     
     init(
-        initialClassGroupId: UUID? = nil, onSave: ((User) -> Void)? = nil
+        initialClassGroupId: UUID? = nil
     ) {
         self.initialClassGroupId = initialClassGroupId
-        self.onSave = onSave
     }
     
     var body: some View {
@@ -108,7 +106,7 @@ struct UserFormContainerView: View {
         case .guardian:
             // 新規登録で保護者を直接登録する場合は、選択された園児のIDを使用
             guard let selectedChild = selectedChild else {
-                alertState = .error("保護者を登録する場合は関連する利用者を選択してください")
+                alertState = .error("保護者を登録する場合は関連する園児を選択してください")
                 return
             }
             userType = .guardian(relatedChildId: selectedChild.id)
@@ -121,12 +119,12 @@ struct UserFormContainerView: View {
                 classGroupId: selectedClassGroup.id,
                 userType: userType
             )
-            let savedUser = try userModel.registerUser(newUser)
+            _ = try userModel.registerUser(newUser)
             
             // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
                 for i in 1...guardianCount {
-                    let guardianName = "\(name)の保護者\(i)"
+                    let guardianName = i == 1 ? "\(name)の保護者" : "\(name)の保護者(\(i))"
                     let guardian = User(
                         name: guardianName,
                         classGroupId: selectedClassGroup.id,
@@ -136,26 +134,28 @@ struct UserFormContainerView: View {
                 }
             }
             
-            onSave?(savedUser)
             dismiss()
         } catch {
             alertState = .error("保存に失敗しました: \(error.localizedDescription)")
         }
     }
     
+    /// 初期読み込み
     private func loadInitialData() {
+        // 選択可能な組・園児一覧
         classGroups = classGroupModel.getAllClassGroups()
+        availableChildren = userModel.users
+            .filter { $0.userType == .child }
         
-        // 園児一覧を取得（保護者登録時に使用）
-        availableChildren = userModel.users.filter { user in
-            if case .child = user.userType {
-                return true
+        // 組が決まっている場合は組固定
+        if let initialClassGroupId = initialClassGroupId,
+            let initialClassGroup = classGroupModel.findClassGroupById(initialClassGroupId)
+        {
+            classGroups = [initialClassGroup]
+            classGroup = initialClassGroup
+            availableChildren = availableChildren.filter {
+                $0.classGroupId == initialClassGroupId
             }
-            return false
-        }
-        
-        if let initialClassGroupId = initialClassGroupId {
-            classGroup = classGroupModel.findClassGroupById(initialClassGroupId)
         }
     }
 }

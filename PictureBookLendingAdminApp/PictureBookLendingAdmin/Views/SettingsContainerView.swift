@@ -16,9 +16,9 @@ struct SettingsContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
-    @State private var isBookRegistrationSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
+    @State private var isPromoteConfirmationPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
     
@@ -36,14 +36,17 @@ struct SettingsContainerView: View {
                 onSelectBook: {
                     navigationPath.append(SettingsDestination.book)
                 },
-                onSelectBookRegistration: {
-                    isBookRegistrationSheetPresented = true
-                },
                 onSelectBookBulkRegistration: {
                     isBookBulkRegistrationSheetPresented = true
                 },
                 onSelectLoanSettings: {
                     isLoanSettingsSheetPresented = true
+                },
+                onCreateGuardiansForAllChildren: {
+                    handleCreateGuardiansForAllChildren()
+                },
+                onPromoteToNextYear: {
+                    isPromoteConfirmationPresented = true
                 },
                 onSelectDeviceReset: {
                     isDeviceResetDialogPresented = true
@@ -75,18 +78,12 @@ struct SettingsContainerView: View {
                 }
             }
             #if os(macOS)
-                .sheet(isPresented: $isBookRegistrationSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
                 .sheet(isPresented: $isBookBulkRegistrationSheetPresented) {
                     NavigationStack {
                         BookBulkAddContainerView()
                     }
                 }
             #else
-                .fullScreenCover(isPresented: $isBookRegistrationSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
                 .fullScreenCover(isPresented: $isBookBulkRegistrationSheetPresented) {
                     BookBulkAddContainerView()
                 }
@@ -97,6 +94,14 @@ struct SettingsContainerView: View {
                     selectedOptions: $deviceResetOptions,
                     onConfirm: handleDeviceReset
                 )
+            }
+            .alert("進級処理の確認", isPresented: $isPromoteConfirmationPresented) {
+                Button("実行", role: .destructive) {
+                    handlePromoteToNextYear()
+                }
+                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。")
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
@@ -111,6 +116,66 @@ struct SettingsContainerView: View {
     private func handleDeviceReset(_ options: DeviceResetOptions) {
         Task {
             await performDeviceReset(options)
+        }
+    }
+    
+    private func handleCreateGuardiansForAllChildren() {
+        Task {
+            await performCreateGuardiansForAllChildren()
+        }
+    }
+    
+    private func handlePromoteToNextYear() {
+        Task {
+            await performPromoteToNextYear()
+        }
+    }
+    
+    private func performCreateGuardiansForAllChildren() async {
+        do {
+            // 園児のみを取得
+            let children = userModel.users.filter { $0.userType == .child }
+            if children.isEmpty {
+                alertState = .info("登録されている園児がいません")
+                return
+            }
+            
+            var createdGuardiansCount = 0
+            
+            // 各園児に対して保護者を作成
+            for child in children {
+                // 既に保護者がいるかチェック
+                let hasExistingGuardian = userModel.users.contains { user in
+                    if case .guardian(let relatedChildId) = user.userType {
+                        return relatedChildId == child.id
+                    }
+                    return false
+                }
+                
+                // 保護者がいない場合のみ作成
+                if !hasExistingGuardian {
+                    let guardian = User(
+                        name: "\(child.name)の保護者",
+                        classGroupId: child.classGroupId,
+                        userType: .guardian(relatedChildId: child.id)
+                    )
+                    
+                    _ = try userModel.registerUser(guardian)
+                    createdGuardiansCount += 1
+                }
+            }
+            
+            let message =
+                if createdGuardiansCount > 0 {
+                    "\(createdGuardiansCount)人の保護者を作成しました"
+                } else {
+                    "すべての園児に既に保護者が登録されています"
+                }
+            
+            alertState = .info(message)
+            
+        } catch {
+            alertState = .error("保護者作成中にエラーが発生しました: \(error.localizedDescription)")
         }
     }
     
@@ -145,6 +210,17 @@ struct SettingsContainerView: View {
             
         } catch {
             alertState = .error("削除中にエラーが発生しました: \(error.localizedDescription)")
+        }
+    }
+    
+    private func performPromoteToNextYear() async {
+        do {
+            try classGroupModel.promoteToNextYear()
+            
+            alertState = .info("進級処理が完了しました")
+            
+        } catch {
+            alertState = .error("進級処理中にエラーが発生しました: \(error.localizedDescription)")
         }
     }
     

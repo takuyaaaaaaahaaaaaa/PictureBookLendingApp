@@ -55,7 +55,7 @@ public class ClassGroupModel {
         
         // 初期データのロード
         do {
-            self.classGroups = try repository.fetchAll()
+            self.classGroups = try repository.fetchAll().sorted(by: { $0.ageGroup < $1.ageGroup })
         } catch {
             print("初期データのロードに失敗しました: \(error)")
             self.classGroups = []
@@ -155,7 +155,7 @@ public class ClassGroupModel {
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
     public func refreshClassGroups() {
         do {
-            classGroups = try repository.fetchAll()
+            classGroups = try repository.fetchAll().sorted(by: { $0.ageGroup < $1.ageGroup })
         } catch {
             print("クラスリストの更新に失敗しました: \(error)")
         }
@@ -182,6 +182,82 @@ public class ClassGroupModel {
             return currentClassGroups.count
         } catch {
             throw ClassGroupModelError.deletionFailed
+        }
+    }
+    
+    /// 次のクラスグループを取得する
+    ///
+    /// 現在のクラスグループから進級先のクラスグループを作成します。
+    /// 上の年齢区分の対応するクラス名を流用します。
+    ///
+    /// - Parameter current: 現在のクラスグループ
+    /// - Returns: 進級先のクラスグループ
+    private func nextClassGroup(current: ClassGroup) -> ClassGroup? {
+        // その他の場合は年度だけ更新
+        if current.ageGroup == .other {
+            return ClassGroup(
+                id: current.id,
+                name: current.name,
+                ageGroup: current.ageGroup,
+                year: current.year + 1
+            )
+        }
+        // 進級可能な場合は翌年度の組を変更
+        if let nextAgeGroup = current.ageGroup.nextAgeGroup(),
+            let nextClassGroup = classGroups.first(where: { $0.ageGroup == nextAgeGroup })
+        {
+            return ClassGroup(
+                id: current.id,
+                name: nextClassGroup.name,
+                ageGroup: nextClassGroup.ageGroup,
+                year: current.year + 1
+            )
+        }
+        
+        return nil
+    }
+    
+    /// 進級処理を実行する
+    ///
+    /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。
+    /// 5歳児クラスは卒業として削除されます。
+    ///
+    /// - Throws: 進級処理に失敗した場合は `ClassGroupModelError` を投げます
+    public func promoteToNextYear() throws {
+        do {
+            let currentClassGroups = classGroups
+            var updatedClassGroups: [ClassGroup] = []
+            
+            // 最小クラスを作成
+            let firstClassGroup = currentClassGroups.filter { $0.ageGroup != .other }
+                .sorted { $0.ageGroup < $1.ageGroup }
+                .first
+            if let firstClassGroup {
+                let updatedFirstClassGroup = ClassGroup(
+                    name: firstClassGroup.name,
+                    ageGroup: firstClassGroup.ageGroup,
+                    year: firstClassGroup.year + 1)
+                try repository.save(updatedFirstClassGroup)
+                updatedClassGroups.append(updatedFirstClassGroup)
+            }
+            
+            // 各クラスグループを進級処理
+            for classGroup in currentClassGroups {
+                if let nextClassGroupInstance = nextClassGroup(current: classGroup) {
+                    // 進級可能な場合は進級先の組へ更新
+                    try repository.save(nextClassGroupInstance)
+                    updatedClassGroups.append(nextClassGroupInstance)
+                } else {
+                    // 進級不可（5歳児など）の場合は削除
+                    try repository.delete(by: classGroup.id)
+                    // TODO: 関連する利用者一覧も削除
+                }
+            }
+            // キャッシュを更新
+            classGroups = updatedClassGroups.sorted(by: { $0.ageGroup < $1.ageGroup })
+            
+        } catch {
+            throw ClassGroupModelError.updateFailed
         }
     }
 }

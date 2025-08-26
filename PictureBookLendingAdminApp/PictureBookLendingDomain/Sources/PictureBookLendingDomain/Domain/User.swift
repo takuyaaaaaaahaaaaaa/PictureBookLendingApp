@@ -16,6 +16,34 @@ public enum UserType: Codable, Hashable {
             return "保護者"
         }
     }
+    
+    /// 種別カテゴリ（フィルタ用）
+    public var category: UserTypeCategory {
+        switch self {
+        case .child:
+            return .child
+        case .guardian:
+            return .guardian
+        }
+    }
+}
+
+/// 利用者種別カテゴリ（フィルタ用）
+public enum UserTypeCategory: Codable, Hashable {
+    /// 園児
+    case child
+    /// 保護者
+    case guardian
+    
+    /// 表示用の日本語名
+    public var displayName: String {
+        switch self {
+        case .child:
+            return "園児"
+        case .guardian:
+            return "保護者"
+        }
+    }
 }
 
 /// 利用者モデル

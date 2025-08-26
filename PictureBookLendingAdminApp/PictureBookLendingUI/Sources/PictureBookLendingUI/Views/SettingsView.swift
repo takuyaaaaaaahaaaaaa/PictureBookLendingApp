@@ -12,9 +12,10 @@ public struct SettingsView: View {
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
-    let onSelectBookRegistration: () -> Void
     let onSelectBookBulkRegistration: () -> Void
     let onSelectLoanSettings: () -> Void
+    let onCreateGuardiansForAllChildren: () -> Void
+    let onPromoteToNextYear: () -> Void
     let onSelectDeviceReset: () -> Void
     
     public init(
@@ -25,9 +26,10 @@ public struct SettingsView: View {
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
-        onSelectBookRegistration: @escaping () -> Void,
         onSelectBookBulkRegistration: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
+        onCreateGuardiansForAllChildren: @escaping () -> Void,
+        onPromoteToNextYear: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
@@ -37,9 +39,10 @@ public struct SettingsView: View {
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
-        self.onSelectBookRegistration = onSelectBookRegistration
         self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
         self.onSelectLoanSettings = onSelectLoanSettings
+        self.onCreateGuardiansForAllChildren = onCreateGuardiansForAllChildren
+        self.onPromoteToNextYear = onPromoteToNextYear
         self.onSelectDeviceReset = onSelectDeviceReset
     }
     
@@ -60,25 +63,47 @@ public struct SettingsView: View {
             )
             
             SettingsMenuItem(
-                iconName: "book.badge.plus",
-                title: "絵本追加",
-                subtitle: "新しい絵本を個別に登録",
-                action: onSelectBookRegistration
-            )
-            
-            SettingsMenuItem(
-                iconName: "books.vertical",
-                title: "絵本一括登録",
-                subtitle: "CSVファイルから複数の絵本を一括登録",
-                action: onSelectBookBulkRegistration
-            )
-            
-            SettingsMenuItem(
                 iconName: "clock",
                 title: "貸出設定",
                 subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
-                action: onSelectLoanSettings
+                action: onSelectLoanSettings,
+                showChevron: false
             )
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            // お試し機能セクション
+            VStack(alignment: .leading, spacing: 8) {
+                Text("お試し機能")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+                
+                SettingsMenuItem(
+                    iconName: "person.2.badge.plus",
+                    title: "全園児に保護者を作成",
+                    subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
+                    action: onCreateGuardiansForAllChildren,
+                    showChevron: false
+                )
+                
+                SettingsMenuItem(
+                    iconName: "books.vertical",
+                    title: "絵本一括登録",
+                    subtitle: "CSVファイルから複数の絵本を一括登録",
+                    action: onSelectBookBulkRegistration,
+                    showChevron: false
+                )
+                
+                SettingsMenuItem(
+                    iconName: "graduationcap",
+                    title: "進級処理",
+                    subtitle: "年度変更時に園児を次の年齢区分に進級（5歳児は卒業として削除）",
+                    action: onPromoteToNextYear,
+                    showChevron: false
+                )
+            }
             
             Divider()
                 .padding(.vertical, 8)
@@ -88,7 +113,8 @@ public struct SettingsView: View {
                 title: "端末初期化",
                 subtitle: "利用者・絵本・貸出記録のデータを削除",
                 action: onSelectDeviceReset,
-                style: .destructive
+                style: .destructive,
+                showChevron: false
             )
             
             Spacer()
@@ -105,6 +131,7 @@ private struct SettingsMenuItem: View {
     let subtitle: String
     let action: () -> Void
     let style: Style
+    let showChevron: Bool
     
     enum Style {
         case normal
@@ -127,13 +154,14 @@ private struct SettingsMenuItem: View {
     
     init(
         iconName: String, title: String, subtitle: String, action: @escaping () -> Void,
-        style: Style = .normal
+        style: Style = .normal, showChevron: Bool = true
     ) {
         self.iconName = iconName
         self.title = title
         self.subtitle = subtitle
         self.action = action
         self.style = style
+        self.showChevron = showChevron
     }
     
     var body: some View {
@@ -152,9 +180,11 @@ private struct SettingsMenuItem: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if showChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding()
             .background(.gray.opacity(0.1))
@@ -174,9 +204,10 @@ private struct SettingsMenuItem: View {
             maxBooksPerUser: 1,
             onSelectUser: {},
             onSelectBook: {},
-            onSelectBookRegistration: {},
             onSelectBookBulkRegistration: {},
             onSelectLoanSettings: {},
+            onCreateGuardiansForAllChildren: {},
+            onPromoteToNextYear: {},
             onSelectDeviceReset: {}
         )
         .navigationTitle("設定")

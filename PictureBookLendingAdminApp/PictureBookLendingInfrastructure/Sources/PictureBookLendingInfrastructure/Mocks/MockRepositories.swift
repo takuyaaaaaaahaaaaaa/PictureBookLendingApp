@@ -252,7 +252,7 @@ public final class MockBookSearchGateway: BookSearchGatewayProtocol {
                 description: "これは\(title)のテスト用絵本です。",
                 smallThumbnail: "https://example.com/small-thumbnail\(i).jpg",
                 thumbnail: "https://example.com/thumbnail\(i).jpg",
-                targetAge: Const.TargetAudience.allCases[i % Const.TargetAudience.allCases.count],
+                targetAge: TargetAudience.allCases[i % TargetAudience.allCases.count],
                 pageCount: 30 + i * 2,
                 categories: ["絵本", "テスト"],
                 managementNumber: "テスト\(i)"
