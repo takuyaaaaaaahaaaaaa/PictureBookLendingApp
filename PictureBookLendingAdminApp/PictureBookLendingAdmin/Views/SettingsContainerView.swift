@@ -215,23 +215,9 @@ struct SettingsContainerView: View {
     
     private func performPromoteToNextYear() async {
         do {
-            let (promotedCount, deletedCount) = try classGroupModel.promoteToNextYear()
+            try classGroupModel.promoteToNextYear()
             
-            let message: String
-            if promotedCount > 0 || deletedCount > 0 {
-                var details: [String] = []
-                if promotedCount > 0 {
-                    details.append("\(promotedCount)クラスが進級しました")
-                }
-                if deletedCount > 0 {
-                    details.append("\(deletedCount)クラス（5歳児）が卒業により削除されました")
-                }
-                message = "進級処理が完了しました：\n\(details.joined(separator: "\n"))"
-            } else {
-                message = "進級対象のクラスがありませんでした"
-            }
-            
-            alertState = .info(message)
+            alertState = .info("進級処理が完了しました")
             
         } catch {
             alertState = .error("進級処理中にエラーが発生しました: \(error.localizedDescription)")
