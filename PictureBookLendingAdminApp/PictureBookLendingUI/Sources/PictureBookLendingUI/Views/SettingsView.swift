@@ -15,6 +15,7 @@ public struct SettingsView: View {
     let onSelectBookRegistration: () -> Void
     let onSelectBookBulkRegistration: () -> Void
     let onSelectLoanSettings: () -> Void
+    let onCreateGuardiansForAllChildren: () -> Void
     let onSelectDeviceReset: () -> Void
     
     public init(
@@ -28,6 +29,7 @@ public struct SettingsView: View {
         onSelectBookRegistration: @escaping () -> Void,
         onSelectBookBulkRegistration: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
+        onCreateGuardiansForAllChildren: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
@@ -40,6 +42,7 @@ public struct SettingsView: View {
         self.onSelectBookRegistration = onSelectBookRegistration
         self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
         self.onSelectLoanSettings = onSelectLoanSettings
+        self.onCreateGuardiansForAllChildren = onCreateGuardiansForAllChildren
         self.onSelectDeviceReset = onSelectDeviceReset
     }
     
@@ -79,6 +82,24 @@ public struct SettingsView: View {
                 subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
                 action: onSelectLoanSettings
             )
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            // お試し機能セクション
+            VStack(alignment: .leading, spacing: 8) {
+                Text("お試し機能")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+                
+                SettingsMenuItem(
+                    iconName: "person.2.badge.plus",
+                    title: "全園児に保護者を作成",
+                    subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
+                    action: onCreateGuardiansForAllChildren
+                )
+            }
             
             Divider()
                 .padding(.vertical, 8)
@@ -177,6 +198,7 @@ private struct SettingsMenuItem: View {
             onSelectBookRegistration: {},
             onSelectBookBulkRegistration: {},
             onSelectLoanSettings: {},
+            onCreateGuardiansForAllChildren: {},
             onSelectDeviceReset: {}
         )
         .navigationTitle("設定")

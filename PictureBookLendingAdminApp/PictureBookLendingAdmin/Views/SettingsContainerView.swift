@@ -45,6 +45,9 @@ struct SettingsContainerView: View {
                 onSelectLoanSettings: {
                     isLoanSettingsSheetPresented = true
                 },
+                onCreateGuardiansForAllChildren: {
+                    handleCreateGuardiansForAllChildren()
+                },
                 onSelectDeviceReset: {
                     isDeviceResetDialogPresented = true
                 }
@@ -111,6 +114,60 @@ struct SettingsContainerView: View {
     private func handleDeviceReset(_ options: DeviceResetOptions) {
         Task {
             await performDeviceReset(options)
+        }
+    }
+    
+    private func handleCreateGuardiansForAllChildren() {
+        Task {
+            await performCreateGuardiansForAllChildren()
+        }
+    }
+    
+    private func performCreateGuardiansForAllChildren() async {
+        do {
+            // 園児のみを取得
+            let children = userModel.users.filter { $0.userType == .child }
+            if children.isEmpty {
+                alertState = .info("登録されている園児がいません")
+                return
+            }
+            
+            var createdGuardiansCount = 0
+            
+            // 各園児に対して保護者を作成
+            for child in children {
+                // 既に保護者がいるかチェック
+                let hasExistingGuardian = userModel.users.contains { user in
+                    if case .guardian(let relatedChildId) = user.userType {
+                        return relatedChildId == child.id
+                    }
+                    return false
+                }
+                
+                // 保護者がいない場合のみ作成
+                if !hasExistingGuardian {
+                    let guardian = User(
+                        name: "\(child.name)の保護者",
+                        classGroupId: child.classGroupId,
+                        userType: .guardian(relatedChildId: child.id)
+                    )
+                    
+                    _ = try userModel.registerUser(guardian)
+                    createdGuardiansCount += 1
+                }
+            }
+            
+            let message =
+                if createdGuardiansCount > 0 {
+                    "\(createdGuardiansCount)人の保護者を作成しました"
+                } else {
+                    "すべての園児に既に保護者が登録されています"
+                }
+            
+            alertState = .info(message)
+            
+        } catch {
+            alertState = .error("保護者作成中にエラーが発生しました: \(error.localizedDescription)")
         }
     }
     
