@@ -200,11 +200,19 @@ public class ClassGroupModel {
             for classGroup in currentClassGroups {
                 let ageGroup = classGroup.ageGroup
                 
-                if case .age(5) = ageGroup {
-                    // 5歳児は卒業で削除
-                    try repository.delete(by: classGroup.id)
+                if case .other = ageGroup {
+                    // その他（大人クラス）は年度のみ更新
+                    let updatedClassGroup = ClassGroup(
+                        id: classGroup.id,
+                        name: classGroup.name,
+                        ageGroup: classGroup.ageGroup,
+                        year: classGroup.year + 1
+                    )
+                    
+                    try repository.save(updatedClassGroup)
+                    updatedClassGroups.append(updatedClassGroup)
                 } else if ageGroup.canPromote, let nextAgeGroup = ageGroup.nextAgeGroup() {
-                    // 進級：年齢区分を1つ上げて年度を更新
+                    // 進級可能：年齢区分を1つ上げて年度を更新
                     let updatedClassGroup = ClassGroup(
                         id: classGroup.id,
                         name: classGroup.name,
@@ -215,16 +223,35 @@ public class ClassGroupModel {
                     try repository.save(updatedClassGroup)
                     updatedClassGroups.append(updatedClassGroup)
                 } else {
-                    // 大人クラスは年度のみ更新
-                    let updatedClassGroup = ClassGroup(
-                        id: classGroup.id,
-                        name: classGroup.name,
-                        ageGroup: classGroup.ageGroup,
-                        year: classGroup.year + 1
-                    )
-                    
-                    try repository.save(updatedClassGroup)
-                    updatedClassGroups.append(updatedClassGroup)
+                    // それ以外（5歳児など）は削除
+                    try repository.delete(by: classGroup.id)
+                }
+            }
+            
+            // 0歳児のClassGroupを追加
+            let zeroAgeClassGroups = currentClassGroups.filter { $0.ageGroup == .age(0) }
+            for zeroAgeClassGroup in zeroAgeClassGroups {
+                let newZeroAgeClassGroup = ClassGroup(
+                    name: zeroAgeClassGroup.name,
+                    ageGroup: .age(0),
+                    year: zeroAgeClassGroup.year + 1
+                )
+                
+                try repository.save(newZeroAgeClassGroup)
+                updatedClassGroups.append(newZeroAgeClassGroup)
+            }
+            
+            // ClassGroupをソート（年齢区分順、その後名前順）
+            updatedClassGroups.sort { lhs, rhs in
+                switch (lhs.ageGroup, rhs.ageGroup) {
+                case let (.age(lhsAge), .age(rhsAge)):
+                    return lhsAge < rhsAge
+                case (.age(_), .other):
+                    return true
+                case (.other, .age(_)):
+                    return false
+                case (.other, .other):
+                    return lhs.name < rhs.name
                 }
             }
             
