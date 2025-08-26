@@ -140,19 +140,22 @@ struct UserFormContainerView: View {
         }
     }
     
+    /// 初期読み込み
     private func loadInitialData() {
+        // 選択可能な組・園児一覧
         classGroups = classGroupModel.getAllClassGroups()
+        availableChildren = userModel.users
+            .filter { $0.userType == .child }
         
-        // 園児一覧を取得（保護者登録時に使用）
-        availableChildren = userModel.users.filter { user in
-            if case .child = user.userType {
-                return true
+        // 組が決まっている場合は組固定
+        if let initialClassGroupId = initialClassGroupId,
+            let initialClassGroup = classGroupModel.findClassGroupById(initialClassGroupId)
+        {
+            classGroups = [initialClassGroup]
+            classGroup = initialClassGroup
+            availableChildren = availableChildren.filter {
+                $0.classGroupId == initialClassGroupId
             }
-            return false
-        }
-        
-        if let initialClassGroupId = initialClassGroupId {
-            classGroup = classGroupModel.findClassGroupById(initialClassGroupId)
         }
     }
 }

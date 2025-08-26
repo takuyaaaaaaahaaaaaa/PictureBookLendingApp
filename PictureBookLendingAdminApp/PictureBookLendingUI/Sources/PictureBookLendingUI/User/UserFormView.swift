@@ -90,10 +90,19 @@ public struct UserFormView: View {
                 .pickerStyle(.segmented)
                 
                 TextField("名前", text: name)
-                Picker("組", selection: classGroup) {
-                    Text("組を選択してください").tag(nil as ClassGroup?)
-                    ForEach(classGroups) { group in
-                        Text(group.name).tag(group as ClassGroup?)
+                
+                if classGroups.count == 1 {
+                    HStack {
+                        Text("組")
+                        Spacer()
+                        Text(classGroup.wrappedValue?.name ?? "選択されていません")
+                    }
+                } else {
+                    Picker("組", selection: classGroup) {
+                        Text("組を選択してください").tag(nil as ClassGroup?)
+                        ForEach(classGroups) { group in
+                            Text(group.name).tag(group as ClassGroup?)
+                        }
                     }
                 }
             }
