@@ -194,56 +194,37 @@ public class ClassGroupModel {
     public func promoteToNextYear() throws {
         do {
             let currentClassGroups = classGroups
-            
             var updatedClassGroups: [ClassGroup] = []
-            
-            // 年齢区分別にクラスを分類（代表クラス名を取得するため）
-            let classGroupsByAgeGroup = Dictionary(grouping: currentClassGroups) { classGroup in
-                classGroup.ageGroup
-            }
-            
-            // 各年齢区分の代表クラス名を取得（既存の並び順で最初のもの）
-            func getRepresentativeClassName(for ageGroup: AgeGroup) -> String? {
-                return classGroupsByAgeGroup[ageGroup]?.first?.name
-            }
             
             // 各クラスグループを処理
             for classGroup in currentClassGroups {
                 let ageGroup = classGroup.ageGroup
                 
-                // 進級可能かどうかをチェック
-                if ageGroup.canPromote,
-                    let nextAgeGroup = ageGroup.nextAgeGroup(),
-                    let nextClassName = getRepresentativeClassName(for: nextAgeGroup)
-                {
-                    // 既存の上位年齢区分のクラス名に変更して進級
+                if case .age(5) = ageGroup {
+                    // 5歳児は卒業で削除
+                    try repository.delete(by: classGroup.id)
+                } else if ageGroup.canPromote, let nextAgeGroup = ageGroup.nextAgeGroup() {
+                    // 進級：年齢区分を1つ上げて年度を更新
                     let updatedClassGroup = ClassGroup(
                         id: classGroup.id,
-                        name: nextClassName,
+                        name: classGroup.name,
                         ageGroup: nextAgeGroup,
                         year: classGroup.year + 1
                     )
                     
                     try repository.save(updatedClassGroup)
                     updatedClassGroups.append(updatedClassGroup)
-                    
                 } else {
-                    // 卒業（5歳児クラス）または変更なし（大人クラス）
-                    if case .age(5) = ageGroup {
-                        // 5歳児は卒業で削除
-                        try repository.delete(by: classGroup.id)
-                    } else {
-                        // 大人クラスは年度のみ更新して継続
-                        let updatedClassGroup = ClassGroup(
-                            id: classGroup.id,
-                            name: classGroup.name,
-                            ageGroup: classGroup.ageGroup,
-                            year: classGroup.year + 1
-                        )
-                        
-                        try repository.save(updatedClassGroup)
-                        updatedClassGroups.append(updatedClassGroup)
-                    }
+                    // 大人クラスは年度のみ更新
+                    let updatedClassGroup = ClassGroup(
+                        id: classGroup.id,
+                        name: classGroup.name,
+                        ageGroup: classGroup.ageGroup,
+                        year: classGroup.year + 1
+                    )
+                    
+                    try repository.save(updatedClassGroup)
+                    updatedClassGroups.append(updatedClassGroup)
                 }
             }
             
