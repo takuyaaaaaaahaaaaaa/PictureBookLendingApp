@@ -80,7 +80,7 @@ import SwiftUI
         }
         
         /// カメラ権限をリクエスト
-        public static func requestCameraPermission(completion: @escaping (Bool) -> Void) {
+        public static func requestCameraPermission(completion: @Sendable @escaping (Bool) -> Void) {
             AVCaptureDevice.requestAccess(for: .video, completionHandler: completion)
         }
     }

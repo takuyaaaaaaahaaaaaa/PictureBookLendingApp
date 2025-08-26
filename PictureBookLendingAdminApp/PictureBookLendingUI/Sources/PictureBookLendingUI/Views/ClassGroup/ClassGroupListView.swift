@@ -7,7 +7,8 @@ import SwiftUI
 /// データ取得やビジネスロジックはContainer Viewに委譲します。
 public struct ClassGroupListView: View {
     let classGroups: [ClassGroup]
-    let getUserCount: (UUID) -> Int
+    let getChildCount: (UUID) -> Int
+    let getGuardianCount: (UUID) -> Int
     let isEditMode: Bool
     let onAdd: () -> Void
     let onSelect: (ClassGroup) -> Void
@@ -16,7 +17,8 @@ public struct ClassGroupListView: View {
     
     public init(
         classGroups: [ClassGroup],
-        getUserCount: @escaping (UUID) -> Int,
+        getChildCount: @escaping (UUID) -> Int,
+        getGuardianCount: @escaping (UUID) -> Int,
         isEditMode: Bool = false,
         onAdd: @escaping () -> Void,
         onSelect: @escaping (ClassGroup) -> Void,
@@ -24,7 +26,8 @@ public struct ClassGroupListView: View {
         onDelete: @escaping (IndexSet) -> Void
     ) {
         self.classGroups = classGroups
-        self.getUserCount = getUserCount
+        self.getChildCount = getChildCount
+        self.getGuardianCount = getGuardianCount
         self.isEditMode = isEditMode
         self.onAdd = onAdd
         self.onSelect = onSelect
@@ -44,7 +47,8 @@ public struct ClassGroupListView: View {
                 ForEach(classGroups) { classGroup in
                     ClassGroupListRowView(
                         classGroup: classGroup,
-                        userCount: getUserCount(classGroup.id)
+                        childCount: getChildCount(classGroup.id),
+                        guardianCount: getGuardianCount(classGroup.id)
                     ) {
                         if isEditMode {
                             onEdit(classGroup)
@@ -62,12 +66,16 @@ public struct ClassGroupListView: View {
 /// 組一覧の行表示コンポーネント
 public struct ClassGroupListRowView: View {
     let classGroup: ClassGroup
-    let userCount: Int
+    let childCount: Int
+    let guardianCount: Int
     let onTap: () -> Void
     
-    public init(classGroup: ClassGroup, userCount: Int, onTap: @escaping () -> Void) {
+    public init(
+        classGroup: ClassGroup, childCount: Int, guardianCount: Int, onTap: @escaping () -> Void
+    ) {
         self.classGroup = classGroup
-        self.userCount = userCount
+        self.childCount = childCount
+        self.guardianCount = guardianCount
         self.onTap = onTap
     }
     
@@ -81,8 +89,9 @@ public struct ClassGroupListRowView: View {
                     
                     let ageGroupText = Text("\(classGroup.ageGroup) ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
-                    let userCountText = Text(" • \(userCount)人")
-                    Text("\(ageGroupText)(\(yearText))\(userCountText)")
+                    let childCountText = Text(" • 園児\(childCount)人")
+                    let guardianCountText = Text(" • 保護者\(guardianCount)人")
+                    Text("\(ageGroupText)(\(yearText))\(childCountText)\(guardianCountText)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -107,7 +116,8 @@ public struct ClassGroupListRowView: View {
                 ClassGroup(name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024),
                 ClassGroup(name: "さくら組", ageGroup: Const.AgeGroup.infant5.rawValue, year: 2024),
             ],
-            getUserCount: { _ in 8 },
+            getChildCount: { _ in 8 },
+            getGuardianCount: { _ in 16 },
             onAdd: {},
             onSelect: { _ in },
             onEdit: { _ in },
@@ -121,7 +131,8 @@ public struct ClassGroupListRowView: View {
     NavigationStack {
         ClassGroupListView(
             classGroups: [],
-            getUserCount: { _ in 0 },
+            getChildCount: { _ in 0 },
+            getGuardianCount: { _ in 0 },
             onAdd: {},
             onSelect: { _ in },
             onEdit: { _ in },
@@ -135,11 +146,13 @@ public struct ClassGroupListRowView: View {
     List {
         ClassGroupListRowView(
             classGroup: ClassGroup(
-                name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024), userCount: 8
+                name: "ひまわり組", ageGroup: Const.AgeGroup.infant3.rawValue, year: 2024),
+            childCount: 8, guardianCount: 16
         ) {}
         ClassGroupListRowView(
             classGroup: ClassGroup(
-                name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024), userCount: 12
+                name: "たんぽぽ組", ageGroup: Const.AgeGroup.infant4.rawValue, year: 2024),
+            childCount: 12, guardianCount: 24
         ) {}
     }
 }
