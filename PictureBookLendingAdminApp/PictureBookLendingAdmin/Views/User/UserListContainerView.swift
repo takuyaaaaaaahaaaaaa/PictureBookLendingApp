@@ -89,10 +89,7 @@ struct UserListContainerView: View {
         }
         .sheet(isPresented: $isAddSheetPresented) {
             UserFormContainerView(
-                initialClassGroupId: classGroupId,
-                onSave: { _ in
-                    // 追加成功時にシートを閉じる処理は既にUserFormContainerView内で実行される
-                }
+                initialClassGroupId: classGroupId
             )
         }
         .alert(alertState.title, isPresented: $alertState.isPresented) {

@@ -14,7 +14,6 @@ struct UserFormContainerView: View {
     @Environment(\.dismiss) private var dismiss
     
     let initialClassGroupId: UUID?
-    var onSave: ((User) -> Void)? = nil
     
     /// 利用者名
     @State private var name = ""
@@ -37,10 +36,9 @@ struct UserFormContainerView: View {
     @State private var alertState = AlertState()
     
     init(
-        initialClassGroupId: UUID? = nil, onSave: ((User) -> Void)? = nil
+        initialClassGroupId: UUID? = nil
     ) {
         self.initialClassGroupId = initialClassGroupId
-        self.onSave = onSave
     }
     
     var body: some View {
@@ -121,7 +119,7 @@ struct UserFormContainerView: View {
                 classGroupId: selectedClassGroup.id,
                 userType: userType
             )
-            let savedUser = try userModel.registerUser(newUser)
+            _ = try userModel.registerUser(newUser)
             
             // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
@@ -136,7 +134,6 @@ struct UserFormContainerView: View {
                 }
             }
             
-            onSave?(savedUser)
             dismiss()
         } catch {
             alertState = .error("保存に失敗しました: \(error.localizedDescription)")
