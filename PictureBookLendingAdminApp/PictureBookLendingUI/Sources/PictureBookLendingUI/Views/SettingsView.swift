@@ -63,7 +63,8 @@ public struct SettingsView: View {
                 iconName: "clock",
                 title: "貸出設定",
                 subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
-                action: onSelectLoanSettings
+                action: onSelectLoanSettings,
+                showChevron: false
             )
             
             Divider()
@@ -80,14 +81,16 @@ public struct SettingsView: View {
                     iconName: "person.2.badge.plus",
                     title: "全園児に保護者を作成",
                     subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
-                    action: onCreateGuardiansForAllChildren
+                    action: onCreateGuardiansForAllChildren,
+                    showChevron: false
                 )
                 
                 SettingsMenuItem(
                     iconName: "books.vertical",
                     title: "絵本一括登録",
                     subtitle: "CSVファイルから複数の絵本を一括登録",
-                    action: onSelectBookBulkRegistration
+                    action: onSelectBookBulkRegistration,
+                    showChevron: false
                 )
             }
             
@@ -99,7 +102,8 @@ public struct SettingsView: View {
                 title: "端末初期化",
                 subtitle: "利用者・絵本・貸出記録のデータを削除",
                 action: onSelectDeviceReset,
-                style: .destructive
+                style: .destructive,
+                showChevron: false
             )
             
             Spacer()
@@ -116,6 +120,7 @@ private struct SettingsMenuItem: View {
     let subtitle: String
     let action: () -> Void
     let style: Style
+    let showChevron: Bool
     
     enum Style {
         case normal
@@ -138,13 +143,14 @@ private struct SettingsMenuItem: View {
     
     init(
         iconName: String, title: String, subtitle: String, action: @escaping () -> Void,
-        style: Style = .normal
+        style: Style = .normal, showChevron: Bool = true
     ) {
         self.iconName = iconName
         self.title = title
         self.subtitle = subtitle
         self.action = action
         self.style = style
+        self.showChevron = showChevron
     }
     
     var body: some View {
@@ -163,9 +169,11 @@ private struct SettingsMenuItem: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                if showChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
             .padding()
             .background(.gray.opacity(0.1))
