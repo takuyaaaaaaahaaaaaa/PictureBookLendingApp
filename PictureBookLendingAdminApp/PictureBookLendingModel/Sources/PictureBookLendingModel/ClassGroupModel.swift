@@ -202,6 +202,16 @@ public class ClassGroupModel {
             var deletedCount = 0
             var updatedClassGroups: [ClassGroup] = []
             
+            // 年齢区分別にクラスを分類（代表クラス名を取得するため）
+            let classGroupsByAgeGroup = Dictionary(grouping: currentClassGroups) { classGroup in
+                classGroup.ageGroup
+            }
+            
+            // 各年齢区分の代表クラス名を取得（既存の並び順で最初のもの）
+            func getRepresentativeClassName(for ageGroup: Const.AgeGroup) -> String? {
+                return classGroupsByAgeGroup[ageGroup.rawValue]?.first?.name
+            }
+            
             // 各クラスグループを処理
             for classGroup in currentClassGroups {
                 // 年齢グループを解析
@@ -211,17 +221,26 @@ public class ClassGroupModel {
                 }
                 
                 if let nextAgeGroup = ageGroup.nextAgeGroup() {
-                    // 進級処理
-                    let updatedClassGroup = ClassGroup(
-                        id: classGroup.id,
-                        name: classGroup.name,
-                        ageGroup: nextAgeGroup.rawValue,
-                        year: nextYear
-                    )
+                    // 次の年齢区分に既存クラスがあるかチェック
+                    let nextClassName = getRepresentativeClassName(for: nextAgeGroup)
                     
-                    try repository.save(updatedClassGroup)
-                    updatedClassGroups.append(updatedClassGroup)
-                    promotedCount += 1
+                    if let nextClassName = nextClassName {
+                        // 既存の上位年齢区分のクラス名に変更して進級
+                        let updatedClassGroup = ClassGroup(
+                            id: classGroup.id,
+                            name: nextClassName,
+                            ageGroup: nextAgeGroup.rawValue,
+                            year: nextYear
+                        )
+                        
+                        try repository.save(updatedClassGroup)
+                        updatedClassGroups.append(updatedClassGroup)
+                        promotedCount += 1
+                    } else {
+                        // 次の年齢区分にクラスが存在しない場合は卒業扱い（削除）
+                        try repository.delete(by: classGroup.id)
+                        deletedCount += 1
+                    }
                 } else {
                     // 卒業（5歳児クラスを削除）
                     try repository.delete(by: classGroup.id)
