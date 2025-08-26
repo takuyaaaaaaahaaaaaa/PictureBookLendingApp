@@ -68,5 +68,6 @@ struct PictureBookLendingAdminApp: App {
                 }
         }
         .modelContainer(SwiftDataRepositoryFactory.shared.modelContainer)
+        .windowResizability(.contentSize)
     }
 }
