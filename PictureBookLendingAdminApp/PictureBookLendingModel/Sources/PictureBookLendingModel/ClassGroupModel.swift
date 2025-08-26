@@ -195,8 +195,6 @@ public class ClassGroupModel {
     public func promoteToNextYear() throws -> (promotedCount: Int, deletedCount: Int) {
         do {
             let currentClassGroups = classGroups
-            let currentYear = Calendar.current.component(.year, from: Date())
-            let nextYear = currentYear + 1
             
             var promotedCount = 0
             var deletedCount = 0
@@ -220,27 +218,22 @@ public class ClassGroupModel {
                     continue
                 }
                 
-                if let nextAgeGroup = ageGroup.nextAgeGroup() {
-                    // 次の年齢区分に既存クラスがあるかチェック
+                // 次の年齢区分に既存クラスがあるかチェック
+                if let nextAgeGroup = ageGroup.nextAgeGroup(),
                     let nextClassName = getRepresentativeClassName(for: nextAgeGroup)
+                {
+                    // 既存の上位年齢区分のクラス名に変更して進級
+                    let updatedClassGroup = ClassGroup(
+                        id: classGroup.id,
+                        name: nextClassName,
+                        ageGroup: nextAgeGroup.rawValue,
+                        year: classGroup.year + 1
+                    )
                     
-                    if let nextClassName = nextClassName {
-                        // 既存の上位年齢区分のクラス名に変更して進級
-                        let updatedClassGroup = ClassGroup(
-                            id: classGroup.id,
-                            name: nextClassName,
-                            ageGroup: nextAgeGroup.rawValue,
-                            year: nextYear
-                        )
-                        
-                        try repository.save(updatedClassGroup)
-                        updatedClassGroups.append(updatedClassGroup)
-                        promotedCount += 1
-                    } else {
-                        // 次の年齢区分にクラスが存在しない場合は卒業扱い（削除）
-                        try repository.delete(by: classGroup.id)
-                        deletedCount += 1
-                    }
+                    try repository.save(updatedClassGroup)
+                    updatedClassGroups.append(updatedClassGroup)
+                    promotedCount += 1
+                    
                 } else {
                     // 卒業（5歳児クラスを削除）
                     try repository.delete(by: classGroup.id)

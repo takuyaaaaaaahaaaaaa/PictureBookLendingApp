@@ -49,8 +49,10 @@ struct ClassGroupListContainerView: View {
             ToolbarSpacer(.fixed)
             
             ToolbarItem(id: "add") {
-                Button("組追加") {
+                Button {
                     handleAdd()
+                } label: {
+                    Label("組を追加", systemImage: "plus")
                 }
             }
         }
