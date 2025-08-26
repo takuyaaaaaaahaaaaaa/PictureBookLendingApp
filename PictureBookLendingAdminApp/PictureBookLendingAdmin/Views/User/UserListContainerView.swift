@@ -20,7 +20,9 @@ struct UserListContainerView: View {
     @State private var showGuardians = false
     @State private var isAddSheetPresented = false
     @State private var alertState = AlertState()
+    @State private var deleteConfirmationState = AlertState()
     @State private var navigationPath = NavigationPath()
+    @State private var userToDelete: User?
     
     init(classGroupId: UUID? = nil) {
         self.classGroupId = classGroupId
@@ -97,6 +99,14 @@ struct UserListContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .alert(deleteConfirmationState.title, isPresented: $deleteConfirmationState.isPresented) {
+            Button("削除", role: .destructive) {
+                executeDelete()
+            }
+            Button("キャンセル", role: .cancel) {}
+        } message: {
+            Text(deleteConfirmationState.message)
+        }
         .onAppear {
             userModel.refreshUsers()
         }
@@ -108,14 +118,57 @@ struct UserListContainerView: View {
     // MARK: - Actions
     
     private func handleDeleteUsers(at offsets: IndexSet) {
-        for index in offsets {
-            let user = filteredUsers[index]
-            do {
-                _ = try userModel.deleteUser(user.id)
-            } catch {
-                alertState = .error("利用者の削除に失敗しました: \(error.localizedDescription)")
+        guard let index = offsets.first, offsets.count == 1 else {
+            // 複数選択の場合は通常の削除処理
+            for index in offsets {
+                let user = filteredUsers[index]
+                do {
+                    _ = try userModel.deleteUser(user.id)
+                } catch {
+                    alertState = .error("利用者の削除に失敗しました: \(error.localizedDescription)")
+                }
             }
+            return
         }
+        
+        let user = filteredUsers[index]
+        userToDelete = user
+        
+        // 園児かつ関連保護者がいる場合をチェック
+        let isChildAndHasGuardians =
+            user.userType == .child
+            && userModel.users.contains { child in
+                if case .guardian(let relatedChildId) = child.userType {
+                    return relatedChildId == child.id
+                }
+                return false
+            }
+        
+        let message =
+            if isChildAndHasGuardians {
+                "\(user.name)を削除しますか？\n関連する保護者も合わせて削除されます。"
+            } else {
+                "\(user.name)を削除しますか？"
+            }
+        
+        deleteConfirmationState = AlertState(
+            isPresented: true,
+            title: "利用者の削除",
+            message: message
+        )
+    }
+    
+    private func executeDelete() {
+        guard let user = userToDelete else { return }
+        
+        do {
+            _ = try userModel.deleteUser(user.id)
+        } catch {
+            alertState = .error("利用者の削除に失敗しました: \(error.localizedDescription)")
+        }
+        
+        userToDelete = nil
+        deleteConfirmationState = AlertState()
     }
 }
 
