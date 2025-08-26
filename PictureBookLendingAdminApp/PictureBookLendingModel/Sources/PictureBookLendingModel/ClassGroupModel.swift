@@ -185,6 +185,39 @@ public class ClassGroupModel {
         }
     }
     
+    /// 次のクラスグループを取得する
+    ///
+    /// 現在のクラスグループから進級先のクラスグループを作成します。
+    /// 上の年齢区分の対応するクラス名を流用します。
+    ///
+    /// - Parameter current: 現在のクラスグループ
+    /// - Returns: 進級先のクラスグループ
+    private func nextClassGroup(current: ClassGroup) -> ClassGroup? {
+        guard let nextAgeGroup = current.ageGroup.nextAgeGroup() else {
+            return nil
+        }
+        
+        // 年齢区分別にグループ化
+        let groupsByAgeGroup = Dictionary(grouping: classGroups) { $0.ageGroup }
+        
+        // 現在の年齢区分内でのインデックスを取得
+        let currentAgeGroupClasses = groupsByAgeGroup[current.ageGroup] ?? []
+        let currentIndex = currentAgeGroupClasses.firstIndex(of: current) ?? 0
+        
+        // 次の年齢区分の対応するクラス名を取得
+        let nextAgeGroupClasses = groupsByAgeGroup[nextAgeGroup] ?? []
+        let newName = nextAgeGroupClasses.indices.contains(currentIndex) 
+            ? nextAgeGroupClasses[currentIndex].name 
+            : current.name
+        
+        return ClassGroup(
+            id: current.id,
+            name: newName,
+            ageGroup: nextAgeGroup,
+            year: current.year + 1
+        )
+    }
+    
     /// 進級処理を実行する
     ///
     /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。
@@ -211,17 +244,10 @@ public class ClassGroupModel {
                     
                     try repository.save(updatedClassGroup)
                     updatedClassGroups.append(updatedClassGroup)
-                } else if let nextAgeGroup = ageGroup.nextAgeGroup() {
-                    // 進級可能：年齢区分を1つ上げて年度を更新
-                    let updatedClassGroup = ClassGroup(
-                        id: classGroup.id,
-                        name: classGroup.name,
-                        ageGroup: nextAgeGroup,
-                        year: classGroup.year + 1
-                    )
-                    
-                    try repository.save(updatedClassGroup)
-                    updatedClassGroups.append(updatedClassGroup)
+                } else if let nextClassGroupInstance = nextClassGroup(current: classGroup) {
+                    // 進級可能：nextClassGroupメソッドを使用
+                    try repository.save(nextClassGroupInstance)
+                    updatedClassGroups.append(nextClassGroupInstance)
                 } else {
                     // 進級不可（5歳児など）は削除
                     try repository.delete(by: classGroup.id)
