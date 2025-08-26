@@ -48,5 +48,25 @@ public enum Const {
         public static var sortedCases: [AgeGroup] {
             return allCases
         }
+        
+        /// 次の年齢グループを取得（進級処理用）
+        /// - Returns: 進級後の年齢グループ。5歳児の場合はnil（卒業）
+        public func nextAgeGroup() -> AgeGroup? {
+            switch self {
+            case .infant0: return .infant1
+            case .infant1: return .infant2
+            case .infant2: return .infant3
+            case .infant3: return .infant4
+            case .infant4: return .infant5
+            case .infant5: return nil  // 卒業
+            case .adult: return .adult  // 変更なし
+            }
+        }
+        
+        /// 進級可能かどうかを判定
+        /// - Returns: 進級可能な場合true、卒業の場合false
+        public var canPromote: Bool {
+            return nextAgeGroup() != nil
+        }
     }
 }

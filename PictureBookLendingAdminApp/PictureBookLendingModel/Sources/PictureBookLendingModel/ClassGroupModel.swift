@@ -184,4 +184,58 @@ public class ClassGroupModel {
             throw ClassGroupModelError.deletionFailed
         }
     }
+    
+    /// 進級処理を実行する
+    ///
+    /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。
+    /// 5歳児クラスは卒業として削除されます。
+    ///
+    /// - Returns: (進級したクラス数, 削除したクラス数) のタプル
+    /// - Throws: 進級処理に失敗した場合は `ClassGroupModelError` を投げます
+    public func promoteToNextYear() throws -> (promotedCount: Int, deletedCount: Int) {
+        do {
+            let currentClassGroups = classGroups
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let nextYear = currentYear + 1
+            
+            var promotedCount = 0
+            var deletedCount = 0
+            var updatedClassGroups: [ClassGroup] = []
+            
+            // 各クラスグループを処理
+            for classGroup in currentClassGroups {
+                // 年齢グループを解析
+                guard let ageGroup = Const.AgeGroup(rawValue: classGroup.ageGroup) else {
+                    // 不明な年齢グループはスキップ
+                    continue
+                }
+                
+                if let nextAgeGroup = ageGroup.nextAgeGroup() {
+                    // 進級処理
+                    let updatedClassGroup = ClassGroup(
+                        id: classGroup.id,
+                        name: classGroup.name,
+                        ageGroup: nextAgeGroup.rawValue,
+                        year: nextYear
+                    )
+                    
+                    try repository.save(updatedClassGroup)
+                    updatedClassGroups.append(updatedClassGroup)
+                    promotedCount += 1
+                } else {
+                    // 卒業（5歳児クラスを削除）
+                    try repository.delete(by: classGroup.id)
+                    deletedCount += 1
+                }
+            }
+            
+            // キャッシュを更新
+            classGroups = updatedClassGroups
+            
+            return (promotedCount, deletedCount)
+            
+        } catch {
+            throw ClassGroupModelError.updateFailed
+        }
+    }
 }

@@ -18,6 +18,7 @@ struct SettingsContainerView: View {
     @State private var isLoanSettingsSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
+    @State private var isPromoteConfirmationPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
     
@@ -43,6 +44,9 @@ struct SettingsContainerView: View {
                 },
                 onCreateGuardiansForAllChildren: {
                     handleCreateGuardiansForAllChildren()
+                },
+                onPromoteToNextYear: {
+                    isPromoteConfirmationPresented = true
                 },
                 onSelectDeviceReset: {
                     isDeviceResetDialogPresented = true
@@ -91,6 +95,14 @@ struct SettingsContainerView: View {
                     onConfirm: handleDeviceReset
                 )
             }
+            .alert("進級処理の確認", isPresented: $isPromoteConfirmationPresented) {
+                Button("実行", role: .destructive) {
+                    handlePromoteToNextYear()
+                }
+                Button("キャンセル", role: .cancel) {}
+            } message: {
+                Text("すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。")
+            }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -110,6 +122,12 @@ struct SettingsContainerView: View {
     private func handleCreateGuardiansForAllChildren() {
         Task {
             await performCreateGuardiansForAllChildren()
+        }
+    }
+    
+    private func handlePromoteToNextYear() {
+        Task {
+            await performPromoteToNextYear()
         }
     }
     
@@ -192,6 +210,31 @@ struct SettingsContainerView: View {
             
         } catch {
             alertState = .error("削除中にエラーが発生しました: \(error.localizedDescription)")
+        }
+    }
+    
+    private func performPromoteToNextYear() async {
+        do {
+            let (promotedCount, deletedCount) = try classGroupModel.promoteToNextYear()
+            
+            let message =
+                if promotedCount > 0 || deletedCount > 0 {
+                    var details: [String] = []
+                    if promotedCount > 0 {
+                        details.append("\(promotedCount)クラスが進級しました")
+                    }
+                    if deletedCount > 0 {
+                        details.append("\(deletedCount)クラス（5歳児）が卒業により削除されました")
+                    }
+                    "進級処理が完了しました：\n\(details.joined(separator: "\n"))"
+                } else {
+                    "進級対象のクラスがありませんでした"
+                }
+            
+            alertState = .info(message)
+            
+        } catch {
+            alertState = .error("進級処理中にエラーが発生しました: \(error.localizedDescription)")
         }
     }
     

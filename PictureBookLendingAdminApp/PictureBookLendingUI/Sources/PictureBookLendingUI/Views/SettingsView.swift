@@ -15,6 +15,7 @@ public struct SettingsView: View {
     let onSelectBookBulkRegistration: () -> Void
     let onSelectLoanSettings: () -> Void
     let onCreateGuardiansForAllChildren: () -> Void
+    let onPromoteToNextYear: () -> Void
     let onSelectDeviceReset: () -> Void
     
     public init(
@@ -28,6 +29,7 @@ public struct SettingsView: View {
         onSelectBookBulkRegistration: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
         onCreateGuardiansForAllChildren: @escaping () -> Void,
+        onPromoteToNextYear: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
@@ -40,6 +42,7 @@ public struct SettingsView: View {
         self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
         self.onSelectLoanSettings = onSelectLoanSettings
         self.onCreateGuardiansForAllChildren = onCreateGuardiansForAllChildren
+        self.onPromoteToNextYear = onPromoteToNextYear
         self.onSelectDeviceReset = onSelectDeviceReset
     }
     
@@ -90,6 +93,14 @@ public struct SettingsView: View {
                     title: "絵本一括登録",
                     subtitle: "CSVファイルから複数の絵本を一括登録",
                     action: onSelectBookBulkRegistration,
+                    showChevron: false
+                )
+                
+                SettingsMenuItem(
+                    iconName: "graduationcap",
+                    title: "進級処理",
+                    subtitle: "年度変更時に園児を次の年齢区分に進級（5歳児は卒業として削除）",
+                    action: onPromoteToNextYear,
                     showChevron: false
                 )
             }
@@ -196,6 +207,7 @@ private struct SettingsMenuItem: View {
             onSelectBookBulkRegistration: {},
             onSelectLoanSettings: {},
             onCreateGuardiansForAllChildren: {},
+            onPromoteToNextYear: {},
             onSelectDeviceReset: {}
         )
         .navigationTitle("設定")
