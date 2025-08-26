@@ -106,7 +106,7 @@ struct UserFormContainerView: View {
         case .guardian:
             // 新規登録で保護者を直接登録する場合は、選択された園児のIDを使用
             guard let selectedChild = selectedChild else {
-                alertState = .error("保護者を登録する場合は関連する利用者を選択してください")
+                alertState = .error("保護者を登録する場合は関連する園児を選択してください")
                 return
             }
             userType = .guardian(relatedChildId: selectedChild.id)
@@ -124,7 +124,7 @@ struct UserFormContainerView: View {
             // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
                 for i in 1...guardianCount {
-                    let guardianName = "\(name)の保護者\(i)"
+                    let guardianName = i == 1 ? "\(name)の保護者" : "\(name)の保護者(\(i))"
                     let guardian = User(
                         name: guardianName,
                         classGroupId: selectedClassGroup.id,

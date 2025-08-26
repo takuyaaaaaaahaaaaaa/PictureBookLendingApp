@@ -100,16 +100,16 @@ public struct UserFormView: View {
             
             // 保護者を選択した場合は関連する園児を選択
             if editingUser == nil && userTypeForPicker.wrappedValue == .guardian {
-                Section(header: Text("関連する利用者")) {
-                    Picker("利用者を選択", selection: selectedChild) {
-                        Text("利用者を選択してください").tag(nil as User?)
+                Section(header: Text("関連する園児")) {
+                    Picker("園児を選択", selection: selectedChild) {
+                        Text("園児を選択してください").tag(nil as User?)
                         ForEach(availableChildren) { child in
                             Text(child.name).tag(child as User?)
                         }
                     }
                     
                     if selectedChild.wrappedValue != nil {
-                        Text("選択した利用者の保護者として登録されます")
+                        Text("選択した園児の保護者として登録されます")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -137,8 +137,8 @@ public struct UserFormView: View {
                         
                         Text(
                             guardianCount.wrappedValue == 1
-                                ? "保護者名は「\(name.wrappedValue)の保護者1」として自動設定されます"
-                                : "保護者名は「\(name.wrappedValue)の保護者1」から「\(name.wrappedValue)の保護者\(guardianCount.wrappedValue)」として自動設定されます"
+                                ? "保護者名は「\(name.wrappedValue)の保護者」として自動設定されます"
+                                : "保護者名は「\(name.wrappedValue)の保護者」「\(name.wrappedValue)の保護者(2)」...「\(name.wrappedValue)の保護者(\(guardianCount.wrappedValue))」として自動設定されます"
                         )
                         .font(.caption)
                         .foregroundStyle(.secondary)
