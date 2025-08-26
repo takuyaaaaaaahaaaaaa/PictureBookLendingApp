@@ -55,7 +55,7 @@ public class ClassGroupModel {
         
         // 初期データのロード
         do {
-            self.classGroups = try repository.fetchAll()
+            self.classGroups = try repository.fetchAll().sorted(by: { $0.ageGroup < $1.ageGroup })
         } catch {
             print("初期データのロードに失敗しました: \(error)")
             self.classGroups = []
@@ -155,7 +155,7 @@ public class ClassGroupModel {
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
     public func refreshClassGroups() {
         do {
-            classGroups = try repository.fetchAll()
+            classGroups = try repository.fetchAll().sorted(by: { $0.ageGroup < $1.ageGroup })
         } catch {
             print("クラスリストの更新に失敗しました: \(error)")
         }
@@ -193,29 +193,28 @@ public class ClassGroupModel {
     /// - Parameter current: 現在のクラスグループ
     /// - Returns: 進級先のクラスグループ
     private func nextClassGroup(current: ClassGroup) -> ClassGroup? {
-        guard let nextAgeGroup = current.ageGroup.nextAgeGroup() else {
-            return nil
+        // その他の場合は年度だけ更新
+        if current.ageGroup == .other {
+            return ClassGroup(
+                id: current.id,
+                name: current.name,
+                ageGroup: current.ageGroup,
+                year: current.year + 1
+            )
+        }
+        // 進級可能な場合は翌年度の組を変更
+        if let nextAgeGroup = current.ageGroup.nextAgeGroup(),
+            let nextClassGroup = classGroups.first(where: { $0.ageGroup == nextAgeGroup })
+        {
+            return ClassGroup(
+                id: current.id,
+                name: nextClassGroup.name,
+                ageGroup: nextClassGroup.ageGroup,
+                year: current.year + 1
+            )
         }
         
-        // 年齢区分別にグループ化
-        let groupsByAgeGroup = Dictionary(grouping: classGroups) { $0.ageGroup }
-        
-        // 現在の年齢区分内でのインデックスを取得
-        let currentAgeGroupClasses = groupsByAgeGroup[current.ageGroup] ?? []
-        let currentIndex = currentAgeGroupClasses.firstIndex(of: current) ?? 0
-        
-        // 次の年齢区分の対応するクラス名を取得
-        let nextAgeGroupClasses = groupsByAgeGroup[nextAgeGroup] ?? []
-        let newName = nextAgeGroupClasses.indices.contains(currentIndex) 
-            ? nextAgeGroupClasses[currentIndex].name 
-            : current.name
-        
-        return ClassGroup(
-            id: current.id,
-            name: newName,
-            ageGroup: nextAgeGroup,
-            year: current.year + 1
-        )
+        return nil
     }
     
     /// 進級処理を実行する
@@ -229,60 +228,33 @@ public class ClassGroupModel {
             let currentClassGroups = classGroups
             var updatedClassGroups: [ClassGroup] = []
             
-            // 各クラスグループを処理
+            // 最小クラスを作成
+            let firstClassGroup = currentClassGroups.filter { $0.ageGroup != .other }
+                .sorted { $0.ageGroup < $1.ageGroup }
+                .first
+            if let firstClassGroup {
+                let updatedFirstClassGroup = ClassGroup(
+                    name: firstClassGroup.name,
+                    ageGroup: firstClassGroup.ageGroup,
+                    year: firstClassGroup.year + 1)
+                try repository.save(updatedFirstClassGroup)
+                updatedClassGroups.append(updatedFirstClassGroup)
+            }
+            
+            // 各クラスグループを進級処理
             for classGroup in currentClassGroups {
-                let ageGroup = classGroup.ageGroup
-                
-                if case .other = ageGroup {
-                    // その他（大人クラス）は年度のみ更新
-                    let updatedClassGroup = ClassGroup(
-                        id: classGroup.id,
-                        name: classGroup.name,
-                        ageGroup: classGroup.ageGroup,
-                        year: classGroup.year + 1
-                    )
-                    
-                    try repository.save(updatedClassGroup)
-                    updatedClassGroups.append(updatedClassGroup)
-                } else if let nextClassGroupInstance = nextClassGroup(current: classGroup) {
-                    // 進級可能：nextClassGroupメソッドを使用
+                if let nextClassGroupInstance = nextClassGroup(current: classGroup) {
+                    // 進級可能な場合は進級先の組へ更新
                     try repository.save(nextClassGroupInstance)
                     updatedClassGroups.append(nextClassGroupInstance)
                 } else {
-                    // 進級不可（5歳児など）は削除
+                    // 進級不可（5歳児など）の場合は削除
                     try repository.delete(by: classGroup.id)
+                    // TODO: 関連する利用者一覧も削除
                 }
             }
-            
-            // 0歳児のClassGroupを追加
-            let zeroAgeClassGroups = currentClassGroups.filter { $0.ageGroup == .age(0) }
-            for zeroAgeClassGroup in zeroAgeClassGroups {
-                let newZeroAgeClassGroup = ClassGroup(
-                    name: zeroAgeClassGroup.name,
-                    ageGroup: .age(0),
-                    year: zeroAgeClassGroup.year + 1
-                )
-                
-                try repository.save(newZeroAgeClassGroup)
-                updatedClassGroups.append(newZeroAgeClassGroup)
-            }
-            
-            // ClassGroupをソート（年齢区分順、その後名前順）
-            updatedClassGroups.sort { lhs, rhs in
-                switch (lhs.ageGroup, rhs.ageGroup) {
-                case let (.age(lhsAge), .age(rhsAge)):
-                    return lhsAge < rhsAge
-                case (.age(_), .other):
-                    return true
-                case (.other, .age(_)):
-                    return false
-                case (.other, .other):
-                    return lhs.name < rhs.name
-                }
-            }
-            
             // キャッシュを更新
-            classGroups = updatedClassGroups
+            classGroups = updatedClassGroups.sorted(by: { $0.ageGroup < $1.ageGroup })
             
         } catch {
             throw ClassGroupModelError.updateFailed

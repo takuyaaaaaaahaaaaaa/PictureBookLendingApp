@@ -63,3 +63,16 @@ public enum AgeGroup: Codable, Hashable, Sendable {
         }
     }
 }
+
+extension AgeGroup: Comparable {
+    private var sortKey: Int {
+        switch self {
+        case .age(let value): return value  // 0〜5
+        case .other: return Int.max  // 最後尾
+        }
+    }
+    
+    public static func < (lhs: AgeGroup, rhs: AgeGroup) -> Bool {
+        return lhs.sortKey < rhs.sortKey
+    }
+}
