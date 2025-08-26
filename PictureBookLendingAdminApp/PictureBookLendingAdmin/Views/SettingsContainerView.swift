@@ -16,7 +16,6 @@ struct SettingsContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
-    @State private var isBookRegistrationSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
@@ -35,9 +34,6 @@ struct SettingsContainerView: View {
                 },
                 onSelectBook: {
                     navigationPath.append(SettingsDestination.book)
-                },
-                onSelectBookRegistration: {
-                    isBookRegistrationSheetPresented = true
                 },
                 onSelectBookBulkRegistration: {
                     isBookBulkRegistrationSheetPresented = true
@@ -78,18 +74,12 @@ struct SettingsContainerView: View {
                 }
             }
             #if os(macOS)
-                .sheet(isPresented: $isBookRegistrationSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
                 .sheet(isPresented: $isBookBulkRegistrationSheetPresented) {
                     NavigationStack {
                         BookBulkAddContainerView()
                     }
                 }
             #else
-                .fullScreenCover(isPresented: $isBookRegistrationSheetPresented) {
-                    BookFormContainerView(mode: .add)
-                }
                 .fullScreenCover(isPresented: $isBookBulkRegistrationSheetPresented) {
                     BookBulkAddContainerView()
                 }

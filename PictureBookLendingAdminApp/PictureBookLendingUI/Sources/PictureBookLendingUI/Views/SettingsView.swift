@@ -12,7 +12,6 @@ public struct SettingsView: View {
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
-    let onSelectBookRegistration: () -> Void
     let onSelectBookBulkRegistration: () -> Void
     let onSelectLoanSettings: () -> Void
     let onCreateGuardiansForAllChildren: () -> Void
@@ -26,7 +25,6 @@ public struct SettingsView: View {
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
-        onSelectBookRegistration: @escaping () -> Void,
         onSelectBookBulkRegistration: @escaping () -> Void,
         onSelectLoanSettings: @escaping () -> Void,
         onCreateGuardiansForAllChildren: @escaping () -> Void,
@@ -39,7 +37,6 @@ public struct SettingsView: View {
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
-        self.onSelectBookRegistration = onSelectBookRegistration
         self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
         self.onSelectLoanSettings = onSelectLoanSettings
         self.onCreateGuardiansForAllChildren = onCreateGuardiansForAllChildren
@@ -60,20 +57,6 @@ public struct SettingsView: View {
                 title: "絵本管理",
                 subtitle: "\(bookCount)冊登録済み",
                 action: onSelectBook
-            )
-            
-            SettingsMenuItem(
-                iconName: "book.badge.plus",
-                title: "絵本追加",
-                subtitle: "新しい絵本を個別に登録",
-                action: onSelectBookRegistration
-            )
-            
-            SettingsMenuItem(
-                iconName: "books.vertical",
-                title: "絵本一括登録",
-                subtitle: "CSVファイルから複数の絵本を一括登録",
-                action: onSelectBookBulkRegistration
             )
             
             SettingsMenuItem(
@@ -98,6 +81,13 @@ public struct SettingsView: View {
                     title: "全園児に保護者を作成",
                     subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
                     action: onCreateGuardiansForAllChildren
+                )
+                
+                SettingsMenuItem(
+                    iconName: "books.vertical",
+                    title: "絵本一括登録",
+                    subtitle: "CSVファイルから複数の絵本を一括登録",
+                    action: onSelectBookBulkRegistration
                 )
             }
             
@@ -195,7 +185,6 @@ private struct SettingsMenuItem: View {
             maxBooksPerUser: 1,
             onSelectUser: {},
             onSelectBook: {},
-            onSelectBookRegistration: {},
             onSelectBookBulkRegistration: {},
             onSelectLoanSettings: {},
             onCreateGuardiansForAllChildren: {},
