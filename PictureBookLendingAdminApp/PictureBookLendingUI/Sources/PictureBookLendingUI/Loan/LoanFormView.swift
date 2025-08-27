@@ -73,15 +73,13 @@ public struct LoanFormView: View {
             }
             
             if selectedClassGroup != nil {
-                Section(header: Text("利用者種別")) {
+                
+                Section(header: Text("利用者を選択")) {
                     Picker("利用者種別", selection: $selectedUserTypeCategory) {
                         Text("園児").tag(UserTypeCategory.child)
                         Text("保護者").tag(UserTypeCategory.guardian)
                     }
                     .pickerStyle(.segmented)
-                }
-                
-                Section(header: Text("利用者を選択")) {
                     if users.isEmpty {
                         Text(
                             selectedUserTypeCategory == .child
@@ -130,17 +128,20 @@ public struct LoanFormView: View {
         User(name: "鈴木花子", classGroupId: sampleClassGroup.id),
     ]
     
-    NavigationStack {
-        LoanFormView(
-            book: sampleBook,
-            classGroups: sampleClassGroups,
-            users: sampleUsers,
-            dueDate: Date(),
-            selectedClassGroup: $selectedClassGroup,
-            selectedUser: $selectedUser,
-            selectedUserTypeCategory: $selectedUserTypeCategory,
-            isValidInput: selectedClassGroup != nil && selectedUser != nil
-        )
-        .navigationTitle("貸出登録")
-    }
+    Text("test")
+        .sheet(isPresented: .constant(true)) {
+            NavigationStack {
+                LoanFormView(
+                    book: sampleBook,
+                    classGroups: sampleClassGroups,
+                    users: sampleUsers,
+                    dueDate: Date(),
+                    selectedClassGroup: $selectedClassGroup,
+                    selectedUser: $selectedUser,
+                    selectedUserTypeCategory: $selectedUserTypeCategory,
+                    isValidInput: selectedClassGroup != nil && selectedUser != nil
+                )
+            }
+            .navigationTitle("貸出登録")
+        }
 }

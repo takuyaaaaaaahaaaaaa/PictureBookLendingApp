@@ -47,6 +47,7 @@ struct LoanFormContainerView: View {
                 selectedUser = nil
             }
             .navigationTitle("貸出登録")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
@@ -141,12 +142,6 @@ struct LoanFormContainerView: View {
             
             _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id)
             alertState = .success("貸出登録が完了しました")
-        } catch LoanModelError.bookAlreadyLent {
-            alertState = .error("この絵本はすでに貸出中です")
-        } catch LoanModelError.bookNotFound {
-            alertState = .error("選択された絵本が見つかりません")
-        } catch LoanModelError.userNotFound {
-            alertState = .error("選択された利用者が見つかりません")
         } catch {
             alertState = .error("貸出登録に失敗しました: \(error.localizedDescription)")
         }
