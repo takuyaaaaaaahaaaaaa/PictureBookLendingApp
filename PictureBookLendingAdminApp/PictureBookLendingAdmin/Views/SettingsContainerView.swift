@@ -136,7 +136,7 @@ struct SettingsContainerView: View {
             // 園児のみを取得
             let children = userModel.users.filter { $0.userType == .child }
             if children.isEmpty {
-                alertState = .error("登録されている園児がいません")
+                alertState = .error("保護者作成に失敗しました", message: "登録されている園児がいません")
                 return
             }
             
@@ -174,7 +174,7 @@ struct SettingsContainerView: View {
             
             alertState = .info(message)
         } catch {
-            alertState = .error("保護者作成中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("保護者作成に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -208,7 +208,7 @@ struct SettingsContainerView: View {
             alertState = .info(message)
             
         } catch {
-            alertState = .error("削除中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("データ削除に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -246,7 +246,7 @@ struct SettingsContainerView: View {
             alertState = .info("進級処理が完了しました。", message: graduationMessage)
             
         } catch {
-            alertState = .error("進級処理中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("進級処理に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

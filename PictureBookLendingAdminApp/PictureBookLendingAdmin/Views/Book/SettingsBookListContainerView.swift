@@ -144,7 +144,7 @@ struct SettingsBookListContainerView: View {
         do {
             _ = try bookModel.deleteBook(book.id)
         } catch {
-            alertState = .error("絵本の削除に失敗しました: \(error.localizedDescription)")
+            alertState = .error("絵本の削除に失敗しました", message: "\(error.localizedDescription)")
         }
     }
 }

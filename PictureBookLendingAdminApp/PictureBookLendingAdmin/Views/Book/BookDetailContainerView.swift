@@ -40,7 +40,7 @@ struct BookDetailContainerView: View {
             do {
                 _ = try bookModel.updateBook(newValue)
             } catch {
-                alertState = .error(error.localizedDescription)
+                alertState = .error("絵本情報の更新に失敗しました", message: error.localizedDescription)
             }
         }
     }

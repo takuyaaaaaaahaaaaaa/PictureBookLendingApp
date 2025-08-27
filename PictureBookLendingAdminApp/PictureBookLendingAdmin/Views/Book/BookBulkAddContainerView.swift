@@ -282,7 +282,7 @@ struct BookBulkAddContainerView: View {
             refreshProcessedBooks()
             
         } catch {
-            alertState = .error("テキスト解析でエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("テキスト解析でエラーが発生しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -324,7 +324,7 @@ struct BookBulkAddContainerView: View {
             }
             
         } catch {
-            alertState = .error("保存でエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("絵本の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

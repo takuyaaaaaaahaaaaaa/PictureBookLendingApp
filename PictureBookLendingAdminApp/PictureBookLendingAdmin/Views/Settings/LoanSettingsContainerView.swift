@@ -53,7 +53,8 @@ struct LoanSettingsContainerView: View {
             defaultLoanPeriodDays: loanPeriodDays, maxBooksPerUser: maxBooksPerUser)
         
         guard newSettings.isValid() else {
-            alertState = .error("設定値が無効です。貸出期間は1日〜365日、貸出可能数は1冊以上で設定してください。")
+            alertState = .error(
+                "設定の保存に失敗しました", message: "設定値が無効です。貸出期間は1日〜365日、貸出可能数は1冊以上で設定してください。")
             return
         }
         
@@ -63,7 +64,7 @@ struct LoanSettingsContainerView: View {
             // 成功時は即座に画面を閉じる
             dismiss()
         } catch {
-            alertState = .error("設定の保存に失敗しました: \(error.localizedDescription)")
+            alertState = .error("設定の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

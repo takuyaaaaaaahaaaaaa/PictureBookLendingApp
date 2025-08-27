@@ -125,7 +125,7 @@ struct UserListContainerView: View {
                 do {
                     _ = try userModel.deleteUser(user.id)
                 } catch {
-                    alertState = .error("利用者の削除に失敗しました: \(error.localizedDescription)")
+                    alertState = .error("利用者の削除に失敗しました", message: "\(error.localizedDescription)")
                 }
             }
             return
@@ -164,7 +164,7 @@ struct UserListContainerView: View {
         do {
             _ = try userModel.deleteUser(user.id)
         } catch {
-            alertState = .error("利用者の削除に失敗しました: \(error.localizedDescription)")
+            alertState = .error("利用者の削除に失敗しました", message: "\(error.localizedDescription)")
         }
         
         userToDelete = nil
