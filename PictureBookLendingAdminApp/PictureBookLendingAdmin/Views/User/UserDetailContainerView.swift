@@ -69,7 +69,7 @@ struct UserDetailContainerView: View {
             _ = try userModel.updateUser(updatedUser)
             alertState = .success("利用者情報を保存しました")
         } catch {
-            alertState = .error("利用者情報の保存に失敗しました: \(error.localizedDescription)")
+            alertState = .error("利用者情報の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

@@ -162,7 +162,7 @@ struct BookFormContainerView: View {
             onSave?(savedBook)
             dismiss()
         } catch {
-            alertState = .error("保存に失敗しました: \(error.localizedDescription)")
+            alertState = .error("絵本の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -216,7 +216,7 @@ struct BookFormContainerView: View {
                 book.thumbnail = localPath
                 
             } catch {
-                alertState = .error("画像の保存に失敗しました: \(error.localizedDescription)")
+                alertState = .error("画像の保存に失敗しました", message: "\(error.localizedDescription)")
             }
         }
     #endif

@@ -95,7 +95,7 @@ struct UserFormContainerView: View {
     
     private func handleSave() {
         guard let selectedClassGroup = classGroup else {
-            alertState = .error("組を選択してください")
+            alertState = .error("利用者登録に失敗しました", message: "組を選択してください")
             return
         }
         
@@ -106,7 +106,7 @@ struct UserFormContainerView: View {
         case .guardian:
             // 新規登録で保護者を直接登録する場合は、選択された園児のIDを使用
             guard let selectedChild = selectedChild else {
-                alertState = .error("保護者を登録する場合は関連する園児を選択してください")
+                alertState = .error("利用者登録に失敗しました", message: "保護者を登録する場合は関連する園児を選択してください")
                 return
             }
             userType = .guardian(relatedChildId: selectedChild.id)
@@ -136,7 +136,7 @@ struct UserFormContainerView: View {
             
             dismiss()
         } catch {
-            alertState = .error("保存に失敗しました: \(error.localizedDescription)")
+            alertState = .error("利用者保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

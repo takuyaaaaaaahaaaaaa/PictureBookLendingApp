@@ -116,7 +116,7 @@ struct ClassGroupListContainerView: View {
             do {
                 try classGroupModel.deleteClassGroup(classGroup.id)
             } catch {
-                alertState = .error("組の削除に失敗しました")
+                alertState = .error("組の削除に失敗しました", message: error.localizedDescription)
             }
         }
     }
@@ -126,7 +126,7 @@ struct ClassGroupListContainerView: View {
             try classGroupModel.registerClassGroup(classGroup)
             isAddSheetPresented = false
         } catch {
-            alertState = .error("組の追加に失敗しました")
+            alertState = .error("組の追加に失敗しました", message: error.localizedDescription)
         }
     }
     
@@ -135,7 +135,7 @@ struct ClassGroupListContainerView: View {
             try classGroupModel.updateClassGroup(classGroup)
             editingClassGroup = nil
         } catch {
-            alertState = .error("組の更新に失敗しました")
+            alertState = .error("組の更新に失敗しました", message: error.localizedDescription)
         }
     }
 }

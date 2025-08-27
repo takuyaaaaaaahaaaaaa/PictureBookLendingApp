@@ -59,7 +59,7 @@ struct LoanConfirmationContainerView: View {
             onComplete()
             dismiss()
         } catch {
-            alertState = .error("貸出処理に失敗しました")
+            alertState = .error("貸出処理に失敗しました", message: error.localizedDescription)
         }
     }
     

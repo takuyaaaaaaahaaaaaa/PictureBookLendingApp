@@ -47,6 +47,9 @@ struct LoanFormContainerView: View {
                 selectedUser = nil
             }
             .navigationTitle("貸出登録")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル") {
@@ -125,7 +128,7 @@ struct LoanFormContainerView: View {
     
     private func handleRegister() {
         guard let user = selectedUser else {
-            alertState = .error("必要な情報が選択されていません")
+            alertState = .error("貸出登録に失敗しました", message: "必要な情報が選択されていません")
             return
         }
         
@@ -135,20 +138,14 @@ struct LoanFormContainerView: View {
             
             // すでに貸出中かどうか再確認
             if loanModel.isBookLent(bookId: selectedBook.id) {
-                alertState = .error("この絵本はすでに貸出中です")
+                alertState = .error("貸出登録に失敗しました", message: "この絵本はすでに貸出中です")
                 return
             }
             
             _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id)
             alertState = .success("貸出登録が完了しました")
-        } catch LoanModelError.bookAlreadyLent {
-            alertState = .error("この絵本はすでに貸出中です")
-        } catch LoanModelError.bookNotFound {
-            alertState = .error("選択された絵本が見つかりません")
-        } catch LoanModelError.userNotFound {
-            alertState = .error("選択された利用者が見つかりません")
         } catch {
-            alertState = .error("貸出登録に失敗しました: \(error.localizedDescription)")
+            alertState = .error("貸出登録に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

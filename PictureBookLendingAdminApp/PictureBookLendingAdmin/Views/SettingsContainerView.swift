@@ -136,7 +136,7 @@ struct SettingsContainerView: View {
             // 園児のみを取得
             let children = userModel.users.filter { $0.userType == .child }
             if children.isEmpty {
-                alertState = .info("登録されている園児がいません")
+                alertState = .error("保護者作成に失敗しました", message: "登録されている園児がいません")
                 return
             }
             
@@ -173,9 +173,8 @@ struct SettingsContainerView: View {
                 }
             
             alertState = .info(message)
-            
         } catch {
-            alertState = .error("保護者作成中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("保護者作成に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -209,18 +208,45 @@ struct SettingsContainerView: View {
             alertState = .info(message)
             
         } catch {
-            alertState = .error("削除中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("データ削除に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
+    /// 進級対応
     private func performPromoteToNextYear() async {
         do {
-            try classGroupModel.promoteToNextYear()
+            // クラス進級処理を実行し、削除されたクラスを取得
+            let deletedClassGroups = try classGroupModel.promoteToNextYear()
+            var graduationTextArray: [String] = []
             
-            alertState = .info("進級処理が完了しました")
+            // 削除されたクラスに所属していたユーザーも削除し、卒業メッセージを作成
+            for deletedClassGroup in deletedClassGroups {
+                // 該当クラスのユーザーを取得（削除前に園児数をカウント）
+                let usersInClass = userModel.users.filter { user in
+                    user.classGroupId == deletedClassGroup.id
+                }
+                
+                // ユーザー削除
+                _ = try userModel.deleteUsersInClassGroup(deletedClassGroup.id)
+                
+                // 卒業メッセージを作成（園児がいる場合のみ）
+                let childrenCount = usersInClass.filter { $0.userType == .child }.count
+                if childrenCount > 0 {
+                    graduationTextArray.append(
+                        "\(deletedClassGroup.year)年度の\(deletedClassGroup.name)組 \(childrenCount)人")
+                }
+            }
+            // 卒業メッセージ
+            let graduationMessage = {
+                guard !graduationTextArray.isEmpty else { return "" }
+                graduationTextArray.append("が卒業しました🌸")
+                return graduationTextArray.joined(separator: "\n")
+            }()
+            
+            alertState = .info("進級処理が完了しました。", message: graduationMessage)
             
         } catch {
-            alertState = .error("進級処理中にエラーが発生しました: \(error.localizedDescription)")
+            alertState = .error("進級処理に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
