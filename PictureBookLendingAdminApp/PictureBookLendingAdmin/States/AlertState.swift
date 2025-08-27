@@ -29,7 +29,7 @@ struct AlertState {
         AlertState(isPresented: true, title: title, message: message, type: .confirmation)
     }
     
-    static func info(_ message: String) -> AlertState {
-        AlertState(isPresented: true, title: "情報", message: message, type: .info)
+    static func info(_ title: String, message: String = "") -> AlertState {
+        AlertState(isPresented: true, title: title, message: message, type: .info)
     }
 }

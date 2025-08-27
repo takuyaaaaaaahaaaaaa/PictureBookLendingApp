@@ -222,11 +222,13 @@ public class ClassGroupModel {
     /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。
     /// 5歳児クラスは卒業として削除されます。
     ///
+    /// - Returns: 削除されたクラスグループの配列
     /// - Throws: 進級処理に失敗した場合は `ClassGroupModelError` を投げます
-    public func promoteToNextYear() throws {
+    public func promoteToNextYear() throws -> [ClassGroup] {
         do {
             let currentClassGroups = classGroups
             var updatedClassGroups: [ClassGroup] = []
+            var deletedClassGroups: [ClassGroup] = []
             
             // 最小クラスを作成
             let firstClassGroup = currentClassGroups.filter { $0.ageGroup != .other }
@@ -248,13 +250,16 @@ public class ClassGroupModel {
                     try repository.save(nextClassGroupInstance)
                     updatedClassGroups.append(nextClassGroupInstance)
                 } else {
-                    // 進級不可（5歳児など）の場合は削除
+                    // 進級不可（5歳児など）の場合は削除対象として記録
+                    deletedClassGroups.append(classGroup)
                     try repository.delete(by: classGroup.id)
-                    // TODO: 関連する利用者一覧も削除
                 }
             }
             // キャッシュを更新
             classGroups = updatedClassGroups.sorted(by: { $0.ageGroup < $1.ageGroup })
+            
+            // 削除されたクラスグループを返却
+            return deletedClassGroups
             
         } catch {
             throw ClassGroupModelError.updateFailed

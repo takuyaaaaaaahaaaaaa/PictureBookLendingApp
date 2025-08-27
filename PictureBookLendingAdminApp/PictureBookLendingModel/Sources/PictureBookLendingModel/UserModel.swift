@@ -10,6 +10,8 @@ public enum UserModelError: Error, Equatable, LocalizedError {
     case registrationFailed
     /// 利用者情報更新に失敗した場合のエラー
     case updateFailed
+    /// 利用者削除に失敗した場合のエラー
+    case deletionFailed
     
     public var errorDescription: String? {
         switch self {
@@ -19,6 +21,8 @@ public enum UserModelError: Error, Equatable, LocalizedError {
             return "利用者の登録に失敗しました"
         case .updateFailed:
             return "利用者情報の更新に失敗しました"
+        case .deletionFailed:
+            return "利用者の削除に失敗しました"
         }
     }
 }
@@ -204,6 +208,34 @@ public class UserModel {
             return currentUsers.count
         } catch {
             throw UserModelError.updateFailed
+        }
+    }
+    
+    /// 指定されたクラスグループに属する利用者を全て削除する
+    ///
+    /// - Parameter classGroupId: 削除対象のクラスグループID
+    /// - Returns: 削除された利用者の数
+    /// - Throws: 削除に失敗した場合は `UserModelError.deletionFailed` を投げます
+    public func deleteUsersInClassGroup(_ classGroupId: UUID) throws -> Int {
+        do {
+            // 指定クラスグループの全利用者を取得
+            let usersInClass = users.filter { user in
+                user.classGroupId == classGroupId
+            }
+            
+            // 各利用者を削除
+            for user in usersInClass {
+                _ = try repository.delete(user.id)
+            }
+            
+            // キャッシュからも削除
+            users.removeAll { user in
+                user.classGroupId == classGroupId
+            }
+            
+            return usersInClass.count
+        } catch {
+            throw UserModelError.deletionFailed
         }
     }
 }
