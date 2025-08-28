@@ -91,6 +91,9 @@ struct BookListContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .onChange(of: bookModel.books) {
+            loadBookSections()
+        }
         .onAppear {
             bookModel.refreshBooks()
             loanModel.refreshLoans()
