@@ -89,12 +89,28 @@ extension BookSection {
 }
 
 /// 管理番号のソート用キーを作成
+/// 全角数字と半角数字の両方に対応
 private func sortKey(_ text: String) -> (hiragana: String, number: Int) {
     // 先頭のひらがな
     let prefix = String(text.prefix(1))
-    // 残りの部分から数字を抜き出す
-    let numberPart = text.dropFirst().prefix { $0.isNumber }
+    
+    // 残りの部分から数字を抜き出す（全角・半角両対応）
+    let remainingText = String(text.dropFirst())
+    let normalizedText = normalizeNumbers(remainingText)
+    let numberPart = normalizedText.prefix { $0.isNumber }
     let number = Int(numberPart) ?? 0
     
     return (prefix, number)
+}
+
+/// 全角数字を半角数字に変換
+private func normalizeNumbers(_ text: String) -> String {
+    let fullWidthNumbers = "０１２３４５６７８９"
+    let halfWidthNumbers = "0123456789"
+    
+    var result = text
+    for (fullWidth, halfWidth) in zip(fullWidthNumbers, halfWidthNumbers) {
+        result = result.replacingOccurrences(of: String(fullWidth), with: String(halfWidth))
+    }
+    return result
 }
