@@ -1,3 +1,4 @@
+import Foundation
 import PictureBookLendingDomain
 import SwiftData
 
@@ -56,7 +57,8 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
         do {
             self.modelContainer = try ModelContainer(
                 for: schema,
-                configurations: [modelConfiguration]
+                migrationPlan: PictureBookLendingMigrationPlan.self,
+                configurations: [modelConfiguration],
             )
         } catch {
             fatalError("ModelContainerの初期化に失敗しました: \(error)")
