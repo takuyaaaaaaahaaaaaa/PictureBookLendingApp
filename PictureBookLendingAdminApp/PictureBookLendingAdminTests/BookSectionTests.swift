@@ -329,6 +329,66 @@ struct BookSectionTests {
         #expect(books[3].managementNumber == "さ010")  // さ010
     }
     
+    /// 文字列数字文字列パターンのソートテスト
+    ///
+    /// "abc123def"のような文字列数字文字列パターンが正しくソートされることを確認します。
+    @Test("文字列数字文字列パターンのソート")
+    func sortedByStringNumberStringPattern() {
+        // 1. Arrange - 準備（文字列＋数字＋文字列パターン）
+        let patternBooks = [
+            Book(title: "本A", managementNumber: "book010-a", kanaGroup: .other),
+            Book(title: "本B", managementNumber: "book005-b", kanaGroup: .other),
+            Book(title: "本C", managementNumber: "abc123def", kanaGroup: .other),
+            Book(title: "本D", managementNumber: "abc050xyz", kanaGroup: .other),
+            Book(title: "本E", managementNumber: "book100", kanaGroup: .other),  // 末尾文字列なし
+        ]
+        let sections = BookSection.createSections(from: patternBooks)
+        
+        // 2. Act - 実行
+        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        
+        // 3. Assert - 検証
+        #expect(sortedSections.count == 1)
+        let books = sortedSections[0].books
+        
+        // 文字列部分順 → 数字順
+        #expect(books[0].managementNumber == "abc050xyz")  // abc50
+        #expect(books[1].managementNumber == "abc123def")  // abc123
+        #expect(books[2].managementNumber == "book005-b")  // book5
+        #expect(books[3].managementNumber == "book010-a")  // book10
+        #expect(books[4].managementNumber == "book100")  // book100
+    }
+    
+    /// 複雑な管理番号パターンのソートテスト
+    ///
+    /// ひらがな、英数字、記号を含む複雑なパターンのソートを確認します。
+    @Test("複雑な管理番号パターンのソート")
+    func sortedByComplexPatterns() {
+        // 1. Arrange - 準備
+        let complexBooks = [
+            Book(title: "本A", managementNumber: "あ１０", kanaGroup: .other),  // ひらがな＋全角数字
+            Book(title: "本B", managementNumber: "A005-x", kanaGroup: .other),  // 英字＋数字＋文字
+            Book(title: "本C", managementNumber: "あ05", kanaGroup: .other),  // ひらがな＋半角数字
+            Book(title: "本D", managementNumber: "B003", kanaGroup: .other),  // 英字＋数字
+            Book(title: "本E", managementNumber: "A010", kanaGroup: .other),  // 英字＋数字
+        ]
+        let sections = BookSection.createSections(from: complexBooks)
+        
+        // 2. Act - 実行
+        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        
+        // 3. Assert - 検証
+        #expect(sortedSections.count == 1)
+        let books = sortedSections[0].books
+        
+        // 文字列部分のアルファベット順・ひらがな順、その中で数字順
+        #expect(books[0].managementNumber == "A005-x")  // A005
+        #expect(books[1].managementNumber == "A010")  // A010
+        #expect(books[2].managementNumber == "B003")  // B003
+        #expect(books[3].managementNumber == "あ05")  // あ05
+        #expect(books[4].managementNumber == "あ１０")  // あ10
+    }
+    
     // MARK: - Integration Tests
     
     /// 全機能統合テスト

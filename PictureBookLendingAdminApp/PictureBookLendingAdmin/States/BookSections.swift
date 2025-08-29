@@ -89,16 +89,36 @@ extension BookSection {
 }
 
 /// 管理番号のソート用キーを作成
+/// "文字列数字文字列"パターンに対応（例: "abc123def", "あ001-a"）
 /// 全角数字と半角数字の両方に対応
 private func sortKey(_ text: String) -> (hiragana: String, number: Int) {
-    // 先頭のひらがな
-    let prefix = String(text.prefix(1))
+    let normalizedText = normalizeNumbers(text)
     
-    // 残りの部分から数字を抜き出す（全角・半角両対応）
-    let remainingText = String(text.dropFirst())
-    let normalizedText = normalizeNumbers(remainingText)
-    let numberPart = normalizedText.prefix { $0.isNumber }
-    let number = Int(numberPart) ?? 0
+    // 最初の数字列を見つける
+    var stringPrefix = ""
+    var numberString = ""
+    var foundNumber = false
+    
+    for char in normalizedText {
+        if char.isNumber {
+            if !foundNumber {
+                foundNumber = true
+            }
+            numberString.append(char)
+        } else {
+            if foundNumber {
+                // 数字の後の文字が来たら数字部分の抽出完了
+                break
+            } else {
+                // まだ数字が見つかってない場合は文字列部分
+                stringPrefix.append(char)
+            }
+        }
+    }
+    
+    // 文字列部分が空の場合は元のテキストを使用
+    let prefix = stringPrefix.isEmpty ? text : stringPrefix
+    let number = Int(numberString) ?? 0
     
     return (prefix, number)
 }
