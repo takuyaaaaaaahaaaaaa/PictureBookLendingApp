@@ -26,7 +26,10 @@ struct LoanListContainerView: View {
             selectedGroupFilter: $selectedGroupFilter,
             groupFilterOptions: groupFilterOptions
         ) { loan in
-            LoanActionContainerButton(bookId: loan.bookId)
+            LoanActionContainerButton(
+                bookId: loan.bookId,
+                onReturnSuccess: handleReturnSuccess
+            )
         }
         .navigationTitle("貸出管理")
         .toolbar {
@@ -124,6 +127,11 @@ struct LoanListContainerView: View {
         bookModel.refreshBooks()
         loanModel.refreshLoans()
         classGroupModel.refreshClassGroups()
+    }
+    
+    /// 返却成功時の処理
+    private func handleReturnSuccess(_ message: String) {
+        alertState = .success(message)
     }
 }
 

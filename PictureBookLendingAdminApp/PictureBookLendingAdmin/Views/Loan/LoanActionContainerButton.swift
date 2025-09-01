@@ -11,6 +11,8 @@ import SwiftUI
 struct LoanActionContainerButton: View {
     /// 対象絵本のID
     let bookId: UUID
+    /// 返却完了時のコールバック（オプション）
+    let onReturnSuccess: ((String) -> Void)?
     
     /// 絵本管理モデル
     @Environment(BookModel.self) private var bookModel
@@ -92,7 +94,12 @@ struct LoanActionContainerButton: View {
         Task {
             do {
                 try loanModel.returnBook(bookId: bookId)
-                alertState = .success("返却が完了しました")
+                // コールバックが提供されている場合は親に成功を通知、そうでなければ自身でアラート表示
+                if let onReturnSuccess = onReturnSuccess {
+                    onReturnSuccess("返却が完了しました")
+                } else {
+                    alertState = .success("返却が完了しました")
+                }
             } catch {
                 alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
             }
@@ -115,7 +122,7 @@ struct LoanActionContainerButton: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
     
     VStack(spacing: 16) {
-        LoanActionContainerButton(bookId: sampleBook.id)
+        LoanActionContainerButton(bookId: sampleBook.id, onReturnSuccess: nil)
         
         // リスト内での表示例
         List {
@@ -130,7 +137,7 @@ struct LoanActionContainerButton: View {
                 
                 Spacer()
                 
-                LoanActionContainerButton(bookId: sampleBook.id)
+                LoanActionContainerButton(bookId: sampleBook.id, onReturnSuccess: nil)
             }
             .padding(.vertical, 4)
         }

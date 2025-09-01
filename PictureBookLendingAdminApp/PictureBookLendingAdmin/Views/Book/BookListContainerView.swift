@@ -50,7 +50,7 @@ struct BookListContainerView: View {
             if isEditMode {
                 BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
             } else {
-                LoanActionContainerButton(bookId: book.id)
+                LoanActionContainerButton(bookId: book.id, onReturnSuccess: nil)
             }
         }
         #if os(iOS)
