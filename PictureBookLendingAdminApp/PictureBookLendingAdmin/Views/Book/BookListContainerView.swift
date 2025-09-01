@@ -40,7 +40,7 @@ struct BookListContainerView: View {
             if isEditMode {
                 BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
             } else {
-                LoanActionContainerButton(bookId: book.id)
+                LoanActionContainerButton(bookId: book.id, alertState: $alertState)
             }
         }
         #if os(iOS)

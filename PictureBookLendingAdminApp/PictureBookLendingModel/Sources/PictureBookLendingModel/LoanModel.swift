@@ -165,15 +165,6 @@ public class LoanModel {
     public func returnBook(loanId: UUID) throws -> Loan {
         // 貸出情報を検索
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
-            // リポジトリからも検索
-            do {
-                if try repository.findById(loanId) == nil {
-                    throw LoanModelError.loanNotFound
-                }
-            } catch {
-                throw LoanModelError.loanNotFound
-            }
-            
             throw LoanModelError.loanNotFound
         }
         
@@ -215,20 +206,6 @@ public class LoanModel {
     public func returnBook(bookId: UUID) throws -> Loan {
         // 指定された絵本の現在の貸出情報を検索
         guard let currentLoan = loans.first(where: { $0.bookId == bookId && !$0.isReturned }) else {
-            // キャッシュにない場合はリポジトリから検索
-            do {
-                let allLoans = try repository.fetchActiveLoans()
-                if let repositoryLoan = allLoans.first(where: {
-                    $0.bookId == bookId && !$0.isReturned
-                }) {
-                    // 見つかった場合はキャッシュを更新してから返却処理
-                    loans = allLoans
-                    return try returnBook(loanId: repositoryLoan.id)
-                }
-            } catch {
-                throw LoanModelError.loanNotFound
-            }
-            
             throw LoanModelError.loanNotFound
         }
         

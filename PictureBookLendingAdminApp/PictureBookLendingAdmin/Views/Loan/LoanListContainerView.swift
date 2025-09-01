@@ -26,7 +26,7 @@ struct LoanListContainerView: View {
             selectedGroupFilter: $selectedGroupFilter,
             groupFilterOptions: groupFilterOptions
         ) { loan in
-            LoanActionContainerButton(bookId: loan.bookId)
+            LoanActionContainerButton(bookId: loan.bookId, alertState: $alertState)
         }
         .navigationTitle("貸出管理")
         .toolbar {
