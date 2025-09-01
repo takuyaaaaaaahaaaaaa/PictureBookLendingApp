@@ -5,13 +5,38 @@
 //  Created by takuya_tominaga on 8/29/25.
 //
 
+import Observation
 import PictureBookLendingDomain
 import PictureBookLendingUI
+import SwiftUI
 
-extension BookSection {
+/// グループ単位のBookオブジェクトを管理するState
+@Observable
+class BookSectionsState {
+    /// /// 五十音順グループごとの絵本分類
+    private var bookSections: [BookSection] = []
+    
+    init(books: [Book]) {
+        self.bookSections = createSections(from: books)
+    }
+    
+    /// フィルタリング・ソート済みの絵本セクション
+    public func filter(
+        searchText: String, kanafilter: KanaGroup?, sortType: BookSortType
+    ) -> [BookSection] {
+        // 1. フィルタリング
+        let filteredSections = filtered(
+            sections: bookSections,
+            searchText: searchText,
+            selectedKanaFilter: kanafilter
+        )
+        
+        // 2. ソート
+        return sorted(sections: filteredSections, by: sortType)
+    }
     
     /// 全絵本からBookSectionの配列を作成
-    static func createSections(from books: [Book]) -> [BookSection] {
+    private func createSections(from books: [Book]) -> [BookSection] {
         // 五十音グループごとに分類
         let groupedBooks = Dictionary(grouping: books) { book -> KanaGroup in
             return book.kanaGroup ?? .other
@@ -27,7 +52,7 @@ extension BookSection {
     }
     
     /// 検索テキストとかなフィルターでセクション配列をフィルタリング
-    static func filtered(
+    private func filtered(
         sections: [BookSection],
         searchText: String,
         selectedKanaFilter: KanaGroup?
@@ -55,7 +80,7 @@ extension BookSection {
     }
     
     /// ソート方法に基づいてセクション配列をソート
-    static func sorted(sections: [BookSection], by sortType: BookSortType) -> [BookSection] {
+    private func sorted(sections: [BookSection], by sortType: BookSortType) -> [BookSection] {
         return sections.map { section in
             let sortedBooks: [Book]
             switch sortType {

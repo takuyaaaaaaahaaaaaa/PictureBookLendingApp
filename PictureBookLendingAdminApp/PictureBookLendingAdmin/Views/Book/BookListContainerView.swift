@@ -22,24 +22,14 @@ struct BookListContainerView: View {
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
-    @State private var bookSections: [BookSection] = []
-    
-    /// フィルタリング・ソート済みの絵本セクション
-    private var filteredBookSections: [BookSection] {
-        // 1. フィルタリング
-        let filteredSections = BookSection.filtered(
-            sections: bookSections,
-            searchText: searchText,
-            selectedKanaFilter: selectedKanaFilter
-        )
-        
-        // 2. ソート
-        return BookSection.sorted(sections: filteredSections, by: selectedSortType)
-    }
+    @State private var bookSectionsState: BookSectionsState = .init(books: [])
     
     var body: some View {
         BookListView(
-            sections: filteredBookSections,
+            sections: bookSectionsState.filter(
+                searchText: searchText,
+                kanafilter: selectedKanaFilter,
+                sortType: selectedSortType),
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
@@ -110,7 +100,7 @@ struct BookListContainerView: View {
     
     /// 絵本データから基本セクションを作成・更新
     private func loadBookSections() {
-        bookSections = BookSection.createSections(from: bookModel.books)
+        bookSectionsState = BookSectionsState(books: bookModel.books)
     }
     
     private func handleEditBook(_ book: Book) {
