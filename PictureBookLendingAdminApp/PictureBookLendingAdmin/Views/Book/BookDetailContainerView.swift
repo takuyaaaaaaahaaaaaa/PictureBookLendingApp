@@ -25,7 +25,7 @@ struct BookDetailContainerView: View {
             currentLoan: currentLoan,
             loanHistory: loanHistory,
         ) {
-            LoanActionContainerButton(bookId: book.id)
+            LoanActionContainerButton(bookId: book.id, alertState: $alertState)
         }
         .navigationTitle(book.title)
         #if os(iOS)

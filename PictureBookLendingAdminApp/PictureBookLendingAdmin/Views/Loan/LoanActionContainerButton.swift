@@ -24,7 +24,7 @@ struct LoanActionContainerButton: View {
     /// 返却確認アラートの表示状態
     @State private var isReturnConfirmationPresented = false
     /// アラート状態管理
-    @State private var alertState = AlertState()
+    @Binding var alertState: AlertState
     
     /// bookIdから取得した絵本オブジェクト
     private var book: Book? {
@@ -43,6 +43,7 @@ struct LoanActionContainerButton: View {
     }
     
     var body: some View {
+        let _ = Self._printChanges()
         VStack {
             if isBookLent {
                 ReturnButtonView(onTap: handleReturnTap)
@@ -68,11 +69,11 @@ struct LoanActionContainerButton: View {
                 }
             }
         }
-        .alert(alertState.title, isPresented: $alertState.isPresented) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertState.message)
-        }
+        //        .alert(alertState.title, isPresented: $alertState.isPresented) {
+        //            Button("OK", role: .cancel) {}
+        //        } message: {
+        //            Text(alertState.message)
+        //        }
     }
     
     // MARK: - Actions
@@ -89,18 +90,19 @@ struct LoanActionContainerButton: View {
     
     /// 返却処理の実行
     private func performReturn() {
-        Task {
-            do {
-                try loanModel.returnBook(bookId: bookId)
-                alertState = .success("返却が完了しました")
-            } catch {
-                alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
-            }
+        do {
+            try loanModel.returnBook(bookId: bookId)
+            alertState = .success("返却が完了しました")
+        } catch {
+            alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
         }
     }
 }
 
 #Preview {
+    
+    @Previewable @State var alertState = AlertState()
+    
     let mockRepositoryFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
     let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
@@ -115,7 +117,7 @@ struct LoanActionContainerButton: View {
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
     
     VStack(spacing: 16) {
-        LoanActionContainerButton(bookId: sampleBook.id)
+        LoanActionContainerButton(bookId: sampleBook.id, alertState: $alertState)
         
         // リスト内での表示例
         List {
@@ -130,7 +132,7 @@ struct LoanActionContainerButton: View {
                 
                 Spacer()
                 
-                LoanActionContainerButton(bookId: sampleBook.id)
+                LoanActionContainerButton(bookId: sampleBook.id, alertState: $alertState)
             }
             .padding(.vertical, 4)
         }

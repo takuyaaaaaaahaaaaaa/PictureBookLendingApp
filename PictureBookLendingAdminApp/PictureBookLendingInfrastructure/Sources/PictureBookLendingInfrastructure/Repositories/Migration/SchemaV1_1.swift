@@ -18,7 +18,7 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
             SwiftDataClassGroup.self,
         ]
     }
-
+    
     @Model
     final public class SwiftDataLoan {
         @Attribute(.unique) public var id: UUID
