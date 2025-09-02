@@ -18,17 +18,13 @@ struct PictureBookLendingAdminWidget: Widget {
         }
         .configurationDisplayName("絵本管理アプリ")
         .description("このボタンを押すことでロック画面から絵本管理アプリが開けます。")
-        //.supportedFamilies(supportedFamilies)
+        .supportedFamilies([
+            // ロック画面用
+            .accessoryInline,
+            .accessoryCircular,
+            .accessoryRectangular,
+        ])
     }
-    
-    //    private var supportedFamilies: [WidgetFamily] {
-    //        [
-    //            .systemExtraLarge,
-    //            .systemLarge,
-    //            .systemMedium,
-    //            .systemSmall,
-    //        ]
-    //    }
 }
 
 /// ウィジット表示情報
@@ -76,14 +72,18 @@ struct PictureBookLendingAdminWidgetEntryView: View {
     var entry: Provider.Entry
     
     var body: some View {
-        switch family {
-        case .systemLarge:
-            systemLargeView
-        case .systemExtraLarge:
-            systemExtraLargeView
-        default:
-            systemDefaultView
+        Group {
+            switch family {
+            case .accessoryCircular:
+                accessoryCircularView
+            case .accessoryRectangular:
+                accessoryRectangularView
+            default:
+                systemDefaultView
+            }
         }
+        .foregroundStyle(.white)
+        .containerBackground(.orange, for: .widget)
     }
     
     /// アプリ名を取得
@@ -93,82 +93,60 @@ struct PictureBookLendingAdminWidgetEntryView: View {
             ?? "絵本管理アプリ"
     }
     
-    private var systemDefaultView: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "book.fill")
-                .font(.system(size: 40, weight: .medium))
-                .foregroundStyle(.blue)
-            
+    private var accessoryCircularView: some View {
+        Image(systemName: "book.fill")
+            .font(.system(size: 40, weight: .medium))
+            .foregroundStyle(.blue)
+            .containerBackground(.orange, for: .widget)
+    }
+    
+    private var accessoryRectangularView: some View {
+        VStack {
             Text(appName)
                 .font(.headline)
                 .fontWeight(.semibold)
             
-            Text("タップして開く")
+            Text("をタップして開く")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(.fill.quaternary, for: .widget)
     }
     
-    private var systemLargeView: some View {
-        VStack(spacing: 12) {
+    private var systemDefaultView: some View {
+        VStack {
             Image(systemName: "book.fill")
-                .font(.system(size: 50, weight: .medium))
-                .foregroundStyle(.blue)
+                .font(.system(size: 40, weight: .medium))
             
             Text(appName)
-                .font(.largeTitle)
-                .fontWeight(.bold)
+                .font(.headline)
+                .fontWeight(.semibold)
             Text("タップして開く")
-                .font(.title)
-                .foregroundStyle(.secondary)
+                .font(.caption)
+                .foregroundStyle(.primary)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .containerBackground(.fill.quaternary, for: .widget)
     }
     
-    private var systemExtraLargeView: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 16) {
-                Image(systemName: "book.fill")
-                    .font(.system(size: 60, weight: .medium))
-                    .foregroundStyle(.blue)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(appName)
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    
-                    Text("絵本の貸出を管理するアプリ")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                
-                Spacer()
-            }
-            
-            Divider()
-            
-            Spacer()
-            
-            HStack(spacing: 8) {
-                Image(systemName: "hand.tap.fill")
-                Text("タップしてアプリを開く")
-                Spacer()
-            }
-            .font(.system(size: 50, weight: .medium))
-            .foregroundStyle(.secondary)
-            
-            Spacer()
-            
-        }
-        .padding()
-        .containerBackground(.fill.quaternary, for: .widget)
-    }
 }
 
-#Preview(as: .systemExtraLarge) {
+#Preview(as: .systemMedium) {
+    PictureBookLendingAdminWidget()
+} timeline: {
+    StatusEntry(date: Date())
+}
+
+#Preview(as: .accessoryRectangular) {
+    PictureBookLendingAdminWidget()
+} timeline: {
+    StatusEntry(date: Date())
+}
+
+#Preview(as: .accessoryCircular) {
+    PictureBookLendingAdminWidget()
+} timeline: {
+    StatusEntry(date: Date())
+}
+
+#Preview(as: .accessoryInline) {
     PictureBookLendingAdminWidget()
 } timeline: {
     StatusEntry(date: Date())
