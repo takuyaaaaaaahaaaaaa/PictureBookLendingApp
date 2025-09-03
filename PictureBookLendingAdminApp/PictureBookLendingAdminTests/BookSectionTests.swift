@@ -5,13 +5,13 @@ import Testing
 
 @testable import PictureBookLendingAdmin
 
-/// BookSection拡張メソッドテストケース
+/// BookSectionsStateテストケース
 ///
-/// BookSection+sortedで定義された以下の機能をテストします：
-/// - セクション作成機能（createSections）
-/// - フィルタリング機能（filtered）
-/// - ソート機能（sorted）
-@Suite("BookSection Extension Tests")
+/// BookSectionsStateで定義された以下の機能をテストします：
+/// - セクション作成機能（初期化）
+/// - フィルタリング機能（filter）
+/// - ソート機能（filter内でのソート）
+@Suite("BookSectionsState Tests")
 struct BookSectionTests {
     
     // MARK: - Test Data
@@ -39,7 +39,8 @@ struct BookSectionTests {
         let books = testBooks
         
         // 2. Act - 実行
-        let sections = BookSection.createSections(from: books)
+        let bookSectionsState = BookSectionsState(books: books)
+        let sections = bookSectionsState.filter(searchText: "", kanafilter: nil, sortType: .title)
         
         // 3. Assert - 検証
         #expect(sections.count == 4)  // あ、か、は、その他
@@ -72,7 +73,8 @@ struct BookSectionTests {
         let books: [Book] = []
         
         // 2. Act - 実行
-        let sections = BookSection.createSections(from: books)
+        let bookSectionsState = BookSectionsState(books: books)
+        let sections = bookSectionsState.filter(searchText: "", kanafilter: nil, sortType: .title)
         
         // 3. Assert - 検証
         #expect(sections.count == 0)
@@ -86,13 +88,13 @@ struct BookSectionTests {
     @Test("検索テキストによるフィルタリング")
     func filteredBySearchText() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（"あおむし"で検索）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let filteredSections = bookSectionsState.filter(
             searchText: "あおむし",
-            selectedKanaFilter: nil
+            kanafilter: nil,
+            sortType: .title
         )
         
         // 3. Assert - 検証
@@ -108,13 +110,13 @@ struct BookSectionTests {
     @Test("著者名による検索フィルタリング")
     func filteredByAuthor() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（"エリック・カール"で検索）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let filteredSections = bookSectionsState.filter(
             searchText: "エリック・カール",
-            selectedKanaFilter: nil
+            kanafilter: nil,
+            sortType: .title
         )
         
         // 3. Assert - 検証
@@ -128,13 +130,13 @@ struct BookSectionTests {
     @Test("五十音グループによるフィルタリング")
     func filteredByKanaGroup() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（か行のみ）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let filteredSections = bookSectionsState.filter(
             searchText: "",
-            selectedKanaFilter: .ka
+            kanafilter: .ka,
+            sortType: .title
         )
         
         // 3. Assert - 検証
@@ -149,13 +151,13 @@ struct BookSectionTests {
     @Test("複合フィルタリング")
     func filteredBySearchTextAndKanaGroup() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（"か"で検索 + か行フィルター）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let filteredSections = bookSectionsState.filter(
             searchText: "か",
-            selectedKanaFilter: .ka
+            kanafilter: .ka,
+            sortType: .title
         )
         
         // 3. Assert - 検証
@@ -171,13 +173,13 @@ struct BookSectionTests {
     @Test("フィルタリング結果なし")
     func filteredNoResults() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（存在しない文字列で検索）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let filteredSections = bookSectionsState.filter(
             searchText: "存在しない本",
-            selectedKanaFilter: nil
+            kanafilter: nil,
+            sortType: .title
         )
         
         // 3. Assert - 検証
@@ -192,11 +194,14 @@ struct BookSectionTests {
     @Test("タイトルソート")
     func sortedByTitle() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
-        let kaSection = sections.first { $0.kanaGroup == .ka }!
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
-        // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: [kaSection], by: .title)
+        // 2. Act - 実行（か行とタイトルソート）
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: .ka,
+            sortType: .title
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -211,11 +216,14 @@ struct BookSectionTests {
     @Test("管理番号ソート")
     func sortedByManagementNumber() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
-        let aSection = sections.first { $0.kanaGroup == .a }!
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
-        // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: [aSection], by: .managementNumber)
+        // 2. Act - 実行（あ行と管理番号ソート）
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: .a,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -230,11 +238,14 @@ struct BookSectionTests {
     @Test("管理番号なしを含むソート")
     func sortedByManagementNumberWithNil() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
-        let haSection = sections.first { $0.kanaGroup == .ha }!
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
-        // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: [haSection], by: .managementNumber)
+        // 2. Act - 実行（は行と管理番号ソート）
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: .ha,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -256,10 +267,14 @@ struct BookSectionTests {
             Book(title: "本D", managementNumber: "か001", kanaGroup: .ka),
             Book(title: "本E", managementNumber: nil, kanaGroup: .ka),
         ]
-        let sections = BookSection.createSections(from: complexBooks)
+        let bookSectionsState = BookSectionsState(books: complexBooks)
         
         // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -285,10 +300,14 @@ struct BookSectionTests {
             Book(title: "本C", managementNumber: "あ001", kanaGroup: .a),  // 半角001
             Book(title: "本D", managementNumber: "あ１００", kanaGroup: .a),  // 全角100
         ]
-        let sections = BookSection.createSections(from: fullWidthBooks)
+        let bookSectionsState = BookSectionsState(books: fullWidthBooks)
         
         // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -313,10 +332,14 @@ struct BookSectionTests {
             Book(title: "本C", managementNumber: "あ０２０", kanaGroup: .sa),  // 全角020（あ）
             Book(title: "本D", managementNumber: "さ010", kanaGroup: .sa),  // 半角010
         ]
-        let sections = BookSection.createSections(from: mixedBooks)
+        let bookSectionsState = BookSectionsState(books: mixedBooks)
         
         // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -342,10 +365,14 @@ struct BookSectionTests {
             Book(title: "本D", managementNumber: "abc050xyz", kanaGroup: .other),
             Book(title: "本E", managementNumber: "book100", kanaGroup: .other),  // 末尾文字列なし
         ]
-        let sections = BookSection.createSections(from: patternBooks)
+        let bookSectionsState = BookSectionsState(books: patternBooks)
         
         // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -372,10 +399,14 @@ struct BookSectionTests {
             Book(title: "本D", managementNumber: "B003", kanaGroup: .other),  // 英字＋数字
             Book(title: "本E", managementNumber: "A010", kanaGroup: .other),  // 英字＋数字
         ]
-        let sections = BookSection.createSections(from: complexBooks)
+        let bookSectionsState = BookSectionsState(books: complexBooks)
         
         // 2. Act - 実行
-        let sortedSections = BookSection.sorted(sections: sections, by: .managementNumber)
+        let sortedSections = bookSectionsState.filter(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .managementNumber
+        )
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
@@ -397,15 +428,14 @@ struct BookSectionTests {
     @Test("全機能統合テスト")
     func fullWorkflow() {
         // 1. Arrange - 準備
-        let sections = BookSection.createSections(from: testBooks)
+        let bookSectionsState = BookSectionsState(books: testBooks)
         
         // 2. Act - 実行（"か"で検索、か行フィルター、管理番号順ソート）
-        let filteredSections = BookSection.filtered(
-            sections: sections,
+        let sortedSections = bookSectionsState.filter(
             searchText: "か",
-            selectedKanaFilter: .ka
+            kanafilter: .ka,
+            sortType: .managementNumber
         )
-        let sortedSections = BookSection.sorted(sections: filteredSections, by: .managementNumber)
         
         // 3. Assert - 検証
         #expect(sortedSections.count == 1)
