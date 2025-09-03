@@ -19,7 +19,9 @@
 		EF9609522E6757CB006A557F /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF9609512E6757CB006A557F /* WidgetKit.framework */; };
 		EF9609542E6757CB006A557F /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EF9609532E6757CB006A557F /* SwiftUI.framework */; };
 		EF9609652E6757CC006A557F /* PictureBookLendingAdminWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = EF9609502E6757CB006A557F /* PictureBookLendingAdminWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		EF9609842E67A5E1006A557F /* PictureBook.icon in Resources */ = {isa = PBXBuildFile; fileRef = EF9609832E67A5E1006A557F /* PictureBook.icon */; };
+		EF960A182E67C253006A557F /* PictureBookApp.icon in Resources */ = {isa = PBXBuildFile; fileRef = EF960A172E67C253006A557F /* PictureBookApp.icon */; };
+		EF960A192E67C2FB006A557F /* PictureBookApp.icon in Resources */ = {isa = PBXBuildFile; fileRef = EF960A172E67C253006A557F /* PictureBookApp.icon */; };
+		EF960A1A2E67C2FB006A557F /* PictureBookApp.icon in Resources */ = {isa = PBXBuildFile; fileRef = EF960A172E67C253006A557F /* PictureBookApp.icon */; };
 		EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91542DF0A0D6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91572DF0A1A6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91562DF0A1A6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91592DF0A1AB007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */; };
@@ -70,7 +72,7 @@
 		EF9609502E6757CB006A557F /* PictureBookLendingAdminWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PictureBookLendingAdminWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		EF9609512E6757CB006A557F /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		EF9609532E6757CB006A557F /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
-		EF9609832E67A5E1006A557F /* PictureBook.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = PictureBook.icon; sourceTree = "<group>"; };
+		EF960A172E67C253006A557F /* PictureBookApp.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = PictureBookApp.icon; sourceTree = "<group>"; };
 		EFD9BABA2E20FDF300218826 /* PictureBookLendingDomain */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = PictureBookLendingDomain; sourceTree = "<group>"; };
 		EFF77EF02DD66AAB009BD213 /* PictureBookLendingAdmin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PictureBookLendingAdmin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFF77F002DD66AAD009BD213 /* PictureBookLendingAdminTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PictureBookLendingAdminTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -185,7 +187,7 @@
 				EF9609552E6757CB006A557F /* PictureBookLendingAdminWidget */,
 				EFF77EF12DD66AAB009BD213 /* Products */,
 				EFDF91532DF0A0D6007EB46B /* Frameworks */,
-				EF9609832E67A5E1006A557F /* PictureBook.icon */,
+				EF960A172E67C253006A557F /* PictureBookApp.icon */,
 			);
 			sourceTree = "<group>";
 		};
@@ -361,6 +363,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF960A1A2E67C2FB006A557F /* PictureBookApp.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,7 +371,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				EF9609842E67A5E1006A557F /* PictureBook.icon in Resources */,
+				EF960A182E67C253006A557F /* PictureBookApp.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,6 +379,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				EF960A192E67C2FB006A557F /* PictureBookApp.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -646,7 +650,7 @@
 		EFF77F152DD66AAD009BD213 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBook;
+				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBookApp;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PictureBookLendingAdmin/PictureBookLendingAdmin.entitlements;
@@ -695,7 +699,7 @@
 		EFF77F162DD66AAD009BD213 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBook;
+				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBookApp;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PictureBookLendingAdmin/PictureBookLendingAdmin.entitlements;
