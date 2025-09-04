@@ -209,11 +209,11 @@ struct BookFormContainerView: View {
             isCameraPresented = false
             
             do {
-                // 画像をローカルに保存
-                let localPath = try ImageStorageUtility.saveImage(image)
+                // 画像をローカルに保存（ファイル名のみが返される）
+                let fileName = try ImageStorageUtility.saveImage(image)
                 
-                // Bookのthumbnailフィールドにローカルパスを設定
-                book.thumbnail = localPath
+                // BookのlocalImageFileNameフィールドにファイル名を設定
+                book.localImageFileName = fileName
                 
             } catch {
                 alertState = .error("画像の保存に失敗しました", message: "\(error.localizedDescription)")

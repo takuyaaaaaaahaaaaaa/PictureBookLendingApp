@@ -34,17 +34,15 @@ public struct BookDetailView<ActionButton: View>: View {
                 HStack {
                     Spacer()
                     
-                    KFImage(URL(string: book.thumbnail ?? book.smallThumbnail ?? ""))
-                        .placeholder {
-                            Image(systemName: "book.closed")
-                                .foregroundStyle(.secondary)
-                                .font(.system(size: 48))
-                        }
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 160)
-                        .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    BookImageView(imageURL: book.displayImageSource) {
+                        Image(systemName: "book.closed")
+                            .foregroundStyle(.secondary)
+                            .font(.system(size: 48))
+                    }
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 120, height: 160)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
                     
                     Spacer()
                 }

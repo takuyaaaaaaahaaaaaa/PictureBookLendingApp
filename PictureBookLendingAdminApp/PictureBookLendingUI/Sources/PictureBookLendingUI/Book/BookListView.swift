@@ -242,7 +242,7 @@ public struct BookRowView<RowAction: View>: View {
     public var body: some View {
         HStack {
             // サムネイル画像
-            BookImageView(imageURL: book.smallThumbnail ?? book.thumbnail) {
+            BookImageView(imageURL: book.displaySmallImageSource) {
                 Image(systemName: "book.closed")
                     .foregroundStyle(.secondary)
                     .font(.title2)

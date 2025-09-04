@@ -21,6 +21,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var smallThumbnail: String?
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
+    /// ローカル保存された画像のファイル名
+    public var localImageFileName: String?
     /// 対象読者
     public var targetAge: TargetAudience?
     /// ページ数
@@ -43,6 +45,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     ///   - description: 説明・あらすじ（任意）
     ///   - smallThumbnail: 小さなサムネイル画像のURL（任意）
     ///   - thumbnail: 通常サイズのサムネイル画像のURL（任意）
+    ///   - localImageFileName: ローカル保存された画像のファイル名（任意）
     ///   - targetAge: 対象年齢（任意）
     ///   - pageCount: ページ数（任意）
     ///   - categories: カテゴリ・ジャンル（デフォルトは空配列）
@@ -58,6 +61,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         description: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
+        localImageFileName: String? = nil,
         targetAge: TargetAudience? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
@@ -74,10 +78,44 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.description = description
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
+        self.localImageFileName = localImageFileName
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories
         self.kanaGroup = kanaGroup
     }
     
+    /// 表示用の画像URLを取得する
+    /// ローカル画像が存在する場合はfile://付きフルパスを返し、そうでなければ外部URLを返す
+    /// - Returns: 画像のURL（存在しない場合はnil）
+    public var displayImageSource: String? {
+        // ローカル画像が存在する場合は優先してfile://付きフルパスを返す
+        if let localImageFileName = localImageFileName {
+            let documentsURL = FileManager.default.urls(
+                for: .documentDirectory, in: .userDomainMask
+            ).first!
+            let imageDirectoryURL = documentsURL.appendingPathComponent("BookImages")
+            let fileURL = imageDirectoryURL.appendingPathComponent(localImageFileName)
+            return fileURL.absoluteString
+        }
+        // 外部URLのサムネイル
+        return thumbnail ?? smallThumbnail
+    }
+    
+    /// 表示用の画像URLを取得する（小さいサムネイル優先）
+    /// ローカル画像が存在する場合はfile://付きフルパスを返し、そうでなければ外部URLを返す
+    /// - Returns: 画像のURL（存在しない場合はnil）
+    public var displaySmallImageSource: String? {
+        // ローカル画像が存在する場合は優先してfile://付きフルパスを返す
+        if let localImageFileName = localImageFileName {
+            let documentsURL = FileManager.default.urls(
+                for: .documentDirectory, in: .userDomainMask
+            ).first!
+            let imageDirectoryURL = documentsURL.appendingPathComponent("BookImages")
+            let fileURL = imageDirectoryURL.appendingPathComponent(localImageFileName)
+            return fileURL.absoluteString
+        }
+        // 外部URLのサムネイル（小さいサイズ優先）
+        return smallThumbnail ?? thumbnail
+    }
 }

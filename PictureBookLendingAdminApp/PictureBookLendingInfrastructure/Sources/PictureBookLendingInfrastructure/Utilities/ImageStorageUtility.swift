@@ -32,11 +32,11 @@ public enum ImageStorageUtility {
             }
         }
         
-        /// 画像を保存してローカルパスを返す
+        /// 画像を保存してファイル名を返す
         /// - Parameters:
         ///   - image: 保存する画像
         ///   - fileName: ファイル名（拡張子なし、デフォルトでUUID生成）
-        /// - Returns: 保存されたファイルのローカルパス
+        /// - Returns: 保存されたファイル名（拡張子付き）
         /// - Throws: 保存に失敗した場合のエラー
         public static func saveImage(_ image: UIImage, fileName: String = UUID().uuidString) throws
             -> String
@@ -52,50 +52,49 @@ public enum ImageStorageUtility {
             
             try imageData.write(to: fileURL)
             
-            // ローカルパスを返す（file://スキームを含む）
-            return fileURL.absoluteString
+            // ファイル名のみを返す（アップデート時のコンテナID変更に対応）
+            return fullFileName
         }
         
-        /// ローカルパスから画像を読み込む
-        /// - Parameter localPath: ローカルファイルパス
+        /// ローカルパスまたはファイル名から画像を読み込む
+        /// - Parameter pathOrFileName: ローカルファイルパス（file://形式）またはファイル名
         /// - Returns: 読み込まれた画像（失敗時はnil）
-        public static func loadImage(from localPath: String) -> UIImage? {
-            guard let url = URL(string: localPath) else { return nil }
-            
-            // file://スキームの場合はローカルファイル
-            if url.scheme == "file" {
+        public static func loadImage(from pathOrFileName: String) -> UIImage? {
+            // TODO: file://スキームの後方互換性サポート - 将来的に削除予定
+            // file://スキームの場合は絶対パス（後方互換性のため）
+            if pathOrFileName.hasPrefix("file://") {
+                guard let url = URL(string: pathOrFileName) else { return nil }
                 return UIImage(contentsOfFile: url.path)
             }
             
-            // それ以外は従来のURL（リモート画像など）として扱う
-            return nil
+            // ファイル名のみの場合は動的にパスを構築
+            let fileURL = imageDirectoryURL.appendingPathComponent(pathOrFileName)
+            return UIImage(contentsOfFile: fileURL.path)
         }
         
-        /// 指定されたローカルパスの画像ファイルを削除
-        /// - Parameter localPath: 削除するファイルのローカルパス
+        /// 指定されたローカルパスまたはファイル名の画像ファイルを削除
+        /// - Parameter pathOrFileName: 削除するファイルのローカルパス（file://形式）またはファイル名
         /// - Returns: 削除に成功した場合はtrue
-        public static func deleteImage(at localPath: String) -> Bool {
-            guard let url = URL(string: localPath),
-                url.scheme == "file"
-            else { return false }
+        public static func deleteImage(at pathOrFileName: String) -> Bool {
+            let fileURL: URL
+            
+            // TODO: file://スキームの後方互換性サポート - 将来的に削除予定
+            // file://スキームの場合は絶対パス（後方互換性のため）
+            if pathOrFileName.hasPrefix("file://") {
+                guard let url = URL(string: pathOrFileName) else { return false }
+                fileURL = url
+            } else {
+                // ファイル名のみの場合は動的にパスを構築
+                fileURL = imageDirectoryURL.appendingPathComponent(pathOrFileName)
+            }
             
             do {
-                try FileManager.default.removeItem(at: url)
+                try FileManager.default.removeItem(at: fileURL)
                 return true
             } catch {
                 print("画像削除に失敗: \(error)")
                 return false
             }
-        }
-        
-        /// ローカル画像パスかどうかを判定
-        /// - Parameter path: 判定する文字列
-        /// - Returns: ローカル画像パスの場合はtrue
-        public static func isLocalImagePath(_ path: String?) -> Bool {
-            guard let path = path,
-                let url = URL(string: path)
-            else { return false }
-            return url.scheme == "file"
         }
 
     #endif

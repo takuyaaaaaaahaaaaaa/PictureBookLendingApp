@@ -65,17 +65,15 @@ public struct BookSearchResultRowView: View {
     public var body: some View {
         HStack {
             // サムネイル画像
-            KFImage(URL(string: scoredBook.book.thumbnail ?? scoredBook.book.smallThumbnail ?? ""))
-                .placeholder {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                        .font(.title2)
-                }
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 60, height: 80)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            BookImageView(imageURL: scoredBook.book.displayImageSource) {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(.secondary)
+                    .font(.title2)
+            }
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 60, height: 80)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(scoredBook.book.title)
