@@ -241,8 +241,8 @@ public struct BookFormView<AutoFillButton: View>: View {
             HStack {
                 Spacer()
                 
-                if let thumbnailURL = book.thumbnail ?? book.smallThumbnail {
-                    BookImageView(imageURL: thumbnailURL) {
+                if let imageSource = book.displayImageSource {
+                    BookImageView(imageURL: imageSource) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
                             .font(.system(size: 40))

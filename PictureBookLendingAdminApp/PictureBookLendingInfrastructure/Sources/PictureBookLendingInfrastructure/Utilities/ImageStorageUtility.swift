@@ -96,22 +96,6 @@ public enum ImageStorageUtility {
                 return false
             }
         }
-        
-        /// ローカル画像パスまたはファイル名かどうかを判定
-        /// - Parameter pathOrFileName: 判定する文字列
-        /// - Returns: ローカル画像パスまたはファイル名の場合はtrue
-        public static func isLocalImage(_ pathOrFileName: String?) -> Bool {
-            guard let pathOrFileName = pathOrFileName else { return false }
-            
-            // TODO: file://スキームの後方互換性サポート - 将来的に削除予定
-            // file://スキームの場合はローカルパス
-            if pathOrFileName.hasPrefix("file://") {
-                return true
-            }
-            
-            // .jpgで終わる場合はローカル画像ファイル名と判定
-            return pathOrFileName.hasSuffix(".jpg")
-        }
 
     #endif
 }
