@@ -42,6 +42,9 @@ final public class SwiftDataBook {
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
     
+    /// ローカル保存された画像のファイル名
+    public var localImageFileName: String?
+    
     /// 対象年齢（rawValue文字列として保存）
     public var targetAge: String?
     
@@ -67,6 +70,7 @@ final public class SwiftDataBook {
     ///   - bookDescription: 絵本の説明・概要
     ///   - smallThumbnail: 小さなサムネイル画像のURL
     ///   - thumbnail: 通常サイズのサムネイル画像のURL
+    ///   - localImageFileName: ローカル保存された画像のファイル名
     ///   - targetAge: 対象年齢
     ///   - pageCount: ページ数
     ///   - categories: カテゴリ・ジャンルの配列
@@ -81,6 +85,7 @@ final public class SwiftDataBook {
         bookDescription: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
+        localImageFileName: String? = nil,
         targetAge: String? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
@@ -97,6 +102,7 @@ final public class SwiftDataBook {
         self.bookDescription = bookDescription
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
+        self.localImageFileName = localImageFileName
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories

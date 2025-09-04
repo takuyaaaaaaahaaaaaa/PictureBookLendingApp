@@ -21,6 +21,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var smallThumbnail: String?
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
+    /// ローカル保存された画像のファイル名
+    public var localImageFileName: String?
     /// 対象読者
     public var targetAge: TargetAudience?
     /// ページ数
@@ -43,6 +45,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     ///   - description: 説明・あらすじ（任意）
     ///   - smallThumbnail: 小さなサムネイル画像のURL（任意）
     ///   - thumbnail: 通常サイズのサムネイル画像のURL（任意）
+    ///   - localImageFileName: ローカル保存された画像のファイル名（任意）
     ///   - targetAge: 対象年齢（任意）
     ///   - pageCount: ページ数（任意）
     ///   - categories: カテゴリ・ジャンル（デフォルトは空配列）
@@ -58,6 +61,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         description: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
+        localImageFileName: String? = nil,
         targetAge: TargetAudience? = nil,
         pageCount: Int? = nil,
         categories: [String] = [],
@@ -74,6 +78,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.description = description
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
+        self.localImageFileName = localImageFileName
         self.targetAge = targetAge
         self.pageCount = pageCount
         self.categories = categories

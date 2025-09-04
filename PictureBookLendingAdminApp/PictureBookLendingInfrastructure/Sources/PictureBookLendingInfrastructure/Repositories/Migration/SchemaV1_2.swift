@@ -1,15 +1,15 @@
 //
-//  SchemaV1_1.swift
+//  SchemaV1_2.swift
 //  PictureBookLendingAdmin
 //
-//  Created by takuya_tominaga on 8/28/25.
+//  Created by takuya_tominaga on 9/4/25.
 //
 
 import Foundation
 import SwiftData
 
-struct PictureBookLendingSchemaV1_1: VersionedSchema {
-    static var versionIdentifier: Schema.Version { Schema.Version(1, 1, 0) }
+struct PictureBookLendingSchemaV1_2: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(1, 2, 0) }
     static var models: [any PersistentModel.Type] {
         [
             SwiftDataLoan.self,
@@ -57,6 +57,7 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
         public var bookDescription: String?
         public var smallThumbnail: String?
         public var thumbnail: String?
+        public var localImageFileName: String?  // 新しく追加されたフィールド
         public var targetAge: String?
         public var pageCount: Int?
         public var categories: [String]
@@ -72,6 +73,7 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
             bookDescription: String? = nil,
             smallThumbnail: String? = nil,
             thumbnail: String? = nil,
+            localImageFileName: String? = nil,
             targetAge: String? = nil,
             pageCount: Int? = nil,
             categories: [String] = [],
@@ -88,25 +90,11 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
             self.bookDescription = bookDescription
             self.smallThumbnail = smallThumbnail
             self.thumbnail = thumbnail
+            self.localImageFileName = localImageFileName
             self.targetAge = targetAge
             self.pageCount = pageCount
             self.categories = categories
             self.kanaGroup = kanaGroup
-        }
-    }
-    
-    @Model
-    final public class SwiftDataClassGroup {
-        @Attribute(.unique) public var id: UUID
-        public var name: String
-        public var ageGroup: String
-        public var year: Int
-        
-        public init(id: UUID, name: String, ageGroup: String, year: Int) {
-            self.id = id
-            self.name = name
-            self.ageGroup = ageGroup
-            self.year = year
         }
     }
     
@@ -139,6 +127,21 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
         }
     }
     
+    @Model
+    final public class SwiftDataClassGroup {
+        @Attribute(.unique) public var id: UUID
+        public var name: String
+        public var ageGroup: String
+        public var year: Int
+        
+        public init(id: UUID, name: String, ageGroup: String, year: Int) {
+            self.id = id
+            self.name = name
+            self.ageGroup = ageGroup
+            self.year = year
+        }
+    }
+    
     public enum KanaGroup: String, CaseIterable, Sendable, Codable {
         case a = "あ"
         case ka = "か"
@@ -158,6 +161,7 @@ struct PictureBookLendingSchemaV1_1: VersionedSchema {
         public var name: String
         public var classGroupId: UUID
         public var userType: UserType
+        
         public init(
             id: UUID = UUID(),
             name: String,
