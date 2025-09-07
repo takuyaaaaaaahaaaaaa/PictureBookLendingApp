@@ -9,6 +9,8 @@ import SwiftUI
 public struct BookDetailView<ActionButton: View>: View {
     /// 表示・編集対象の絵本データ
     @Binding var book: Book
+    /// 表示用の画像URL（App層で計算済み）
+    let imageURL: String?
     /// 現在の貸出情報（貸出中の場合のみ存在）
     let currentLoan: Loan?
     /// 貸出履歴一覧
@@ -18,11 +20,13 @@ public struct BookDetailView<ActionButton: View>: View {
     
     public init(
         book: Binding<Book>,
+        imageURL: String? = nil,
         currentLoan: Loan? = nil,
         loanHistory: [Loan] = [],
         @ViewBuilder actionButton: @escaping () -> ActionButton
     ) {
         self._book = book
+        self.imageURL = imageURL
         self.currentLoan = currentLoan
         self.loanHistory = loanHistory
         self.actionButton = actionButton
@@ -34,7 +38,7 @@ public struct BookDetailView<ActionButton: View>: View {
                 HStack {
                     Spacer()
                     
-                    BookImageView(imageURL: book.displayImageSource) {
+                    BookImageView(imageURL: imageURL) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
                             .font(.system(size: 48))

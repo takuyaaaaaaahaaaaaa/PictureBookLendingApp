@@ -35,14 +35,18 @@ struct BookListContainerView: View {
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onEdit: handleEditBook,
-            onDelete: handleDeleteBook
-        ) { book in
-            if isEditMode {
-                BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
-            } else {
-                LoanActionContainerButton(bookId: book.id, alertState: $alertState)
+            onDelete: handleDeleteBook,
+            rowAction: { book in
+                if isEditMode {
+                    BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
+                } else {
+                    LoanActionContainerButton(bookId: book.id, alertState: $alertState)
+                }
+            },
+            imageURLProvider: { book in
+                book.displaySmallImageSourceWithLocal
             }
-        }
+        )
         #if os(iOS)
             .searchable(
                 text: $searchText,

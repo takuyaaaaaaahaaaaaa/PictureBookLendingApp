@@ -49,6 +49,7 @@ struct BookFormContainerView: View {
         NavigationStack {
             BookFormView(
                 book: $book,
+                imageURL: book.displayImageSourceWithLocal,
                 mode: mode,
                 autoFillButton: {
                     BookAutoFillContainerButton(
