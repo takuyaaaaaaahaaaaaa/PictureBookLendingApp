@@ -30,10 +30,14 @@ struct SettingsBookListContainerView: View {
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onEdit: handleEditBook,
-            onDelete: handleDeleteBook
-        ) { book in
-            BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
-        }
+            onDelete: handleDeleteBook,
+            rowAction: { book in
+                BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
+            },
+            imageURLProvider: { book in
+                book.displaySmallImageSourceWithLocal
+            }
+        )
         .navigationTitle("絵本管理")
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
