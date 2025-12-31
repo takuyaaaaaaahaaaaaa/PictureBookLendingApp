@@ -34,7 +34,7 @@ jobs:
             - name: Setup Xcode
               uses: maxim-lobanov/setup-xcode@v1
               with:
-                  xcode-version: latest-stable
+                  xcode-version: '26.0-beta'
 
             - name: Run Claude PR Action
               uses: anthropics/claude-code-action@beta
