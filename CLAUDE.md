@@ -115,6 +115,21 @@ xcodebuild -scheme PictureBookLendingAdmin test -project PictureBookLendingAdmin
 
 ---
 
+## PR・マージ方針
+
+判定基準：**「このPRの合否は目と指でしか判定できないか？」**
+
+* **実機確認してからマージ**：UX・アニメーション・ハプティクス・レイアウト等、
+  使用感が本質の変更。PR作成後はマージせず、ユーザーが実機で確認してOKを
+  出してからマージする。調整（表示時間・文言等）はマージ前にPR上で行う
+* **即マージしてよい**：ドキュメント・リファクタリング・テストで正しさを
+  判定できる修正
+* このリポジトリはGitHub設定で auto-merge が無効のため、グローバル設定の
+  `gh pr merge --auto` は使わず `gh pr merge <PR番号> --squash --delete-branch`
+  で直接マージする
+
+---
+
 ## 🏗 アーキテクチャ概要（SwiftUI 共通指針）
 
 ### 採用パターン
