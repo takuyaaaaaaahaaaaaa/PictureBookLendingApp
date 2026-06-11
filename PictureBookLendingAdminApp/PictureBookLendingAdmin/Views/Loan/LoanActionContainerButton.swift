@@ -43,7 +43,6 @@ struct LoanActionContainerButton: View {
     }
     
     var body: some View {
-        let _ = Self._printChanges()
         VStack {
             if isBookLent {
                 ReturnButtonView(onTap: handleReturnTap)
@@ -69,11 +68,6 @@ struct LoanActionContainerButton: View {
                 }
             }
         }
-        //        .alert(alertState.title, isPresented: $alertState.isPresented) {
-        //            Button("OK", role: .cancel) {}
-        //        } message: {
-        //            Text(alertState.message)
-        //        }
     }
     
     // MARK: - Actions
