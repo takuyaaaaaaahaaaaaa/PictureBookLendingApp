@@ -16,6 +16,10 @@ struct LoanFormContainerView: View {
     @Environment(LoanSettingsModel.self) private var loanSettingModel
     @Environment(\.dismiss) private var dismiss
     
+    /// 前回貸出した組のID（次回フォームの初期値として記憶。連続貸出の組選択を省略するため）
+    @AppStorage(StorageKeys.lastSelectedClassGroupId)
+    private var lastSelectedClassGroupId = ""
+    
     /// 選択したクラス（組）
     @State private var selectedClassGroup: ClassGroup?
     /// 選択した利用者
@@ -84,6 +88,7 @@ struct LoanFormContainerView: View {
             }
             .onAppear {
                 refreshData()
+                restoreLastSelectedClassGroup()
             }
         }
     }
@@ -140,6 +145,7 @@ struct LoanFormContainerView: View {
             }
             
             _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id)
+            lastSelectedClassGroupId = selectedClassGroup?.id.uuidString ?? ""
             onLoanSuccess(user.name)
             dismiss()
         } catch {
@@ -152,6 +158,24 @@ struct LoanFormContainerView: View {
         loanModel.refreshLoans()
         classGroupModel.refreshClassGroups()
     }
+    
+    /// 前回貸出した組を初期選択として復元する
+    ///
+    /// 連続貸出時（同じ組の親子が並んでいる状況）の組選択タップを省略する。
+    /// 組が削除されている場合や記憶がない場合は未選択のまま。
+    private func restoreLastSelectedClassGroup() {
+        guard selectedClassGroup == nil,
+            let groupId = UUID(uuidString: lastSelectedClassGroupId),
+            let group = classGroupModel.getAllClassGroups().first(where: { $0.id == groupId })
+        else { return }
+        selectedClassGroup = group
+    }
+}
+
+/// 画面間で共有しないローカル設定のUserDefaultsキー
+private enum StorageKeys {
+    /// 前回貸出した組のID
+    static let lastSelectedClassGroupId = "lastSelectedClassGroupId"
 }
 
 #Preview {
