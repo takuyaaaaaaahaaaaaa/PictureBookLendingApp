@@ -69,6 +69,8 @@ public struct BookListView<RowAction: View>: View {
     public let onEdit: (Book) -> Void
     /// 絵本削除時の動作
     public let onDelete: (Book) -> Void
+    /// 絵本のサムネイル画像URLを解決するクロージャ（App層で解決済みのURLを返す）
+    public let imageURLProvider: (Book) -> String?
     /// 各行に表示するアクションビューを生成するクロージャ
     public let rowAction: (Book) -> RowAction
     
@@ -82,6 +84,7 @@ public struct BookListView<RowAction: View>: View {
         isEditMode: Bool = false,
         onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (Book) -> Void,
+        imageURLProvider: @escaping (Book) -> String?,
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
         self.sections = sections
@@ -92,6 +95,7 @@ public struct BookListView<RowAction: View>: View {
         self.isEditMode = isEditMode
         self.onEdit = onEdit
         self.onDelete = onDelete
+        self.imageURLProvider = imageURLProvider
         self.rowAction = rowAction
     }
     
@@ -211,12 +215,12 @@ public struct BookListView<RowAction: View>: View {
             Button {
                 onEdit(book)
             } label: {
-                BookRowView(book: book, rowAction: rowAction)
+                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
             }
             .buttonStyle(.plain)
         } else {
             NavigationLink(value: book) {
-                BookRowView(book: book, rowAction: rowAction)
+                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
             }
         }
     }
@@ -227,12 +231,13 @@ public struct BookListView<RowAction: View>: View {
 /// 一覧の各行に表示する絵本情報のレイアウトを定義します。
 public struct BookRowView<RowAction: View>: View {
     let book: Book
+    let imageURL: String?
     let rowAction: (Book) -> RowAction
     
     public var body: some View {
         HStack {
             // サムネイル画像
-            BookImageView(imageURL: book.displaySmallImageSource) {
+            BookImageView(imageURL: imageURL) {
                 Image(systemName: "book.closed")
                     .foregroundStyle(.secondary)
                     .font(.title2)
@@ -285,7 +290,10 @@ public struct BookRowView<RowAction: View>: View {
             selectedSortType: $selectedSortType,
             isEditMode: true,
             onEdit: { _ in },
-            onDelete: { _ in }
+            onDelete: { _ in },
+            imageURLProvider: { book in
+                book.displaySmallImageSource
+            }
         ) { book in
             LoanButtonView(onTap: {})
         }

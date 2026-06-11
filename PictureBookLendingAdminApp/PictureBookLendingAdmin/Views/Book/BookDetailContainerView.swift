@@ -22,6 +22,7 @@ struct BookDetailContainerView: View {
     var body: some View {
         BookDetailView(
             book: $book,
+            imageURL: book.resolvedImageSource,
             currentLoan: currentLoan,
             loanHistory: loanHistory,
         ) {

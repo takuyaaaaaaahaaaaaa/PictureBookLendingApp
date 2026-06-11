@@ -7,18 +7,26 @@ import Foundation
 /// 画像のローカル保存・読み込みを管理するユーティリティ
 public enum ImageStorageUtility {
     
+    /// 画像保存用のディレクトリ名
+    private static let imageDirectoryName = "BookImages"
+    
+    /// 画像保存用ディレクトリのURL
+    private static var imageDirectoryURL: URL {
+        let documentsURL = FileManager.default.urls(
+            for: .documentDirectory, in: .userDomainMask
+        ).first!
+        return documentsURL.appendingPathComponent(imageDirectoryName)
+    }
+    
+    /// ローカル保存された画像ファイル名から表示用のファイルURLを取得する
+    /// パスは呼び出し時に動的に構築する（アップデート時のコンテナID変更に対応）
+    /// - Parameter fileName: 保存済み画像のファイル名（拡張子付き）
+    /// - Returns: 画像ファイルのURL
+    public static func imageURL(for fileName: String) -> URL {
+        imageDirectoryURL.appendingPathComponent(fileName)
+    }
+    
     #if canImport(UIKit)
-        
-        /// 画像保存用のディレクトリ名
-        private static let imageDirectoryName = "BookImages"
-        
-        /// 画像保存用ディレクトリのURL
-        private static var imageDirectoryURL: URL {
-            let documentsURL = FileManager.default.urls(
-                for: .documentDirectory, in: .userDomainMask
-            ).first!
-            return documentsURL.appendingPathComponent(imageDirectoryName)
-        }
         
         /// 画像保存用ディレクトリを作成
         private static func createImageDirectoryIfNeeded() throws {
