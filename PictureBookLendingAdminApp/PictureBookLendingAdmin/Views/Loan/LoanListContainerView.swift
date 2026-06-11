@@ -19,6 +19,8 @@ struct LoanListContainerView: View {
     @State private var isSettingsPresented = false
     /// アラート状態
     @State private var alertState = AlertState()
+    /// 成功フィードバック状態
+    @State private var successFeedback = SuccessFeedback()
     
     var body: some View {
         LoanListView(
@@ -26,7 +28,8 @@ struct LoanListContainerView: View {
             selectedGroupFilter: $selectedGroupFilter,
             groupFilterOptions: groupFilterOptions
         ) { loan in
-            LoanActionContainerButton(bookId: loan.bookId, alertState: $alertState)
+            LoanActionContainerButton(
+                bookId: loan.bookId, alertState: $alertState, successFeedback: $successFeedback)
         }
         .navigationTitle("貸出管理")
         .toolbar {
@@ -53,6 +56,7 @@ struct LoanListContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .successFeedback($successFeedback)
         .onAppear {
             selectedGroupFilter = nil  // フィルターリセット
             refreshData()

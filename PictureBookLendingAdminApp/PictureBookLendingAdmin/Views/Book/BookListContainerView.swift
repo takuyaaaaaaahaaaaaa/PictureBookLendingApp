@@ -19,6 +19,7 @@ struct BookListContainerView: View {
     @State private var isBulkAddSheetPresented = false
     @State private var editingBook: Book?
     @State private var alertState = AlertState()
+    @State private var successFeedback = SuccessFeedback()
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
@@ -43,7 +44,8 @@ struct BookListContainerView: View {
             if isEditMode {
                 BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
             } else {
-                LoanActionContainerButton(bookId: book.id, alertState: $alertState)
+                LoanActionContainerButton(
+                    bookId: book.id, alertState: $alertState, successFeedback: $successFeedback)
             }
         }
         #if os(iOS)
@@ -84,6 +86,7 @@ struct BookListContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .successFeedback($successFeedback)
         .onChange(of: bookModel.books) {
             loadBookSections()
         }

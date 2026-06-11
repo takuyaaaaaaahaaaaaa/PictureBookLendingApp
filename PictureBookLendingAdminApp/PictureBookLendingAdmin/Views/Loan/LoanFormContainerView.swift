@@ -16,8 +16,6 @@ struct LoanFormContainerView: View {
     @Environment(LoanSettingsModel.self) private var loanSettingModel
     @Environment(\.dismiss) private var dismiss
     
-    /// 選択した絵本
-    let selectedBook: Book
     /// 選択したクラス（組）
     @State private var selectedClassGroup: ClassGroup?
     /// 選択した利用者
@@ -25,6 +23,11 @@ struct LoanFormContainerView: View {
     /// 利用者種別選択（デフォルトは園児）
     @State private var selectedUserTypeCategory: UserTypeCategory = .child
     @State private var alertState = AlertState()
+    
+    /// 選択した絵本
+    let selectedBook: Book
+    /// 貸出成功時の動作（貸出先の利用者名を渡す）
+    let onLoanSuccess: (String) -> Void
     
     var body: some View {
         NavigationStack {
@@ -75,13 +78,7 @@ struct LoanFormContainerView: View {
                 #endif
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
-                if alertState.type == .success {
-                    Button("OK", role: .cancel) {
-                        dismiss()  // 成功時は画面を閉じる
-                    }
-                } else {
-                    Button("OK", role: .cancel) {}
-                }
+                Button("OK", role: .cancel) {}
             } message: {
                 Text(alertState.message)
             }
@@ -143,7 +140,8 @@ struct LoanFormContainerView: View {
             }
             
             _ = try loanModel.lendBook(bookId: selectedBook.id, userId: user.id)
-            alertState = .success("貸出登録が完了しました")
+            onLoanSuccess(user.name)
+            dismiss()
         } catch {
             alertState = .error("貸出登録に失敗しました", message: "\(error.localizedDescription)")
         }
@@ -171,7 +169,7 @@ struct LoanFormContainerView: View {
     
     let selectedBook = Book(title: "りんごかもしれない", author: "ヨシタケ・シンスケ", managementNumber: "え001")
     
-    LoanFormContainerView(selectedBook: selectedBook)
+    LoanFormContainerView(selectedBook: selectedBook, onLoanSuccess: { _ in })
         .environment(userModel)
         .environment(loanModel)
         .environment(classGroupModel)
