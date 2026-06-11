@@ -21,6 +21,8 @@ struct LoanListContainerView: View {
     @State private var alertState = AlertState()
     /// 成功フィードバック状態
     @State private var successFeedback = SuccessFeedback()
+    /// 取り消し可能フィードバック状態
+    @State private var undoFeedback = UndoFeedback()
     
     var body: some View {
         LoanListView(
@@ -29,7 +31,8 @@ struct LoanListContainerView: View {
             groupFilterOptions: groupFilterOptions
         ) { loan in
             LoanActionContainerButton(
-                bookId: loan.bookId, alertState: $alertState, successFeedback: $successFeedback)
+                bookId: loan.bookId, alertState: $alertState, successFeedback: $successFeedback,
+                undoFeedback: $undoFeedback)
         }
         .navigationTitle("貸出管理")
         .toolbar {
@@ -57,6 +60,7 @@ struct LoanListContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback)
+        .undoSnackbar($undoFeedback, onUndo: handleUndoReturn)
         .onAppear {
             selectedGroupFilter = nil  // フィルターリセット
             refreshData()
@@ -121,6 +125,16 @@ struct LoanListContainerView: View {
             return "未分類"
         }
         return classGroup.name
+    }
+    
+    /// 返却の取り消し（スナックバーの「元に戻す」）
+    private func handleUndoReturn() {
+        guard let loanId = undoFeedback.targetId else { return }
+        do {
+            try loanModel.undoReturn(loanId: loanId)
+        } catch {
+            alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
+        }
     }
     
     /// データ更新
