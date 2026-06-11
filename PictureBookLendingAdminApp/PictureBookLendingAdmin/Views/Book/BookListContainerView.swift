@@ -35,7 +35,10 @@ struct BookListContainerView: View {
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onEdit: handleEditBook,
-            onDelete: handleDeleteBook
+            onDelete: handleDeleteBook,
+            imageURLProvider: { book in
+                book.resolvedSmallImageSource
+            }
         ) { book in
             if isEditMode {
                 BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
