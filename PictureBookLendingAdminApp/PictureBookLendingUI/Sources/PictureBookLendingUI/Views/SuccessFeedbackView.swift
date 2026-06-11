@@ -3,10 +3,18 @@ import SwiftUI
 /// 成功フィードバックの表示状態
 ///
 /// OKタップ不要の成功フィードバック（チェックマーク表示＋ハプティクス）を制御します。
-/// `occurrenceCount` は連続表示時にハプティクスと自動消滅タイマーを再起動させるためのトリガです。
 public struct SuccessFeedback: Equatable, Sendable {
+    /// フィードバックが表示中かどうか
     public var isPresented: Bool
+    /// 表示するメッセージ（例：「○○さんに貸出しました」）
     public var message: String
+    /// `show(_:)` が呼ばれた累計回数
+    ///
+    /// SwiftUIは「値の変化」しか検知できないため、表示中にもう一度 `show(_:)` を
+    /// 呼んでも `isPresented`（true→true）では再表示を検知できない。
+    /// この値を `sensoryFeedback` と `task(id:)` のトリガに渡すことで、
+    /// 連続操作時にも毎回ハプティクスが鳴り、自動消滅タイマーが新しい表示の
+    /// タイミングから再スタートする。
     public private(set) var occurrenceCount: Int
     
     public init() {
