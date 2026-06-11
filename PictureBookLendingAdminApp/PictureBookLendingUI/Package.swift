@@ -27,11 +27,13 @@ let package = Package(
             dependencies: [
                 .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
                 .product(name: "Kingfisher", package: "Kingfisher"),
-            ]
+            ],
+            path: "Sources"
         ),
         .testTarget(
             name: "PictureBookLendingUITests",
-            dependencies: ["PictureBookLendingUI"]
+            dependencies: ["PictureBookLendingUI"],
+            path: "Tests"
         ),
     ]
 )

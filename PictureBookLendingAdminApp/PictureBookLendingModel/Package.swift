@@ -25,13 +25,15 @@ let package = Package(
             name: "PictureBookLendingModel",
             dependencies: [
                 .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain")
-            ]
+            ],
+            path: "Sources"
         ),
         .testTarget(
             name: "PictureBookLendingModelTests",
             dependencies: [
                 "PictureBookLendingModel"
-            ]
+            ],
+            path: "Tests"
         ),
     ]
 )
