@@ -8,7 +8,7 @@ final class LoanSettingsTests: XCTestCase {
         // デフォルト設定のテスト
         let defaultSettings = LoanSettings.default
         
-        XCTAssertEqual(defaultSettings.defaultLoanPeriodDays, 14)
+        XCTAssertEqual(defaultSettings.defaultLoanPeriodDays, 7)
         XCTAssertTrue(defaultSettings.isValid())
     }
     
