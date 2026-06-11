@@ -28,6 +28,7 @@ struct AutoFillTip: Tip {
 /// 画面制御はContainer Viewに委譲します。
 public struct BookFormView<AutoFillButton: View>: View {
     @Binding var book: Book
+    let imageURL: String?
     let mode: BookFormMode
     let autoFillButton: AutoFillButton?
     let onSave: () -> Void
@@ -39,6 +40,7 @@ public struct BookFormView<AutoFillButton: View>: View {
     
     public init(
         book: Binding<Book>,
+        imageURL: String? = nil,
         mode: BookFormMode,
         @ViewBuilder autoFillButton: () -> AutoFillButton,
         onSave: @escaping () -> Void,
@@ -47,6 +49,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         onCameraTap: (() -> Void)? = nil
     ) {
         self._book = book
+        self.imageURL = imageURL
         self.mode = mode
         self.autoFillButton = autoFillButton()
         self.onSave = onSave
@@ -64,6 +67,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         onCameraTap: (() -> Void)? = nil
     ) where AutoFillButton == EmptyView {
         self._book = book
+        self.imageURL = nil
         self.mode = mode
         self.autoFillButton = nil
         self.onSave = onSave
@@ -241,7 +245,7 @@ public struct BookFormView<AutoFillButton: View>: View {
             HStack {
                 Spacer()
                 
-                if let imageSource = book.displayImageSource {
+                if let imageSource = imageURL {
                     BookImageView(imageURL: imageSource) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
