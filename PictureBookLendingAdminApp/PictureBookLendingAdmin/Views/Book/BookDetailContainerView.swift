@@ -14,6 +14,7 @@ struct BookDetailContainerView: View {
     
     @State private var book: Book
     @State private var alertState = AlertState()
+    @State private var successFeedback = SuccessFeedback()
     
     init(book: Book) {
         self._book = State(initialValue: book)
@@ -25,7 +26,8 @@ struct BookDetailContainerView: View {
             currentLoan: currentLoan,
             loanHistory: loanHistory,
         ) {
-            LoanActionContainerButton(bookId: book.id, alertState: $alertState)
+            LoanActionContainerButton(
+                bookId: book.id, alertState: $alertState, successFeedback: $successFeedback)
         }
         .navigationTitle(book.title)
         #if os(iOS)
@@ -36,6 +38,7 @@ struct BookDetailContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .successFeedback($successFeedback)
         .onChange(of: book) { _, newValue in
             do {
                 _ = try bookModel.updateBook(newValue)
