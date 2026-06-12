@@ -299,4 +299,75 @@ struct LoanModelTests {
         // アクティブな貸出は3冊のまま
         #expect(loanModel.getUserActiveLoans(userId: userId).count == 3)
     }
+    
+    /// 返却取り消し機能のテスト
+    @Test("返却を取り消すと貸出中に戻ることのテスト")
+    @MainActor
+    func undoReturn() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let bookId = testBook.id
+        let userId = testUser.id
+        
+        // 貸出→返却
+        let loan = try loanModel.lendBook(bookId: bookId, userId: userId)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        #expect(loanModel.isBookLent(bookId: bookId) == false)
+        
+        // 返却を取り消す
+        let restoredLoan = try loanModel.undoReturn(loanId: loan.id)
+        
+        // 貸出中に戻り、元の貸出情報が保持されている
+        #expect(restoredLoan.id == loan.id)
+        #expect(restoredLoan.returnedDate == nil)
+        #expect(restoredLoan.isReturned == false)
+        #expect(restoredLoan.loanDate == loan.loanDate)
+        #expect(restoredLoan.dueDate == loan.dueDate)
+        #expect(loanModel.isBookLent(bookId: bookId) == true)
+        #expect(loanModel.getUserActiveLoans(userId: userId).count == 1)
+    }
+    
+    @Test("未返却の貸出の返却取り消しはエラーが発生することのテスト")
+    @MainActor
+    func undoReturnNotReturned() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        // 貸出のみ（未返却）
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        
+        #expect(throws: LoanModelError.undoReturnFailed) {
+            try loanModel.undoReturn(loanId: loan.id)
+        }
+    }
+    
+    @Test("存在しない貸出の返却取り消しはエラーが発生することのテスト")
+    @MainActor
+    func undoReturnLoanNotFound() throws {
+        let (_, _, _, loanModel, _, _) = try createLoanModel()
+        
+        #expect(throws: LoanModelError.loanNotFound) {
+            try loanModel.undoReturn(loanId: UUID())
+        }
+    }
+    
+    @Test("取り消しまでに同じ絵本が貸出中になっていたらエラーが発生することのテスト")
+    @MainActor
+    func undoReturnBookAlreadyLent() throws {
+        let (mockRepositoryFactory, _, userModel, loanModel, testBook, testUser) =
+            try createLoanModel()
+        let bookId = testBook.id
+        
+        // 利用者Aに貸出→返却
+        let loan = try loanModel.lendBook(bookId: bookId, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        
+        // 別の利用者Bに同じ絵本を貸出
+        let classGroup = try mockRepositoryFactory.classGroupRepository.fetchAll().first!
+        let user2 = try userModel.registerUser(User(name: "鈴木花子", classGroupId: classGroup.id))
+        _ = try loanModel.lendBook(bookId: bookId, userId: user2.id)
+        
+        // 利用者Aの返却は取り消せない
+        #expect(throws: LoanModelError.bookAlreadyLent) {
+            try loanModel.undoReturn(loanId: loan.id)
+        }
+    }
 }
