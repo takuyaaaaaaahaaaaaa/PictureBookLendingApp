@@ -89,7 +89,7 @@ struct BookListContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback)
-        .undoSnackbar($undoFeedback, onUndo: handleUndoReturn)
+        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onChange(of: bookModel.books) {
             loadBookSections()
         }

@@ -60,7 +60,7 @@ struct LoanListContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback)
-        .undoSnackbar($undoFeedback, onUndo: handleUndoReturn)
+        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onAppear {
             selectedGroupFilter = nil  // フィルターリセット
             refreshData()

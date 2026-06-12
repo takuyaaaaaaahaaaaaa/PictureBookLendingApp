@@ -42,7 +42,7 @@ struct BookDetailContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback)
-        .undoSnackbar($undoFeedback, onUndo: handleUndoReturn)
+        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onChange(of: book) { _, newValue in
             do {
                 _ = try bookModel.updateBook(newValue)
