@@ -5,7 +5,7 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 正規化効果検証テスト - 正規化前後での検索精度を比較
-@Suite(.tags(.integrationTest))
+@Suite(.tags(.integrationTest), .liveAPITest)
 struct NormalizationEffectivenessTests {
     private let gateway = GoogleBookSearchGateway()
     private let normalizer = JapaneseStringNormalizer()

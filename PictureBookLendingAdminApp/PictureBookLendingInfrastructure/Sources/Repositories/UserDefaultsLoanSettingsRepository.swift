@@ -8,8 +8,7 @@ import PictureBookLendingDomain
 /// - JSONEncoder/JSONDecoderも不変なインスタンスなので同時アクセスが安全
 /// - FoundationがまだSendableプロトコルに準拠していないため、@uncheckedが必要
 public final class UserDefaultsLoanSettingsRepository: LoanSettingsRepositoryProtocol,
-    @unchecked
-    Sendable
+    @unchecked Sendable
 {
     private let userDefaults: UserDefaults
     private let encoder = JSONEncoder()
