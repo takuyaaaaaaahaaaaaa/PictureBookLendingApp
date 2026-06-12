@@ -18,6 +18,8 @@ public enum LoanModelError: Error, Equatable, LocalizedError {
     case lendingFailed
     /// その他の返却処理失敗エラー
     case returnFailed
+    /// 返却取り消し処理失敗エラー
+    case undoReturnFailed
     
     public var errorDescription: String? {
         switch self {
@@ -35,6 +37,8 @@ public enum LoanModelError: Error, Equatable, LocalizedError {
             return "貸出処理に失敗しました"
         case .returnFailed:
             return "返却処理に失敗しました"
+        case .undoReturnFailed:
+            return "返却の取り消しに失敗しました"
         }
     }
 }
@@ -211,6 +215,55 @@ public class LoanModel {
         
         // 見つかった貸出情報のIDで返却処理を実行
         return try returnBook(loanId: currentLoan.id)
+    }
+    
+    /// 返却を取り消す（返却操作のUndo）
+    ///
+    /// 返却済みの貸出情報を貸出中に戻します。貸出日・返却期限は元の値を保持します。
+    ///
+    /// - Parameter loanId: 返却を取り消す貸出情報のID
+    /// - Returns: 更新された貸出情報（貸出中に戻る）
+    /// - Throws: 取り消しに失敗した場合は `LoanModelError` を投げます
+    @discardableResult
+    public func undoReturn(loanId: UUID) throws -> Loan {
+        // 貸出情報を検索
+        guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
+            throw LoanModelError.loanNotFound
+        }
+        
+        let loan = loans[loanIndex]
+        
+        // 返却済みでなければ取り消せない
+        guard loan.isReturned else {
+            throw LoanModelError.undoReturnFailed
+        }
+        
+        // 取り消しまでに同じ絵本が貸し出されていたら取り消せない
+        if isBookLent(bookId: loan.bookId) {
+            throw LoanModelError.bookAlreadyLent
+        }
+        
+        // 取り消し処理：返却日を消して貸出中に戻す
+        let restoredLoan = Loan(
+            id: loan.id,
+            bookId: loan.bookId,
+            user: loan.user,
+            loanDate: loan.loanDate,
+            dueDate: loan.dueDate,
+            returnedDate: nil
+        )
+        
+        do {
+            // リポジトリで更新
+            let result = try repository.update(restoredLoan)
+            
+            // キャッシュも更新
+            loans[loanIndex] = result
+            
+            return result
+        } catch {
+            throw LoanModelError.undoReturnFailed
+        }
     }
     
     /// 絵本が現在貸出中かどうかを確認する

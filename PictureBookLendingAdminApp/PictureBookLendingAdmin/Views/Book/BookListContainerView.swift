@@ -20,6 +20,7 @@ struct BookListContainerView: View {
     @State private var editingBook: Book?
     @State private var alertState = AlertState()
     @State private var successFeedback = SuccessFeedback()
+    @State private var undoFeedback = UndoFeedback()
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
@@ -45,7 +46,8 @@ struct BookListContainerView: View {
                 BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
             } else {
                 LoanActionContainerButton(
-                    bookId: book.id, alertState: $alertState, successFeedback: $successFeedback)
+                    bookId: book.id, alertState: $alertState, successFeedback: $successFeedback,
+                    undoFeedback: $undoFeedback)
             }
         }
         #if os(iOS)
@@ -87,6 +89,7 @@ struct BookListContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback)
+        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onChange(of: bookModel.books) {
             loadBookSections()
         }
@@ -107,6 +110,16 @@ struct BookListContainerView: View {
     /// 絵本データから基本セクションを作成・更新
     private func loadBookSections() {
         bookSectionsState = BookSectionsState(books: bookModel.books)
+    }
+    
+    /// 返却の取り消し（スナックバーの「元に戻す」）
+    private func handleUndoReturn() {
+        guard let loanId = undoFeedback.targetId else { return }
+        do {
+            try loanModel.undoReturn(loanId: loanId)
+        } catch {
+            alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
+        }
     }
     
     private func handleEditBook(_ book: Book) {

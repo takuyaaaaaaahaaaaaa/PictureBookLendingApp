@@ -21,22 +21,16 @@ struct LoanActionContainerButton: View {
     
     /// 貸出フォームシートの表示状態
     @State private var isLoanSheetPresented = false
-    /// 返却確認アラートの表示状態
-    @State private var isReturnConfirmationPresented = false
     /// アラート状態管理（エラー表示用）
     @Binding var alertState: AlertState
-    /// 成功フィードバック状態管理
+    /// 成功フィードバック状態管理（貸出用）
     @Binding var successFeedback: SuccessFeedback
+    /// 取り消し可能フィードバック状態管理（返却用）
+    @Binding var undoFeedback: UndoFeedback
     
     /// bookIdから取得した絵本オブジェクト
     private var book: Book? {
         bookModel.findBookById(bookId)
-    }
-    
-    /// 貸出中のユーザ名
-    private var userName: String? {
-        guard let loan = loanModel.getCurrentLoan(bookId: bookId) else { return nil }
-        return loan.user.name
     }
     
     /// 絵本が貸出中かどうか
@@ -58,18 +52,6 @@ struct LoanActionContainerButton: View {
                     .interactiveDismissDisabled()  // スワイプで閉じないようにする
             }
         }
-        .alert("返却確認", isPresented: $isReturnConfirmationPresented) {
-            Button("返却する", role: .destructive) {
-                performReturn()
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            if let book, let userName {
-                VStack {
-                    Text("利用者：\(userName) \nタイトル：\(book.title)")
-                }
-            }
-        }
     }
     
     // MARK: - Actions
@@ -80,8 +62,11 @@ struct LoanActionContainerButton: View {
     }
     
     /// 返却ボタンタップ時の処理
+    ///
+    /// 確認ダイアログは出さず即時返却し、「元に戻す」付きスナックバーで
+    /// 取り消し手段を提供する（DESIGN_PRINCIPLES.md 原則2）。
     private func handleReturnTap() {
-        isReturnConfirmationPresented = true
+        performReturn()
     }
     
     /// 貸出成功時の処理
@@ -92,8 +77,14 @@ struct LoanActionContainerButton: View {
     /// 返却処理の実行
     private func performReturn() {
         do {
-            try loanModel.returnBook(bookId: bookId)
-            successFeedback.show("返却しました")
+            let returnedLoan = try loanModel.returnBook(bookId: bookId)
+            let message =
+                if let title = book?.title {
+                    "『\(title)』を返却しました"
+                } else {
+                    "返却しました"
+                }
+            undoFeedback.show(message, targetId: returnedLoan.id)
         } catch {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
         }
@@ -104,6 +95,7 @@ struct LoanActionContainerButton: View {
     
     @Previewable @State var alertState = AlertState()
     @Previewable @State var successFeedback = SuccessFeedback()
+    @Previewable @State var undoFeedback = UndoFeedback()
     
     let mockRepositoryFactory = MockRepositoryFactory()
     let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
@@ -120,7 +112,8 @@ struct LoanActionContainerButton: View {
     
     VStack(spacing: 16) {
         LoanActionContainerButton(
-            bookId: sampleBook.id, alertState: $alertState, successFeedback: $successFeedback)
+            bookId: sampleBook.id, alertState: $alertState, successFeedback: $successFeedback,
+            undoFeedback: $undoFeedback)
         
         // リスト内での表示例
         List {
@@ -137,7 +130,7 @@ struct LoanActionContainerButton: View {
                 
                 LoanActionContainerButton(
                     bookId: sampleBook.id, alertState: $alertState,
-                    successFeedback: $successFeedback)
+                    successFeedback: $successFeedback, undoFeedback: $undoFeedback)
             }
             .padding(.vertical, 4)
         }
