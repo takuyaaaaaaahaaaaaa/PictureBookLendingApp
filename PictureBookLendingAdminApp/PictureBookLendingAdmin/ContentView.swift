@@ -11,8 +11,12 @@ import SwiftUI
 struct ContentView: View {
     /// 貸出管理モデル
     @Environment(LoanModel.self) private var loanModel
-    // 選択中のタブを管理
-    @State private var selectedTab = 0
+    // 選択中のタブを管理（DEBUGビルドは開発用カタログを初期表示）
+    #if DEBUG
+        @State private var selectedTab = 2
+    #else
+        @State private var selectedTab = 0
+    #endif
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -34,6 +38,17 @@ struct ContentView: View {
             }
             .badge(overDueCount)
             .tag(1)
+            
+            #if DEBUG
+                // UIカタログタブ（開発用・DEBUGビルド限定）
+                NavigationStack {
+                    UICatalogContainerView()
+                }
+                .tabItem {
+                    Label("カタログ", systemImage: "square.grid.2x2")
+                }
+                .tag(2)
+            #endif
         }
     }
     
