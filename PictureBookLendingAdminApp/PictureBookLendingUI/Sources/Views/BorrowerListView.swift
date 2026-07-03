@@ -45,11 +45,10 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// 返却モードの借用者一覧のPresentation View
 ///
 /// 現在貸出中の利用者（園児・保護者の両方）を名前のみで組セクション単位に一覧表示します。
-/// 組フィルタチップと「延滞のみ」フィルタを備え、先生の俯瞰を兼ねます。
+/// 組チップは**インデックス**（タップでその組セクションへスクロール）として動作し、
+/// 一覧から行が消えない。絞り込みは「延滞のみ」フィルタのみ（先生の俯瞰兼用）。
 public struct BorrowerListView: View {
     public let sections: [BorrowerListSection]
-    public let classGroups: [ClassGroup]
-    @Binding public var selectedClassGroup: ClassGroup?
     @Binding public var isOverdueOnly: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
     
@@ -62,48 +61,47 @@ public struct BorrowerListView: View {
     
     public init(
         sections: [BorrowerListSection],
-        classGroups: [ClassGroup],
-        selectedClassGroup: Binding<ClassGroup?>,
         isOverdueOnly: Binding<Bool>,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
-        self.classGroups = classGroups
-        self._selectedClassGroup = selectedClassGroup
         self._isOverdueOnly = isOverdueOnly
         self.onSelect = onSelect
     }
     
     public var body: some View {
-        VStack(alignment: .leading, spacing: Layout.chipSpacing) {
-            filterSection
-            
-            if sections.allSatisfy({ $0.rows.isEmpty }) {
-                emptyStateView
-            } else {
-                borrowerListSection
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: Layout.chipSpacing) {
+                indexSection(proxy: proxy)
+                
+                if sections.allSatisfy({ $0.rows.isEmpty }) {
+                    emptyStateView
+                } else {
+                    borrowerListSection
+                }
             }
         }
     }
     
     // MARK: - Private Views
     
-    /// 組フィルタチップ＋「延滞のみ」フィルタ
-    private var filterSection: some View {
+    /// 組インデックス（タップでその組へスクロール）＋「延滞のみ」フィルタ
+    ///
+    /// 組チップを絞り込みにすると「押したら他の組が消えて一覧に居ないと勘違いする」
+    /// ため、行が消えないインデックスジャンプとして動作させる。
+    /// チップは借用者がいる組だけ表示する（押しても何も起きないチップを作らない）。
+    private func indexSection(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: Layout.chipSpacing) {
             ScrollView(.horizontal) {
                 HStack(spacing: Layout.chipSpacing) {
-                    ForEach(classGroups) { group in
-                        Button(group.name) {
-                            // 未選択なら選択、選択中なら解除
-                            if selectedClassGroup == group {
-                                selectedClassGroup = nil
-                            } else {
-                                selectedClassGroup = group
+                    ForEach(sections) { section in
+                        Button(section.title) {
+                            withAnimation {
+                                proxy.scrollTo(section.id, anchor: .top)
                             }
                         }
                         .buttonStyle(.bordered)
-                        .tint(selectedClassGroup == group ? .accentColor : .secondary)
+                        .tint(.secondary)
                     }
                 }
                 .padding(.leading)
@@ -142,6 +140,7 @@ public struct BorrowerListView: View {
                         .buttonStyle(.plain)
                     }
                 }
+                .id(section.id)
             }
         }
     }
@@ -182,7 +181,6 @@ public struct BorrowerListView: View {
 }
 
 #Preview {
-    @Previewable @State var selectedClassGroup: ClassGroup? = nil
     @Previewable @State var isOverdueOnly = false
     
     let momo = ClassGroup(name: "もも組", ageGroup: AgeGroup.age(4), year: 2026)
@@ -208,8 +206,6 @@ public struct BorrowerListView: View {
                             id: UUID(), name: "うえだ そうた", isGuardian: false, isOverdue: true)
                     ]),
             ],
-            classGroups: [momo, bara],
-            selectedClassGroup: $selectedClassGroup,
             isOverdueOnly: $isOverdueOnly,
             onSelect: { _ in }
         )
@@ -218,14 +214,11 @@ public struct BorrowerListView: View {
 }
 
 #Preview("空状態") {
-    @Previewable @State var selectedClassGroup: ClassGroup? = nil
     @Previewable @State var isOverdueOnly = false
     
     NavigationStack {
         BorrowerListView(
             sections: [],
-            classGroups: [],
-            selectedClassGroup: $selectedClassGroup,
             isOverdueOnly: $isOverdueOnly,
             onSelect: { _ in }
         )

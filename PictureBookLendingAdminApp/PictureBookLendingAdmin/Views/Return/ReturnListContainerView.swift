@@ -17,7 +17,6 @@ struct ReturnListContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
-    @State private var selectedClassGroup: ClassGroup?
     @State private var isOverdueOnly = false
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
@@ -26,8 +25,6 @@ struct ReturnListContainerView: View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
                 sections: filteredSections,
-                classGroups: classGroupModel.getAllClassGroups(),
-                selectedClassGroup: $selectedClassGroup,
                 isOverdueOnly: $isOverdueOnly,
                 onSelect: handleSelect(_:)
             )
@@ -116,13 +113,10 @@ struct ReturnListContainerView: View {
             .sorted { $0.row.name < $1.row.name }
     }
     
-    /// 検索・組・延滞フィルタを適用した借用者
+    /// 検索・延滞フィルタを適用した借用者（組はフィルタせずインデックスでスクロール）
     private var filteredEntries: [BorrowerEntry] {
         borrowerEntries
             .filter { entry in
-                if let selectedClassGroup, entry.classGroupId != selectedClassGroup.id {
-                    return false
-                }
                 if isOverdueOnly && !entry.row.isOverdue {
                     return false
                 }
