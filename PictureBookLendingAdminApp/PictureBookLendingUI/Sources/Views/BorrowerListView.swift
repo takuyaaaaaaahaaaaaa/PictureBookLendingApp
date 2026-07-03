@@ -96,8 +96,11 @@ public struct BorrowerListView: View {
                 HStack(spacing: Layout.chipSpacing) {
                     ForEach(sections) { section in
                         Button(section.title) {
+                            // ListのSectionに付けたidはscrollToが拾えないことがあるため、
+                            // ForEachの行identity（確実に登録される）へスクロールする
+                            guard let targetRowId = section.rows.first?.id else { return }
                             withAnimation {
-                                proxy.scrollTo(section.id, anchor: .top)
+                                proxy.scrollTo(targetRowId, anchor: .top)
                             }
                         }
                         .buttonStyle(.bordered)
@@ -140,7 +143,6 @@ public struct BorrowerListView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .id(section.id)
             }
         }
     }
