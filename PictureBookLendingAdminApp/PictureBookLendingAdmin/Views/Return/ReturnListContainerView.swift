@@ -22,8 +22,15 @@ struct ReturnListContainerView: View {
     @State private var scrollToTopTrigger = 0
     /// 返却後、Undoカードの表示が終わったら一覧へ戻るための予約フラグ
     @State private var isPopPendingAfterReturn = false
+    /// 家庭の画面の無操作タイマーのトークン（操作のたびに更新して待ち時間を延長する）
+    @State private var idleTicket = 0
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
+    
+    /// 家庭の画面の無操作タイムアウト。貸出が残っていて操作がないまま
+    /// この時間が経過したら、置き去りとみなして一覧トップへ戻る
+    /// （次の利用者に家庭の情報を見せないためのキオスク作法）
+    private static let familyScreenIdleTimeout: Duration = .seconds(15)
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -82,6 +89,13 @@ struct ReturnListContainerView: View {
                 onBorrowSlotSelected: { _ in }
             )
             .padding()
+        }
+        .task(id: idleTicket) {
+            // 無操作タイムアウト：操作（返却・取り消し）のたびにidleTicketが変わり、
+            // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
+            try? await Task.sleep(for: Self.familyScreenIdleTimeout)
+            if Task.isCancelled { return }
+            popToListAndScrollTop()
         }
         .navigationTitle(userModel.findUserById(userId)?.name ?? "")
         #if os(iOS)
@@ -169,6 +183,7 @@ struct ReturnListContainerView: View {
     /// まだ貸出が残っていれば留まり続け、2冊目の返却を時間制限なしで行える
     private func handleReturnCompleted(hasRemainingLoans: Bool) {
         isPopPendingAfterReturn = !hasRemainingLoans
+        idleTicket += 1
     }
     
     /// 一覧のトップへ戻る（次の親子への画面の引き継ぎ）
@@ -184,6 +199,7 @@ struct ReturnListContainerView: View {
     /// 取り消したらその場（家庭の画面）に留まり、枠に本が戻るのを見せる
     private func handleUndoReturn() {
         isPopPendingAfterReturn = false
+        idleTicket += 1
         guard let loanId = undoFeedback.targetId else { return }
         do {
             try loanModel.undoReturn(loanId: loanId)
