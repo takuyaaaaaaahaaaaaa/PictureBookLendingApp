@@ -13,7 +13,7 @@ struct ContentView: View {
     @Environment(LoanModel.self) private var loanModel
     // 選択中のタブを管理（DEBUGビルドは開発用カタログを初期表示）
     #if DEBUG
-        @State private var selectedTab = 3
+        @State private var selectedTab = 4
     #else
         @State private var selectedTab = 0
     #endif
@@ -56,6 +56,14 @@ struct ContentView: View {
                         Label("返却β", systemImage: "arrow.uturn.backward.circle")
                     }
                     .tag(3)
+                
+                // 貸出モードβ（Phase 2 段取り3の動作確認用・DEBUGビルド限定）
+                // 段取り4のタブ再構成で正式タブに昇格し、このDEBUGタブは撤去する
+                BorrowListContainerView()
+                    .tabItem {
+                        Label("貸出β", systemImage: "book.circle")
+                    }
+                    .tag(4)
             #endif
         }
     }

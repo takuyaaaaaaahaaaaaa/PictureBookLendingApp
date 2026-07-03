@@ -51,6 +51,12 @@ public struct BorrowerListView: View {
     public let sections: [BorrowerListSection]
     /// 値が変わると一覧をトップへスクロールする（返却完了後、次の利用者のために初期位置へ戻す）
     public let scrollToTopTrigger: Int
+    /// 「延滞のみ」フィルタを表示するかどうか（貸出フローの利用者選択では不要のため隠す）
+    public let showsOverdueFilter: Bool
+    /// 空状態のタイトル（ホストする文脈に合わせて差し替え可能）
+    public let emptyStateTitle: String
+    /// 空状態の説明文（ホストする文脈に合わせて差し替え可能）
+    public let emptyStateDescription: String
     @Binding public var isOverdueOnly: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
     
@@ -67,11 +73,17 @@ public struct BorrowerListView: View {
     public init(
         sections: [BorrowerListSection],
         scrollToTopTrigger: Int = 0,
+        showsOverdueFilter: Bool = true,
+        emptyStateTitle: String = "現在、貸出中の利用者はいません",
+        emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
         isOverdueOnly: Binding<Bool>,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
         self.scrollToTopTrigger = scrollToTopTrigger
+        self.showsOverdueFilter = showsOverdueFilter
+        self.emptyStateTitle = emptyStateTitle
+        self.emptyStateDescription = emptyStateDescription
         self._isOverdueOnly = isOverdueOnly
         self.onSelect = onSelect
     }
@@ -127,20 +139,22 @@ public struct BorrowerListView: View {
             
             Spacer()
             
-            Toggle("延滞のみ", isOn: $isOverdueOnly)
-                .toggleStyle(.button)
-                .buttonStyle(.bordered)
-                .tint(isOverdueOnly ? .red : .secondary)
-                .padding(.trailing)
+            if showsOverdueFilter {
+                Toggle("延滞のみ", isOn: $isOverdueOnly)
+                    .toggleStyle(.button)
+                    .buttonStyle(.bordered)
+                    .tint(isOverdueOnly ? .red : .secondary)
+                    .padding(.trailing)
+            }
         }
     }
     
     /// 空状態（タブは隠さず理由を説明する・HIG準拠）
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "現在、貸出中の利用者はいません",
+            emptyStateTitle,
             systemImage: "books.vertical",
-            description: Text("図書が貸し出されると、ここに名前が表示されます")
+            description: Text(emptyStateDescription)
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
