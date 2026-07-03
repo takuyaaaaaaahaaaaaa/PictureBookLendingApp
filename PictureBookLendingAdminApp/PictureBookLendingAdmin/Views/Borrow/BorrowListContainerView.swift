@@ -6,9 +6,11 @@ import SwiftUI
 
 /// 貸出モードのContainer View（貸出タブのルート）
 ///
-/// 本起点の3タップ貸出フロー（SCREEN_DESIGN_PHASE2 §4）を提供します。
-/// 図書一覧 →「だれが借りますか？」（利用者選択）→「どの枠で借りますか？」（家庭の枠確認）
-/// → ✓カード → 図書一覧へ戻る、の順に進みます。
+/// 本起点の3タップ貸出フローを提供します。
+/// 図書一覧で本をタップすると、フォームシートが開き
+/// 「だれが借りますか？」（利用者選択）→「どの枠で借りますか？」（家庭の枠確認）
+/// → ✓カード の順にシートの中だけで完結します。背後の図書一覧は動きません。
+/// 貸出が終わる（✓カードが消える）と、または置き去り復帰時にはシートを閉じます。
 /// 返却モードで確立したパターン（カード表示中は留まり消えたら戻る・
 /// 無操作15秒で置き去り復帰）を踏襲します。
 struct BorrowListContainerView: View {
@@ -17,7 +19,10 @@ struct BorrowListContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
-    @State private var navigationPath = NavigationPath()
+    /// タップされた図書。非nilの間フォームシートを開く（シートの提示単位）
+    @State private var selectedBook: Book?
+    /// フォームシート内部の遷移パス（利用者選択→枠確認）
+    @State private var sheetPath = NavigationPath()
     @State private var searchText = ""
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
@@ -25,7 +30,7 @@ struct BorrowListContainerView: View {
     @State private var bookSectionsState: BookSectionsState = .init(books: [])
     @State private var alertState = AlertState()
     @State private var successFeedback = SuccessFeedback()
-    /// 貸出後、✓カードの表示が終わったら図書一覧へ戻るための予約フラグ
+    /// 貸出後、✓カードの表示が終わったらシートを閉じる（図書一覧へ戻す）ための予約フラグ
     @State private var isPopPendingAfterLend = false
     /// 選択画面の無操作タイマーのトークン（操作のたびに更新して待ち時間を延長する）
     @State private var idleTicket = 0
@@ -39,7 +44,7 @@ struct BorrowListContainerView: View {
     private static let screenIdleTimeout: Duration = .seconds(15)
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             BookListView(
                 sections: bookSectionsState.filter(
                     searchText: searchText,
@@ -50,6 +55,11 @@ struct BorrowListContainerView: View {
                 selectedSortType: $selectedSortType,
                 onEdit: { _ in },
                 onDelete: { _ in },
+                onSelect: { book in
+                    // 一覧はプッシュ遷移させず、その図書の貸出シートを開く
+                    sheetPath = NavigationPath()
+                    selectedBook = book
+                },
                 imageURLProvider: { book in
                     book.resolvedSmallImageSource
                 }
@@ -65,25 +75,6 @@ struct BorrowListContainerView: View {
             #else
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
             #endif
-            .navigationDestination(for: Book.self) { book in
-                borrowerPickScreen(for: book)
-            }
-            .navigationDestination(for: BorrowConfirmRoute.self) { route in
-                slotConfirmScreen(for: route)
-            }
-        }
-        .alert(alertState.title, isPresented: $alertState.isPresented) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(alertState.message)
-        }
-        .successFeedback($successFeedback)
-        .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
-            // カードがタイムアウトで消えたら一覧へ戻る
-            if wasPresented && !isPresented && isPopPendingAfterLend {
-                isPopPendingAfterLend = false
-                popToRoot()
-            }
         }
         .onChange(of: bookModel.books) {
             loadBookSections()
@@ -96,11 +87,35 @@ struct BorrowListContainerView: View {
             refreshData()
             loadBookSections()
         }
+        .sheet(item: $selectedBook) { book in
+            // 一時的な貸出タスク（利用者選択→枠確認→✓カード）をシートの中だけで完結させる。
+            // ✓カードとアラートは背後の図書一覧に付けると隠れるため、必ずシート内に置く
+            NavigationStack(path: $sheetPath) {
+                borrowerPickScreen(for: book)
+                    .navigationDestination(for: BorrowConfirmRoute.self) { route in
+                        slotConfirmScreen(for: route)
+                    }
+            }
+            .presentationSizing(.form)
+            .alert(alertState.title, isPresented: $alertState.isPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertState.message)
+            }
+            .successFeedback($successFeedback)
+            .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
+                // ✓カードがタイムアウトで消えたらシートを閉じる
+                if wasPresented && !isPresented && isPopPendingAfterLend {
+                    isPopPendingAfterLend = false
+                    selectedBook = nil
+                }
+            }
+        }
     }
     
     // MARK: - Private Views
     
-    /// 利用者選択画面（図書タップのプッシュ先・「だれが借りますか？」）
+    /// 利用者選択画面（フォームシートの最初の画面・「だれが借りますか？」）
     ///
     /// 貸出中の図書が選ばれた場合は貸出できない理由を説明する空状態を表示する。
     @ViewBuilder
@@ -120,7 +135,7 @@ struct BorrowListContainerView: View {
                     emptyStateDescription: "設定画面から利用者を登録してください",
                     isOverdueOnly: .constant(false),
                     onSelect: { row in
-                        navigationPath.append(BorrowConfirmRoute(book: book, userId: row.id))
+                        sheetPath.append(BorrowConfirmRoute(book: book, userId: row.id))
                     }
                 )
             }
@@ -130,15 +145,26 @@ struct BorrowListContainerView: View {
             // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
             try? await Task.sleep(for: Self.screenIdleTimeout)
             if Task.isCancelled { return }
-            popToRoot()
+            // 置き去りとみなしてシートを閉じる
+            selectedBook = nil
         }
         .navigationTitle("だれが借りますか？")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    // 下スワイプを知らない利用者のための明示的な閉じるボタン
+                    Button {
+                        selectedBook = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
         #endif
     }
     
-    /// 枠確認画面（利用者タップのプッシュ先・「どの枠で借りますか？」）
+    /// 枠確認画面（シート内で利用者タップから進む先・「どの枠で借りますか？」）
     ///
     /// 選んだ図書の要約を上部に示し、家庭の枠領域（貸出文脈）で空き枠を選ばせる。
     private func slotConfirmScreen(for route: BorrowConfirmRoute) -> some View {
@@ -172,11 +198,22 @@ struct BorrowListContainerView: View {
             // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
             try? await Task.sleep(for: Self.screenIdleTimeout)
             if Task.isCancelled { return }
-            popToRoot()
+            // 置き去りとみなしてシートを閉じる
+            selectedBook = nil
         }
         .navigationTitle("どの枠で借りますか？")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    // 下スワイプを知らない利用者のための明示的な閉じるボタン
+                    Button {
+                        selectedBook = nil
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
         #endif
     }
     
@@ -221,11 +258,6 @@ struct BorrowListContainerView: View {
         } catch {
             alertState = .error("貸出に失敗しました", message: error.localizedDescription)
         }
-    }
-    
-    /// 図書一覧（ルート）へ戻る（次の親子への画面の引き継ぎ）
-    private func popToRoot() {
-        navigationPath = NavigationPath()
     }
     
     private func refreshData() {

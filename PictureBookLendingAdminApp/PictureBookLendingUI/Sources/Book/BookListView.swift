@@ -69,6 +69,9 @@ public struct BookListView<RowAction: View>: View {
     public let onEdit: (Book) -> Void
     /// 絵本削除時の動作
     public let onDelete: (Book) -> Void
+    /// 行タップ時の動作。指定すると行はNavigationLinkではなくボタンとして振る舞う
+    /// （プッシュ遷移ではなくsheet等をホスト側で開く文脈用。nilなら従来どおりプッシュ遷移）
+    public let onSelect: ((Book) -> Void)?
     /// 絵本のサムネイル画像URLを解決するクロージャ（App層で解決済みのURLを返す）
     public let imageURLProvider: (Book) -> String?
     /// 各行に表示するアクションビューを生成するクロージャ
@@ -84,6 +87,7 @@ public struct BookListView<RowAction: View>: View {
         isEditMode: Bool = false,
         onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (Book) -> Void,
+        onSelect: ((Book) -> Void)? = nil,
         imageURLProvider: @escaping (Book) -> String?,
         @ViewBuilder rowAction: @escaping (Book) -> RowAction
     ) {
@@ -95,6 +99,7 @@ public struct BookListView<RowAction: View>: View {
         self.isEditMode = isEditMode
         self.onEdit = onEdit
         self.onDelete = onDelete
+        self.onSelect = onSelect
         self.imageURLProvider = imageURLProvider
         self.rowAction = rowAction
     }
@@ -214,6 +219,13 @@ public struct BookListView<RowAction: View>: View {
         if isEditMode {
             Button {
                 onEdit(book)
+            } label: {
+                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
+            }
+            .buttonStyle(.plain)
+        } else if let onSelect {
+            Button {
+                onSelect(book)
             } label: {
                 BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
             }
