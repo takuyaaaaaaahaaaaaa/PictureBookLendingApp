@@ -49,6 +49,8 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// 一覧から行が消えない。絞り込みは「延滞のみ」フィルタのみ（先生の俯瞰兼用）。
 public struct BorrowerListView: View {
     public let sections: [BorrowerListSection]
+    /// 値が変わると一覧をトップへスクロールする（返却完了後、次の利用者のために初期位置へ戻す）
+    public let scrollToTopTrigger: Int
     @Binding public var isOverdueOnly: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
     
@@ -57,14 +59,19 @@ public struct BorrowerListView: View {
         static let rowVerticalPadding: CGFloat = 12
         static let badgePaddingH: CGFloat = 8
         static let badgePaddingV: CGFloat = 3
+        /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
+        /// 先頭行の上にあるセクション見出しが視界に入るようにする
+        static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
     }
     
     public init(
         sections: [BorrowerListSection],
+        scrollToTopTrigger: Int = 0,
         isOverdueOnly: Binding<Bool>,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
+        self.scrollToTopTrigger = scrollToTopTrigger
         self._isOverdueOnly = isOverdueOnly
         self.onSelect = onSelect
     }
@@ -78,6 +85,13 @@ public struct BorrowerListView: View {
                     emptyStateView
                 } else {
                     borrowerListSection
+                }
+            }
+            .onChange(of: scrollToTopTrigger) { _, _ in
+                // 返却完了後の「次の利用者への引き継ぎ」：一覧を先頭へ戻す
+                guard let firstRowId = sections.first?.rows.first?.id else { return }
+                withAnimation {
+                    proxy.scrollTo(firstRowId, anchor: Layout.sectionJumpAnchor)
                 }
             }
         }
@@ -96,11 +110,12 @@ public struct BorrowerListView: View {
                 HStack(spacing: Layout.chipSpacing) {
                     ForEach(sections) { section in
                         Button(section.title) {
-                            // ListのSectionに付けたidはscrollToが拾えないことがあるため、
-                            // ForEachの行identity（確実に登録される）へスクロールする
+                            // Listの遅延描画では見出しのIDがscrollToに解決されないため、
+                            // 確実に登録される先頭行のIDへスクロールする。
+                            // アンカーを上端より少し下げ、行の上にある組タイトルまで見せる
                             guard let targetRowId = section.rows.first?.id else { return }
                             withAnimation {
-                                proxy.scrollTo(targetRowId, anchor: .top)
+                                proxy.scrollTo(targetRowId, anchor: Layout.sectionJumpAnchor)
                             }
                         }
                         .buttonStyle(.bordered)

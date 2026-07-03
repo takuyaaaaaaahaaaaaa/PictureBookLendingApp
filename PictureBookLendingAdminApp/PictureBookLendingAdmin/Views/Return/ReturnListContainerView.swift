@@ -18,6 +18,8 @@ struct ReturnListContainerView: View {
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
     @State private var isOverdueOnly = false
+    /// 一覧をトップへ戻すトリガ（返却完了ごとにインクリメント）
+    @State private var scrollToTopTrigger = 0
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
     
@@ -25,6 +27,7 @@ struct ReturnListContainerView: View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
                 sections: filteredSections,
+                scrollToTopTrigger: scrollToTopTrigger,
                 isOverdueOnly: $isOverdueOnly,
                 onSelect: handleSelect(_:)
             )
@@ -150,11 +153,12 @@ struct ReturnListContainerView: View {
         navigationPath.append(row.id)
     }
     
-    /// 返却完了時：自動で一覧に戻る（次の親子へ）
+    /// 返却完了時：自動で一覧のトップに戻る（次の親子への画面の引き継ぎ）
     private func handleReturnCompleted() {
         if !navigationPath.isEmpty {
             navigationPath.removeLast()
         }
+        scrollToTopTrigger += 1
     }
     
     /// 返却の取り消し（Undoカードの「元に戻す」）
