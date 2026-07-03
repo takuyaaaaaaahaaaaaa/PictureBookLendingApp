@@ -24,8 +24,9 @@ struct FamilyLoanSlotsContainerView: View {
     let userId: UUID
     /// 文脈（返却／貸出）
     let mode: FamilyLoanSlotsMode
-    /// 返却完了時の動作（一覧へ自動で戻る等は呼び出し元が決める）
-    let onReturnCompleted: () -> Void
+    /// 返却完了時の動作（引数は家庭内にまだ貸出中の本が残っているか。
+    /// 一覧へ自動で戻る等の遷移は呼び出し元が決める）
+    let onReturnCompleted: (_ hasRemainingLoans: Bool) -> Void
     /// 貸出文脈で枠が選ばれたときの動作（引数は枠の持ち主の利用者ID）
     let onBorrowSlotSelected: (UUID) -> Void
     
@@ -90,7 +91,9 @@ struct FamilyLoanSlotsContainerView: View {
                     "返却しました"
                 }
             undoFeedback.show(message, targetId: returnedLoan.id)
-            onReturnCompleted()
+            let hasRemainingLoans = userModel.getFamilyMembers(of: slot.id)
+                .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
+            onReturnCompleted(hasRemainingLoans)
         } catch {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
         }
@@ -126,7 +129,7 @@ struct FamilyLoanSlotsContainerView: View {
             undoFeedback: $undoFeedback,
             userId: mother.id,  // 保護者のIDから入っても同じ家庭に解決される
             mode: .returning,
-            onReturnCompleted: {},
+            onReturnCompleted: { _ in },
             onBorrowSlotSelected: { _ in }
         )
         .padding()

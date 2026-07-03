@@ -78,7 +78,7 @@ struct ReturnListContainerView: View {
                 undoFeedback: $undoFeedback,
                 userId: userId,
                 mode: .returning,
-                onReturnCompleted: handleReturnCompleted,
+                onReturnCompleted: handleReturnCompleted(hasRemainingLoans:),
                 onBorrowSlotSelected: { _ in }
             )
             .padding()
@@ -163,11 +163,12 @@ struct ReturnListContainerView: View {
         navigationPath.append(row.id)
     }
     
-    /// 返却完了時：すぐには戻らず、Undoカードの表示中は家庭の画面に留まる。
-    /// 枠が「借りていません」に変わるのを見せて確認とし（状態が画面に残る原則）、
-    /// 家族2冊目の連続返却もその場で行えるようにする。カードが消えたら一覧へ戻る
-    private func handleReturnCompleted() {
-        isPopPendingAfterReturn = true
+    /// 返却完了時：すぐには戻らず、Undoカードの表示中は家庭の画面に留まる
+    /// （枠が「借りていません」に変わるのを見せて確認とする＝状態が画面に残る原則）。
+    /// 家庭の本がすべて返ったときだけ、カードが消えた後に一覧へ自動で戻る。
+    /// まだ貸出が残っていれば留まり続け、2冊目の返却を時間制限なしで行える
+    private func handleReturnCompleted(hasRemainingLoans: Bool) {
+        isPopPendingAfterReturn = !hasRemainingLoans
     }
     
     /// 一覧のトップへ戻る（次の親子への画面の引き継ぎ）
