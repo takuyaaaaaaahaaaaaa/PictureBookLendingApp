@@ -150,4 +150,92 @@ struct UserModelTests {
             try userModel.deleteUser(nonExistingId)
         }
     }
+    
+    // MARK: - 家庭解決（getFamilyMembers）
+    
+    /// 園児IDから家族全員（本人＋保護者）を取得できることのテスト
+    @Test("園児IDから家族全員を取得できることのテスト")
+    @MainActor
+    func getFamilyMembersFromChild() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        let father = try userModel.registerUser(
+            User(
+                name: "伊藤 健一", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        let family = userModel.getFamilyMembers(of: child.id)
+        
+        #expect(family.count == 3)
+        #expect(family.first?.id == child.id, "園児が先頭に来る")
+        #expect(family.contains(where: { $0.id == mother.id }))
+        #expect(family.contains(where: { $0.id == father.id }))
+    }
+    
+    /// 保護者IDからも同じ家族に解決されることのテスト
+    @Test("保護者IDからも同じ家族に解決されることのテスト")
+    @MainActor
+    func getFamilyMembersFromGuardian() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        let familyFromChild = userModel.getFamilyMembers(of: child.id)
+        let familyFromGuardian = userModel.getFamilyMembers(of: mother.id)
+        
+        #expect(familyFromChild.map(\.id) == familyFromGuardian.map(\.id), "どの家族名から入っても同じ家庭に着地する")
+    }
+    
+    /// 保護者が登録されていない園児は本人のみ返ることのテスト
+    @Test("保護者が未登録の園児は本人のみ返ることのテスト")
+    @MainActor
+    func getFamilyMembersChildOnly() throws {
+        let (userModel, _) = createUserModel()
+        let child = try userModel.registerUser(User(name: "あおき はると", classGroupId: UUID()))
+        
+        let family = userModel.getFamilyMembers(of: child.id)
+        
+        #expect(family.map(\.id) == [child.id])
+    }
+    
+    /// 存在しない利用者IDでは空配列が返ることのテスト
+    @Test("存在しない利用者IDでは空配列が返ることのテスト")
+    @MainActor
+    func getFamilyMembersUnknownId() {
+        let (userModel, _) = createUserModel()
+        
+        let family = userModel.getFamilyMembers(of: UUID())
+        
+        #expect(family.isEmpty)
+    }
+    
+    /// 園児を削除すると保護者もカスケード削除され、家庭解決が空になることのテスト
+    ///
+    /// `deleteUser` のドメイン仕様（園児削除で関連保護者も削除）により、
+    /// 「紐付く園児のいない保護者」は正規操作では発生しない。
+    @Test("園児削除で保護者も削除され家庭解決が空になることのテスト")
+    @MainActor
+    func getFamilyMembersAfterChildDeleted() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        _ = try userModel.deleteUser(child.id)
+        
+        #expect(userModel.findUserById(mother.id) == nil, "園児削除で保護者もカスケード削除される（仕様）")
+        #expect(userModel.getFamilyMembers(of: mother.id).isEmpty)
+    }
 }
