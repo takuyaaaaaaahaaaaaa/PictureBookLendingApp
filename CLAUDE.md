@@ -277,6 +277,13 @@ struct BookListContainerView: View {
   * **ドメイン共通の定数**: Domainモジュールに定義  
   * **アプリ設定値**: App層に定数として定義
 
+### 表示型（〜Display等）の置き場所と純度
+
+* **View専用の表示型はUI層でViewと同居**させる（型が育つ・他のViewからも使われ始めたら、同じUI層内の隣接ファイルに分割。その際はドメイン概念への昇格も検討する）
+* 表示型のプロパティは**表示可能な完成品のみ**（整形済みString・スタイル用Bool・画像ソース等）。生の`Date`・`Int`等の業務値や業務判定ロジックを持たせない
+* **業務判定はDomain/Modelに置く**（例：延滞判定は`Loan.isOverdue(at:)`）。App層Containerの変換は整形だけを行い、判定を書かない
+* **TERMS.mdに載る概念はDomainに定義する**（用語集に載せたくなったらドメイン昇格のサイン）
+
 ### Boolean変数の命名規則
 
 * **sheet/alert/popover表示状態**: `isXXPresented` (例: `isAddSheetPresented`, `isDeleteAlertPresented`)
