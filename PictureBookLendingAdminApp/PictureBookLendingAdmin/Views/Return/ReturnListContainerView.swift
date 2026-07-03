@@ -25,7 +25,7 @@ struct ReturnListContainerView: View {
     var body: some View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
-                rows: filteredRows,
+                sections: filteredSections,
                 classGroups: classGroupModel.getAllClassGroups(),
                 selectedClassGroup: $selectedClassGroup,
                 isOverdueOnly: $isOverdueOnly,
@@ -116,8 +116,8 @@ struct ReturnListContainerView: View {
             .sorted { $0.row.name < $1.row.name }
     }
     
-    /// 検索・組・延滞フィルタを適用した表示行
-    private var filteredRows: [BorrowerRowDisplay] {
+    /// 検索・組・延滞フィルタを適用した借用者
+    private var filteredEntries: [BorrowerEntry] {
         borrowerEntries
             .filter { entry in
                 if let selectedClassGroup, entry.classGroupId != selectedClassGroup.id {
@@ -135,7 +135,19 @@ struct ReturnListContainerView: View {
                 }
                 return true
             }
-            .map(\.row)
+    }
+    
+    /// 組セクション単位の表示データ（既存の貸出管理・絵本一覧と同じ見た目の慣習）
+    private var filteredSections: [BorrowerListSection] {
+        Dictionary(grouping: filteredEntries) { $0.classGroupId }
+            .map { classGroupId, entries in
+                BorrowerListSection(
+                    id: classGroupId,
+                    title: classGroupModel.findClassGroupById(classGroupId)?.name ?? "未分類",
+                    rows: entries.map(\.row)
+                )
+            }
+            .sorted { $0.title < $1.title }
     }
     
     // MARK: - Actions

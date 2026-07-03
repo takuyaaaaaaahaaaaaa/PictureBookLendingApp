@@ -23,12 +23,31 @@ public struct BorrowerRowDisplay: Identifiable, Equatable, Sendable {
     }
 }
 
+/// 借用者一覧の組セクション
+///
+/// 既存画面（貸出管理の組別グルーピング・絵本一覧の五十音セクション）と
+/// 同じ見た目の慣習に合わせ、一覧は組単位のセクションで区切る。
+public struct BorrowerListSection: Identifiable, Equatable, Sendable {
+    /// 組のID（未分類の場合は生成されたID）
+    public let id: UUID
+    /// セクション見出し（組名）
+    public let title: String
+    /// この組の借用者
+    public let rows: [BorrowerRowDisplay]
+    
+    public init(id: UUID, title: String, rows: [BorrowerRowDisplay]) {
+        self.id = id
+        self.title = title
+        self.rows = rows
+    }
+}
+
 /// 返却モードの借用者一覧のPresentation View
 ///
-/// 現在貸出中の利用者（園児・保護者の両方）を名前のみで一覧表示します。
+/// 現在貸出中の利用者（園児・保護者の両方）を名前のみで組セクション単位に一覧表示します。
 /// 組フィルタチップと「延滞のみ」フィルタを備え、先生の俯瞰を兼ねます。
 public struct BorrowerListView: View {
-    public let rows: [BorrowerRowDisplay]
+    public let sections: [BorrowerListSection]
     public let classGroups: [ClassGroup]
     @Binding public var selectedClassGroup: ClassGroup?
     @Binding public var isOverdueOnly: Bool
@@ -42,13 +61,13 @@ public struct BorrowerListView: View {
     }
     
     public init(
-        rows: [BorrowerRowDisplay],
+        sections: [BorrowerListSection],
         classGroups: [ClassGroup],
         selectedClassGroup: Binding<ClassGroup?>,
         isOverdueOnly: Binding<Bool>,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
-        self.rows = rows
+        self.sections = sections
         self.classGroups = classGroups
         self._selectedClassGroup = selectedClassGroup
         self._isOverdueOnly = isOverdueOnly
@@ -59,7 +78,7 @@ public struct BorrowerListView: View {
         VStack(alignment: .leading, spacing: Layout.chipSpacing) {
             filterSection
             
-            if rows.isEmpty {
+            if sections.allSatisfy({ $0.rows.isEmpty }) {
                 emptyStateView
             } else {
                 borrowerListSection
@@ -112,13 +131,17 @@ public struct BorrowerListView: View {
     
     private var borrowerListSection: some View {
         List {
-            ForEach(rows) { row in
-                Button {
-                    onSelect(row)
-                } label: {
-                    borrowerRow(row)
+            ForEach(sections) { section in
+                Section(header: Text(section.title)) {
+                    ForEach(section.rows) { row in
+                        Button {
+                            onSelect(row)
+                        } label: {
+                            borrowerRow(row)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(.plain)
             }
         }
     }
@@ -167,15 +190,23 @@ public struct BorrowerListView: View {
     
     NavigationStack {
         BorrowerListView(
-            rows: [
-                BorrowerRowDisplay(
-                    id: UUID(), name: "あおき はると", isGuardian: false, isOverdue: false),
-                BorrowerRowDisplay(
-                    id: UUID(), name: "いとう さくら", isGuardian: false, isOverdue: false),
-                BorrowerRowDisplay(
-                    id: UUID(), name: "伊藤 由美子", isGuardian: true, isOverdue: false),
-                BorrowerRowDisplay(
-                    id: UUID(), name: "うえだ そうた", isGuardian: false, isOverdue: true),
+            sections: [
+                BorrowerListSection(
+                    id: momo.id, title: "もも組",
+                    rows: [
+                        BorrowerRowDisplay(
+                            id: UUID(), name: "あおき はると", isGuardian: false, isOverdue: false),
+                        BorrowerRowDisplay(
+                            id: UUID(), name: "いとう さくら", isGuardian: false, isOverdue: false),
+                        BorrowerRowDisplay(
+                            id: UUID(), name: "伊藤 由美子", isGuardian: true, isOverdue: false),
+                    ]),
+                BorrowerListSection(
+                    id: bara.id, title: "ばら組",
+                    rows: [
+                        BorrowerRowDisplay(
+                            id: UUID(), name: "うえだ そうた", isGuardian: false, isOverdue: true)
+                    ]),
             ],
             classGroups: [momo, bara],
             selectedClassGroup: $selectedClassGroup,
@@ -192,7 +223,7 @@ public struct BorrowerListView: View {
     
     NavigationStack {
         BorrowerListView(
-            rows: [],
+            sections: [],
             classGroups: [],
             selectedClassGroup: $selectedClassGroup,
             isOverdueOnly: $isOverdueOnly,
