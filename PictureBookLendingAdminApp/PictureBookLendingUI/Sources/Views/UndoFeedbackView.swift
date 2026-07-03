@@ -102,7 +102,7 @@ private struct UndoFeedbackModifier: ViewModifier {
     
     private enum Constants {
         /// 自動消滅までの表示時間（DESIGN_PRINCIPLES.md「フィードバック設計」準拠）
-        static let displayDuration: Duration = .seconds(2)
+        static let displayDuration: Duration = .seconds(3)
         /// 出現・消滅アニメーションの時間
         static let transitionDuration: TimeInterval = 0.3
         /// 出現時の初期スケール

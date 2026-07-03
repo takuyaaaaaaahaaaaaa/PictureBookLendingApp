@@ -80,11 +80,35 @@
                         )
                         .padding(.vertical, 8)
                     }
+                    catalogSection("借用者一覧：組インデックスのスクロール確認（チップをタップ）") {
+                        borrowerListDemo
+                            .frame(height: 600)
+                    }
                 }
                 .padding(24)
             }
             .background(.background)
             .navigationTitle("UIカタログ（開発用）")
+        }
+        
+        /// 借用者一覧（組インデックスのスクロール確認用・ダミー5組×6人）
+        private var borrowerListDemo: some View {
+            BorrowerListView(
+                sections: (1...5).map { groupIndex in
+                    BorrowerListSection(
+                        id: UUID(),
+                        title: ["もも組", "ばら組", "きく組", "すみれ組", "ゆり組"][groupIndex - 1],
+                        rows: (1...6).map { rowIndex in
+                            BorrowerRowDisplay(
+                                id: UUID(),
+                                name: "みほん \(groupIndex)-\(rowIndex)",
+                                isGuardian: rowIndex == 6,
+                                isOverdue: rowIndex == 3)
+                        })
+                },
+                isOverdueOnly: .constant(false),
+                onSelect: { _ in }
+            )
         }
         
         /// 見出し付きのカタログ区画
