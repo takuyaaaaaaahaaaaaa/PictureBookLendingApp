@@ -20,6 +20,8 @@ struct ReturnListContainerView: View {
     @State private var isOverdueOnly = false
     /// 一覧をトップへ戻すトリガ（返却完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
+    /// 返却後、Undoカードの表示が終わったら一覧へ戻るための予約フラグ
+    @State private var isPopPendingAfterReturn = false
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
     
@@ -50,6 +52,14 @@ struct ReturnListContainerView: View {
             Text(alertState.message)
         }
         .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
+        .onChange(of: undoFeedback.isPresented) { wasPresented, isPresented in
+            // カードがタイムアウトで消えたら一覧へ戻る（Undoで消えた場合は
+            // handleUndoReturnが先に予約を取り消しているため、その場に留まる）
+            if wasPresented && !isPresented && isPopPendingAfterReturn {
+                isPopPendingAfterReturn = false
+                popToListAndScrollTop()
+            }
+        }
         .onAppear {
             refreshData()
         }
@@ -153,8 +163,15 @@ struct ReturnListContainerView: View {
         navigationPath.append(row.id)
     }
     
-    /// 返却完了時：自動で一覧のトップに戻る（次の親子への画面の引き継ぎ）
+    /// 返却完了時：すぐには戻らず、Undoカードの表示中は家庭の画面に留まる。
+    /// 枠が「借りていません」に変わるのを見せて確認とし（状態が画面に残る原則）、
+    /// 家族2冊目の連続返却もその場で行えるようにする。カードが消えたら一覧へ戻る
     private func handleReturnCompleted() {
+        isPopPendingAfterReturn = true
+    }
+    
+    /// 一覧のトップへ戻る（次の親子への画面の引き継ぎ）
+    private func popToListAndScrollTop() {
         if !navigationPath.isEmpty {
             navigationPath.removeLast()
         }
@@ -162,7 +179,10 @@ struct ReturnListContainerView: View {
     }
     
     /// 返却の取り消し（Undoカードの「元に戻す」）
+    ///
+    /// 取り消したらその場（家庭の画面）に留まり、枠に本が戻るのを見せる
     private func handleUndoReturn() {
+        isPopPendingAfterReturn = false
         guard let loanId = undoFeedback.targetId else { return }
         do {
             try loanModel.undoReturn(loanId: loanId)
