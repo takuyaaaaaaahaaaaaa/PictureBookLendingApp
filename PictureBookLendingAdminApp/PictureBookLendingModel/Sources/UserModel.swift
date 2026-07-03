@@ -123,6 +123,45 @@ public class UserModel {
         }
     }
     
+    /// 指定した利用者と同じ家庭の利用者一覧を取得する
+    ///
+    /// 園児と保護者は `UserType.guardian(relatedChildId:)` で紐づきます。
+    /// どの家族の利用者IDを渡しても同じ家庭に解決されます（先頭は園児、続いて保護者を名前順）。
+    /// 紐づく園児が見つからない保護者は本人のみを返します。
+    ///
+    /// - Parameter userId: 家庭を特定する利用者のID
+    /// - Returns: 家庭の利用者一覧（先頭は園児）。利用者が存在しない場合は空配列
+    public func getFamilyMembers(of userId: UUID) -> [User] {
+        guard let user = findUserById(userId) else { return [] }
+        
+        let childId: UUID
+        switch user.userType {
+        case .child:
+            childId = user.id
+        case .guardian(let relatedChildId):
+            childId = relatedChildId
+        }
+        
+        let allUsers = getAllUsers()
+        guard let child = allUsers.first(where: { $0.id == childId }) else {
+            // 正規操作では園児削除時に保護者もカスケード削除されるため到達しない。
+            // データ不整合時のフォールバックとして本人のみ返す
+            return [user]
+        }
+        
+        let guardians =
+            allUsers
+            .filter { member in
+                if case .guardian(let relatedChildId) = member.userType {
+                    return relatedChildId == childId
+                }
+                return false
+            }
+            .sorted { $0.name < $1.name }
+        
+        return [child] + guardians
+    }
+    
     /// 利用者情報を更新する
     ///
     /// 指定された利用者の情報を更新します。

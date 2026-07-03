@@ -21,6 +21,15 @@ public struct Loan: Identifiable, Codable {
         returnedDate != nil
     }
     
+    /// 指定した日時の時点で延滞しているかどうか
+    ///
+    /// 未返却かつ返却期限を過ぎている場合に延滞とみなします（返却済みの貸出は延滞ではありません）。
+    /// - Parameter date: 判定基準の日時
+    /// - Returns: 延滞していればtrue
+    public func isOverdue(at date: Date) -> Bool {
+        !isReturned && dueDate < date
+    }
+    
     /// 貸出モデルの初期化
     /// - Parameters:
     ///   - id: 貸出の一意識別子（デフォルトでは新しいUUIDが生成されます）

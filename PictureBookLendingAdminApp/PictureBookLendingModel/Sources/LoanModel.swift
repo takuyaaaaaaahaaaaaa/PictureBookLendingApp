@@ -335,8 +335,7 @@ public class LoanModel {
     /// - Returns: 延滞している貸出件数
     public func getOverDueLoansCount(at today: Date) -> Int {
         getActiveLoans()
-            .filter { !$0.isReturned }  // 未返却
-            .filter { $0.dueDate < today }  // 返却期限が過ぎている
+            .filter { $0.isOverdue(at: today) }
             .count
     }
     

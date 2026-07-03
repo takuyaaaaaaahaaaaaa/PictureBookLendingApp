@@ -113,7 +113,7 @@ struct LoanListContainerView: View {
                 groupName: groupName,
                 loanDate: loan.loanDate,
                 dueDate: loan.dueDate,
-                isOverdue: loan.dueDate < Date()
+                isOverdue: loan.isOverdue(at: Date())
             )
         }
     }
