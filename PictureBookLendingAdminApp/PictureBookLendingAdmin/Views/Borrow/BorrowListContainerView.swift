@@ -219,12 +219,25 @@ struct BorrowListContainerView: View {
     
     // MARK: - Computed Properties
     
-    /// 全利用者の組セクション（利用者選択画面用・組ごとに名前順）
+    /// 利用者選択画面の組セクション（組ごとに名前順）
+    ///
+    /// 一覧から隠すのは「別の入口から構造的に到達できる利用者」＝保護者だけ
+    /// （保護者の枠は園児タップ後の家庭の画面から必ず選べる。IA_REVIEW 追記12）。
+    /// 園児と、大人の組の独立利用者（先生・職員）はそのまま表示する。
+    /// 紐づく園児が実在しない保護者は入口を失うため、本人を表示するフォールバック。
     ///
     /// 注意: LoanModelのgetActiveLoans()はキャッシュ更新の副作用を持ち
     /// body評価中に呼ぶと再描画ループになるため使わない（延滞表示は今回不要）
     private var allUserSections: [BorrowerListSection] {
-        Dictionary(grouping: userModel.getAllUsers()) { $0.classGroupId }
+        let allUsers = userModel.getAllUsers()
+        let allUserIds = Set(allUsers.map(\.id))
+        let entranceUsers = allUsers.filter { user in
+            if case .guardian(let relatedChildId) = user.userType {
+                return !allUserIds.contains(relatedChildId)
+            }
+            return true
+        }
+        return Dictionary(grouping: entranceUsers) { $0.classGroupId }
             .map { classGroupId, users in
                 BorrowerListSection(
                     id: classGroupId,
