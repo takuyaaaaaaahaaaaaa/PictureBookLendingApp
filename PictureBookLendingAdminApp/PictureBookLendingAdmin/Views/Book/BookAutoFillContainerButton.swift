@@ -55,6 +55,7 @@ struct BookAutoFillContainerButton: View {
     private var searchResultsSheet: some View {
         BookSearchResultsView(
             searchResults: registerModel.searchResults,
+            attribution: registerModel.searchAttribution,
             onBookSelect: selectBook,
             onCancel: {
                 isResultSheetPresented = false

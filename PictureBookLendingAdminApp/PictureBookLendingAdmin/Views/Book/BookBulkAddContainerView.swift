@@ -51,6 +51,7 @@ struct BookBulkAddContainerView: View {
             inputText: $inputText,
             processedBooks: processedBooks,
             isProcessing: isProcessing,
+            attribution: registerModel.searchAttribution,
             onTextChange: handleTextChange,
             onStartProcessing: handleStartProcessing,
             onSave: handleSave,

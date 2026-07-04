@@ -31,6 +31,9 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     
     // MARK: - BookSearchGatewayProtocol Implementation
     
+    /// 楽天ウェブサービスのクレジット表記（規約により表示が義務付けられている）
+    public var attribution: SearchProviderAttribution? { .rakuten }
+    
     /// 指定されたISBNで書籍を検索する
     /// - Parameter isbn: 検索する書籍のISBN-13またはISBN-10
     /// - Returns: ドメインモデルとしてのBook
