@@ -19,6 +19,7 @@ struct SettingsContainerView: View {
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
     @State private var isPromoteConfirmationPresented = false
+    @State private var isFeedbackSheetPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
     
@@ -50,6 +51,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectDeviceReset: {
                     isDeviceResetDialogPresented = true
+                },
+                onSelectFeedback: {
+                    isFeedbackSheetPresented = true
                 }
             )
             .navigationTitle("設定")
@@ -94,6 +98,9 @@ struct SettingsContainerView: View {
                     selectedOptions: $deviceResetOptions,
                     onConfirm: handleDeviceReset
                 )
+            }
+            .sheet(isPresented: $isFeedbackSheetPresented) {
+                FeedbackFormContainerView()
             }
             .alert("進級処理の確認", isPresented: $isPromoteConfirmationPresented) {
                 Button("実行", role: .destructive) {

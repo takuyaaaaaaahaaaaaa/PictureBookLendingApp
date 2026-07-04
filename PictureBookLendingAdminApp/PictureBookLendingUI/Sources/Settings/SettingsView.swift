@@ -17,6 +17,7 @@ public struct SettingsView: View {
     let onCreateGuardiansForAllChildren: () -> Void
     let onPromoteToNextYear: () -> Void
     let onSelectDeviceReset: () -> Void
+    let onSelectFeedback: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -30,7 +31,8 @@ public struct SettingsView: View {
         onSelectLoanSettings: @escaping () -> Void,
         onCreateGuardiansForAllChildren: @escaping () -> Void,
         onPromoteToNextYear: @escaping () -> Void,
-        onSelectDeviceReset: @escaping () -> Void
+        onSelectDeviceReset: @escaping () -> Void,
+        onSelectFeedback: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -44,6 +46,7 @@ public struct SettingsView: View {
         self.onCreateGuardiansForAllChildren = onCreateGuardiansForAllChildren
         self.onPromoteToNextYear = onPromoteToNextYear
         self.onSelectDeviceReset = onSelectDeviceReset
+        self.onSelectFeedback = onSelectFeedback
     }
     
     public var body: some View {
@@ -101,6 +104,25 @@ public struct SettingsView: View {
                     title: "進級処理",
                     subtitle: "年度変更時に園児を次の年齢区分に進級（5歳児は卒業として削除）",
                     action: onPromoteToNextYear,
+                    showChevron: false
+                )
+            }
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            // サポートセクション
+            VStack(alignment: .leading, spacing: 8) {
+                Text("サポート")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+                
+                SettingsMenuItem(
+                    iconName: "envelope",
+                    title: "不具合・ご要望を報告",
+                    subtitle: "開発者にメールで報告します",
+                    action: onSelectFeedback,
                     showChevron: false
                 )
             }
@@ -208,7 +230,8 @@ private struct SettingsMenuItem: View {
             onSelectLoanSettings: {},
             onCreateGuardiansForAllChildren: {},
             onPromoteToNextYear: {},
-            onSelectDeviceReset: {}
+            onSelectDeviceReset: {},
+            onSelectFeedback: {}
         )
         .navigationTitle("設定")
     }
