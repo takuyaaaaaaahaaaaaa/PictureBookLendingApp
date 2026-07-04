@@ -205,10 +205,13 @@ public struct FamilyLoanSlotsView: View {
                     .foregroundStyle(.white)
             }
             
+            // 返却タブの家庭の画面と同じ大きさ・フォントで揃える
             Button("返却") {
                 onReturn(slot)
             }
+            .font(.title3)
             .buttonStyle(.bordered)
+            .controlSize(.large)
         }
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
