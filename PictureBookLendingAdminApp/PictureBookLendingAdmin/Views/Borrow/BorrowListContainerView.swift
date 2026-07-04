@@ -44,6 +44,19 @@ struct BorrowListContainerView: View {
     /// 置き去りとみなして図書一覧へ戻る
     /// （次の利用者に前の家庭の情報を見せないためのキオスク作法）
     private static let screenIdleTimeout: Duration = .seconds(15)
+    /// 貸出成功の✓カードの表示時間。カードの消滅がシートを閉じる合図を兼ねるため、
+    /// 既定の1.5秒では読み切る前に画面が変わってしまう。読み切れる長さに延ばす
+    private static let lendFeedbackDuration: Duration = .seconds(2.5)
+    
+    private enum Layout {
+        static let sectionSpacing: CGFloat = 24
+        static let headerContentSpacing: CGFloat = 16
+        static let headerTextSpacing: CGFloat = 4
+        /// 表紙サムネイル（家庭の枠の貸出中カードと同じ寸法で揃える）
+        static let thumbnailWidth: CGFloat = 56
+        static let thumbnailHeight: CGFloat = 72
+        static let thumbnailCornerRadius: CGFloat = 6
+    }
     
     var body: some View {
         NavigationStack {
@@ -127,7 +140,7 @@ struct BorrowListContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .successFeedback($successFeedback)
+        .successFeedback($successFeedback, displayDuration: Self.lendFeedbackDuration)
         .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
             // ✓カードがタイムアウトで消えたらシートを閉じる
             if wasPresented && !isPresented && isPopPendingAfterLend {
@@ -138,6 +151,12 @@ struct BorrowListContainerView: View {
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
         // 絵本管理の貸出フォームと同じ作法）
         .interactiveDismissDisabled()
+        // シート内のあらゆるタッチ（タップ・スクロール）で無操作タイマーを延長する。
+        // 200人の一覧をゆっくり探している最中に置き去り扱いで閉じないようにする
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onEnded { _ in idleTicket += 1 }
+        )
     }
     
     // MARK: - Private Views
@@ -145,9 +164,8 @@ struct BorrowListContainerView: View {
     /// 利用者選択画面（フォームシートの最初の画面・「だれが借りますか？」）
     ///
     /// 貸出中の図書が選ばれた場合は貸出できない理由を説明する空状態を表示する。
-    @ViewBuilder
     private func borrowerPickScreen(for book: Book) -> some View {
-        Group {
+        sheetScreen(title: "だれが借りますか？") {
             if loanModel.isBookLent(bookId: book.id) {
                 ContentUnavailableView(
                     "この図書は貸出中です",
@@ -171,81 +189,84 @@ struct BorrowListContainerView: View {
                 )
             }
         }
-        .task(id: idleTicket) {
-            // 無操作タイムアウト：操作のたびにidleTicketが変わり、
-            // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
-            try? await Task.sleep(for: Self.screenIdleTimeout)
-            if Task.isCancelled { return }
-            // 置き去りとみなしてシートを閉じる
-            selectedBook = nil
-        }
-        .navigationTitle("だれが借りますか？")
-        #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    // 下スワイプを知らない利用者のための明示的な閉じるボタン
-                    Button {
-                        selectedBook = nil
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                }
-            }
-        #endif
     }
     
     /// 枠確認画面（シート内で利用者タップから進む先・「どの枠で借りますか？」）
     ///
-    /// 選んだ図書の要約を上部に示し、家庭の枠領域（貸出文脈）で空き枠を選ばせる。
+    /// 選んだ図書の要約（表紙＋タイトル＋著者）を上部に示し、
+    /// 家庭の枠領域（貸出文脈）で空き枠を選ばせる。
+    /// 表紙の見た目は家庭の枠の貸出中カードと同じ作法（サイズ・角丸）で揃える
     private func slotConfirmScreen(for route: BorrowConfirmRoute) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("『\(route.book.title)』")
-                        .font(.title3.bold())
-                    if let author = route.book.author {
-                        Text(author)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+        sheetScreen(title: "どの枠で借りますか？") {
+            ScrollView {
+                VStack(alignment: .leading, spacing: Layout.sectionSpacing) {
+                    HStack(spacing: Layout.headerContentSpacing) {
+                        BookImageView(imageURL: route.book.resolvedSmallImageSource) {
+                            Image(systemName: "book.closed")
+                                .foregroundStyle(.secondary)
+                                .font(.title2)
+                        }
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: Layout.thumbnailWidth, height: Layout.thumbnailHeight)
+                        .background(.regularMaterial)
+                        .clipShape(RoundedRectangle(cornerRadius: Layout.thumbnailCornerRadius))
+                        
+                        VStack(alignment: .leading, spacing: Layout.headerTextSpacing) {
+                            Text("『\(route.book.title)』")
+                                .font(.title3.bold())
+                            if let author = route.book.author {
+                                Text(author)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    
+                    FamilyLoanSlotsContainerView(
+                        alertState: $alertState,
+                        undoFeedback: $unusedUndoFeedback,
+                        userId: route.userId,
+                        mode: .borrowing,
+                        onReturnCompleted: { _ in },
+                        onBorrowSlotSelected: { slotUserId in
+                            handleLend(book: route.book, userId: slotUserId)
+                        }
+                    )
+                }
+                .padding()
+            }
+        }
+    }
+    
+    /// シート内画面の共通装飾（無操作タイマー・インラインタイトル・✕閉じるボタン）
+    ///
+    /// 無操作タイムアウト：シート内のタッチのたびにidleTicketが変わってタスクが再起動し、
+    /// 待ち時間が延長される。画面を離れると自動キャンセルされる。
+    /// ✕ボタンは、下スワイプでの閉じ方を知らない利用者のための明示的な閉じる手段
+    private func sheetScreen(
+        title: String,
+        @ViewBuilder content: () -> some View
+    ) -> some View {
+        content()
+            .task(id: idleTicket) {
+                try? await Task.sleep(for: Self.screenIdleTimeout)
+                if Task.isCancelled { return }
+                // 置き去りとみなしてシートを閉じる
+                selectedBook = nil
+            }
+            .navigationTitle(title)
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            selectedBook = nil
+                        } label: {
+                            Image(systemName: "xmark")
+                        }
                     }
                 }
-                
-                FamilyLoanSlotsContainerView(
-                    alertState: $alertState,
-                    undoFeedback: $unusedUndoFeedback,
-                    userId: route.userId,
-                    mode: .borrowing,
-                    onReturnCompleted: { _ in },
-                    onBorrowSlotSelected: { slotUserId in
-                        handleLend(book: route.book, userId: slotUserId)
-                    }
-                )
-            }
-            .padding()
-        }
-        .task(id: idleTicket) {
-            // 無操作タイムアウト：操作のたびにidleTicketが変わり、
-            // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
-            try? await Task.sleep(for: Self.screenIdleTimeout)
-            if Task.isCancelled { return }
-            // 置き去りとみなしてシートを閉じる
-            selectedBook = nil
-        }
-        .navigationTitle("どの枠で借りますか？")
-        #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    // 下スワイプを知らない利用者のための明示的な閉じるボタン
-                    Button {
-                        selectedBook = nil
-                    } label: {
-                        Image(systemName: "xmark")
-                    }
-                }
-            }
-        #endif
+            #endif
     }
     
     // MARK: - Computed Properties
@@ -291,13 +312,9 @@ struct BorrowListContainerView: View {
     
     /// 貸出中の図書の説明文（「いつ戻るか」の目安を日付だけで知らせる）
     ///
-    /// 誰が借りているかは表示しない（プライバシー配慮・IA_REVIEW 追記13）。
-    /// 注意: getActiveLoans()はキャッシュ更新の副作用を持つためgetAllLoans()から絞り込む
+    /// 誰が借りているかは表示しない（プライバシー配慮・IA_REVIEW 追記13）
     private func lentBookDescription(for book: Book) -> String {
-        if let loan = loanModel.getAllLoans().first(where: {
-            $0.bookId == book.id && !$0.isReturned
-        }
-        ) {
+        if let loan = loanModel.getCurrentLoan(bookId: book.id) {
             "\(loan.dueDateText)ごろ返却予定です"
         } else {
             "返却されると貸出できるようになります"

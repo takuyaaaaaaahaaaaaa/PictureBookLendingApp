@@ -123,6 +123,8 @@ public struct BorrowerListView: View {
             VStack(alignment: .leading, spacing: Layout.chipSpacing) {
                 indexSection(proxy: proxy)
                 
+                // 空判定はフィルタ前の全体で行う（組の絞り込みによる一時的な空を
+                // 「利用者がいない」空状態と誤認しないため）
                 if sections.allSatisfy({ $0.rows.isEmpty }) {
                     emptyStateView
                 } else {

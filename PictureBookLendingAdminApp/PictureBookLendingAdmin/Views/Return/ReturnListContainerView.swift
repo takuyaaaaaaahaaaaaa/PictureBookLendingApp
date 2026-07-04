@@ -123,16 +123,21 @@ struct ReturnListContainerView: View {
         // 注意: getActiveLoans()はキャッシュ更新の副作用を持ちbody評価中に呼ぶと
         // 再描画ループになるため、副作用のないgetAllLoans()から絞り込む
         let activeLoans = loanModel.getAllLoans().filter { !$0.isReturned }
-        let loansByRepresentative = Dictionary(grouping: activeLoans) {
-            representativeUser(for: $0).id
+        // body評価のたびに走るため、ループ内の線形検索を避けて
+        // id→要素の辞書を先に1回だけ作る（200利用者・500冊規模への備え）
+        let usersById = Dictionary(
+            uniqueKeysWithValues: userModel.getAllUsers().map { ($0.id, $0) })
+        let booksById = Dictionary(uniqueKeysWithValues: bookModel.books.map { ($0.id, $0) })
+        
+        var familyLoans: [UUID: (representative: User, loans: [Loan])] = [:]
+        for loan in activeLoans {
+            let representative = Self.representativeUser(for: loan, usersById: usersById)
+            familyLoans[representative.id, default: (representative, [])].loans.append(loan)
         }
         
-        return
-            loansByRepresentative
-            .compactMap { _, loans -> BorrowerEntry? in
-                guard let first = loans.first else { return nil }
-                let representative = representativeUser(for: first)
-                return BorrowerEntry(
+        return familyLoans.values
+            .map { representative, loans in
+                BorrowerEntry(
                     row: BorrowerRowDisplay(
                         id: representative.id,
                         name: representative.name,
@@ -140,7 +145,7 @@ struct ReturnListContainerView: View {
                         isOverdue: loans.contains { $0.isOverdue(at: now) }
                     ),
                     classGroupId: representative.classGroupId,
-                    bookTitles: loans.compactMap { bookModel.findBookById($0.bookId)?.title }
+                    bookTitles: loans.compactMap { booksById[$0.bookId]?.title }
                 )
             }
             .sorted { $0.row.name < $1.row.name }
@@ -150,10 +155,10 @@ struct ReturnListContainerView: View {
     ///
     /// 名前・種別は現在の利用者情報を優先し、削除済みなら貸出時のスナップショットを使う。
     /// 保護者名義は紐づく園児に寄せ、園児が見つからない場合（削除後の残留等）は本人のまま
-    private func representativeUser(for loan: Loan) -> User {
-        let user = userModel.findUserById(loan.user.id) ?? loan.user
+    private static func representativeUser(for loan: Loan, usersById: [UUID: User]) -> User {
+        let user = usersById[loan.user.id] ?? loan.user
         if case .guardian(let relatedChildId) = user.userType,
-            let child = userModel.findUserById(relatedChildId)
+            let child = usersById[relatedChildId]
         {
             return child
         }
