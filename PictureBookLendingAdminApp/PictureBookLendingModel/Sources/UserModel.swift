@@ -162,6 +162,31 @@ public class UserModel {
         return [child] + guardians
     }
     
+    /// 指定した利用者の家庭の代表を解決する
+    ///
+    /// 家庭の代表解決の単一の入口です。園児IDでも保護者IDでも、
+    /// その家庭の代表（＝園児）を返します。紐づく園児が実在しない保護者は本人を返します。
+    ///
+    /// - Parameter userId: 家庭を特定する利用者のID
+    /// - Returns: 家庭の代表となる利用者。利用者が存在しない場合はnil
+    public func familyRepresentative(of userId: UUID) -> User? {
+        getFamilyMembers(of: userId).first
+    }
+    
+    /// 一覧の入口として表示すべき利用者を取得する
+    ///
+    /// 保護者は紐づく園児が実在する場合のみ一覧から隠します
+    /// （園児タップ後の家庭の画面から到達できるため）。
+    /// 紐づく園児が実在しない保護者・園児・園児でも保護者でもない利用者（先生等）は
+    /// そのまま一覧に含めます。
+    ///
+    /// - Returns: 一覧に表示すべき利用者（自分自身が家庭の代表である利用者）
+    public func getFamilyEntranceUsers() -> [User] {
+        getAllUsers().filter { user in
+            familyRepresentative(of: user.id)?.id == user.id
+        }
+    }
+    
     /// 利用者情報を更新する
     ///
     /// 指定された利用者の情報を更新します。
