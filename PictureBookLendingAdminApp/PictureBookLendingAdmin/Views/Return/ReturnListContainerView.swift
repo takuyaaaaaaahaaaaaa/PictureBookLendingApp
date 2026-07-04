@@ -112,32 +112,52 @@ struct ReturnListContainerView: View {
         let bookTitles: [String]
     }
     
-    /// 貸出中の利用者一覧（名前順）
+    /// 貸出がある家庭の一覧（家庭の代表＝園児の名前順・家庭で1行）
+    ///
+    /// 保護者名義の貸出は紐づく園児（家庭の代表）の行に寄せる（IA_REVIEW 追記16）。
+    /// 貸出フローの利用者選択と同じ「家庭のキーは園児名」の原則で、
+    /// 園児と保護者が両方借りている家庭も1行にまとまる。
+    /// タップ先の家庭の画面には従来どおり家庭全員の貸出が並ぶ
     private var borrowerEntries: [BorrowerEntry] {
         let now = Date()
         // 注意: getActiveLoans()はキャッシュ更新の副作用を持ちbody評価中に呼ぶと
         // 再描画ループになるため、副作用のないgetAllLoans()から絞り込む
         let activeLoans = loanModel.getAllLoans().filter { !$0.isReturned }
-        let loansByUser = Dictionary(grouping: activeLoans) { $0.user.id }
+        let loansByRepresentative = Dictionary(grouping: activeLoans) {
+            representativeUser(for: $0).id
+        }
         
         return
-            loansByUser
-            .compactMap { userId, loans -> BorrowerEntry? in
+            loansByRepresentative
+            .compactMap { _, loans -> BorrowerEntry? in
                 guard let first = loans.first else { return nil }
-                // 名前・種別は現在の利用者情報を優先し、削除済みなら貸出時のスナップショットを使う
-                let user = userModel.findUserById(userId) ?? first.user
+                let representative = representativeUser(for: first)
                 return BorrowerEntry(
                     row: BorrowerRowDisplay(
-                        id: userId,
-                        name: user.name,
-                        isGuardian: user.userType.category == .guardian,
+                        id: representative.id,
+                        name: representative.name,
+                        isGuardian: representative.userType.category == .guardian,
                         isOverdue: loans.contains { $0.isOverdue(at: now) }
                     ),
-                    classGroupId: user.classGroupId,
+                    classGroupId: representative.classGroupId,
                     bookTitles: loans.compactMap { bookModel.findBookById($0.bookId)?.title }
                 )
             }
             .sorted { $0.row.name < $1.row.name }
+    }
+    
+    /// 貸出の名義を家庭の代表に解決する
+    ///
+    /// 名前・種別は現在の利用者情報を優先し、削除済みなら貸出時のスナップショットを使う。
+    /// 保護者名義は紐づく園児に寄せ、園児が見つからない場合（削除後の残留等）は本人のまま
+    private func representativeUser(for loan: Loan) -> User {
+        let user = userModel.findUserById(loan.user.id) ?? loan.user
+        if case .guardian(let relatedChildId) = user.userType,
+            let child = userModel.findUserById(relatedChildId)
+        {
+            return child
+        }
+        return user
     }
     
     /// 検索・延滞フィルタを適用した借用者（組はフィルタせずインデックスでスクロール）
