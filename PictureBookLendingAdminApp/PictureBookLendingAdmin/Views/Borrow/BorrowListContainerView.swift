@@ -135,6 +135,9 @@ struct BorrowListContainerView: View {
                 selectedBook = nil
             }
         }
+        // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
+        // 絵本管理の貸出フォームと同じ作法）
+        .interactiveDismissDisabled()
     }
     
     // MARK: - Private Views
