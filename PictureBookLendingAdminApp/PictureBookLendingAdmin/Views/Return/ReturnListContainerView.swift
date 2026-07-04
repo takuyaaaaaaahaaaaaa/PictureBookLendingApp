@@ -27,16 +27,11 @@ struct ReturnListContainerView: View {
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
     
-    /// 家庭の画面の無操作タイムアウト。貸出が残っていて操作がないまま
-    /// この時間が経過したら、置き去りとみなして一覧トップへ戻る
-    /// （次の利用者に家庭の情報を見せないためのキオスク作法）
-    private static let familyScreenIdleTimeout: Duration = .seconds(15)
-    
     var body: some View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
                 sections: filteredSections,
-                scrollToTopTrigger: scrollToTopTrigger,
+                chipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
                 isOverdueOnly: $isOverdueOnly,
                 onSelect: handleSelect(_:)
             )
@@ -84,19 +79,11 @@ struct ReturnListContainerView: View {
                 alertState: $alertState,
                 undoFeedback: $undoFeedback,
                 userId: userId,
-                mode: .returning,
-                onReturnCompleted: handleReturnCompleted(hasRemainingLoans:),
-                onBorrowSlotSelected: { _ in }
+                context: .returning(onReturnCompleted: handleReturnCompleted(hasRemainingLoans:))
             )
             .padding()
         }
-        .task(id: idleTicket) {
-            // 無操作タイムアウト：操作（返却・取り消し）のたびにidleTicketが変わり、
-            // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
-            try? await Task.sleep(for: Self.familyScreenIdleTimeout)
-            if Task.isCancelled { return }
-            popToListAndScrollTop()
-        }
+        .kioskIdleTimeout(ticket: idleTicket, onTimeout: popToListAndScrollTop)
         .navigationTitle(userModel.findUserById(userId)?.name ?? "")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)

@@ -46,10 +46,6 @@ struct BorrowListContainerView: View {
     /// 枠確認画面での返却（本の入れ替え）用のUndoカード状態
     @State private var undoFeedback = UndoFeedback()
     
-    /// 選択画面の無操作タイムアウト。操作がないままこの時間が経過したら、
-    /// 置き去りとみなして図書一覧へ戻る
-    /// （次の利用者に前の家庭の情報を見せないためのキオスク作法）
-    private static let screenIdleTimeout: Duration = .seconds(15)
     /// 貸出成功の✓カードの表示時間。カードの消滅がシートを閉じる合図を兼ねるため、
     /// 既定の1.5秒では読み切る前に画面が変わってしまう。読み切れる長さに延ばす
     private static let lendFeedbackDuration: Duration = .seconds(2.5)
@@ -86,11 +82,11 @@ struct BorrowListContainerView: View {
                 // 貸出中＝グレーの「貸出中」（押すと返却予定日の案内シートが開く）。
                 // 行全体もタップ可能なので、ボタンの外を押しても同じ動きになる
                 if loanModel.isBookLent(bookId: book.id) {
-                    LoanButtonView(title: "貸出中", systemImage: "book.closed", tint: .gray) {
+                    RowActionButton(title: "貸出中", systemImage: "book.closed", tint: .gray) {
                         openBorrowSheet(for: book)
                     }
                 } else {
-                    LoanButtonView(title: "借りる") {
+                    RowActionButton(title: "借りる") {
                         openBorrowSheet(for: book)
                     }
                 }
@@ -187,14 +183,11 @@ struct BorrowListContainerView: View {
             } else {
                 BorrowerListView(
                     sections: allUserSections,
-                    showsOverdueFilter: false,
-                    emptyStateTitle: "利用者が登録されていません",
-                    emptyStateDescription: "設定画面から利用者を登録してください",
                     // 自分の組が分かっていて切り替えたい画面なので、
                     // チップはインデックスではなくフィルタとして動作させる
-                    chipBehavior: .filter,
-                    selectedSectionId: $selectedClassGroupId,
-                    isOverdueOnly: .constant(false),
+                    chipBehavior: .filter(selection: $selectedClassGroupId),
+                    emptyStateTitle: "利用者が登録されていません",
+                    emptyStateDescription: "設定画面から利用者を登録してください",
                     onSelect: { row in
                         sheetPath.append(BorrowConfirmRoute(book: book, userId: row.id))
                     }
@@ -238,12 +231,9 @@ struct BorrowListContainerView: View {
                         alertState: $alertState,
                         undoFeedback: $undoFeedback,
                         userId: route.userId,
-                        mode: .borrowing,
-                        // 返却後もその場に留まる（空いた枠で続けて借りるのが目的のため）
-                        onReturnCompleted: { _ in },
-                        onBorrowSlotSelected: { slotUserId in
+                        context: .borrowing(onSlotSelected: { slotUserId in
                             handleLend(book: route.book, userId: slotUserId)
-                        }
+                        })
                     )
                 }
                 .padding()
@@ -253,20 +243,13 @@ struct BorrowListContainerView: View {
     
     /// シート内画面の共通装飾（無操作タイマー・インラインタイトル・✕閉じるボタン）
     ///
-    /// 無操作タイムアウト：シート内のタッチのたびにidleTicketが変わってタスクが再起動し、
-    /// 待ち時間が延長される。画面を離れると自動キャンセルされる。
     /// ✕ボタンは、下スワイプでの閉じ方を知らない利用者のための明示的な閉じる手段
     private func sheetScreen(
         title: String,
         @ViewBuilder content: () -> some View
     ) -> some View {
         content()
-            .task(id: idleTicket) {
-                try? await Task.sleep(for: Self.screenIdleTimeout)
-                if Task.isCancelled { return }
-                // 置き去りとみなしてシートを閉じる
-                selectedBook = nil
-            }
+            .kioskIdleTimeout(ticket: idleTicket) { selectedBook = nil }
             .navigationTitle(title)
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
