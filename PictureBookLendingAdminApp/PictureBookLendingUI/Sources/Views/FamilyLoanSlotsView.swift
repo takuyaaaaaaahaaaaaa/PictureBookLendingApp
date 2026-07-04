@@ -44,7 +44,9 @@ public struct FamilyLoanSlotLoan: Equatable, Sendable {
 public enum FamilyLoanSlotsMode: Equatable, Sendable {
     /// 返却タブから：貸出中の枠に「返却」ボタンを表示
     case returning
-    /// 貸出フローから：空いている枠に「この枠で借りる」ボタンを表示
+    /// 貸出フローから：空いている枠に「この枠で借りる」ボタンを表示。
+    /// 貸出中の枠はコンパクト表示＋「返却」ボタン（先に返し忘れて枠が埋まっている人が
+    /// その場で枠を空けて借り直せるように＝本の入れ替え）
     case borrowing
 }
 
@@ -112,7 +114,7 @@ public struct FamilyLoanSlotsView: View {
                 // 貸出文脈では「すでに借りている本」は選べない情報なので、
                 // 主役（空き枠・いま借りる本の表紙）に視線を譲るコンパクト表示にする
                 if mode == .borrowing {
-                    lentCompactCard(loan: loan)
+                    lentCompactCard(slot: slot, loan: loan)
                 } else {
                     lentCard(slot: slot, loan: loan)
                 }
@@ -174,10 +176,14 @@ public struct FamilyLoanSlotsView: View {
         )
     }
     
-    /// 貸出中の枠（貸出文脈のコンパクト表示）：表紙なしの1行
+    /// 貸出中の枠（貸出文脈のコンパクト表示）：表紙なしの1行＋「返却」ボタン
     ///
-    /// 本のアイコン＋書名＋期限をグレーで控えめに示す。延滞だけは赤で残す
-    private func lentCompactCard(loan: FamilyLoanSlotLoan) -> some View {
+    /// 本のアイコン＋書名＋期限をグレーで控えめに示す。延滞だけは赤で残す。
+    /// 「返却」ボタンは、先に返し忘れて枠が埋まっている人がその場で枠を空けて
+    /// 借り直せるようにするリカバリー導線（原則2「ミスは前提、リカバリーは1タップ」）
+    private func lentCompactCard(slot: FamilyLoanSlotDisplay, loan: FamilyLoanSlotLoan)
+        -> some View
+    {
         HStack(spacing: Layout.headerSpacing) {
             Image(systemName: "book.closed")
                 .foregroundStyle(.secondary)
@@ -198,6 +204,11 @@ public struct FamilyLoanSlotsView: View {
                     .background(.red, in: Capsule())
                     .foregroundStyle(.white)
             }
+            
+            Button("返却") {
+                onReturn(slot)
+            }
+            .buttonStyle(.bordered)
         }
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)

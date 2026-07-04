@@ -43,9 +43,8 @@ struct BorrowListContainerView: View {
     @State private var isPopPendingAfterLend = false
     /// 選択画面の無操作タイマーのトークン（操作のたびに更新して待ち時間を延長する）
     @State private var idleTicket = 0
-    /// 貸出文脈ではUndoカードを使わないためのダミー
-    /// （FamilyLoanSlotsContainerViewのundoFeedbackが@Bindingのため受け皿として持つ）
-    @State private var unusedUndoFeedback = UndoFeedback()
+    /// 枠確認画面での返却（本の入れ替え）用のUndoカード状態
+    @State private var undoFeedback = UndoFeedback()
     
     /// 選択画面の無操作タイムアウト。操作がないままこの時間が経過したら、
     /// 置き去りとみなして図書一覧へ戻る
@@ -150,6 +149,9 @@ struct BorrowListContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback, displayDuration: Self.lendFeedbackDuration)
+        // 枠確認画面での返却（本の入れ替え）に対するUndoカード。
+        // 取り消してもその場に留まり、枠に本が戻るのを見せる
+        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
             // ✓カードがタイムアウトで消えたらシートを閉じる
             if wasPresented && !isPresented && isPopPendingAfterLend {
@@ -234,9 +236,10 @@ struct BorrowListContainerView: View {
                     
                     FamilyLoanSlotsContainerView(
                         alertState: $alertState,
-                        undoFeedback: $unusedUndoFeedback,
+                        undoFeedback: $undoFeedback,
                         userId: route.userId,
                         mode: .borrowing,
+                        // 返却後もその場に留まる（空いた枠で続けて借りるのが目的のため）
                         onReturnCompleted: { _ in },
                         onBorrowSlotSelected: { slotUserId in
                             handleLend(book: route.book, userId: slotUserId)
@@ -349,6 +352,18 @@ struct BorrowListContainerView: View {
     }
     
     // MARK: - Actions
+    
+    /// 枠確認画面での返却の取り消し（Undoカードの「元に戻す」）
+    ///
+    /// 取り消したらその場に留まり、枠に本が戻るのを見せる
+    private func handleUndoReturn() {
+        guard let loanId = undoFeedback.targetId else { return }
+        do {
+            try loanModel.undoReturn(loanId: loanId)
+        } catch {
+            alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
+        }
+    }
     
     /// 図書の貸出シートを開く（行タップ・「借りる」ボタンの共通入口）
     ///
