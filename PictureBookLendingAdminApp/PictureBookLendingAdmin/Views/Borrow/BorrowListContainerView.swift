@@ -23,6 +23,8 @@ struct BorrowListContainerView: View {
     @State private var selectedBook: Book?
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
     @State private var sheetPath = NavigationPath()
+    /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
+    @State private var selectedClassGroupId: UUID?
     @State private var searchText = ""
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
@@ -93,29 +95,41 @@ struct BorrowListContainerView: View {
             loadBookSections()
         }
         .sheet(item: $selectedBook) { book in
-            // 一時的な貸出タスク（利用者選択→枠確認→✓カード）をシートの中だけで完結させる。
-            // ✓カードとアラートは背後の図書一覧に付けると隠れるため、必ずシート内に置く
-            NavigationStack(path: $sheetPath) {
-                borrowerPickScreen(for: book)
-                    .navigationDestination(for: BorrowConfirmRoute.self) { route in
-                        slotConfirmScreen(for: route)
-                    }
+            // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
+            // 200人規模の名前一覧＋組チップを載せる貸出タスクは、
+            // 一回り大きいシステム標準のページシートで出す
+            if loanModel.isBookLent(bookId: book.id) {
+                borrowSheetContent(for: book)
+                    .presentationSizing(.form)
+            } else {
+                borrowSheetContent(for: book)
+                    .presentationSizing(.page)
             }
-            // 200人規模の名前一覧＋組チップを載せるため、フォームシートより
-            // 一回り大きいシステム標準のページシートを使う
-            .presentationSizing(.page)
-            .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(alertState.message)
-            }
-            .successFeedback($successFeedback)
-            .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
-                // ✓カードがタイムアウトで消えたらシートを閉じる
-                if wasPresented && !isPresented && isPopPendingAfterLend {
-                    isPopPendingAfterLend = false
-                    selectedBook = nil
+        }
+    }
+    
+    /// 貸出シートの中身（利用者選択→枠確認→✓カード）
+    ///
+    /// 一時的な貸出タスクをシートの中だけで完結させる。
+    /// ✓カードとアラートは背後の図書一覧に付けると隠れるため、必ずシート内に置く
+    private func borrowSheetContent(for book: Book) -> some View {
+        NavigationStack(path: $sheetPath) {
+            borrowerPickScreen(for: book)
+                .navigationDestination(for: BorrowConfirmRoute.self) { route in
+                    slotConfirmScreen(for: route)
                 }
+        }
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
+        .successFeedback($successFeedback)
+        .onChange(of: successFeedback.isPresented) { wasPresented, isPresented in
+            // ✓カードがタイムアウトで消えたらシートを閉じる
+            if wasPresented && !isPresented && isPopPendingAfterLend {
+                isPopPendingAfterLend = false
+                selectedBook = nil
             }
         }
     }
@@ -140,6 +154,10 @@ struct BorrowListContainerView: View {
                     showsOverdueFilter: false,
                     emptyStateTitle: "利用者が登録されていません",
                     emptyStateDescription: "設定画面から利用者を登録してください",
+                    // 自分の組が分かっていて切り替えたい画面なので、
+                    // チップはインデックスではなくフィルタとして動作させる
+                    chipBehavior: .filter,
+                    selectedSectionId: $selectedClassGroupId,
                     isOverdueOnly: .constant(false),
                     onSelect: { row in
                         sheetPath.append(BorrowConfirmRoute(book: book, userId: row.id))
@@ -284,9 +302,11 @@ struct BorrowListContainerView: View {
     
     /// 図書の貸出シートを開く（行タップ・「借りる」ボタンの共通入口）
     ///
-    /// 一覧はプッシュ遷移させず、その図書の貸出シートを開く
+    /// 一覧はプッシュ遷移させず、その図書の貸出シートを開く。
+    /// 組の絞り込みも毎回リセットし、前の家庭の絞り込みを次の利用者に残さない
     private func openBorrowSheet(for book: Book) {
         sheetPath = NavigationPath()
+        selectedClassGroupId = nil
         selectedBook = book
     }
     
