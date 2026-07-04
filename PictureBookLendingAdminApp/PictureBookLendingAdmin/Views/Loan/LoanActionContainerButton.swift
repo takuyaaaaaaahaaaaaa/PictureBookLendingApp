@@ -43,7 +43,7 @@ struct LoanActionContainerButton: View {
             if isBookLent {
                 ReturnButtonView(onTap: handleReturnTap)
             } else {
-                LoanButtonView(onTap: handleLoanTap)
+                RowActionButton(onTap: handleLoanTap)
             }
         }
         .sheet(isPresented: $isLoanSheetPresented) {
