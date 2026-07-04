@@ -370,4 +370,41 @@ struct LoanModelTests {
             try loanModel.undoReturn(loanId: loan.id)
         }
     }
+    
+    // MARK: - 副作用のないアクセサ（activeLoans）
+    
+    /// activeLoansが返却済みを除いた貸出のみを返すことのテスト
+    @Test("activeLoansが返却済みを除いた貸出のみを返すことのテスト")
+    @MainActor
+    func activeLoansExcludesReturnedLoans() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        
+        let loan1 = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan1.id)
+        
+        let testBook2 = Book(title: "ぐりとぐら", author: "中川李枝子")
+        let savedBook2 = try mockRepositoryFactory.bookRepository.save(testBook2)
+        let loan2 = try loanModel.lendBook(bookId: savedBook2.id, userId: testUser.id)
+        
+        let activeLoans = loanModel.activeLoans
+        
+        #expect(activeLoans.count == 1)
+        #expect(activeLoans.first?.id == loan2.id)
+        #expect(activeLoans.allSatisfy { !$0.isReturned })
+    }
+    
+    /// activeLoansの呼び出し前後でキャッシュ状態が変化しない（副作用がない）ことのテスト
+    @Test("activeLoansの呼び出しに副作用がないことのテスト")
+    @MainActor
+    func activeLoansHasNoSideEffect() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        
+        let allLoansBefore = loanModel.getAllLoans()
+        _ = loanModel.activeLoans
+        let allLoansAfter = loanModel.getAllLoans()
+        
+        #expect(allLoansBefore.map(\.id) == allLoansAfter.map(\.id))
+        #expect(allLoansBefore.map(\.isReturned) == allLoansAfter.map(\.isReturned))
+    }
 }
