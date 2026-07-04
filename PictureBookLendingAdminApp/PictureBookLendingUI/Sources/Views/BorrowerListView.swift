@@ -14,12 +14,18 @@ public struct BorrowerRowDisplay: Identifiable, Equatable, Sendable {
     public let isGuardian: Bool
     /// 延滞中の貸出を持つかどうか
     public let isOverdue: Bool
+    /// 家庭の枠がすべて使用中かどうか（貸出フローの利用者選択で
+    /// 「タップしても借りられない」ことを事前に知らせるバッジに使用）
+    public let hasNoOpenSlot: Bool
     
-    public init(id: UUID, name: String, isGuardian: Bool, isOverdue: Bool) {
+    public init(
+        id: UUID, name: String, isGuardian: Bool, isOverdue: Bool, hasNoOpenSlot: Bool = false
+    ) {
         self.id = id
         self.name = name
         self.isGuardian = isGuardian
         self.isOverdue = isOverdue
+        self.hasNoOpenSlot = hasNoOpenSlot
     }
 }
 
@@ -232,6 +238,17 @@ public struct BorrowerListView: View {
             }
             
             Spacer()
+            
+            if row.hasNoOpenSlot {
+                // グレー＝「いまは借りられない」の色（図書一覧の貸出中ボタンと同じ言葉遣い）。
+                // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる
+                Text("空き枠なし")
+                    .font(.caption.bold())
+                    .padding(.horizontal, Layout.badgePaddingH)
+                    .padding(.vertical, Layout.badgePaddingV)
+                    .background(.gray, in: Capsule())
+                    .foregroundStyle(.white)
+            }
             
             if row.isOverdue {
                 Text("延滞")

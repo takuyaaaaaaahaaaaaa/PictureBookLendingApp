@@ -21,6 +21,13 @@ struct BorrowListContainerView: View {
     
     /// タップされた図書。非nilの間フォームシートを開く（シートの提示単位）
     @State private var selectedBook: Book?
+    /// シートを開いた時点での「選んだ図書が貸出中だったか」のスナップショット
+    ///
+    /// シート内でloanModel.isBookLent(bookId:)をライブで見ると、貸出が成立した
+    /// その瞬間に値が反転し、シートの土台（フォームシート/ページシートの分岐、
+    /// 案内画面/名前一覧の分岐）ごと作り直されて✓カードが一瞬で消えてしまう。
+    /// シートを開いた瞬間に固定し、閉じるまで変えないことでこれを防ぐ
+    @State private var isSelectedBookAlreadyLent = false
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
     @State private var sheetPath = NavigationPath()
     /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
@@ -113,8 +120,10 @@ struct BorrowListContainerView: View {
         .sheet(item: $selectedBook) { book in
             // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
             // 200人規模の名前一覧＋組チップを載せる貸出タスクは、
-            // 一回り大きいシステム標準のページシートで出す
-            if loanModel.isBookLent(bookId: book.id) {
+            // 一回り大きいシステム標準のページシートで出す。
+            // 判定はシートを開いた時点のスナップショットを使う（ライブで見ると、
+            // シート内で貸出成立した瞬間に反転してシートが作り直されてしまう）
+            if isSelectedBookAlreadyLent {
                 borrowSheetContent(for: book)
                     .presentationSizing(.form)
             } else {
@@ -164,9 +173,10 @@ struct BorrowListContainerView: View {
     /// 利用者選択画面（フォームシートの最初の画面・「だれが借りますか？」）
     ///
     /// 貸出中の図書が選ばれた場合は貸出できない理由を説明する空状態を表示する。
+    /// 判定はシートを開いた時点のスナップショットを使う（理由は`isSelectedBookAlreadyLent`参照）
     private func borrowerPickScreen(for book: Book) -> some View {
         sheetScreen(title: "だれが借りますか？") {
-            if loanModel.isBookLent(bookId: book.id) {
+            if isSelectedBookAlreadyLent {
                 ContentUnavailableView(
                     "この図書は貸出中です",
                     systemImage: "book.closed",
@@ -277,9 +287,10 @@ struct BorrowListContainerView: View {
     /// （保護者の枠は園児タップ後の家庭の画面から必ず選べる。IA_REVIEW 追記12）。
     /// 園児と、大人の組の独立利用者（先生・職員）はそのまま表示する。
     /// 紐づく園児が実在しない保護者は入口を失うため、本人を表示するフォールバック。
+    /// 家庭の全員が借用中の行には「空き枠なし」バッジを付け、タップ前に結果を知らせる。
     ///
     /// 注意: LoanModelのgetActiveLoans()はキャッシュ更新の副作用を持ち
-    /// body評価中に呼ぶと再描画ループになるため使わない（延滞表示は今回不要）
+    /// body評価中に呼ぶと再描画ループになるため、副作用のないgetAllLoans()から絞り込む
     private var allUserSections: [BorrowerListSection] {
         let allUsers = userModel.getAllUsers()
         let allUserIds = Set(allUsers.map(\.id))
@@ -289,6 +300,17 @@ struct BorrowListContainerView: View {
             }
             return true
         }
+        
+        // 空き枠判定の材料：借用中の利用者IDと、園児→紐づく保護者の対応表
+        let borrowedUserIds = Set(
+            loanModel.getAllLoans().filter { !$0.isReturned }.map { $0.user.id })
+        var guardiansByChildId: [UUID: [User]] = [:]
+        for user in allUsers {
+            if case .guardian(let relatedChildId) = user.userType {
+                guardiansByChildId[relatedChildId, default: []].append(user)
+            }
+        }
+        
         return Dictionary(grouping: entranceUsers) { $0.classGroupId }
             .map { classGroupId, users in
                 BorrowerListSection(
@@ -298,11 +320,16 @@ struct BorrowListContainerView: View {
                         users
                         .sorted { $0.name < $1.name }
                         .map { user in
-                            BorrowerRowDisplay(
+                            // 家庭の全員（本人＋紐づく保護者）が借用中なら空き枠なし
+                            let familyMembers = [user] + (guardiansByChildId[user.id] ?? [])
+                            return BorrowerRowDisplay(
                                 id: user.id,
                                 name: user.name,
                                 isGuardian: user.userType.category == .guardian,
-                                isOverdue: false
+                                isOverdue: false,
+                                hasNoOpenSlot: familyMembers.allSatisfy {
+                                    borrowedUserIds.contains($0.id)
+                                }
                             )
                         }
                 )
@@ -330,6 +357,7 @@ struct BorrowListContainerView: View {
     private func openBorrowSheet(for book: Book) {
         sheetPath = NavigationPath()
         selectedClassGroupId = nil
+        isSelectedBookAlreadyLent = loanModel.isBookLent(bookId: book.id)
         selectedBook = book
     }
     

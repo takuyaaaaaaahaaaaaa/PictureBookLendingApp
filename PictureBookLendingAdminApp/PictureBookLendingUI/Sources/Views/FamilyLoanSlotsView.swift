@@ -109,7 +109,13 @@ public struct FamilyLoanSlotsView: View {
             }
             
             if let loan = slot.loan {
-                lentCard(slot: slot, loan: loan)
+                // 貸出文脈では「すでに借りている本」は選べない情報なので、
+                // 主役（空き枠・いま借りる本の表紙）に視線を譲るコンパクト表示にする
+                if mode == .borrowing {
+                    lentCompactCard(loan: loan)
+                } else {
+                    lentCard(slot: slot, loan: loan)
+                }
             } else {
                 emptyCard(slot: slot)
             }
@@ -162,6 +168,39 @@ public struct FamilyLoanSlotsView: View {
         }
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, minHeight: Layout.cardMinHeight, alignment: .leading)
+        .background(
+            .background.secondary,
+            in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
+        )
+    }
+    
+    /// 貸出中の枠（貸出文脈のコンパクト表示）：表紙なしの1行
+    ///
+    /// 本のアイコン＋書名＋期限をグレーで控えめに示す。延滞だけは赤で残す
+    private func lentCompactCard(loan: FamilyLoanSlotLoan) -> some View {
+        HStack(spacing: Layout.headerSpacing) {
+            Image(systemName: "book.closed")
+                .foregroundStyle(.secondary)
+            Text(loan.bookTitle)
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Spacer(minLength: Layout.contentSpacing)
+            
+            Text("返却期限：\(loan.dueDateText)")
+                .font(.subheadline)
+                .foregroundStyle(loan.isOverdue ? .red : .secondary)
+            if loan.isOverdue {
+                Text("延滞")
+                    .font(.caption.bold())
+                    .padding(.horizontal, Layout.badgePaddingH)
+                    .padding(.vertical, Layout.badgePaddingV)
+                    .background(.red, in: Capsule())
+                    .foregroundStyle(.white)
+            }
+        }
+        .padding(Layout.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             .background.secondary,
             in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
