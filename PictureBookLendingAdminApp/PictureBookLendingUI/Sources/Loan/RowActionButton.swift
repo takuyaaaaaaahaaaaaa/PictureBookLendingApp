@@ -28,17 +28,22 @@ public struct RowActionButton: View {
         self.onTap = onTap
     }
     
+    private enum Layout {
+        /// 片手親指で押せるタップ領域の最小高さ（DESIGN_PRINCIPLES.md §5準拠）
+        static let minTapTargetHeight: CGFloat = 44
+    }
+    
     public var body: some View {
         Button(action: onTap) {
             HStack(spacing: 6) {
                 Image(systemName: systemImage)
-                    .font(.callout)
+                    .font(.body)
                 Text(title)
-                    .font(.callout)
+                    .font(.body)
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
-            .padding(.vertical, 8)
+            .frame(minHeight: Layout.minTapTargetHeight)
             .background(tint)
             .cornerRadius(8)
         }
