@@ -165,6 +165,19 @@ class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sen
     }
 }
 
+/// テスト用のモック図書画像リポジトリ
+class MockImageStorageRepository: ImageStorageRepositoryProtocol, @unchecked Sendable {
+    private var images: [String: Data] = [:]
+    
+    func loadImageData(fileName: String) -> Data? {
+        images[fileName]
+    }
+    
+    func saveImageData(_ data: Data, fileName: String) throws {
+        images[fileName] = data
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 @MainActor
 class MockRepositoryFactory {
@@ -173,4 +186,5 @@ class MockRepositoryFactory {
     let loanRepository = MockLoanRepository()
     let classGroupRepository = MockClassGroupRepository()
     let loanSettingsRepository = MockLoanSettingsRepository()
+    let imageStorageRepository = MockImageStorageRepository()
 }

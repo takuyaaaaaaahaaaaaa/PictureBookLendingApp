@@ -19,6 +19,8 @@ public struct SettingsView: View {
     let onSelectDeviceReset: () -> Void
     let onSelectFeedback: () -> Void
     let onSelectParentFeedbackQRCode: () -> Void
+    let onSelectBackupExport: () -> Void
+    let onSelectBackupImport: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -34,7 +36,9 @@ public struct SettingsView: View {
         onPromoteToNextYear: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void,
         onSelectFeedback: @escaping () -> Void,
-        onSelectParentFeedbackQRCode: @escaping () -> Void
+        onSelectParentFeedbackQRCode: @escaping () -> Void,
+        onSelectBackupExport: @escaping () -> Void,
+        onSelectBackupImport: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -50,6 +54,8 @@ public struct SettingsView: View {
         self.onSelectDeviceReset = onSelectDeviceReset
         self.onSelectFeedback = onSelectFeedback
         self.onSelectParentFeedbackQRCode = onSelectParentFeedbackQRCode
+        self.onSelectBackupExport = onSelectBackupExport
+        self.onSelectBackupImport = onSelectBackupImport
     }
     
     public var body: some View {
@@ -113,14 +119,14 @@ public struct SettingsView: View {
             
             Divider()
                 .padding(.vertical, 8)
-            
+
             // サポートセクション
             VStack(alignment: .leading, spacing: 8) {
                 Text("サポート")
                     .font(.headline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal)
-                
+
                 SettingsMenuItem(
                     iconName: "envelope",
                     title: "不具合・ご要望を報告",
@@ -128,7 +134,7 @@ public struct SettingsView: View {
                     action: onSelectFeedback,
                     showChevron: false
                 )
-                
+
                 SettingsMenuItem(
                     iconName: "qrcode",
                     title: "保護者向けQRコードを表示",
@@ -137,7 +143,34 @@ public struct SettingsView: View {
                     showChevron: false
                 )
             }
-            
+
+            Divider()
+                .padding(.vertical, 8)
+
+            // データ引き継ぎセクション
+            VStack(alignment: .leading, spacing: 8) {
+                Text("データ引き継ぎ")
+                    .font(.headline)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+
+                SettingsMenuItem(
+                    iconName: "square.and.arrow.up",
+                    title: "バックアップを書き出す",
+                    subtitle: "図書・利用者・貸出記録などをファイルに保存",
+                    action: onSelectBackupExport,
+                    showChevron: false
+                )
+
+                SettingsMenuItem(
+                    iconName: "square.and.arrow.down",
+                    title: "バックアップから復元する",
+                    subtitle: "書き出したファイルから全データを復元（既存データは置き換わります）",
+                    action: onSelectBackupImport,
+                    showChevron: false
+                )
+            }
+
             Divider()
                 .padding(.vertical, 8)
             
@@ -243,7 +276,9 @@ private struct SettingsMenuItem: View {
             onPromoteToNextYear: {},
             onSelectDeviceReset: {},
             onSelectFeedback: {},
-            onSelectParentFeedbackQRCode: {}
+            onSelectParentFeedbackQRCode: {},
+            onSelectBackupExport: {},
+            onSelectBackupImport: {}
         )
         .navigationTitle("設定")
     }

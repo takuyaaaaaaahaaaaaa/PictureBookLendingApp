@@ -23,6 +23,9 @@ struct PictureBookLendingAdminApp: App {
     /// 貸出設定モデル
     @State private var loanSettingsModel: LoanSettingsModel
     
+    /// バックアップモデル
+    @State private var backupModel: BackupModel
+    
     init() {
         // シングルトンのRepositoryFactoryを使用
         let repositoryFactory = SwiftDataRepositoryFactory.shared
@@ -33,6 +36,7 @@ struct PictureBookLendingAdminApp: App {
         let loanRepository = repositoryFactory.makeLoanRepository()
         let classGroupRepository = repositoryFactory.makeClassGroupRepository()
         let loanSettingsRepository = repositoryFactory.makeLoanSettingsRepository()
+        let imageStorageRepository = repositoryFactory.makeImageStorageRepository()
         
         // @StateのwrappedValueを使用して初期化
         _bookModel = State(wrappedValue: BookModel(repository: bookRepository))
@@ -48,6 +52,15 @@ struct PictureBookLendingAdminApp: App {
             wrappedValue: ClassGroupModel(repository: classGroupRepository))
         _loanSettingsModel = State(
             wrappedValue: LoanSettingsModel(repository: loanSettingsRepository))
+        _backupModel = State(
+            wrappedValue: BackupModel(
+                bookRepository: bookRepository,
+                userRepository: userRepository,
+                classGroupRepository: classGroupRepository,
+                loanRepository: loanRepository,
+                loanSettingsRepository: loanSettingsRepository,
+                imageStorageRepository: imageStorageRepository
+            ))
         
     }
     
@@ -59,6 +72,7 @@ struct PictureBookLendingAdminApp: App {
                 .environment(loanModel)
                 .environment(classGroupModel)
                 .environment(loanSettingsModel)
+                .environment(backupModel)
                 .task {
                     // TipKitを初期化
                     try? Tips.configure([

@@ -38,6 +38,13 @@ public class LoanSettingsModel {
     public func resetToDefault() throws {
         try updateSettings(.default)
     }
+    
+    /// リポジトリから最新の設定を再読み込みする
+    ///
+    /// バックアップ復元など、キャッシュを経由せずリポジトリの内容が変更された直後の同期に使用します。
+    public func reload() {
+        settings = repository.fetch()
+    }
 }
 
 /// 貸出設定に関するエラー
