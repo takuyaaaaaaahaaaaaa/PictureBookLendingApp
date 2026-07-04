@@ -176,12 +176,6 @@ struct BorrowListContainerView: View {
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
         // 絵本管理の貸出フォームと同じ作法）
         .interactiveDismissDisabled()
-        // シート内のあらゆるタッチ（タップ・スクロール）で無操作タイマーを延長する。
-        // 200人の一覧をゆっくり探している最中に置き去り扱いで閉じないようにする
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onEnded { _ in idleTicket += 1 }
-        )
     }
     
     // MARK: - Private Views
@@ -267,6 +261,14 @@ struct BorrowListContainerView: View {
         @ViewBuilder content: () -> some View
     ) -> some View {
         content()
+            // コンテンツ領域のタッチ（タップ・スクロール）で無操作タイマーを延長する。
+            // 200人の一覧をゆっくり探している最中に置き去り扱いで閉じないようにする。
+            // ナビバー（戻る・✕）には掛けない：バーのボタンのタッチと競合して
+            // 戻るボタンが効かなくなるため、コンテンツにだけ付ける
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { _ in idleTicket += 1 }
+            )
             .kioskIdleTimeout(ticket: idleTicket) { selectedBook = nil }
             .navigationTitle(title)
             #if os(iOS)
