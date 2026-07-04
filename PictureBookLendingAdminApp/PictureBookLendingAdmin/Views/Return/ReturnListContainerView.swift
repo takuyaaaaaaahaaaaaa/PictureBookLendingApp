@@ -26,6 +26,8 @@ struct ReturnListContainerView: View {
     @State private var idleTicket = 0
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
+    /// 設定画面表示状態
+    @State private var isSettingsPresented = false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -47,6 +49,22 @@ struct ReturnListContainerView: View {
             .navigationDestination(for: UUID.self) { userId in
                 familyScreen(for: userId)
             }
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("設定", systemImage: "gearshape") {
+                        isSettingsPresented = true
+                    }
+                }
+            }
+            #if os(macOS)
+                .sheet(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
+            #else
+                .fullScreenCover(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
+            #endif
         }
         .alert(alertState.title, isPresented: $alertState.isPresented) {
             Button("OK", role: .cancel) {}

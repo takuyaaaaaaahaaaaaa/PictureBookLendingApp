@@ -45,6 +45,8 @@ struct BorrowListContainerView: View {
     @State private var idleTicket = 0
     /// 枠確認画面での返却（本の入れ替え）用のUndoカード状態
     @State private var undoFeedback = UndoFeedback()
+    /// 設定画面表示状態
+    @State private var isSettingsPresented = false
     
     /// 貸出成功の✓カードの表示時間。カードの消滅がシートを閉じる合図を兼ねるため、
     /// 既定の1.5秒では読み切る前に画面が変わってしまう。読み切れる長さに延ばす
@@ -99,6 +101,22 @@ struct BorrowListContainerView: View {
                     prompt: "図書のタイトルまたは著者で検索")
             #else
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("設定", systemImage: "gearshape") {
+                        isSettingsPresented = true
+                    }
+                }
+            }
+            #if os(macOS)
+                .sheet(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
+            #else
+                .fullScreenCover(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
             #endif
         }
         .onChange(of: bookModel.books) {
