@@ -53,6 +53,9 @@ public struct BookSection: Identifiable, Hashable {
 /// 画面制御はContainer Viewに委譲します。
 /// 五十音フィルターとセクション表示に対応
 public struct BookListView<RowAction: View>: View {
+    /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
+    @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
+    
     /// 五十音グループでセクション化された絵本
     public let sections: [BookSection]
     /// 検索テキスト
@@ -178,15 +181,15 @@ public struct BookListView<RowAction: View>: View {
     private var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "book.closed")
-                .font(.system(size: 48))
+                .font(.system(size: emptyIconSize))
                 .foregroundStyle(.secondary)
             
             Text("図書が登録されていません")
-                .font(.headline)
+                .font(.title3)
                 .foregroundStyle(.secondary)
             
             Text("設定画面から図書を登録してください")
-                .font(.caption)
+                .font(.subheadline)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -265,7 +268,7 @@ public struct BookRowView<RowAction: View>: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
-                    .font(.headline)
+                    .font(.title3)
                 
                 Text(book.author ?? "")
                     .font(.subheadline)

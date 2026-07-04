@@ -41,10 +41,12 @@ public struct SuccessFeedback: Equatable, Sendable {
 /// チェックマークとメッセージを表示します。
 /// 操作を妨げないよう、タップは透過します。
 public struct SuccessFeedbackView: View {
+    /// チェックアイコンのサイズ（Dynamic Typeに追従してスケール）
+    @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
+    
     let message: String
     
     private enum Layout {
-        static let iconSize: CGFloat = 64
         static let spacing: CGFloat = 12
         static let padding: CGFloat = 32
         static let cornerRadius: CGFloat = 20
@@ -57,11 +59,11 @@ public struct SuccessFeedbackView: View {
     public var body: some View {
         VStack(spacing: Layout.spacing) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: Layout.iconSize))
+                .font(.system(size: iconSize))
                 .foregroundStyle(.green)
             
             Text(message)
-                .font(.headline)
+                .font(.title3.bold())
                 .multilineTextAlignment(.center)
         }
         .padding(Layout.padding)
