@@ -103,7 +103,7 @@ struct BorrowListContainerView: View {
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
             #endif
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("設定", systemImage: "gearshape") {
                         isSettingsPresented = true
                     }
