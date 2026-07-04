@@ -238,4 +238,114 @@ struct UserModelTests {
         #expect(userModel.findUserById(mother.id) == nil, "園児削除で保護者もカスケード削除される（仕様）")
         #expect(userModel.getFamilyMembers(of: mother.id).isEmpty)
     }
+    
+    // MARK: - 家庭の代表解決（familyRepresentative）
+    
+    /// 園児IDを渡すと自分自身が返ることのテスト
+    @Test("園児IDを渡すと自分自身が返ることのテスト")
+    @MainActor
+    func familyRepresentativeFromChild() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        _ = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        let representative = userModel.familyRepresentative(of: child.id)
+        
+        #expect(representative?.id == child.id)
+    }
+    
+    /// 保護者IDを渡すと紐づく園児が返ることのテスト
+    @Test("保護者IDを渡すと紐づく園児が返ることのテスト")
+    @MainActor
+    func familyRepresentativeFromGuardian() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        let representative = userModel.familyRepresentative(of: mother.id)
+        
+        #expect(representative?.id == child.id)
+    }
+    
+    /// 紐づく園児が存在しない保護者IDを渡すと本人が返ることのテスト
+    @Test("紐づく園児が存在しない保護者IDを渡すと本人が返ることのテスト")
+    @MainActor
+    func familyRepresentativeGuardianWithoutChild() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let orphanGuardian = try userModel.registerUser(
+            User(
+                name: "孤立 保護者", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: UUID())))
+        
+        let representative = userModel.familyRepresentative(of: orphanGuardian.id)
+        
+        #expect(representative?.id == orphanGuardian.id)
+    }
+    
+    /// 存在しないIDを渡すとnilが返ることのテスト
+    @Test("存在しない利用者IDではnilが返ることのテスト")
+    @MainActor
+    func familyRepresentativeUnknownId() {
+        let (userModel, _) = createUserModel()
+        
+        let representative = userModel.familyRepresentative(of: UUID())
+        
+        #expect(representative == nil)
+    }
+    
+    // MARK: - 一覧の入口となる利用者（getFamilyEntranceUsers）
+    
+    /// 園児と保護者がいる家庭では園児のみが返ることのテスト
+    @Test("園児と保護者がいる家庭では園児のみが返ることのテスト")
+    @MainActor
+    func getFamilyEntranceUsersHidesGuardianWithChild() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        _ = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        let entranceUsers = userModel.getFamilyEntranceUsers()
+        
+        #expect(entranceUsers.map(\.id) == [child.id])
+    }
+    
+    /// 紐づく園児がいない保護者は一覧に含まれることのテスト
+    @Test("紐づく園児がいない保護者は一覧に含まれることのテスト")
+    @MainActor
+    func getFamilyEntranceUsersIncludesOrphanGuardian() throws {
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let orphanGuardian = try userModel.registerUser(
+            User(
+                name: "孤立 保護者", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: UUID())))
+        
+        let entranceUsers = userModel.getFamilyEntranceUsers()
+        
+        #expect(entranceUsers.map(\.id) == [orphanGuardian.id])
+    }
+    
+    /// 園児でも保護者でもない単独利用者（先生等）は一覧に含まれることのテスト
+    @Test("園児でも保護者でもない単独利用者は一覧に含まれることのテスト")
+    @MainActor
+    func getFamilyEntranceUsersIncludesStandaloneUser() throws {
+        let (userModel, _) = createUserModel()
+        let teacher = try userModel.registerUser(User(name: "先生", classGroupId: UUID()))
+        
+        let entranceUsers = userModel.getFamilyEntranceUsers()
+        
+        #expect(entranceUsers.map(\.id) == [teacher.id])
+    }
 }

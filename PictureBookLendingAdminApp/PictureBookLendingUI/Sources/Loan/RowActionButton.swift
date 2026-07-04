@@ -1,13 +1,13 @@
 import SwiftUI
 
-/// 貸出ボタンのPresentation View
+/// 行内アクションボタンのPresentation View
 ///
-/// 純粋なUIコンポーネントとして貸出ボタンの表示を担当します。
+/// 純粋なUIコンポーネントとして行内のアクションボタン表示を担当します。
 /// アクション処理はContainer Viewに委譲します。
 /// ラベル・アイコン・色をホストする文脈に合わせて差し替えられます
 /// （例：貸出フローの「借りる」＝青、「貸出中」の案内＝グレー。
 /// 同じ形で並べることでボタン同士のデザインが揃う）。
-public struct LoanButtonView: View {
+public struct RowActionButton: View {
     /// ボタンのラベル（例：貸出フローでは「借りる」）
     let title: String
     /// 先頭のSFシンボル名
@@ -48,7 +48,7 @@ public struct LoanButtonView: View {
 
 #Preview {
     VStack(spacing: 16) {
-        LoanButtonView(onTap: {
+        RowActionButton(onTap: {
             print("貸出ボタンがタップされました")
         })
         
@@ -65,7 +65,7 @@ public struct LoanButtonView: View {
                 
                 Spacer()
                 
-                LoanButtonView(onTap: {
+                RowActionButton(onTap: {
                     print("貸出ボタンがタップされました")
                 })
             }

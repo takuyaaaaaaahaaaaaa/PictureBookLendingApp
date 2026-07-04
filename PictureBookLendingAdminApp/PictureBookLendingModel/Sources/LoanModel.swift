@@ -324,10 +324,26 @@ public class LoanModel {
     
     /// 現在貸出中の全貸出情報を取得する
     ///
+    /// - Important: このメソッドはリポジトリへの問い合わせによるキャッシュ更新の副作用を持ちます。
+    ///   SwiftUIの`body`評価中（computed property等）に呼ぶと、更新が再描画を誘発し
+    ///   再描画ループになるおそれがあるため、そうした場面では呼ばないでください。
+    ///   副作用なしで済む場面では ``activeLoans`` を使ってください。
+    ///
     /// - Returns: 貸出中の貸出情報リスト
     public func getActiveLoans() -> [Loan] {
         refreshActiveLoans()
         return loans.filter { !$0.isReturned }
+    }
+    
+    /// 現在貸出中の全貸出情報を取得する（副作用なし）
+    ///
+    /// キャッシュされた貸出情報から貸出中のものだけを絞り込みます。
+    /// ``getActiveLoans()`` と異なりリポジトリへの問い合わせを行わないため、
+    /// SwiftUIの`body`評価中（computed property等）でも安全に使えます。
+    ///
+    /// - Returns: 貸出中の貸出情報リスト
+    public var activeLoans: [Loan] {
+        getAllLoans().filter { !$0.isReturned }
     }
     
     /// 延滞している貸出件数を取得する

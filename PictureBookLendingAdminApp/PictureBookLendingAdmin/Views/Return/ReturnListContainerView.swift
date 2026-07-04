@@ -27,16 +27,11 @@ struct ReturnListContainerView: View {
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
     
-    /// 家庭の画面の無操作タイムアウト。貸出が残っていて操作がないまま
-    /// この時間が経過したら、置き去りとみなして一覧トップへ戻る
-    /// （次の利用者に家庭の情報を見せないためのキオスク作法）
-    private static let familyScreenIdleTimeout: Duration = .seconds(15)
-    
     var body: some View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
                 sections: filteredSections,
-                scrollToTopTrigger: scrollToTopTrigger,
+                chipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
                 isOverdueOnly: $isOverdueOnly,
                 onSelect: handleSelect(_:)
             )
@@ -84,19 +79,11 @@ struct ReturnListContainerView: View {
                 alertState: $alertState,
                 undoFeedback: $undoFeedback,
                 userId: userId,
-                mode: .returning,
-                onReturnCompleted: handleReturnCompleted(hasRemainingLoans:),
-                onBorrowSlotSelected: { _ in }
+                context: .returning(onReturnCompleted: handleReturnCompleted(hasRemainingLoans:))
             )
             .padding()
         }
-        .task(id: idleTicket) {
-            // 無操作タイムアウト：操作（返却・取り消し）のたびにidleTicketが変わり、
-            // タスクが再起動して待ち時間が延長される。画面を離れると自動キャンセルされる
-            try? await Task.sleep(for: Self.familyScreenIdleTimeout)
-            if Task.isCancelled { return }
-            popToListAndScrollTop()
-        }
+        .kioskIdleTimeout(ticket: idleTicket, onTimeout: popToListAndScrollTop)
         .navigationTitle(userModel.findUserById(userId)?.name ?? "")
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -114,24 +101,21 @@ struct ReturnListContainerView: View {
     
     /// 貸出がある家庭の一覧（家庭の代表＝園児の名前順・家庭で1行）
     ///
-    /// 保護者名義の貸出は紐づく園児（家庭の代表）の行に寄せる（IA_REVIEW 追記16）。
-    /// 貸出フローの利用者選択と同じ「家庭のキーは園児名」の原則で、
-    /// 園児と保護者が両方借りている家庭も1行にまとまる。
+    /// 保護者名義の貸出は`userModel.familyRepresentative(of:)`で紐づく園児（家庭の代表）の
+    /// 行に寄せる（IA_REVIEW 追記16）。貸出フローの利用者選択と同じ
+    /// 「家庭のキーは園児名」の原則で、園児と保護者が両方借りている家庭も1行にまとまる。
+    /// 利用者が削除済みで解決できない場合は貸出時のスナップショット（`loan.user`）を使う。
     /// タップ先の家庭の画面には従来どおり家庭全員の貸出が並ぶ
     private var borrowerEntries: [BorrowerEntry] {
         let now = Date()
-        // 注意: getActiveLoans()はキャッシュ更新の副作用を持ちbody評価中に呼ぶと
-        // 再描画ループになるため、副作用のないgetAllLoans()から絞り込む
-        let activeLoans = loanModel.getAllLoans().filter { !$0.isReturned }
+        let activeLoans = loanModel.activeLoans
         // body評価のたびに走るため、ループ内の線形検索を避けて
         // id→要素の辞書を先に1回だけ作る（200利用者・500冊規模への備え）
-        let usersById = Dictionary(
-            uniqueKeysWithValues: userModel.getAllUsers().map { ($0.id, $0) })
         let booksById = Dictionary(uniqueKeysWithValues: bookModel.books.map { ($0.id, $0) })
         
         var familyLoans: [UUID: (representative: User, loans: [Loan])] = [:]
         for loan in activeLoans {
-            let representative = Self.representativeUser(for: loan, usersById: usersById)
+            let representative = userModel.familyRepresentative(of: loan.user.id) ?? loan.user
             familyLoans[representative.id, default: (representative, [])].loans.append(loan)
         }
         
@@ -149,20 +133,6 @@ struct ReturnListContainerView: View {
                 )
             }
             .sorted { $0.row.name < $1.row.name }
-    }
-    
-    /// 貸出の名義を家庭の代表に解決する
-    ///
-    /// 名前・種別は現在の利用者情報を優先し、削除済みなら貸出時のスナップショットを使う。
-    /// 保護者名義は紐づく園児に寄せ、園児が見つからない場合（削除後の残留等）は本人のまま
-    private static func representativeUser(for loan: Loan, usersById: [UUID: User]) -> User {
-        let user = usersById[loan.user.id] ?? loan.user
-        if case .guardian(let relatedChildId) = user.userType,
-            let child = usersById[relatedChildId]
-        {
-            return child
-        }
-        return user
     }
     
     /// 検索・延滞フィルタを適用した借用者（組はフィルタせずインデックスでスクロール）

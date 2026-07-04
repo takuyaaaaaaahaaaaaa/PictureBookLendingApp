@@ -106,7 +106,6 @@
                                 isOverdue: rowIndex == 3)
                         })
                 },
-                isOverdueOnly: .constant(false),
                 onSelect: { _ in }
             )
         }

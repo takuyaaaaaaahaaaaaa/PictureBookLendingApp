@@ -311,7 +311,7 @@ public struct BookRowView<RowAction: View>: View {
                 book.displaySmallImageSource
             }
         ) { book in
-            LoanButtonView(onTap: {})
+            RowActionButton(onTap: {})
         }
         .navigationTitle("絵本一覧")
     }

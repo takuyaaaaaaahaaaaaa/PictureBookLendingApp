@@ -4,6 +4,15 @@ import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
+/// 家庭の枠領域の利用文脈（呼び出し側から見た「何をしたら何が起きるか」）
+enum FamilyLoanSlotsContext {
+    /// 返却タブから：返却完了時のコールバック（引数は家庭内に貸出が残っているか）
+    case returning(onReturnCompleted: (_ hasRemainingLoans: Bool) -> Void)
+    /// 貸出フローから：空き枠が選ばれたときのコールバック（引数は枠の持ち主の利用者ID）。
+    /// この文脈では返却完了後もその場に留まる（空いた枠で続けて借りるのが目的のため）
+    case borrowing(onSlotSelected: (_ userId: UUID) -> Void)
+}
+
 /// 家庭の枠領域のContainer View
 ///
 /// 利用者ID（園児・保護者どちらでも可）から家庭を解決し、
@@ -18,28 +27,35 @@ struct FamilyLoanSlotsContainerView: View {
     /// アラート状態管理（エラー表示用）
     @Binding var alertState: AlertState
     /// 返却のUndoフィードバック状態管理
+    ///
+    /// 文脈enumに含めない：返却タブの返却Undoだけでなく、貸出フロー内の
+    /// 「枠の入れ替え（先に返し忘れた本をその場で返却して空けるUndo）」でも
+    /// 使われる、両モード共通の状態のため（`handleReturn`参照）
     @Binding var undoFeedback: UndoFeedback
     
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
     /// 文脈（返却／貸出）
-    let mode: FamilyLoanSlotsMode
-    /// 返却完了時の動作（引数は家庭内にまだ貸出中の本が残っているか。
-    /// 一覧へ自動で戻る等の遷移は呼び出し元が決める）
-    let onReturnCompleted: (_ hasRemainingLoans: Bool) -> Void
-    /// 貸出文脈で枠が選ばれたときの動作（引数は枠の持ち主の利用者ID）
-    let onBorrowSlotSelected: (UUID) -> Void
+    let context: FamilyLoanSlotsContext
     
     var body: some View {
         FamilyLoanSlotsView(
             slots: slots,
             mode: mode,
             onReturn: handleReturn(_:),
-            onBorrow: { onBorrowSlotSelected($0.id) }
+            onBorrow: handleBorrow(_:)
         )
     }
     
     // MARK: - Computed Properties
+    
+    /// `context`から導出する`FamilyLoanSlotsView`向けの文脈
+    private var mode: FamilyLoanSlotsMode {
+        switch context {
+        case .returning: .returning
+        case .borrowing: .borrowing
+        }
+    }
     
     /// 家庭の全員分の枠表示データ
     ///
@@ -91,11 +107,20 @@ struct FamilyLoanSlotsContainerView: View {
                     "返却しました"
                 }
             undoFeedback.show(message, targetId: returnedLoan.id)
-            let hasRemainingLoans = userModel.getFamilyMembers(of: slot.id)
-                .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
-            onReturnCompleted(hasRemainingLoans)
+            if case .returning(let onReturnCompleted) = context {
+                let hasRemainingLoans = userModel.getFamilyMembers(of: slot.id)
+                    .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
+                onReturnCompleted(hasRemainingLoans)
+            }
         } catch {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
+        }
+    }
+    
+    /// 貸出文脈で空き枠が選ばれたときの動作（返却文脈では何もしない）
+    private func handleBorrow(_ slot: FamilyLoanSlotDisplay) {
+        if case .borrowing(let onSlotSelected) = context {
+            onSlotSelected(slot.id)
         }
     }
 }
@@ -128,9 +153,7 @@ struct FamilyLoanSlotsContainerView: View {
             alertState: $alertState,
             undoFeedback: $undoFeedback,
             userId: mother.id,  // 保護者のIDから入っても同じ家庭に解決される
-            mode: .returning,
-            onReturnCompleted: { _ in },
-            onBorrowSlotSelected: { _ in }
+            context: .returning(onReturnCompleted: { _ in })
         )
         .padding()
     }
