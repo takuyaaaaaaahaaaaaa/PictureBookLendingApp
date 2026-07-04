@@ -60,27 +60,22 @@ public struct BorrowerListView: View {
     ///   絞り込みで行が消えると「一覧に居ない」と勘違いするためスクロールジャンプにする
     /// - 貸出の利用者選択＝フィルタ：自分の組が分かっていて切り替えたい画面では、
     ///   一覧すべてを見せる必要がないため選んだ組だけに絞り込む
-    public enum SectionChipBehavior: Hashable {
+    public enum SectionChipBehavior {
         /// タップでその組セクションへスクロールする（行は消えない）
-        case scrollIndex
+        case scrollIndex(scrollToTopTrigger: Int)
         /// タップでその組だけに絞り込む（再タップで解除）
-        case filter
+        case filter(selection: Binding<UUID?>)
     }
     
     public let sections: [BorrowerListSection]
-    /// 値が変わると一覧をトップへスクロールする（返却完了後、次の利用者のために初期位置へ戻す）
-    public let scrollToTopTrigger: Int
-    /// 「延滞のみ」フィルタを表示するかどうか（貸出フローの利用者選択では不要のため隠す）
-    public let showsOverdueFilter: Bool
+    /// 組チップの動作モード（既定はインデックス）
+    public let chipBehavior: SectionChipBehavior
     /// 空状態のタイトル（ホストする文脈に合わせて差し替え可能）
     public let emptyStateTitle: String
     /// 空状態の説明文（ホストする文脈に合わせて差し替え可能）
     public let emptyStateDescription: String
-    /// 組チップの動作モード（既定はインデックス）
-    public let chipBehavior: SectionChipBehavior
-    /// フィルタモードで選択中の組ID（nilなら全組を表示）
-    @Binding public var selectedSectionId: UUID?
-    @Binding public var isOverdueOnly: Bool
+    /// 「延滞のみ」フィルタのbinding（nilなら非表示。貸出フローの利用者選択では不要のため隠す）
+    public let isOverdueOnly: Binding<Bool>?
     public let onSelect: (BorrowerRowDisplay) -> Void
     
     private enum Layout {
@@ -95,32 +90,44 @@ public struct BorrowerListView: View {
     
     public init(
         sections: [BorrowerListSection],
-        scrollToTopTrigger: Int = 0,
-        showsOverdueFilter: Bool = true,
+        chipBehavior: SectionChipBehavior = .scrollIndex(scrollToTopTrigger: 0),
         emptyStateTitle: String = "現在、貸出中の利用者はいません",
         emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
-        chipBehavior: SectionChipBehavior = .scrollIndex,
-        selectedSectionId: Binding<UUID?> = .constant(nil),
-        isOverdueOnly: Binding<Bool>,
+        isOverdueOnly: Binding<Bool>? = nil,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
-        self.scrollToTopTrigger = scrollToTopTrigger
-        self.showsOverdueFilter = showsOverdueFilter
+        self.chipBehavior = chipBehavior
         self.emptyStateTitle = emptyStateTitle
         self.emptyStateDescription = emptyStateDescription
-        self.chipBehavior = chipBehavior
-        self._selectedSectionId = selectedSectionId
-        self._isOverdueOnly = isOverdueOnly
+        self.isOverdueOnly = isOverdueOnly
         self.onSelect = onSelect
     }
     
     /// 一覧に表示するセクション（フィルタモードで組が選ばれていればその組だけ）
     private var displayedSections: [BorrowerListSection] {
-        if chipBehavior == .filter, let selectedSectionId {
-            sections.filter { $0.id == selectedSectionId }
+        if case .filter(let selection) = chipBehavior, let selectedId = selection.wrappedValue {
+            sections.filter { $0.id == selectedId }
         } else {
             sections
+        }
+    }
+    
+    /// スクロールインデックスモードのトリガ値（`.onChange`用。フィルタモードでは実質未使用）
+    private var scrollToTopTrigger: Int {
+        if case .scrollIndex(let trigger) = chipBehavior {
+            trigger
+        } else {
+            0
+        }
+    }
+    
+    /// チップのハイライト判定（フィルタモードで選択中の組のときだけtrue）
+    private func isChipSelected(_ section: BorrowerListSection) -> Bool {
+        if case .filter(let selection) = chipBehavior {
+            selection.wrappedValue == section.id
+        } else {
+            false
         }
     }
     
@@ -161,7 +168,7 @@ public struct BorrowerListView: View {
                             handleChipTap(section: section, proxy: proxy)
                         }
                         .buttonStyle(.bordered)
-                        .tint(selectedSectionId == section.id ? Color.accentColor : .secondary)
+                        .tint(isChipSelected(section) ? Color.accentColor : .secondary)
                     }
                 }
                 .padding(.leading)
@@ -169,11 +176,11 @@ public struct BorrowerListView: View {
             
             Spacer()
             
-            if showsOverdueFilter {
-                Toggle("延滞のみ", isOn: $isOverdueOnly)
+            if let isOverdueOnly {
+                Toggle("延滞のみ", isOn: isOverdueOnly)
                     .toggleStyle(.button)
                     .buttonStyle(.bordered)
-                    .tint(isOverdueOnly ? .red : .secondary)
+                    .tint(isOverdueOnly.wrappedValue ? .red : .secondary)
                     .padding(.trailing)
             }
         }
@@ -190,8 +197,8 @@ public struct BorrowerListView: View {
             withAnimation {
                 proxy.scrollTo(targetRowId, anchor: Layout.sectionJumpAnchor)
             }
-        case .filter:
-            selectedSectionId = selectedSectionId == section.id ? nil : section.id
+        case .filter(let selection):
+            selection.wrappedValue = selection.wrappedValue == section.id ? nil : section.id
         }
     }
     
