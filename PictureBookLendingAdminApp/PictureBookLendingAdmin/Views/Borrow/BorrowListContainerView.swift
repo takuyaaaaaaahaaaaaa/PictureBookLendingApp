@@ -55,16 +55,21 @@ struct BorrowListContainerView: View {
                 selectedSortType: $selectedSortType,
                 onEdit: { _ in },
                 onDelete: { _ in },
-                onSelect: { book in
-                    // 一覧はプッシュ遷移させず、その図書の貸出シートを開く
-                    sheetPath = NavigationPath()
-                    selectedBook = book
-                },
+                onSelect: openBorrowSheet(for:),
                 imageURLProvider: { book in
                     book.resolvedSmallImageSource
                 }
             ) { book in
-                BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
+                // 押せることが見た目でわかるように、借りられる本には状態バッジではなく
+                // 「借りる」ボタン（絵本管理の貸出ボタンと同じ見た目）を出す。
+                // 行全体もタップ可能なので、ボタンの外を押しても同じ動きになる
+                if loanModel.isBookLent(bookId: book.id) {
+                    BookStatusView(isCurrentlyLent: true)
+                } else {
+                    LoanButtonView(title: "借りる") {
+                        openBorrowSheet(for: book)
+                    }
+                }
             }
             .navigationTitle("貸出")
             #if os(iOS)
@@ -276,6 +281,14 @@ struct BorrowListContainerView: View {
     }
     
     // MARK: - Actions
+    
+    /// 図書の貸出シートを開く（行タップ・「借りる」ボタンの共通入口）
+    ///
+    /// 一覧はプッシュ遷移させず、その図書の貸出シートを開く
+    private func openBorrowSheet(for book: Book) {
+        sheetPath = NavigationPath()
+        selectedBook = book
+    }
     
     /// 貸出の実行（枠選択のタップで確定・✓カードで完了を伝える）
     private func handleLend(book: Book, userId: UUID) {

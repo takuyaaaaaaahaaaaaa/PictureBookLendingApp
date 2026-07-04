@@ -5,9 +5,12 @@ import SwiftUI
 /// 純粋なUIコンポーネントとして貸出ボタンの表示を担当します。
 /// アクション処理はContainer Viewに委譲します。
 public struct LoanButtonView: View {
+    /// ボタンのラベル（ホストする文脈に合わせて差し替え可能。例：貸出フローでは「借りる」）
+    let title: String
     let onTap: () -> Void
     
-    public init(onTap: @escaping () -> Void) {
+    public init(title: String = "貸出", onTap: @escaping () -> Void) {
+        self.title = title
         self.onTap = onTap
     }
     
@@ -16,7 +19,7 @@ public struct LoanButtonView: View {
             HStack(spacing: 6) {
                 Image(systemName: "plus.circle")
                     .font(.callout)
-                Text("貸出")
+                Text(title)
                     .font(.callout)
             }
             .foregroundStyle(.white)
