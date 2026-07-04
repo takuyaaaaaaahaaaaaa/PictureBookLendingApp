@@ -48,9 +48,7 @@ struct DashboardContainerView: View {
         activeLoansCount = activeLoans.count
         
         let today = Date()
-        overdueLoans = activeLoans.filter { loan in
-            loan.dueDate < today
-        }
+        overdueLoans = activeLoans.filter { $0.isOverdue(at: today) }
     }
 }
 
