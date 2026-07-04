@@ -13,13 +13,14 @@ struct SettingsContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
     @State private var isPromoteConfirmationPresented = false
-    @State private var isFeedbackSheetPresented = false
+    @State private var isParentFeedbackQRCodeSheetPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
     
@@ -53,7 +54,10 @@ struct SettingsContainerView: View {
                     isDeviceResetDialogPresented = true
                 },
                 onSelectFeedback: {
-                    isFeedbackSheetPresented = true
+                    openURL(FeedbackFormLinks.staff)
+                },
+                onSelectParentFeedbackQRCode: {
+                    isParentFeedbackQRCodeSheetPresented = true
                 }
             )
             .navigationTitle("設定")
@@ -99,8 +103,21 @@ struct SettingsContainerView: View {
                     onConfirm: handleDeviceReset
                 )
             }
-            .sheet(isPresented: $isFeedbackSheetPresented) {
-                FeedbackFormContainerView()
+            .sheet(isPresented: $isParentFeedbackQRCodeSheetPresented) {
+                NavigationStack {
+                    FeedbackQRCodeView(url: FeedbackFormLinks.parent)
+                        .navigationTitle("保護者向けQRコード")
+                        #if !os(macOS)
+                            .navigationBarTitleDisplayMode(.inline)
+                        #endif
+                        .toolbar {
+                            ToolbarItem(placement: .cancellationAction) {
+                                Button("閉じる") {
+                                    isParentFeedbackQRCodeSheetPresented = false
+                                }
+                            }
+                        }
+                }
             }
             .alert("進級処理の確認", isPresented: $isPromoteConfirmationPresented) {
                 Button("実行", role: .destructive) {

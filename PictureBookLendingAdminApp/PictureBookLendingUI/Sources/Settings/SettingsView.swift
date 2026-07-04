@@ -18,6 +18,7 @@ public struct SettingsView: View {
     let onPromoteToNextYear: () -> Void
     let onSelectDeviceReset: () -> Void
     let onSelectFeedback: () -> Void
+    let onSelectParentFeedbackQRCode: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -32,7 +33,8 @@ public struct SettingsView: View {
         onCreateGuardiansForAllChildren: @escaping () -> Void,
         onPromoteToNextYear: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void,
-        onSelectFeedback: @escaping () -> Void
+        onSelectFeedback: @escaping () -> Void,
+        onSelectParentFeedbackQRCode: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -47,6 +49,7 @@ public struct SettingsView: View {
         self.onPromoteToNextYear = onPromoteToNextYear
         self.onSelectDeviceReset = onSelectDeviceReset
         self.onSelectFeedback = onSelectFeedback
+        self.onSelectParentFeedbackQRCode = onSelectParentFeedbackQRCode
     }
     
     public var body: some View {
@@ -121,8 +124,16 @@ public struct SettingsView: View {
                 SettingsMenuItem(
                     iconName: "envelope",
                     title: "不具合・ご要望を報告",
-                    subtitle: "開発者にメールで報告します",
+                    subtitle: "報告フォームを開きます",
                     action: onSelectFeedback,
+                    showChevron: false
+                )
+                
+                SettingsMenuItem(
+                    iconName: "qrcode",
+                    title: "保護者向けQRコードを表示",
+                    subtitle: "掲示・印刷して保護者からの報告を受け付けます",
+                    action: onSelectParentFeedbackQRCode,
                     showChevron: false
                 )
             }
@@ -231,7 +242,8 @@ private struct SettingsMenuItem: View {
             onCreateGuardiansForAllChildren: {},
             onPromoteToNextYear: {},
             onSelectDeviceReset: {},
-            onSelectFeedback: {}
+            onSelectFeedback: {},
+            onSelectParentFeedbackQRCode: {}
         )
         .navigationTitle("設定")
     }
