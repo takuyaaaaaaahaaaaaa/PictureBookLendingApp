@@ -291,22 +291,13 @@ struct BorrowListContainerView: View {
     /// 園児と、大人の組の独立利用者（先生・職員）はそのまま表示する。
     /// 紐づく園児が実在しない保護者は入口を失うため、本人を表示するフォールバック。
     /// 家庭の全員が借用中の行には「空き枠なし」バッジを付け、タップ前に結果を知らせる。
-    ///
-    /// 注意: LoanModelのgetActiveLoans()はキャッシュ更新の副作用を持ち
-    /// body評価中に呼ぶと再描画ループになるため、副作用のないgetAllLoans()から絞り込む
+    /// 一覧に出す利用者の判定は`userModel.getFamilyEntranceUsers()`に委譲する。
     private var allUserSections: [BorrowerListSection] {
         let allUsers = userModel.getAllUsers()
-        let allUserIds = Set(allUsers.map(\.id))
-        let entranceUsers = allUsers.filter { user in
-            if case .guardian(let relatedChildId) = user.userType {
-                return !allUserIds.contains(relatedChildId)
-            }
-            return true
-        }
+        let entranceUsers = userModel.getFamilyEntranceUsers()
         
         // 空き枠判定の材料：借用中の利用者IDと、園児→紐づく保護者の対応表
-        let borrowedUserIds = Set(
-            loanModel.getAllLoans().filter { !$0.isReturned }.map { $0.user.id })
+        let borrowedUserIds = Set(loanModel.activeLoans.map { $0.user.id })
         var guardiansByChildId: [UUID: [User]] = [:]
         for user in allUsers {
             if case .guardian(let relatedChildId) = user.userType {
