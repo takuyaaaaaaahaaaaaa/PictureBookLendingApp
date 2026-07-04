@@ -69,11 +69,11 @@ public struct LoanListView<RowAction: View>: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             
-            Text("貸出中の絵本がありません")
+            Text("貸出中の図書がありません")
                 .font(.headline)
                 .foregroundStyle(.secondary)
             
-            Text("絵本を貸し出すと、ここに表示されます")
+            Text("図書を貸し出すと、ここに表示されます")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }

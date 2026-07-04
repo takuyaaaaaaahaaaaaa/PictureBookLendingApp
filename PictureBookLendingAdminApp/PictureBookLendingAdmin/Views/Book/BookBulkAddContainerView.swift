@@ -72,7 +72,7 @@ struct BookBulkAddContainerView: View {
                     }
                 )
                 .navigationTitle(
-                    "絵本を追加 (\(failedBookItem.currentIndex + 1)/\(failedBookItem.totalCount))"
+                    "図書を追加 (\(failedBookItem.currentIndex + 1)/\(failedBookItem.totalCount))"
                 )
                 #if !os(macOS)
                     .navigationBarTitleDisplayMode(.inline)
@@ -158,14 +158,14 @@ struct BookBulkAddContainerView: View {
             } else {
                 // 登録可能な本がない場合は終了
                 activeFailedBook = nil
-                alertState = .info("登録可能な絵本がありません")
+                alertState = .info("登録可能な図書がありません")
             }
         } else {
             // 全ての本の登録が完了
             activeFailedBook = nil
             let successMessage =
                 remainingFailedBooks.isEmpty
-                ? "個別登録が必要な絵本の登録が全て完了しました。\n※最後に画面右上の保存ボタンを押し忘れないようにお気をつけください。" : "絵本の個別登録が完了しました"
+                ? "個別登録が必要な図書の登録が全て完了しました。\n※最後に画面右上の保存ボタンを押し忘れないようにお気をつけください。" : "図書の個別登録が完了しました"
             alertState = .info(successMessage)
         }
     }
@@ -316,7 +316,7 @@ struct BookBulkAddContainerView: View {
                 }
             }
             
-            alertState = .info("\(savedCount)件の絵本を追加しました")
+            alertState = .info("\(savedCount)件の図書を追加しました")
             
             // 成功したら画面を閉じる
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
@@ -324,7 +324,7 @@ struct BookBulkAddContainerView: View {
             }
             
         } catch {
-            alertState = .error("絵本の保存に失敗しました", message: "\(error.localizedDescription)")
+            alertState = .error("図書の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     

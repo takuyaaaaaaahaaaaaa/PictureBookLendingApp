@@ -5,7 +5,7 @@ import PictureBookLendingUI
 import SwiftUI
 
 /// 設定画面のコンテナビュー
-/// 管理者用の絵本・利用者・組管理機能を提供します
+/// 管理者用の図書・利用者・組管理機能を提供します
 struct SettingsContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(UserModel.self) private var userModel
@@ -190,7 +190,7 @@ struct SettingsContainerView: View {
             
             if options.deleteBooks {
                 let bookCount = try bookModel.deleteAllBooks()
-                deletedDetails.append("絵本データ(\(bookCount)冊)")
+                deletedDetails.append("図書データ(\(bookCount)冊)")
             }
             
             if options.deleteLoanRecords {

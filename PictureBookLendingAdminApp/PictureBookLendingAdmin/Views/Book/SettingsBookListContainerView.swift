@@ -37,7 +37,7 @@ struct SettingsBookListContainerView: View {
         ) { book in
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
-        .navigationTitle("絵本管理")
+        .navigationTitle("図書管理")
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }
@@ -54,7 +54,7 @@ struct SettingsBookListContainerView: View {
                 Button(action: {
                     isAddSheetPresented = true
                 }) {
-                    Label("絵本を追加", systemImage: "plus")
+                    Label("図書を追加", systemImage: "plus")
                 }
             }
         }
@@ -108,7 +108,7 @@ struct SettingsBookListContainerView: View {
         do {
             _ = try bookModel.deleteBook(book.id)
         } catch {
-            alertState = .error("絵本の削除に失敗しました", message: "\(error.localizedDescription)")
+            alertState = .error("図書の削除に失敗しました", message: "\(error.localizedDescription)")
         }
     }
 }

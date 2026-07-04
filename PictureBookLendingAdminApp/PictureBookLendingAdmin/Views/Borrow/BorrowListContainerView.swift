@@ -45,6 +45,8 @@ struct BorrowListContainerView: View {
     @State private var idleTicket = 0
     /// 枠確認画面での返却（本の入れ替え）用のUndoカード状態
     @State private var undoFeedback = UndoFeedback()
+    /// 設定画面表示状態
+    @State private var isSettingsPresented = false
     
     /// 貸出成功の✓カードの表示時間。カードの消滅がシートを閉じる合図を兼ねるため、
     /// 既定の1.5秒では読み切る前に画面が変わってしまう。読み切れる長さに延ばす
@@ -99,6 +101,22 @@ struct BorrowListContainerView: View {
                     prompt: "図書のタイトルまたは著者で検索")
             #else
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("設定", systemImage: "gearshape") {
+                        isSettingsPresented = true
+                    }
+                }
+            }
+            #if os(macOS)
+                .sheet(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
+            #else
+                .fullScreenCover(isPresented: $isSettingsPresented) {
+                    SettingsContainerView()
+                }
             #endif
         }
         .onChange(of: bookModel.books) {
@@ -158,12 +176,6 @@ struct BorrowListContainerView: View {
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
         // 絵本管理の貸出フォームと同じ作法）
         .interactiveDismissDisabled()
-        // シート内のあらゆるタッチ（タップ・スクロール）で無操作タイマーを延長する。
-        // 200人の一覧をゆっくり探している最中に置き去り扱いで閉じないようにする
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onEnded { _ in idleTicket += 1 }
-        )
     }
     
     // MARK: - Private Views
@@ -249,6 +261,14 @@ struct BorrowListContainerView: View {
         @ViewBuilder content: () -> some View
     ) -> some View {
         content()
+            // コンテンツ領域のタッチ（タップ・スクロール）で無操作タイマーを延長する。
+            // 200人の一覧をゆっくり探している最中に置き去り扱いで閉じないようにする。
+            // ナビバー（戻る・✕）には掛けない：バーのボタンのタッチと競合して
+            // 戻るボタンが効かなくなるため、コンテンツにだけ付ける
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .onEnded { _ in idleTicket += 1 }
+            )
             .kioskIdleTimeout(ticket: idleTicket) { selectedBook = nil }
             .navigationTitle(title)
             #if os(iOS)

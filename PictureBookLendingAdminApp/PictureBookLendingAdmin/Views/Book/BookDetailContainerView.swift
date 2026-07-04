@@ -14,8 +14,6 @@ struct BookDetailContainerView: View {
     
     @State private var book: Book
     @State private var alertState = AlertState()
-    @State private var successFeedback = SuccessFeedback()
-    @State private var undoFeedback = UndoFeedback()
     
     init(book: Book) {
         self._book = State(initialValue: book)
@@ -28,9 +26,7 @@ struct BookDetailContainerView: View {
             currentLoan: currentLoan,
             loanHistory: loanHistory,
         ) {
-            LoanActionContainerButton(
-                bookId: book.id, alertState: $alertState, successFeedback: $successFeedback,
-                undoFeedback: $undoFeedback)
+            EmptyView()
         }
         .navigationTitle(book.title)
         #if os(iOS)
@@ -41,13 +37,11 @@ struct BookDetailContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .successFeedback($successFeedback)
-        .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
         .onChange(of: book) { _, newValue in
             do {
                 _ = try bookModel.updateBook(newValue)
             } catch {
-                alertState = .error("絵本情報の更新に失敗しました", message: error.localizedDescription)
+                alertState = .error("図書情報の更新に失敗しました", message: error.localizedDescription)
             }
         }
     }
@@ -59,16 +53,6 @@ struct BookDetailContainerView: View {
     private var loanHistory: [Loan] {
         loanModel.getLoansByBook(bookId: book.id)
             .sorted { $0.loanDate > $1.loanDate }  // 新しい順にソート
-    }
-    
-    /// 返却の取り消し（スナックバーの「元に戻す」）
-    private func handleUndoReturn() {
-        guard let loanId = undoFeedback.targetId else { return }
-        do {
-            try loanModel.undoReturn(loanId: loanId)
-        } catch {
-            alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
-        }
     }
 }
 

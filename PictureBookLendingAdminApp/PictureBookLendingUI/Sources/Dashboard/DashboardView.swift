@@ -76,7 +76,7 @@ public struct StatisticsCardView: View {
             
             HStack(spacing: 20) {
                 StatItem(
-                    title: "絵本",
+                    title: "図書",
                     count: bookCount,
                     iconName: "book.fill",
                     color: .blue
@@ -236,7 +236,7 @@ public struct SummaryCardsView: View {
             
             InfoCardView(
                 title: "新機能",
-                description: "貸出管理アプリの使い方については「絵本の貸出管理」ボタンをタップして確認してください。",
+                description: "貸出管理アプリの使い方については「図書の貸出管理」ボタンをタップして確認してください。",
                 iconName: "star.fill",
                 color: .yellow
             )

@@ -181,11 +181,11 @@ public struct BookListView<RowAction: View>: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             
-            Text("絵本が登録されていません")
+            Text("図書が登録されていません")
                 .font(.headline)
                 .foregroundStyle(.secondary)
             
-            Text("設定画面から絵本を登録してください")
+            Text("設定画面から図書を登録してください")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
@@ -313,6 +313,6 @@ public struct BookRowView<RowAction: View>: View {
         ) { book in
             RowActionButton(onTap: {})
         }
-        .navigationTitle("絵本一覧")
+        .navigationTitle("図書一覧")
     }
 }

@@ -38,7 +38,7 @@ public struct LoanSettingsView: View {
                         )
                         .labelsHidden()
                         
-                        Text("絵本を貸し出してから返却期限までの日数です")
+                        Text("図書を貸し出してから返却期限までの日数です")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -60,7 +60,7 @@ public struct LoanSettingsView: View {
                         )
                         .labelsHidden()
                         
-                        Text("一人の利用者が同時に借りられる絵本の最大数です")
+                        Text("一人の利用者が同時に借りられる図書の最大数です")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
