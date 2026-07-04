@@ -79,10 +79,10 @@ public struct SuccessFeedbackView: View {
 /// OKタップは不要で、操作をブロックしません。
 private struct SuccessFeedbackModifier: ViewModifier {
     @Binding var feedback: SuccessFeedback
+    /// 自動消滅までの表示時間
+    let displayDuration: Duration
     
     private enum Constants {
-        /// 自動消滅までの表示時間（DESIGN_PRINCIPLES.md「フィードバック設計」準拠）
-        static let displayDuration: Duration = .seconds(1.5)
         /// 出現・消滅アニメーションの時間
         static let transitionDuration: TimeInterval = 0.3
         /// 出現時の初期スケール
@@ -104,7 +104,7 @@ private struct SuccessFeedbackModifier: ViewModifier {
             .sensoryFeedback(.success, trigger: feedback.occurrenceCount)
             .task(id: feedback.occurrenceCount) {
                 guard feedback.isPresented else { return }
-                try? await Task.sleep(for: Constants.displayDuration)
+                try? await Task.sleep(for: displayDuration)
                 feedback.dismiss()
             }
     }
@@ -112,8 +112,15 @@ private struct SuccessFeedbackModifier: ViewModifier {
 
 extension View {
     /// 成功フィードバック（チェックマーク＋ハプティクス、自動消滅）をオーバーレイ表示する
-    public func successFeedback(_ feedback: Binding<SuccessFeedback>) -> some View {
-        modifier(SuccessFeedbackModifier(feedback: feedback))
+    ///
+    /// - Parameter displayDuration: 自動消滅までの表示時間。既定は1.5秒
+    ///   （DESIGN_PRINCIPLES.md「フィードバック設計」の日常の成功）。
+    ///   カードの消滅が画面遷移の合図を兼ねる文脈では、読み切れるよう長めに指定できる
+    public func successFeedback(
+        _ feedback: Binding<SuccessFeedback>,
+        displayDuration: Duration = .seconds(1.5)
+    ) -> some View {
+        modifier(SuccessFeedbackModifier(feedback: feedback, displayDuration: displayDuration))
     }
 }
 

@@ -4,25 +4,42 @@ import SwiftUI
 ///
 /// 純粋なUIコンポーネントとして貸出ボタンの表示を担当します。
 /// アクション処理はContainer Viewに委譲します。
+/// ラベル・アイコン・色をホストする文脈に合わせて差し替えられます
+/// （例：貸出フローの「借りる」＝青、「貸出中」の案内＝グレー。
+/// 同じ形で並べることでボタン同士のデザインが揃う）。
 public struct LoanButtonView: View {
+    /// ボタンのラベル（例：貸出フローでは「借りる」）
+    let title: String
+    /// 先頭のSFシンボル名
+    let systemImage: String
+    /// ボタンの背景色（主役の操作は青、案内などの脇役はグレー）
+    let tint: Color
     let onTap: () -> Void
     
-    public init(onTap: @escaping () -> Void) {
+    public init(
+        title: String = "貸出",
+        systemImage: String = "plus.circle",
+        tint: Color = .blue,
+        onTap: @escaping () -> Void
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.tint = tint
         self.onTap = onTap
     }
     
     public var body: some View {
         Button(action: onTap) {
             HStack(spacing: 6) {
-                Image(systemName: "plus.circle")
+                Image(systemName: systemImage)
                     .font(.callout)
-                Text("貸出")
+                Text(title)
                     .font(.callout)
             }
             .foregroundStyle(.white)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color.blue)
+            .background(tint)
             .cornerRadius(8)
         }
         .buttonStyle(.plain)

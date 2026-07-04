@@ -14,12 +14,18 @@ public struct BorrowerRowDisplay: Identifiable, Equatable, Sendable {
     public let isGuardian: Bool
     /// 延滞中の貸出を持つかどうか
     public let isOverdue: Bool
+    /// 家庭の枠がすべて使用中かどうか（貸出フローの利用者選択で
+    /// 「タップしても借りられない」ことを事前に知らせるバッジに使用）
+    public let hasNoOpenSlot: Bool
     
-    public init(id: UUID, name: String, isGuardian: Bool, isOverdue: Bool) {
+    public init(
+        id: UUID, name: String, isGuardian: Bool, isOverdue: Bool, hasNoOpenSlot: Bool = false
+    ) {
         self.id = id
         self.name = name
         self.isGuardian = isGuardian
         self.isOverdue = isOverdue
+        self.hasNoOpenSlot = hasNoOpenSlot
     }
 }
 
@@ -42,15 +48,38 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
     }
 }
 
-/// 返却モードの借用者一覧のPresentation View
+/// 借用者・利用者一覧のPresentation View（返却一覧と貸出の利用者選択が共用）
 ///
-/// 現在貸出中の利用者（園児・保護者の両方）を名前のみで組セクション単位に一覧表示します。
-/// 組チップは**インデックス**（タップでその組セクションへスクロール）として動作し、
-/// 一覧から行が消えない。絞り込みは「延滞のみ」フィルタのみ（先生の俯瞰兼用）。
+/// 利用者を名前のみで組セクション単位に一覧表示します。
+/// 組チップの動作はホストする文脈に合わせて `SectionChipBehavior` で切り替えます
+/// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
 public struct BorrowerListView: View {
+    /// 組チップの動作モード
+    ///
+    /// - 返却一覧＝インデックス：探している名前がどこにいるか分からない画面では、
+    ///   絞り込みで行が消えると「一覧に居ない」と勘違いするためスクロールジャンプにする
+    /// - 貸出の利用者選択＝フィルタ：自分の組が分かっていて切り替えたい画面では、
+    ///   一覧すべてを見せる必要がないため選んだ組だけに絞り込む
+    public enum SectionChipBehavior: Hashable {
+        /// タップでその組セクションへスクロールする（行は消えない）
+        case scrollIndex
+        /// タップでその組だけに絞り込む（再タップで解除）
+        case filter
+    }
+    
     public let sections: [BorrowerListSection]
     /// 値が変わると一覧をトップへスクロールする（返却完了後、次の利用者のために初期位置へ戻す）
     public let scrollToTopTrigger: Int
+    /// 「延滞のみ」フィルタを表示するかどうか（貸出フローの利用者選択では不要のため隠す）
+    public let showsOverdueFilter: Bool
+    /// 空状態のタイトル（ホストする文脈に合わせて差し替え可能）
+    public let emptyStateTitle: String
+    /// 空状態の説明文（ホストする文脈に合わせて差し替え可能）
+    public let emptyStateDescription: String
+    /// 組チップの動作モード（既定はインデックス）
+    public let chipBehavior: SectionChipBehavior
+    /// フィルタモードで選択中の組ID（nilなら全組を表示）
+    @Binding public var selectedSectionId: UUID?
     @Binding public var isOverdueOnly: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
     
@@ -67,13 +96,32 @@ public struct BorrowerListView: View {
     public init(
         sections: [BorrowerListSection],
         scrollToTopTrigger: Int = 0,
+        showsOverdueFilter: Bool = true,
+        emptyStateTitle: String = "現在、貸出中の利用者はいません",
+        emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
+        chipBehavior: SectionChipBehavior = .scrollIndex,
+        selectedSectionId: Binding<UUID?> = .constant(nil),
         isOverdueOnly: Binding<Bool>,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
         self.scrollToTopTrigger = scrollToTopTrigger
+        self.showsOverdueFilter = showsOverdueFilter
+        self.emptyStateTitle = emptyStateTitle
+        self.emptyStateDescription = emptyStateDescription
+        self.chipBehavior = chipBehavior
+        self._selectedSectionId = selectedSectionId
         self._isOverdueOnly = isOverdueOnly
         self.onSelect = onSelect
+    }
+    
+    /// 一覧に表示するセクション（フィルタモードで組が選ばれていればその組だけ）
+    private var displayedSections: [BorrowerListSection] {
+        if chipBehavior == .filter, let selectedSectionId {
+            sections.filter { $0.id == selectedSectionId }
+        } else {
+            sections
+        }
     }
     
     public var body: some View {
@@ -81,6 +129,8 @@ public struct BorrowerListView: View {
             VStack(alignment: .leading, spacing: Layout.chipSpacing) {
                 indexSection(proxy: proxy)
                 
+                // 空判定はフィルタ前の全体で行う（組の絞り込みによる一時的な空を
+                // 「利用者がいない」空状態と誤認しないため）
                 if sections.allSatisfy({ $0.rows.isEmpty }) {
                     emptyStateView
                 } else {
@@ -99,10 +149,8 @@ public struct BorrowerListView: View {
     
     // MARK: - Private Views
     
-    /// 組インデックス（タップでその組へスクロール）＋「延滞のみ」フィルタ
+    /// 組チップ（動作は `chipBehavior` に従う）＋「延滞のみ」フィルタ
     ///
-    /// 組チップを絞り込みにすると「押したら他の組が消えて一覧に居ないと勘違いする」
-    /// ため、行が消えないインデックスジャンプとして動作させる。
     /// チップは借用者がいる組だけ表示する（押しても何も起きないチップを作らない）。
     private func indexSection(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: Layout.chipSpacing) {
@@ -110,16 +158,10 @@ public struct BorrowerListView: View {
                 HStack(spacing: Layout.chipSpacing) {
                     ForEach(sections) { section in
                         Button(section.title) {
-                            // Listの遅延描画では見出しのIDがscrollToに解決されないため、
-                            // 確実に登録される先頭行のIDへスクロールする。
-                            // アンカーを上端より少し下げ、行の上にある組タイトルまで見せる
-                            guard let targetRowId = section.rows.first?.id else { return }
-                            withAnimation {
-                                proxy.scrollTo(targetRowId, anchor: Layout.sectionJumpAnchor)
-                            }
+                            handleChipTap(section: section, proxy: proxy)
                         }
                         .buttonStyle(.bordered)
-                        .tint(.secondary)
+                        .tint(selectedSectionId == section.id ? Color.accentColor : .secondary)
                     }
                 }
                 .padding(.leading)
@@ -127,27 +169,45 @@ public struct BorrowerListView: View {
             
             Spacer()
             
-            Toggle("延滞のみ", isOn: $isOverdueOnly)
-                .toggleStyle(.button)
-                .buttonStyle(.bordered)
-                .tint(isOverdueOnly ? .red : .secondary)
-                .padding(.trailing)
+            if showsOverdueFilter {
+                Toggle("延滞のみ", isOn: $isOverdueOnly)
+                    .toggleStyle(.button)
+                    .buttonStyle(.bordered)
+                    .tint(isOverdueOnly ? .red : .secondary)
+                    .padding(.trailing)
+            }
+        }
+    }
+    
+    /// 組チップのタップ処理（インデックス＝スクロール／フィルタ＝絞り込みトグル）
+    private func handleChipTap(section: BorrowerListSection, proxy: ScrollViewProxy) {
+        switch chipBehavior {
+        case .scrollIndex:
+            // Listの遅延描画では見出しのIDがscrollToに解決されないため、
+            // 確実に登録される先頭行のIDへスクロールする。
+            // アンカーを上端より少し下げ、行の上にある組タイトルまで見せる
+            guard let targetRowId = section.rows.first?.id else { return }
+            withAnimation {
+                proxy.scrollTo(targetRowId, anchor: Layout.sectionJumpAnchor)
+            }
+        case .filter:
+            selectedSectionId = selectedSectionId == section.id ? nil : section.id
         }
     }
     
     /// 空状態（タブは隠さず理由を説明する・HIG準拠）
     private var emptyStateView: some View {
         ContentUnavailableView(
-            "現在、貸出中の利用者はいません",
+            emptyStateTitle,
             systemImage: "books.vertical",
-            description: Text("図書が貸し出されると、ここに名前が表示されます")
+            description: Text(emptyStateDescription)
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var borrowerListSection: some View {
         List {
-            ForEach(sections) { section in
+            ForEach(displayedSections) { section in
                 Section(header: Text(section.title)) {
                     ForEach(section.rows) { row in
                         Button {
@@ -178,6 +238,17 @@ public struct BorrowerListView: View {
             }
             
             Spacer()
+            
+            if row.hasNoOpenSlot {
+                // グレー＝「いまは借りられない」の色（図書一覧の貸出中ボタンと同じ言葉遣い）。
+                // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる
+                Text("空き枠なし")
+                    .font(.caption.bold())
+                    .padding(.horizontal, Layout.badgePaddingH)
+                    .padding(.vertical, Layout.badgePaddingV)
+                    .background(.gray, in: Capsule())
+                    .foregroundStyle(.white)
+            }
             
             if row.isOverdue {
                 Text("延滞")
