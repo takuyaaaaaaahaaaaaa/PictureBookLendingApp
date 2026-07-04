@@ -50,7 +50,7 @@ struct ReturnListContainerView: View {
                 familyScreen(for: userId)
             }
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("設定", systemImage: "gearshape") {
                         isSettingsPresented = true
                     }
