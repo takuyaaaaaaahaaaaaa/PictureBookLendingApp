@@ -37,8 +37,8 @@ public struct LoanConfirmationView: View {
                 
                 // 貸出情報カード
                 VStack(spacing: 16) {
-                    // 絵本情報
-                    LoanInfoSection(title: "絵本") {
+                    // 図書情報
+                    LoanInfoSection(title: "図書") {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(book.title)
                                 .font(.headline)

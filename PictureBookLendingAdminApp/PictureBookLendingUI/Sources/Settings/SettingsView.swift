@@ -57,7 +57,7 @@ public struct SettingsView: View {
             
             SettingsMenuItem(
                 iconName: "book",
-                title: "絵本管理",
+                title: "図書管理",
                 subtitle: "\(bookCount)冊登録済み",
                 action: onSelectBook
             )
@@ -90,8 +90,8 @@ public struct SettingsView: View {
                 
                 SettingsMenuItem(
                     iconName: "books.vertical",
-                    title: "絵本一括登録",
-                    subtitle: "CSVファイルから複数の絵本を一括登録",
+                    title: "図書一括登録",
+                    subtitle: "CSVファイルから複数の図書を一括登録",
                     action: onSelectBookBulkRegistration,
                     showChevron: false
                 )
@@ -111,7 +111,7 @@ public struct SettingsView: View {
             SettingsMenuItem(
                 iconName: "trash.circle",
                 title: "端末初期化",
-                subtitle: "利用者・絵本・貸出記録のデータを削除",
+                subtitle: "利用者・図書・貸出記録のデータを削除",
                 action: onSelectDeviceReset,
                 style: .destructive,
                 showChevron: false

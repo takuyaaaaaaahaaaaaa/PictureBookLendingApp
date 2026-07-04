@@ -47,7 +47,7 @@ public struct BookBulkAddView: View {
                 .padding()
             }
             .background(.regularMaterial)
-            .navigationTitle("絵本一括追加")
+            .navigationTitle("図書一括追加")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.large)
             #endif
@@ -70,7 +70,7 @@ public struct BookBulkAddView: View {
     
     private var inputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("絵本データ入力")
+            Text("図書データ入力")
                 .font(.headline)
             
             Text("管理番号とタイトルを以下の形式で入力してください：\n例: あ31 あいうえお")

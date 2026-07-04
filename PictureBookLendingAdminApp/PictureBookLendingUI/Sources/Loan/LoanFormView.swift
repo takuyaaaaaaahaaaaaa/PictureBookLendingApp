@@ -38,7 +38,7 @@ public struct LoanFormView: View {
     
     public var body: some View {
         Form {
-            Section(header: Text("絵本")) {
+            Section(header: Text("図書")) {
                 VStack(alignment: .leading) {
                     Text(book.title)
                         .font(.headline)

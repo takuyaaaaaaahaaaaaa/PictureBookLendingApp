@@ -62,7 +62,7 @@ struct BookFormContainerView: View {
                 onReset: handleReset,
                 onCameraTap: handleCameraTap
             )
-            .navigationTitle(isEditMode ? "絵本を編集" : "絵本を追加")
+            .navigationTitle(isEditMode ? "図書を編集" : "図書を追加")
             .interactiveDismissDisabled()
             .onChange(of: book.title) { _, newTitle in
                 updateKanaGroup(for: newTitle)
@@ -88,7 +88,7 @@ struct BookFormContainerView: View {
             } message: {
                 if let duplicated = duplicatedBook {
                     Text(
-                        "管理番号「\(book.managementNumber ?? "")」は既に絵本「\(duplicated.title)」で使用されています。それでも保存しますか？"
+                        "管理番号「\(book.managementNumber ?? "")」は既に図書「\(duplicated.title)」で使用されています。それでも保存しますか？"
                     )
                 } else {
                     Text("この管理番号は既に使用されています。それでも保存しますか？")
@@ -163,7 +163,7 @@ struct BookFormContainerView: View {
             onSave?(savedBook)
             dismiss()
         } catch {
-            alertState = .error("絵本の保存に失敗しました", message: "\(error.localizedDescription)")
+            alertState = .error("図書の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
@@ -178,7 +178,7 @@ struct BookFormContainerView: View {
     }
     
     /// タイトルに基づいて五十音グループを自動設定
-    /// - Parameter title: 絵本のタイトル
+    /// - Parameter title: 図書のタイトル
     private func updateKanaGroup(for title: String) {
         let kanaGroup = KanaGroup.from(text: title)
         book.kanaGroup = kanaGroup

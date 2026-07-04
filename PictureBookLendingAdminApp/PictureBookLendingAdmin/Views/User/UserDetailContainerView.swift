@@ -73,12 +73,12 @@ struct UserDetailContainerView: View {
         }
     }
     
-    /// 絵本タイトル取得
-    /// - Parameter bookId: 絵本ID
-    /// - Returns: 絵本タイトル
+    /// 図書タイトル取得
+    /// - Parameter bookId: 図書ID
+    /// - Returns: 図書タイトル
     private func getBookTitle(for bookId: UUID) -> String {
         guard let book = bookModel.findBookById(bookId) else {
-            return "不明な絵本"
+            return "不明な図書"
         }
         return book.title
     }

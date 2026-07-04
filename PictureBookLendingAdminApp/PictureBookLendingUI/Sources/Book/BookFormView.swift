@@ -176,7 +176,7 @@ public struct BookFormView<AutoFillButton: View>: View {
             
             Section(header: Text("説明（任意）")) {
                 TextField(
-                    "絵本の説明・あらすじ",
+                    "図書の説明・あらすじ",
                     text: Binding(
                         get: { book.description ?? "" },
                         set: { book.description = $0.isEmpty ? nil : $0 }
@@ -309,6 +309,6 @@ public struct BookFormView<AutoFillButton: View>: View {
             onCancel: {},
             onReset: {}
         )
-        .navigationTitle("絵本を追加")
+        .navigationTitle("図書を追加")
     }
 }

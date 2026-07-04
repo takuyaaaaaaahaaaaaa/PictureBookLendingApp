@@ -103,7 +103,7 @@ public struct BookSearchView: View {
             // 登録ボタンセクション
             registrationSection
         }
-        .navigationTitle("絵本を登録")
+        .navigationTitle("図書を登録")
     }
     
     // MARK: - View Components
@@ -113,7 +113,7 @@ public struct BookSearchView: View {
         VStack(spacing: 16) {
             // 検索フォーム
             VStack(spacing: 12) {
-                TextField("絵本のタイトルを入力", text: $searchTitle)
+                TextField("図書のタイトルを入力", text: $searchTitle)
                     .textFieldStyle(.roundedBorder)
                 
                 TextField("著者名を入力（任意）", text: $searchAuthor)
@@ -164,7 +164,7 @@ public struct BookSearchView: View {
             ContentUnavailableView(
                 "検索結果なし",
                 systemImage: "magnifyingglass",
-                description: Text("タイトルを入力して絵本を検索してください")
+                description: Text("タイトルを入力して図書を検索してください")
             )
         } else {
             List(searchResults, id: \.book.id) { scoredBook in
@@ -182,7 +182,7 @@ public struct BookSearchView: View {
     private var manualEntrySection: some View {
         if let manualBook = manualBook {
             Form {
-                Section("絵本情報") {
+                Section("図書情報") {
                     HStack {
                         Text("タイトル")
                             .foregroundStyle(.secondary)
@@ -299,7 +299,7 @@ public struct BookSearchView: View {
                     .multilineTextAlignment(.center)
             }
             
-            Button("絵本を登録") {
+            Button("図書を登録") {
                 onRegister()
             }
             .buttonStyle(.borderedProminent)

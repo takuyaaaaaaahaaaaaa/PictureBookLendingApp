@@ -25,7 +25,7 @@ public struct BookSearchResultsView: View {
                     ContentUnavailableView(
                         "検索結果なし",
                         systemImage: "magnifyingglass",
-                        description: Text("該当する絵本が見つかりませんでした")
+                        description: Text("該当する図書が見つかりませんでした")
                     )
                 } else {
                     List(searchResults, id: \.book.id) { scoredBook in
