@@ -96,7 +96,9 @@ struct BorrowListContainerView: View {
                         slotConfirmScreen(for: route)
                     }
             }
-            .presentationSizing(.form)
+            // 200人規模の名前一覧＋組チップを載せるため、フォームシートより
+            // 一回り大きいシステム標準のページシートを使う
+            .presentationSizing(.page)
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
@@ -125,7 +127,7 @@ struct BorrowListContainerView: View {
                 ContentUnavailableView(
                     "この図書は貸出中です",
                     systemImage: "book.closed",
-                    description: Text("返却されると貸出できるようになります")
+                    description: Text(lentBookDescription(for: book))
                 )
             } else {
                 BorrowerListView(
@@ -256,6 +258,21 @@ struct BorrowListContainerView: View {
                 )
             }
             .sorted { $0.title < $1.title }
+    }
+    
+    /// 貸出中の図書の説明文（「いつ戻るか」の目安を日付だけで知らせる）
+    ///
+    /// 誰が借りているかは表示しない（プライバシー配慮・IA_REVIEW 追記13）。
+    /// 注意: getActiveLoans()はキャッシュ更新の副作用を持つためgetAllLoans()から絞り込む
+    private func lentBookDescription(for book: Book) -> String {
+        if let loan = loanModel.getAllLoans().first(where: {
+            $0.bookId == book.id && !$0.isReturned
+        }
+        ) {
+            "\(loan.dueDateText)ごろ返却予定です"
+        } else {
+            "返却されると貸出できるようになります"
+        }
     }
     
     // MARK: - Actions

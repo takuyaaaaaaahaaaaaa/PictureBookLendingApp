@@ -221,6 +221,9 @@ public struct BookListView<RowAction: View>: View {
                 onEdit(book)
             } label: {
                 BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
+                    // plainスタイルのボタンは不透明な描画部分しか当たり判定にならないため、
+                    // サムネイルと文字のすき間や余白も含めて行全体をタップ可能にする
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         } else if let onSelect {
@@ -228,6 +231,7 @@ public struct BookListView<RowAction: View>: View {
                 onSelect(book)
             } label: {
                 BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         } else {
