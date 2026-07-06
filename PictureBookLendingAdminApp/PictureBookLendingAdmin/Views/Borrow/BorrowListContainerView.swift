@@ -19,15 +19,16 @@ struct BorrowListContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
-    /// タップされた図書。非nilの間フォームシートを開く（シートの提示単位）
-    @State private var selectedBook: Book?
-    /// シートを開いた時点での「選んだ図書が貸出中だったか」のスナップショット
+    /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
-    /// シート内でloanModel.isBookLent(bookId:)をライブで見ると、貸出が成立した
+    /// 「貸出中だったか」はitemに焼き込んだスナップショットで持つ。
+    /// 別の@Stateに分けると、シート提示の瞬間に古いビュー値で評価されて
+    /// 図書と貸出状態がズレることがある（貸出直後に同じ図書を開き直すと
+    /// 貸出中なのに利用者選択が出る）。itemと一体なら必ず一致する。
+    /// ライブでloanModel.isBookLent(bookId:)を見ないのは従来どおり：貸出が成立した
     /// その瞬間に値が反転し、シートの土台（フォームシート/ページシートの分岐、
-    /// 案内画面/名前一覧の分岐）ごと作り直されて✓カードが一瞬で消えてしまう。
-    /// シートを開いた瞬間に固定し、閉じるまで変えないことでこれを防ぐ
-    @State private var isSelectedBookAlreadyLent = false
+    /// 案内画面/名前一覧の分岐）ごと作り直されて✓カードが一瞬で消えてしまうため
+    @State private var borrowSheetContext: BorrowSheetContext?
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
     @State private var sheetPath = NavigationPath()
     /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
@@ -130,17 +131,16 @@ struct BorrowListContainerView: View {
             refreshData()
             loadBookSections()
         }
-        .sheet(item: $selectedBook) { book in
+        .sheet(item: $borrowSheetContext) { context in
             // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
             // 200人規模の名前一覧＋組チップを載せる貸出タスクは、
             // 一回り大きいシステム標準のページシートで出す。
-            // 判定はシートを開いた時点のスナップショットを使う（ライブで見ると、
-            // シート内で貸出成立した瞬間に反転してシートが作り直されてしまう）
-            if isSelectedBookAlreadyLent {
-                borrowSheetContent(for: book)
+            // 判定はitemに焼き込んだスナップショットを使う（理由は`borrowSheetContext`参照）
+            if context.isAlreadyLent {
+                borrowSheetContent(for: context)
                     .presentationSizing(.form)
             } else {
-                borrowSheetContent(for: book)
+                borrowSheetContent(for: context)
                     .presentationSizing(.page)
             }
         }
@@ -150,9 +150,9 @@ struct BorrowListContainerView: View {
     ///
     /// 一時的な貸出タスクをシートの中だけで完結させる。
     /// ✓カードとアラートは背後の図書一覧に付けると隠れるため、必ずシート内に置く
-    private func borrowSheetContent(for book: Book) -> some View {
+    private func borrowSheetContent(for context: BorrowSheetContext) -> some View {
         NavigationStack(path: $sheetPath) {
-            borrowerPickScreen(for: book)
+            borrowerPickScreen(for: context)
                 .navigationDestination(for: BorrowConfirmRoute.self) { route in
                     slotConfirmScreen(for: route)
                 }
@@ -170,7 +170,7 @@ struct BorrowListContainerView: View {
             // ✓カードがタイムアウトで消えたらシートを閉じる
             if wasPresented && !isPresented && isPopPendingAfterLend {
                 isPopPendingAfterLend = false
-                selectedBook = nil
+                borrowSheetContext = nil
             }
         }
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
@@ -183,14 +183,14 @@ struct BorrowListContainerView: View {
     /// 利用者選択画面（フォームシートの最初の画面・「だれが借りますか？」）
     ///
     /// 貸出中の図書が選ばれた場合は貸出できない理由を説明する空状態を表示する。
-    /// 判定はシートを開いた時点のスナップショットを使う（理由は`isSelectedBookAlreadyLent`参照）
-    private func borrowerPickScreen(for book: Book) -> some View {
+    /// 判定はitemに焼き込んだスナップショットを使う（理由は`borrowSheetContext`参照）
+    private func borrowerPickScreen(for context: BorrowSheetContext) -> some View {
         sheetScreen(title: "だれが借りますか？") {
-            if isSelectedBookAlreadyLent {
+            if context.isAlreadyLent {
                 ContentUnavailableView(
                     "この図書は貸出中です",
                     systemImage: "book.closed",
-                    description: Text(lentBookDescription(for: book))
+                    description: Text(lentBookDescription(for: context.book))
                 )
             } else {
                 BorrowerListView(
@@ -201,7 +201,7 @@ struct BorrowListContainerView: View {
                     emptyStateTitle: "利用者が登録されていません",
                     emptyStateDescription: "設定画面から利用者を登録してください",
                     onSelect: { row in
-                        sheetPath.append(BorrowConfirmRoute(book: book, userId: row.id))
+                        sheetPath.append(BorrowConfirmRoute(book: context.book, userId: row.id))
                     }
                 )
             }
@@ -269,14 +269,14 @@ struct BorrowListContainerView: View {
                 DragGesture(minimumDistance: 0)
                     .onEnded { _ in idleTicket += 1 }
             )
-            .kioskIdleTimeout(ticket: idleTicket) { selectedBook = nil }
+            .kioskIdleTimeout(ticket: idleTicket) { borrowSheetContext = nil }
             .navigationTitle(title)
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            selectedBook = nil
+                            borrowSheetContext = nil
                         } label: {
                             Image(systemName: "xmark")
                         }
@@ -366,8 +366,10 @@ struct BorrowListContainerView: View {
     private func openBorrowSheet(for book: Book) {
         sheetPath = NavigationPath()
         selectedClassGroupId = nil
-        isSelectedBookAlreadyLent = loanModel.isBookLent(bookId: book.id)
-        selectedBook = book
+        borrowSheetContext = BorrowSheetContext(
+            book: book,
+            isAlreadyLent: loanModel.isBookLent(bookId: book.id)
+        )
     }
     
     /// 貸出の実行（枠選択のタップで確定・✓カードで完了を伝える）
@@ -394,6 +396,16 @@ struct BorrowListContainerView: View {
     private func loadBookSections() {
         bookSectionsState = BookSectionsState(books: bookModel.books)
     }
+}
+
+/// 貸出シートの提示単位（選んだ図書＋開いた時点の貸出状態のスナップショット）
+///
+/// 貸出状態を図書と同じitemに焼き込むことで、シート提示時に両者がズレないことを保証する
+private struct BorrowSheetContext: Identifiable {
+    let book: Book
+    let isAlreadyLent: Bool
+    
+    var id: UUID { book.id }
 }
 
 /// 枠確認画面への遷移値（選んだ図書＋家庭を特定する利用者ID）
