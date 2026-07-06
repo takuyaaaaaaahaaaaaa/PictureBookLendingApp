@@ -16,8 +16,17 @@ class BookSectionsState {
     /// /// 五十音順グループごとの絵本分類
     private var bookSections: [BookSection] = []
     
+    private enum Suggestion {
+        static let maxCount = 8
+    }
+    
     init(books: [Book]) {
         self.bookSections = createSections(from: books)
+    }
+    
+    /// 全絵本（セクションから都度導出。bookSectionsとの二重保持を避ける）
+    private var allBooks: [Book] {
+        bookSections.flatMap { $0.books }
     }
     
     /// フィルタリング・ソート済みの絵本セクション
@@ -33,6 +42,37 @@ class BookSectionsState {
         
         // 2. ソート
         return sorted(sections: filteredSections, by: sortType)
+    }
+    
+    /// 検索テキスト（＋現在のかなフィルタ）に対する図書タイトルの候補
+    ///
+    /// 一覧側と同じ順序（テキスト検索→かなフィルタ）で絞り込んでからスコアリングすることで、
+    /// かなフィルタが有効な状態でも候補タップ後に一覧が空にならないようにする。
+    /// スコア降順・タイトル重複除去・上位`limit`件のみ返す。
+    public func suggestions(
+        for searchText: String, kanaFilter: KanaGroup?, limit: Int = Suggestion.maxCount
+    ) -> [Book] {
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return [] }
+        
+        let candidates: [Book] =
+            if let kanaFilter {
+                allBooks.filter { ($0.kanaGroup ?? .other) == kanaFilter }
+            } else {
+                allBooks
+            }
+
+        let scored = BookSearchScorer().scoreSearchResults(
+            searchQuery: BookSearchQuery(title: trimmed),
+            books: candidates)
+        
+        var seenTitles = Set<String>()
+        return
+            scored
+            .filter { $0.score > 0 }
+            .compactMap { seenTitles.insert($0.book.title).inserted ? $0.book : nil }
+            .prefix(limit)
+            .map { $0 }
     }
     
     /// 全絵本からBookSectionの配列を作成
