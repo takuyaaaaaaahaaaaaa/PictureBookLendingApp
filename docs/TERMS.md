@@ -15,3 +15,4 @@
 | 返却日 | returnedDate | 実際返却日, 返却完了日, actualReturnDate | 図書が実際に返却された日付（未返却時はnil） |
 | 返却済み | isReturned | 返却フラグ, 完了ステータス, returned, completed | 図書が返却済みかどうかの論理値（計算プロパティ） |
 | 貸出期間 | loanPeriod | 貸出日数, 借用期間, lendingDuration, borrowingPeriod | 図書を貸し出してから返却期限までの日数（例：14日間） |
+| 検索候補 | suggestion | サジェスト（UI文言として）, オートコンプリート | 検索入力中に表示する登録済み図書タイトルの候補。タップすると検索欄に反映され一覧が絞り込まれる |

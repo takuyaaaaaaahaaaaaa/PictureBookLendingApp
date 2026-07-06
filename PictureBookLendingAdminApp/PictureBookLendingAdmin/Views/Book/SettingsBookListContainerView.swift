@@ -12,6 +12,8 @@ struct SettingsBookListContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     
     @State private var searchText = ""
+    /// サジェスト候補算出用にデバウンスした検索テキスト（一覧の絞り込み自体は即時のsearchTextを使う）
+    @State private var debouncedSearchText = ""
     @State private var isAddSheetPresented = false
     @State private var editingBook: Book?
     @State private var isEditMode = false
@@ -38,6 +40,20 @@ struct SettingsBookListContainerView: View {
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
         .navigationTitle("図書管理")
+        .bookSearchable(
+            text: $searchText,
+            suggestions: bookSectionsState.suggestions(
+                for: debouncedSearchText, kanaFilter: selectedKanaFilter)
+        )
+        .task(id: searchText) {
+            do {
+                try await Task.sleep(for: .milliseconds(300))
+                debouncedSearchText = searchText
+            } catch {
+                // キャンセル（新しい入力があった）ので何もしない
+                return
+            }
+        }
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }

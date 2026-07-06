@@ -420,6 +420,123 @@ struct BookSectionTests {
         #expect(books[4].managementNumber == "あ１０")  // あ10
     }
     
+    // MARK: - suggestions Tests
+    
+    /// 空文字での候補取得テスト
+    ///
+    /// 検索テキストが空の場合は候補が空配列になることを確認します。
+    @Test("空文字での候補取得")
+    func suggestionsEmptyText() {
+        // 1. Arrange - 準備
+        let bookSectionsState = BookSectionsState(books: testBooks)
+        
+        // 2. Act - 実行
+        let suggestions = bookSectionsState.suggestions(for: "", kanaFilter: nil)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.isEmpty)
+    }
+    
+    /// 前方一致が部分一致より上位に来ることを確認するテスト
+    @Test("前方一致が部分一致より上位")
+    func suggestionsPrefixMatchRanksHigher() {
+        // 1. Arrange - 準備（"は"で始まる本と、"は"を含むが先頭ではない本）
+        let books = [
+            Book(title: "こわいはなし", kanaGroup: .ka),
+            Book(title: "はらぺこあおむし", kanaGroup: .ha),
+        ]
+        let bookSectionsState = BookSectionsState(books: books)
+        
+        // 2. Act - 実行
+        let suggestions = bookSectionsState.suggestions(for: "は", kanaFilter: nil)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.first?.title == "はらぺこあおむし")
+    }
+    
+    /// タイプミスでも候補に入ることを確認するテスト
+    @Test("タイプミスでも候補に入る")
+    func suggestionsToleratesTypo() {
+        // 1. Arrange - 準備
+        let bookSectionsState = BookSectionsState(books: testBooks)
+        
+        // 2. Act - 実行（「あおむし」を「あおむち」と誤入力）
+        let suggestions = bookSectionsState.suggestions(for: "はらぺこあおむち", kanaFilter: nil)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.contains { $0.title == "はらぺこあおむし" })
+    }
+    
+    /// limit で件数が上限に収まることを確認するテスト
+    @Test("limitで件数が上限に収まる")
+    func suggestionsRespectsLimit() {
+        // 1. Arrange - 準備（10冊、すべて"ほん"を含むタイトル）
+        let manyBooks = (0..<10).map { Book(title: "ほん\($0)", kanaGroup: .ha) }
+        let bookSectionsState = BookSectionsState(books: manyBooks)
+        
+        // 2. Act - 実行
+        let suggestions = bookSectionsState.suggestions(for: "ほん", kanaFilter: nil, limit: 3)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.count == 3)
+    }
+    
+    /// ヒットなしの場合は空配列になることを確認するテスト
+    @Test("ヒットなしで空配列")
+    func suggestionsNoMatch() {
+        // 1. Arrange - 準備
+        let bookSectionsState = BookSectionsState(books: testBooks)
+        
+        // 2. Act - 実行
+        let suggestions = bookSectionsState.suggestions(for: "存在しない本のタイトル", kanaFilter: nil)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.isEmpty)
+    }
+    
+    /// 同一タイトルの重複除去テスト
+    @Test("同一タイトルは重複除去される")
+    func suggestionsDedupesSameTitle() {
+        // 1. Arrange - 準備（同じタイトルの本が2冊）
+        let books = [
+            Book(title: "はらぺこあおむし", managementNumber: "は001", kanaGroup: .ha),
+            Book(title: "はらぺこあおむし", managementNumber: "は002", kanaGroup: .ha),
+        ]
+        let bookSectionsState = BookSectionsState(books: books)
+        
+        // 2. Act - 実行
+        let suggestions = bookSectionsState.suggestions(for: "はらぺこ", kanaFilter: nil)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.count == 1)
+    }
+    
+    /// かなフィルタが選択されている場合、そのグループ外のタイトルは候補に出ないことを確認するテスト
+    @Test("かなフィルタ選択中はグループ外のタイトルが候補に出ない")
+    func suggestionsRespectsKanaFilter() {
+        // 1. Arrange - 準備
+        let bookSectionsState = BookSectionsState(books: testBooks)
+        
+        // 2. Act - 実行（"は行"フィルタ中に、か行の本のタイトルで検索）
+        let suggestions = bookSectionsState.suggestions(for: "かきくけこ", kanaFilter: .ha)
+        
+        // 3. Assert - 検証（か行フィルタ外なので候補は出ない）
+        #expect(suggestions.isEmpty)
+    }
+    
+    /// かなフィルタと一致するタイトルは候補に出ることを確認するテスト
+    @Test("かなフィルタと一致するタイトルは候補に出る")
+    func suggestionsMatchesWithinKanaFilter() {
+        // 1. Arrange - 準備
+        let bookSectionsState = BookSectionsState(books: testBooks)
+        
+        // 2. Act - 実行（"は行"フィルタ中に、は行の本のタイトルで検索）
+        let suggestions = bookSectionsState.suggestions(for: "あおむし", kanaFilter: .ha)
+        
+        // 3. Assert - 検証
+        #expect(suggestions.contains { $0.title == "はらぺこあおむし" })
+    }
+    
     // MARK: - Integration Tests
     
     /// 全機能統合テスト
