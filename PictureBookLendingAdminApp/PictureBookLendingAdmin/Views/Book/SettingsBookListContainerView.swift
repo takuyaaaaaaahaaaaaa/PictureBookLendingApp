@@ -28,7 +28,8 @@ struct SettingsBookListContainerView: View {
             sections: bookSectionsState.filter(
                 searchText: searchText, kanafilter: selectedKanaFilter, sortType: selectedSortType),
             searchText: $searchText,
-            selectedKanaFilter: $selectedKanaFilter,
+            // 管理画面では対象のかな行だけ見たい文脈のため従来どおり絞り込み
+            kanaChipBehavior: .filter(selection: $selectedKanaFilter),
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onEdit: handleEditBook,

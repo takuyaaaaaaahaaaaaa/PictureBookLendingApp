@@ -36,7 +36,8 @@ struct BorrowListContainerView: View {
     @State private var searchText = ""
     /// サジェスト候補算出用にデバウンスした検索テキスト（一覧の絞り込み自体は即時のsearchTextを使う）
     @State private var debouncedSearchText = ""
-    @State private var selectedKanaFilter: KanaGroup?
+    /// 図書一覧をトップへ戻すトリガ（貸出完了ごとにインクリメント）
+    @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
     @State private var bookSectionsState: BookSectionsState = .init(books: [])
@@ -70,10 +71,12 @@ struct BorrowListContainerView: View {
             BookListView(
                 sections: bookSectionsState.filter(
                     searchText: searchText,
-                    kanafilter: selectedKanaFilter,
+                    kanafilter: nil,
                     sortType: selectedSortType),
                 searchText: $searchText,
-                selectedKanaFilter: $selectedKanaFilter,
+                // どの本がどこにあるか分からない画面なので、チップは絞り込みではなく
+                // スクロールジャンプ（返却一覧と同じ作法）
+                kanaChipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
                 selectedSortType: $selectedSortType,
                 onEdit: { _ in },
                 onDelete: { _ in },
@@ -100,7 +103,7 @@ struct BorrowListContainerView: View {
             .bookSearchable(
                 text: $searchText,
                 suggestions: bookSectionsState.suggestions(
-                    for: debouncedSearchText, kanaFilter: selectedKanaFilter)
+                    for: debouncedSearchText, kanaFilter: nil)
             )
             .task(id: searchText) {
                 do {
@@ -179,6 +182,8 @@ struct BorrowListContainerView: View {
             if wasPresented && !isPresented && isPopPendingAfterLend {
                 isPopPendingAfterLend = false
                 borrowSheetContext = nil
+                // 貸出完了→次の貸出への引き継ぎとして図書一覧を先頭へ戻す
+                scrollToTopTrigger += 1
             }
         }
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
