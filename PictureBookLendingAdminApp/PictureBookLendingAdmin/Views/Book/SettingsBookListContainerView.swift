@@ -11,14 +11,12 @@ struct SettingsBookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanModel.self) private var loanModel
     
-    @State private var searchText = ""
-    /// サジェスト候補算出用にデバウンスした検索テキスト（一覧の絞り込み自体は即時のsearchTextを使う）
-    @State private var debouncedSearchText = ""
+    /// 図書一覧の絞り込み状態（検索テキスト・五十音フィルタ。両者は排他制御される）
+    @State private var filterState = BookListFilterState()
     @State private var isAddSheetPresented = false
     @State private var editingBook: Book?
     @State private var isEditMode = false
     @State private var alertState = AlertState()
-    @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
     @State private var bookSectionsState: BookSectionsState = .init(books: [])
@@ -26,10 +24,11 @@ struct SettingsBookListContainerView: View {
     var body: some View {
         BookListView(
             sections: bookSectionsState.filter(
-                searchText: searchText, kanafilter: selectedKanaFilter, sortType: selectedSortType),
-            searchText: $searchText,
-            // 管理画面では対象のかな行だけ見たい文脈のため従来どおり絞り込み
-            kanaChipBehavior: .filter(selection: $selectedKanaFilter),
+                searchText: filterState.searchText,
+                kanafilter: filterState.selectedKanaFilter,
+                sortType: selectedSortType),
+            searchText: searchTextBinding,
+            selectedKanaFilter: kanaFilterBinding,
             selectedSortType: $selectedSortType,
             isEditMode: isEditMode,
             onEdit: handleEditBook,
@@ -42,14 +41,15 @@ struct SettingsBookListContainerView: View {
         }
         .navigationTitle("図書管理")
         .bookSearchable(
-            text: $searchText,
+            text: searchTextBinding,
             suggestions: bookSectionsState.suggestions(
-                for: debouncedSearchText, kanaFilter: selectedKanaFilter)
+                for: filterState.debouncedSearchText,
+                kanaFilter: filterState.selectedKanaFilter)
         )
-        .task(id: searchText) {
+        .task(id: filterState.searchText) {
             do {
                 try await Task.sleep(for: .milliseconds(300))
-                debouncedSearchText = searchText
+                filterState.updateDebouncedSearchText(filterState.searchText)
             } catch {
                 // キャンセル（新しい入力があった）ので何もしない
                 return
@@ -108,6 +108,24 @@ struct SettingsBookListContainerView: View {
             loanModel.refreshLoans()
             loadBookSections()
         }
+    }
+    
+    // MARK: - Computed Properties
+    
+    /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    private var searchTextBinding: Binding<String> {
+        Binding(
+            get: { filterState.searchText },
+            set: { filterState.updateSearchText($0) }
+        )
+    }
+    
+    /// 五十音フィルタのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    private var kanaFilterBinding: Binding<KanaGroup?> {
+        Binding(
+            get: { filterState.selectedKanaFilter },
+            set: { filterState.setKanaFilter($0) }
+        )
     }
     
     // MARK: - Actions

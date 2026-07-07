@@ -33,9 +33,8 @@ struct BorrowListContainerView: View {
     @State private var sheetPath = NavigationPath()
     /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
     @State private var selectedClassGroupId: UUID?
-    @State private var searchText = ""
-    /// サジェスト候補算出用にデバウンスした検索テキスト（一覧の絞り込み自体は即時のsearchTextを使う）
-    @State private var debouncedSearchText = ""
+    /// 図書一覧の絞り込み状態（検索テキスト・五十音フィルタ。両者は排他制御される）
+    @State private var filterState = BookListFilterState()
     /// 図書一覧をトップへ戻すトリガ（貸出完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
@@ -70,13 +69,13 @@ struct BorrowListContainerView: View {
         NavigationStack {
             BookListView(
                 sections: bookSectionsState.filter(
-                    searchText: searchText,
-                    kanafilter: nil,
+                    searchText: filterState.searchText,
+                    kanafilter: filterState.selectedKanaFilter,
                     sortType: selectedSortType),
-                searchText: $searchText,
-                // どの本がどこにあるか分からない画面なので、チップは絞り込みではなく
-                // スクロールジャンプ（返却一覧と同じ作法）
-                kanaChipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
+                searchText: searchTextBinding,
+                selectedKanaFilter: kanaFilterBinding,
+                // 貸出完了ごとに一覧を先頭へ戻す（次の貸出への引き継ぎ）
+                scrollToTopTrigger: scrollToTopTrigger,
                 selectedSortType: $selectedSortType,
                 onEdit: { _ in },
                 onDelete: { _ in },
@@ -101,14 +100,15 @@ struct BorrowListContainerView: View {
             }
             .navigationTitle("貸出")
             .bookSearchable(
-                text: $searchText,
+                text: searchTextBinding,
                 suggestions: bookSectionsState.suggestions(
-                    for: debouncedSearchText, kanaFilter: nil)
+                    for: filterState.debouncedSearchText,
+                    kanaFilter: filterState.selectedKanaFilter)
             )
-            .task(id: searchText) {
+            .task(id: filterState.searchText) {
                 do {
                     try await Task.sleep(for: .milliseconds(300))
-                    debouncedSearchText = searchText
+                    filterState.updateDebouncedSearchText(filterState.searchText)
                 } catch {
                     // キャンセル（新しい入力があった）ので何もしない
                     return
@@ -182,7 +182,8 @@ struct BorrowListContainerView: View {
             if wasPresented && !isPresented && isPopPendingAfterLend {
                 isPopPendingAfterLend = false
                 borrowSheetContext = nil
-                // 貸出完了→次の貸出への引き継ぎとして図書一覧を先頭へ戻す
+                // 貸出完了→次の貸出のために絞り込みを解除し、図書一覧を先頭へ戻す
+                filterState.reset()
                 scrollToTopTrigger += 1
             }
         }
@@ -299,6 +300,22 @@ struct BorrowListContainerView: View {
     }
     
     // MARK: - Computed Properties
+    
+    /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    private var searchTextBinding: Binding<String> {
+        Binding(
+            get: { filterState.searchText },
+            set: { filterState.updateSearchText($0) }
+        )
+    }
+    
+    /// 五十音フィルタのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    private var kanaFilterBinding: Binding<KanaGroup?> {
+        Binding(
+            get: { filterState.selectedKanaFilter },
+            set: { filterState.setKanaFilter($0) }
+        )
+    }
     
     /// 利用者選択画面の組セクション（組ごとに名前順）
     ///
