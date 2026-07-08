@@ -1,23 +1,16 @@
-//
-//  BookSectionState+sorted.swift
-//  PictureBookLendingAdmin
-//
-//  Created by takuya_tominaga on 8/29/25.
-//
-
-import Observation
 import PictureBookLendingDomain
 import PictureBookLendingUI
-import SwiftUI
 
-/// グループ単位のBookオブジェクトを管理するState
-@Observable
-class BookSectionsState {
-    /// /// 五十音順グループごとの絵本分類
-    private var bookSections: [BookSection] = []
+/// 五十音グループ単位でセクション化した絵本の集まり（フィルタリング・ソート前のベース）
+///
+/// 初期化時に分類するだけで内部状態は変化しないため、値型として保持し、
+/// 呼び出し側は`bookModel.books`から都度導出する（手動同期を不要にする）。
+struct BookSections {
+    /// 五十音順グループごとの絵本分類
+    private let bookSections: [BookSection]
     
     init(books: [Book]) {
-        self.bookSections = createSections(from: books)
+        self.bookSections = Self.createSections(from: books)
     }
     
     /// 全絵本（セクションから都度導出。bookSectionsとの二重保持を避ける）
@@ -30,11 +23,11 @@ class BookSectionsState {
     /// 部分一致（＋かなフィルタ）で0件のときは、タイプミスを許容した
     /// あいまい検索（Levenshtein類似度）で図書を救済するフォールバックを行う。
     /// かなフィルタ選択中は、フォールバックもそのグループ内に限定する。
-    public func filter(
+    func filter(
         searchText: String, kanafilter: KanaGroup?, sortType: BookSortType
     ) -> [BookSection] {
         // 1. フィルタリング（部分一致＋かなフィルタ）
-        var filteredSections = filtered(
+        var filteredSections = Self.filtered(
             sections: bookSections,
             searchText: searchText,
             selectedKanaFilter: kanafilter
@@ -47,7 +40,7 @@ class BookSectionsState {
         }
         
         // 3. ソート
-        return sorted(sections: filteredSections, by: sortType)
+        return Self.sorted(sections: filteredSections, by: sortType)
     }
     
     /// 部分一致で0件のとき、タイプミスを許容したあいまい検索で図書を探すフォールバック
@@ -72,14 +65,14 @@ class BookSectionsState {
             .filter { $0.score > 0 }
             .map { $0.book }
         
-        return createSections(from: matchedBooks)
+        return Self.createSections(from: matchedBooks)
     }
     
     /// 全絵本からBookSectionの配列を作成
-    private func createSections(from books: [Book]) -> [BookSection] {
+    private static func createSections(from books: [Book]) -> [BookSection] {
         // 五十音グループごとに分類
         let groupedBooks = Dictionary(grouping: books) { book -> KanaGroup in
-            return book.kanaGroup ?? .other
+            book.kanaGroup ?? .other
         }
         
         // セクションを作成
@@ -92,7 +85,7 @@ class BookSectionsState {
     }
     
     /// 検索テキストとかなフィルターでセクション配列をフィルタリング
-    private func filtered(
+    private static func filtered(
         sections: [BookSection],
         searchText: String,
         selectedKanaFilter: KanaGroup?
@@ -112,7 +105,7 @@ class BookSectionsState {
         }
         
         // 選択されたフィルターがある場合は該当セクションのみ表示
-        if let selectedKanaFilter = selectedKanaFilter {
+        if let selectedKanaFilter {
             filteredSections = filteredSections.filter { $0.kanaGroup == selectedKanaFilter }
         }
         
@@ -120,8 +113,9 @@ class BookSectionsState {
     }
     
     /// ソート方法に基づいてセクション配列をソート
-    private func sorted(sections: [BookSection], by sortType: BookSortType) -> [BookSection] {
-        return sections.map { section in
+    private static func sorted(sections: [BookSection], by sortType: BookSortType) -> [BookSection]
+    {
+        sections.map { section in
             let sortedBooks: [Book]
             switch sortType {
             case .title:

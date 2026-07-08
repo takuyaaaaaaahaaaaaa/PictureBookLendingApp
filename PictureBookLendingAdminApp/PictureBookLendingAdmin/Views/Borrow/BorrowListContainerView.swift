@@ -39,8 +39,6 @@ struct BorrowListContainerView: View {
     @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
     @State private var displayMode: BookDisplayMode = .grid
-    /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
-    @State private var bookSectionsState: BookSectionsState = .init(books: [])
     @State private var alertState = AlertState()
     @State private var successFeedback = SuccessFeedback()
     /// 貸出後、✓カードの表示が終わったらシートを閉じる（図書一覧へ戻す）ための予約フラグ
@@ -69,7 +67,7 @@ struct BorrowListContainerView: View {
     var body: some View {
         NavigationStack {
             BookListView(
-                sections: bookSectionsState.filter(
+                sections: bookSections.filter(
                     searchText: filterState.searchText,
                     kanafilter: filterState.selectedKanaFilter,
                     sortType: selectedSortType),
@@ -126,16 +124,11 @@ struct BorrowListContainerView: View {
                 }
             #endif
         }
-        .onChange(of: bookModel.books) {
-            loadBookSections()
-        }
         .onAppear {
             refreshData()
-            loadBookSections()
         }
         .refreshable {
             refreshData()
-            loadBookSections()
         }
         .sheet(item: $borrowSheetContext) { context in
             // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
@@ -296,6 +289,13 @@ struct BorrowListContainerView: View {
     
     // MARK: - Computed Properties
     
+    /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
+    ///
+    /// `bookModel.books`から都度導出する。値型なので手動同期（onChange/onAppear）は不要。
+    private var bookSections: BookSections {
+        BookSections(books: bookModel.books)
+    }
+    
     /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var searchTextBinding: Binding<String> {
         Binding(
@@ -415,11 +415,6 @@ struct BorrowListContainerView: View {
         loanModel.refreshLoans()
         userModel.refreshUsers()
         classGroupModel.refreshClassGroups()
-    }
-    
-    /// 図書データから基本セクションを作成・更新
-    private func loadBookSections() {
-        bookSectionsState = BookSectionsState(books: bookModel.books)
     }
 }
 
