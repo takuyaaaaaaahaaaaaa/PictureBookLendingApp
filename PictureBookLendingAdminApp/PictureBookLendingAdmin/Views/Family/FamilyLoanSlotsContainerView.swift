@@ -24,14 +24,19 @@ struct FamilyLoanSlotsContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
     
-    /// アラート状態管理（エラー表示用）
-    @Binding var alertState: AlertState
     /// 返却のUndoフィードバック状態管理
     ///
     /// 文脈enumに含めない：返却タブの返却Undoだけでなく、貸出フロー内の
     /// 「枠の入れ替え（先に返し忘れた本をその場で返却して空けるUndo）」でも
-    /// 使われる、両モード共通の状態のため（`handleReturn`参照）
+    /// 使われる、両モード共通の状態のため（`handleReturn`参照）。
+    /// alertStateと違い@Binding：返却完了で子ごとpopされた後もUndoカードは
+    /// 親レベルで生き残る必要があり、子より長寿命の状態は親所有が正しいため
     @Binding var undoFeedback: UndoFeedback
+    
+    /// アラート状態管理（エラー表示用）
+    ///
+    /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
+    @State private var alertState = AlertState()
     
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
@@ -45,6 +50,11 @@ struct FamilyLoanSlotsContainerView: View {
             onReturn: handleReturn(_:),
             onBorrow: handleBorrow(_:)
         )
+        .alert(alertState.title, isPresented: $alertState.isPresented) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(alertState.message)
+        }
     }
     
     // MARK: - Computed Properties
@@ -126,7 +136,6 @@ struct FamilyLoanSlotsContainerView: View {
 }
 
 #Preview("返却文脈（実データ相当）") {
-    @Previewable @State var alertState = AlertState()
     @Previewable @State var undoFeedback = UndoFeedback()
     
     let mockFactory = MockRepositoryFactory()
@@ -150,7 +159,6 @@ struct FamilyLoanSlotsContainerView: View {
     
     return ScrollView {
         FamilyLoanSlotsContainerView(
-            alertState: $alertState,
             undoFeedback: $undoFeedback,
             userId: mother.id,  // 保護者のIDから入っても同じ家庭に解決される
             context: .returning(onReturnCompleted: { _ in })
