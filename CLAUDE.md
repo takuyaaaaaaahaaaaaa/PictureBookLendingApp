@@ -231,6 +231,20 @@ struct BookListContainerView: View {
   * **重要**: State型はApp層（ContainerViewと同じモジュール）に定義する
 * **Model** : アプリ横断で共有するビジネスロジック状態 (`BooksModel`, `UsersModel`)
 
+### 状態の所有権ルール（Container間の状態共有）
+
+* 状態は寿命が一致するViewが所有する。画面と同じ寿命の状態は、その画面の@Stateで持つ
+* 通知系UI状態（AlertState / SuccessFeedback / UndoFeedback等）を子Containerへ@Bindingで渡さない。エラーは起きた場所（子）が自分の@State＋.alertで見せる
+* 例外: 状態が子Viewより長生きする必要がある場合（例: 子がpopされた後も残るUndoカード）のみ、親所有＋@Binding共有を許可し、理由をドキュメントコメントに残す
+* 子→親のイベント通知はクロージャ（onXX: (...) -> Void）で行う。クロージャを持つViewはEquatable準拠を検討
+
+### 状態を持つ型の命名・配置
+
+* アプリ全域の状態＋ビジネスロジック = 「〜Model」: Model層に置き、@Environmentで配布する
+* 1画面の状態＋画面ロジック = 「〜ViewModel」: App層のViewModels/に置き、画面のContainerViewが@Stateで生成する
+* ただの値（AlertState等の共通State型）= struct: App層（既存ルールどおり）
+* 既にある状態から計算できる値は@Stateにコピーせず、computed propertyで導出する（同期するな、導出せよ）
+
 ---
 
 ## 🎯 責任分離（Separation of Concerns）

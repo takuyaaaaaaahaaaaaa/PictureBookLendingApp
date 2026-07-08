@@ -1,11 +1,12 @@
 import Foundation
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import Testing
 
-@testable import PictureBookLendingModel
+@testable import PictureBookLendingAdmin
 
-@Suite("RegisterModel Tests")
-struct RegisterModelTests {
+@Suite("BookRegisterViewModel Tests")
+struct BookRegisterViewModelTests {
     
     // MARK: - Test Data
     
@@ -40,10 +41,10 @@ struct RegisterModelTests {
     
     // MARK: - Initialization Tests
     
-    @Test("RegisterModelの初期化")
+    @Test("BookRegisterViewModelの初期化")
     @MainActor
     func testInitialization() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         #expect(model.searchTitle == "")
         #expect(model.searchAuthor == "")
@@ -62,7 +63,7 @@ struct RegisterModelTests {
     @Test("検索実行可能性の判定")
     @MainActor
     func testCanSearch() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 初期状態：検索不可
         #expect(model.canSearch == false)
@@ -98,7 +99,7 @@ struct RegisterModelTests {
     @Test("検索結果の選択")
     @MainActor
     func testSelectSearchResult() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         let scoredBook = ScoredBook(book: sampleBooks[0], score: 0.9)
         
         model.selectSearchResult(scoredBook)
@@ -111,7 +112,7 @@ struct RegisterModelTests {
     @Test("検索結果のクリア")
     @MainActor
     func testClearSearchResults() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 検索結果を設定
         model.searchResults = [ScoredBook(book: sampleBooks[0], score: 0.9)]
@@ -130,7 +131,7 @@ struct RegisterModelTests {
     @Test("手動入力モードへの切り替え")
     @MainActor
     func testSwitchToManualEntry() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 検索入力を設定
         model.searchTitle = "テストタイトル"
@@ -152,7 +153,7 @@ struct RegisterModelTests {
     @Test("手動入力モードで著者が空の場合")
     @MainActor
     func testSwitchToManualEntryWithEmptyAuthor() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         model.searchTitle = "テストタイトル"
         model.searchAuthor = ""
@@ -165,7 +166,7 @@ struct RegisterModelTests {
     @Test("検索結果モードへの切り替え")
     @MainActor
     func testSwitchToSearchResults() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 手動入力モードに設定
         model.switchToManualEntry()
@@ -181,7 +182,7 @@ struct RegisterModelTests {
     @Test("手動入力の絵本情報更新")
     @MainActor
     func testUpdateManualBook() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         let updatedBook = sampleBooks[0]
         
         model.updateManualBook(updatedBook)
@@ -194,7 +195,7 @@ struct RegisterModelTests {
     @Test("登録実行可能性の判定")
     @MainActor
     func testCanRegister() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 初期状態：登録不可
         #expect(model.canRegister == false)
@@ -212,7 +213,7 @@ struct RegisterModelTests {
     @Test("登録対象の絵本取得")
     @MainActor
     func testBookToRegister() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 初期状態：登録対象なし
         #expect(model.bookToRegister == nil)
@@ -232,7 +233,7 @@ struct RegisterModelTests {
     @Test("登録状態のリセット")
     @MainActor
     func testResetRegistrationState() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 各種状態を設定
         model.searchTitle = "テストタイトル"
@@ -260,7 +261,7 @@ struct RegisterModelTests {
     @Test("検索分析の取得")
     @MainActor
     func testGetSearchAnalysis() {
-        let model = createRegisterModel()
+        let model = createViewModel()
         
         // 検索結果なしの場合
         #expect(model.getSearchAnalysis() == nil)
@@ -344,12 +345,12 @@ struct RegisterModelTests {
     // MARK: - Helper Methods
     
     @MainActor
-    private func createRegisterModel() -> RegisterModel {
+    private func createViewModel() -> BookRegisterViewModel {
         let mockGateway = MockBookSearchGateway()
         let normalizer = MockStringNormalizer()
         let repository = MockBookRepository()
         
-        return RegisterModel(
+        return BookRegisterViewModel(
             gateway: mockGateway,
             normalizer: normalizer,
             repository: repository

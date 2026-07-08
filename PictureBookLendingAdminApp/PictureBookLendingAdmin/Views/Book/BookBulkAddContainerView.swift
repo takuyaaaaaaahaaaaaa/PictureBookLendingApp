@@ -27,18 +27,18 @@ struct BookBulkAddContainerView: View {
     @State private var currentBookIndex = 0
     @State private var activeFailedBook: FailedBookItem?
     
-    // RegisterModelを使用して検索機能を利用
-    @State private var registerModel: RegisterModel
+    // BookRegisterViewModelを使用して検索機能を利用
+    @State private var registerViewModel: BookRegisterViewModel
     
     init() {
-        // RegisterModelを初期化
+        // BookRegisterViewModelを初期化
         let repositoryFactory = SwiftDataRepositoryFactory.shared
         let gateway = repositoryFactory.makeBookSearchGateway()
         let normalizer = GoogleBooksOptimizedNormalizer()
         let repository = repositoryFactory.makeBookRepository()
         
-        self._registerModel = State(
-            initialValue: RegisterModel(
+        self._registerViewModel = State(
+            initialValue: BookRegisterViewModel(
                 gateway: gateway,
                 normalizer: normalizer,
                 repository: repository
@@ -333,15 +333,15 @@ struct BookBulkAddContainerView: View {
     private func performSingleSearch(
         for entry: ParsedBookEntry, completion: @escaping (Book?) -> Void
     ) async {
-        // RegisterModelに検索条件をセット
-        registerModel.searchTitle = entry.inputTitle
-        registerModel.searchAuthor = ""
-        registerModel.clearSearchResults()
+        // BookRegisterViewModelに検索条件をセット
+        registerViewModel.searchTitle = entry.inputTitle
+        registerViewModel.searchAuthor = ""
+        registerViewModel.clearSearchResults()
         
         do {
-            try registerModel.searchBooks()
+            try registerViewModel.searchBooks()
             
-            // RegisterModelの状態変更を監視
+            // BookRegisterViewModelの状態変更を監視
             await withCheckedContinuation { continuation in
                 var isCompleted = false
                 
@@ -351,10 +351,10 @@ struct BookBulkAddContainerView: View {
                     let startTime = Date()
                     
                     while !isCompleted && Date().timeIntervalSince(startTime) < maxWaitTime {
-                        if !registerModel.isSearching {
+                        if !registerViewModel.isSearching {
                             // 検索完了
                             if let bestMatch = findBestMatch(
-                                for: entry.inputTitle, in: registerModel.searchResults)
+                                for: entry.inputTitle, in: registerViewModel.searchResults)
                             {
                                 completion(bestMatch.book)
                             } else {
@@ -378,10 +378,10 @@ struct BookBulkAddContainerView: View {
                 }
                 
                 // 初期状態で既に完了している場合の処理
-                if !registerModel.isSearching {
+                if !registerViewModel.isSearching {
                     monitorTask.cancel()
                     if let bestMatch = findBestMatch(
-                        for: entry.inputTitle, in: registerModel.searchResults)
+                        for: entry.inputTitle, in: registerViewModel.searchResults)
                     {
                         completion(bestMatch.book)
                     } else {

@@ -3,7 +3,7 @@ import Observation
 import PictureBookLendingDomain
 
 /// 絵本登録に関するエラー
-public enum RegisterModelError: Error, Equatable, LocalizedError {
+enum BookRegisterViewModelError: Error, Equatable, LocalizedError {
     /// 検索に失敗した場合のエラー
     case searchFailed
     /// 登録に失敗した場合のエラー
@@ -13,7 +13,7 @@ public enum RegisterModelError: Error, Equatable, LocalizedError {
     /// 不明なエラー
     case unknown
     
-    public var errorDescription: String? {
+    var errorDescription: String? {
         switch self {
         case .searchFailed:
             return "絵本の検索に失敗しました"
@@ -27,13 +27,13 @@ public enum RegisterModelError: Error, Equatable, LocalizedError {
     }
 }
 
-/// 絵本登録モデル
+/// 絵本登録画面のViewModel
 ///
 /// タイトル・著者入力による絵本検索と登録機能を提供します。
 /// 検索結果のスコアリング、手動入力との切り替え、登録状態管理を担当します。
 @Observable
 @MainActor
-public class RegisterModel {
+class BookRegisterViewModel {
     
     // MARK: - Dependencies
     
@@ -45,53 +45,41 @@ public class RegisterModel {
     // MARK: - Observable Properties
     
     /// 検索入力状態
-    public var searchTitle: String = ""
-    public var searchAuthor: String = ""
+    var searchTitle: String = ""
+    var searchAuthor: String = ""
     
     /// 検索結果
-    public var searchResults: [ScoredBook] = []
-    public var isSearching: Bool = false
-    public var searchError: String?
+    var searchResults: [ScoredBook] = []
+    var isSearching: Bool = false
+    var searchError: String?
     
     /// 選択された検索結果
-    public var selectedResult: ScoredBook?
+    var selectedResult: ScoredBook?
     
     /// 手動入力モードの状態
-    public var isManualEntryMode: Bool = false
-    public var manualBook: Book?
+    var isManualEntryMode: Bool = false
+    var manualBook: Book?
     
     /// 登録状態
-    public var isRegistering: Bool = false
-    public var registrationError: String?
+    var isRegistering: Bool = false
+    var registrationError: String?
     
     // MARK: - Computed Properties
     
     /// 検索実行可能かどうか
-    public var canSearch: Bool {
+    var canSearch: Bool {
         let hasTitleInput = !searchTitle.trimmingCharacters(in: .whitespaces).isEmpty
         let hasAuthorInput = !searchAuthor.trimmingCharacters(in: .whitespaces).isEmpty
-        let result = (hasTitleInput || hasAuthorInput) && !isSearching
-        
-        #if DEBUG
-            print("🔍 canSearch check:")
-            print("  - searchTitle: '\(searchTitle)'")
-            print("  - searchAuthor: '\(searchAuthor)'")
-            print("  - hasTitleInput: \(hasTitleInput)")
-            print("  - hasAuthorInput: \(hasAuthorInput)")
-            print("  - isSearching: \(isSearching)")
-            print("  - result: \(result)")
-        #endif
-        
-        return result
+        return (hasTitleInput || hasAuthorInput) && !isSearching
     }
     
     /// 登録実行可能かどうか
-    public var canRegister: Bool {
+    var canRegister: Bool {
         !isRegistering && (selectedResult != nil || manualBook != nil)
     }
     
     /// 現在の登録対象の絵本
-    public var bookToRegister: Book? {
+    var bookToRegister: Book? {
         if isManualEntryMode {
             return manualBook
         } else {
@@ -101,7 +89,7 @@ public class RegisterModel {
     
     // MARK: - Initialization
     
-    public init(
+    init(
         gateway: BookSearchGatewayProtocol,
         scorer: BookSearchScorer = BookSearchScorer(),
         normalizer: StringNormalizer,
@@ -116,7 +104,7 @@ public class RegisterModel {
     // MARK: - Search Actions
     
     /// タイトル・著者検索を実行
-    public func searchBooks() throws {
+    func searchBooks() throws {
         guard canSearch else { return }
         
         isSearching = true
@@ -160,14 +148,14 @@ public class RegisterModel {
     }
     
     /// 検索結果をクリア
-    public func clearSearchResults() {
+    func clearSearchResults() {
         searchResults = []
         selectedResult = nil
         searchError = nil
     }
     
     /// 検索結果を選択
-    public func selectSearchResult(_ result: ScoredBook) {
+    func selectSearchResult(_ result: ScoredBook) {
         selectedResult = result
         isManualEntryMode = false
     }
@@ -175,7 +163,7 @@ public class RegisterModel {
     // MARK: - Manual Entry Actions
     
     /// 手動入力モードに切り替え
-    public func switchToManualEntry() {
+    func switchToManualEntry() {
         isManualEntryMode = true
         selectedResult = nil
         
@@ -199,22 +187,22 @@ public class RegisterModel {
     }
     
     /// 検索結果モードに切り替え
-    public func switchToSearchResults() {
+    func switchToSearchResults() {
         isManualEntryMode = false
         manualBook = nil
     }
     
     /// 手動入力の絵本情報を更新
-    public func updateManualBook(_ book: Book) {
+    func updateManualBook(_ book: Book) {
         manualBook = book
     }
     
     // MARK: - Registration Actions
     
     /// 絵本を登録
-    public func registerBook() throws -> Book {
+    func registerBook() throws -> Book {
         guard canRegister, let book = bookToRegister else {
-            throw RegisterModelError.registrationFailed
+            throw BookRegisterViewModelError.registrationFailed
         }
         
         isRegistering = true
@@ -232,14 +220,14 @@ public class RegisterModel {
         } catch {
             isRegistering = false
             registrationError = handleRegistrationError(error)
-            throw RegisterModelError.registrationFailed
+            throw BookRegisterViewModelError.registrationFailed
         }
     }
     
     // MARK: - State Management
     
     /// 登録状態をリセット
-    public func resetRegistrationState() {
+    func resetRegistrationState() {
         searchTitle = ""
         searchAuthor = ""
         searchResults = []
@@ -251,7 +239,7 @@ public class RegisterModel {
     }
     
     /// 検索分析を取得
-    public func getSearchAnalysis() -> SearchAnalysis? {
+    func getSearchAnalysis() -> SearchAnalysis? {
         guard !searchResults.isEmpty else { return nil }
         
         let query = BookSearchQuery(
@@ -306,17 +294,17 @@ public class RegisterModel {
 }
 
 /// 検索結果の分析データ
-public struct SearchAnalysis: Equatable, Sendable {
-    public let searchQuery: BookSearchQuery
-    public let totalResults: Int
-    public let highScoreCount: Int  // 0.8以上
-    public let mediumScoreCount: Int  // 0.5-0.8
-    public let lowScoreCount: Int  // 0.5未満
-    public let hasExactMatch: Bool  // 0.9以上の結果があるか
-    public let averageScore: Double
-    public let topResult: ScoredBook?
+struct SearchAnalysis: Equatable, Sendable {
+    let searchQuery: BookSearchQuery
+    let totalResults: Int
+    let highScoreCount: Int  // 0.8以上
+    let mediumScoreCount: Int  // 0.5-0.8
+    let lowScoreCount: Int  // 0.5未満
+    let hasExactMatch: Bool  // 0.9以上の結果があるか
+    let averageScore: Double
+    let topResult: ScoredBook?
     
-    public init(
+    init(
         searchQuery: BookSearchQuery,
         totalResults: Int,
         highScoreCount: Int,
@@ -337,7 +325,7 @@ public struct SearchAnalysis: Equatable, Sendable {
     }
     
     /// 検索品質の評価
-    public var searchQuality: SearchQuality {
+    var searchQuality: SearchQuality {
         if hasExactMatch {
             return .excellent
         } else if highScoreCount > 0 {
@@ -351,7 +339,7 @@ public struct SearchAnalysis: Equatable, Sendable {
 }
 
 /// 検索品質の評価
-public enum SearchQuality: String, CaseIterable, Sendable {
+enum SearchQuality: String, CaseIterable, Sendable {
     case excellent = "非常に良い"
     case good = "良い"
     case fair = "普通"
