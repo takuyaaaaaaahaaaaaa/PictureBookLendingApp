@@ -99,21 +99,14 @@ struct BorrowListContainerView: View {
                 }
             }
             .navigationTitle("貸出")
-            .bookSearchable(
-                text: searchTextBinding,
-                suggestions: bookSectionsState.suggestions(
-                    for: filterState.debouncedSearchText,
-                    kanaFilter: filterState.selectedKanaFilter)
-            )
-            .task(id: filterState.searchText) {
-                do {
-                    try await Task.sleep(for: .milliseconds(300))
-                    filterState.updateDebouncedSearchText(filterState.searchText)
-                } catch {
-                    // キャンセル（新しい入力があった）ので何もしない
-                    return
-                }
-            }
+            #if os(iOS)
+                .searchable(
+                    text: searchTextBinding,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "図書のタイトルまたは著者で検索")
+            #else
+                .searchable(text: searchTextBinding, prompt: "図書のタイトルまたは著者で検索")
+            #endif
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("設定", systemImage: "gearshape") {

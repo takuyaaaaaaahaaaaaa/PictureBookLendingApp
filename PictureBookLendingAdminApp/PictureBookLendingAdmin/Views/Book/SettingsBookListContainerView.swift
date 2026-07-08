@@ -40,21 +40,14 @@ struct SettingsBookListContainerView: View {
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
         .navigationTitle("図書管理")
-        .bookSearchable(
-            text: searchTextBinding,
-            suggestions: bookSectionsState.suggestions(
-                for: filterState.debouncedSearchText,
-                kanaFilter: filterState.selectedKanaFilter)
-        )
-        .task(id: filterState.searchText) {
-            do {
-                try await Task.sleep(for: .milliseconds(300))
-                filterState.updateDebouncedSearchText(filterState.searchText)
-            } catch {
-                // キャンセル（新しい入力があった）ので何もしない
-                return
-            }
-        }
+        #if os(iOS)
+            .searchable(
+                text: searchTextBinding,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "図書のタイトルまたは著者で検索")
+        #else
+            .searchable(text: searchTextBinding, prompt: "図書のタイトルまたは著者で検索")
+        #endif
         .navigationDestination(for: Book.self) { book in
             BookDetailContainerView(book: book)
         }

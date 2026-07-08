@@ -16,10 +16,6 @@ class BookSectionsState {
     /// /// 五十音順グループごとの絵本分類
     private var bookSections: [BookSection] = []
     
-    private enum Suggestion {
-        static let maxCount = 8
-    }
-    
     init(books: [Book]) {
         self.bookSections = createSections(from: books)
     }
@@ -30,49 +26,53 @@ class BookSectionsState {
     }
     
     /// フィルタリング・ソート済みの絵本セクション
+    ///
+    /// 部分一致（＋かなフィルタ）で0件のときは、タイプミスを許容した
+    /// あいまい検索（Levenshtein類似度）で図書を救済するフォールバックを行う。
+    /// かなフィルタ選択中は、フォールバックもそのグループ内に限定する。
     public func filter(
         searchText: String, kanafilter: KanaGroup?, sortType: BookSortType
     ) -> [BookSection] {
-        // 1. フィルタリング
-        let filteredSections = filtered(
+        // 1. フィルタリング（部分一致＋かなフィルタ）
+        var filteredSections = filtered(
             sections: bookSections,
             searchText: searchText,
             selectedKanaFilter: kanafilter
         )
         
-        // 2. ソート
+        // 2. 部分一致で0件のとき、タイプミスを許容したあいまい検索で救済するフォールバック
+        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
+        if filteredSections.isEmpty && !trimmed.isEmpty {
+            filteredSections = fuzzyFallbackSections(searchText: trimmed, kanafilter: kanafilter)
+        }
+        
+        // 3. ソート
         return sorted(sections: filteredSections, by: sortType)
     }
     
-    /// 検索テキスト（＋現在のかなフィルタ）に対する図書タイトルの候補
+    /// 部分一致で0件のとき、タイプミスを許容したあいまい検索で図書を探すフォールバック
     ///
-    /// 一覧側と同じ順序（テキスト検索→かなフィルタ）で絞り込んでからスコアリングすることで、
-    /// かなフィルタが有効な状態でも候補タップ後に一覧が空にならないようにする。
-    /// スコア降順・タイトル重複除去・上位`limit`件のみ返す。
-    public func suggestions(
-        for searchText: String, kanaFilter: KanaGroup?, limit: Int = Suggestion.maxCount
-    ) -> [Book] {
-        let trimmed = searchText.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return [] }
-        
+    /// かなフィルタ指定時はそのグループ内の図書のみを候補とし、
+    /// `BookSearchScorer`でスコアが正の図書だけをセクション化して返す。
+    private func fuzzyFallbackSections(
+        searchText: String, kanafilter: KanaGroup?
+    ) -> [BookSection] {
         let candidates: [Book] =
-            if let kanaFilter {
-                allBooks.filter { ($0.kanaGroup ?? .other) == kanaFilter }
+            if let kanafilter {
+                allBooks.filter { ($0.kanaGroup ?? .other) == kanafilter }
             } else {
                 allBooks
             }
 
-        let scored = BookSearchScorer().scoreSearchResults(
-            searchQuery: BookSearchQuery(title: trimmed),
-            books: candidates)
-        
-        var seenTitles = Set<String>()
-        return
-            scored
+        let matchedBooks = BookSearchScorer()
+            .scoreSearchResults(
+                searchQuery: BookSearchQuery(title: searchText),
+                books: candidates
+            )
             .filter { $0.score > 0 }
-            .compactMap { seenTitles.insert($0.book.title).inserted ? $0.book : nil }
-            .prefix(limit)
-            .map { $0 }
+            .map { $0.book }
+        
+        return createSections(from: matchedBooks)
     }
     
     /// 全絵本からBookSectionの配列を作成
