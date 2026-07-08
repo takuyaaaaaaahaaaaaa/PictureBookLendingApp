@@ -23,18 +23,11 @@ struct ClassGroupSelectionContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .onAppear {
-            refreshClassGroups()
-        }
     }
     
     private func handleSelect(_ classGroup: ClassGroup) {
         onSelect(classGroup)
         dismiss()
-    }
-    
-    private func refreshClassGroups() {
-        classGroupModel.refreshClassGroups()
     }
 }
 

@@ -80,9 +80,6 @@ struct ReturnListContainerView: View {
                 popToListAndScrollTop()
             }
         }
-        .onAppear {
-            refreshData()
-        }
         .refreshable {
             refreshData()
         }

@@ -73,9 +73,6 @@ struct ClassGroupListContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .onAppear {
-            classGroupModel.refreshClassGroups()
-        }
     }
     
     // MARK: - Actions

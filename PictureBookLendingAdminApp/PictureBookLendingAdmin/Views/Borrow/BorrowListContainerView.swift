@@ -124,9 +124,6 @@ struct BorrowListContainerView: View {
                 }
             #endif
         }
-        .onAppear {
-            refreshData()
-        }
         .refreshable {
             refreshData()
         }
