@@ -28,6 +28,32 @@ public enum BookSortType: String, CaseIterable, Identifiable {
     }
 }
 
+/// 絵本一覧の表示形式
+public enum BookDisplayMode: String, CaseIterable, Identifiable {
+    case list = "list"
+    case grid = "grid"
+    
+    public var id: String { rawValue }
+    
+    public var displayName: String {
+        switch self {
+        case .list:
+            return "リスト表示"
+        case .grid:
+            return "グリッド表示"
+        }
+    }
+    
+    public var iconName: String {
+        switch self {
+        case .list:
+            return "list.bullet"
+        case .grid:
+            return "square.grid.2x2"
+        }
+    }
+}
+
 /// 絵本セクション情報
 /// 五十音順グループごとの絵本分類を表現
 public struct BookSection: Identifiable, Hashable {
@@ -85,6 +111,8 @@ public struct BookListView<RowAction: View>: View {
     public let scrollToTopTrigger: Int
     /// 選択中のソート方法
     @Binding public var selectedSortType: BookSortType
+    /// 一覧の表示形式（リスト／グリッド）
+    @Binding public var displayMode: BookDisplayMode
     /// 編集モードかどうか
     public let isEditMode: Bool
     /// 絵本編集時の動作
@@ -107,6 +135,7 @@ public struct BookListView<RowAction: View>: View {
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
         scrollToTopTrigger: Int = 0,
         selectedSortType: Binding<BookSortType>,
+        displayMode: Binding<BookDisplayMode>,
         isEditMode: Bool = false,
         onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (Book) -> Void,
@@ -120,6 +149,7 @@ public struct BookListView<RowAction: View>: View {
         self.kanaFilterOptions = kanaFilterOptions
         self.scrollToTopTrigger = scrollToTopTrigger
         self._selectedSortType = selectedSortType
+        self._displayMode = displayMode
         self.isEditMode = isEditMode
         self.onEdit = onEdit
         self.onDelete = onDelete
@@ -136,7 +166,12 @@ public struct BookListView<RowAction: View>: View {
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView
                 } else {
-                    bookListSection
+                    switch displayMode {
+                    case .list:
+                        bookListSection
+                    case .grid:
+                        bookGridSection
+                    }
                 }
             }
             .onChange(of: scrollToTopTrigger) { _, _ in
@@ -205,6 +240,31 @@ public struct BookListView<RowAction: View>: View {
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
             }
+            
+            // 表示形式切替（リスト／グリッド）。アイコンのみでコンパクト幅でも窮屈にならないようにする
+            Menu {
+                ForEach(BookDisplayMode.allCases) { mode in
+                    Button {
+                        displayMode = mode
+                    } label: {
+                        HStack {
+                            Image(systemName: mode.iconName)
+                            Text(mode.displayName)
+                            if displayMode == mode {
+                                Spacer()
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: displayMode.iconName)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(6)
+                    .background(.regularMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
             .padding(.trailing)
         }
     }
@@ -265,6 +325,85 @@ public struct BookListView<RowAction: View>: View {
                             } : nil)
                 }
             }
+        }
+    }
+    
+    /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）
+    private var gridColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: 140), spacing: 16)]
+    }
+    
+    private var bookGridSection: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 24) {
+                ForEach(sections) { section in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(section.title)
+                            .font(.headline)
+                            .padding(.horizontal)
+                        
+                        LazyVGrid(columns: gridColumns, spacing: 16) {
+                            ForEach(section.books) { book in
+                                bookGridCellContent(for: book)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+        }
+    }
+    
+    /// 絵本グリッドセルのコンテンツ
+    ///
+    /// タップ領域（表紙＋タイトル）とrowAction（貸出ボタン等）を縦に分離し、
+    /// ボタン同士のタップ領域が重ならないようにする
+    @ViewBuilder
+    private func bookGridCellContent(for book: Book) -> some View {
+        VStack(spacing: 8) {
+            Group {
+                if isEditMode {
+                    Button {
+                        onEdit(book)
+                    } label: {
+                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                    }
+                    .buttonStyle(.plain)
+                } else if let onSelect {
+                    Button {
+                        onSelect(book)
+                    } label: {
+                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    NavigationLink(value: book) {
+                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                    }
+                }
+            }
+            .overlay(alignment: .topTrailing) {
+                if isEditMode {
+                    Button(role: .destructive) {
+                        onDelete(book)
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .symbolRenderingMode(.palette)
+                            .foregroundStyle(.white, .red)
+                            .font(.title3)
+                    }
+                    .padding(6)
+                }
+            }
+            .contextMenu {
+                if isEditMode {
+                    Button("編集") { onEdit(book) }
+                    Button("削除", role: .destructive) { onDelete(book) }
+                }
+            }
+            
+            rowAction(book)
         }
     }
     
@@ -339,10 +478,55 @@ public struct BookRowView<RowAction: View>: View {
     }
 }
 
+/// 絵本グリッドセルの表紙＋タイトル表示（タップ可能領域）
+///
+/// rowAction（貸出ボタン等）は含まない。タップ領域とアクションボタンの
+/// ジェスチャ競合を避けるため、呼び出し側で別要素として縦に並べる
+private struct BookGridCoverView: View {
+    /// タイトル表示領域の高さ（2行分固定・Dynamic Typeに追従してスケール）。
+    /// lineLimitは最大行数の制限に過ぎず高さは固定しないため、1行タイトルのセルだけ
+    /// 高さが縮んでrowActionの縦位置がずれてしまう問題をこれで防ぐ
+    @ScaledMetric(relativeTo: .subheadline) private var titleHeight: CGFloat = 38
+    
+    let book: Book
+    let imageURL: String?
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            // 表紙画像は縦長・横長どちらでも正方形の枠に揃える（GeometryReaderで
+            // 実際の表示幅を取り、その幅を一辺とした正方形枠の中に.fitで収める。
+            // 画像は切り取らず、枠との差分は背景マテリアルの余白として見せる。
+            // 枠を固定しないと画像の実際の比率によってセルの高さがバラつき、
+            // 同じ行の他のセルとタイトル・rowActionの縦位置がズレてしまうため）
+            GeometryReader { geometry in
+                BookImageView(imageURL: imageURL) {
+                    Image(systemName: "book.closed")
+                        .foregroundStyle(.secondary)
+                        .font(.largeTitle)
+                }
+                .aspectRatio(contentMode: .fit)
+                .frame(width: geometry.size.width, height: geometry.size.width)
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            
+            Text(book.title)
+                .font(.subheadline)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.primary)
+                .frame(height: titleHeight, alignment: .top)
+        }
+        .contentShape(Rectangle())
+    }
+}
+
 #Preview {
     @Previewable @State var searchText = ""
     @Previewable @State var selectedKanaFilter: KanaGroup?
     @Previewable @State var selectedSortType: BookSortType = .title
+    @Previewable @State var displayMode: BookDisplayMode = .list
     
     let book1 = Book(
         title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "は001", kanaGroup: .ha)
@@ -359,6 +543,81 @@ public struct BookRowView<RowAction: View>: View {
             searchText: $searchText,
             selectedKanaFilter: $selectedKanaFilter,
             selectedSortType: $selectedSortType,
+            displayMode: $displayMode,
+            isEditMode: true,
+            onEdit: { _ in },
+            onDelete: { _ in },
+            imageURLProvider: { book in
+                book.displaySmallImageSource
+            }
+        ) { book in
+            RowActionButton(onTap: {})
+        }
+        .navigationTitle("図書一覧")
+    }
+}
+
+#Preview("グリッド表示") {
+    @Previewable @State var searchText = ""
+    @Previewable @State var selectedKanaFilter: KanaGroup?
+    @Previewable @State var selectedSortType: BookSortType = .title
+    @Previewable @State var displayMode: BookDisplayMode = .grid
+    
+    let aBooks = [
+        Book(title: "おおきなかぶ", author: "内田莉莎子", managementNumber: "あ001", kanaGroup: .a),
+        Book(title: "あおくんときいろちゃん", author: "レオ・レオニ", managementNumber: "あ002", kanaGroup: .a),
+        Book(title: "いないいないばあ", author: "松谷みよ子", managementNumber: "あ003", kanaGroup: .a),
+    ]
+    let kaBooks = [
+        Book(title: "ぐりとぐら", author: "中川李枝子", managementNumber: "か001", kanaGroup: .ka),
+        Book(title: "からすのパンやさん", author: "かこさとし", managementNumber: "か002", kanaGroup: .ka),
+        Book(title: "きんぎょがにげた", author: "五味太郎", managementNumber: "か003", kanaGroup: .ka),
+        Book(title: "ぐるんぱのようちえん", author: "西内ミナミ", managementNumber: "か004", kanaGroup: .ka),
+    ]
+    let saBooks = [
+        Book(title: "しろくまちゃんのほっとけーき", author: "わかやまけん", managementNumber: "さ001", kanaGroup: .sa),
+        Book(title: "３びきのやぎのがらがらどん", author: "せたていじ", managementNumber: "さ002", kanaGroup: .sa),
+        Book(title: "そらまめくんのベッド", author: "なかやみわ", managementNumber: "さ003", kanaGroup: .sa),
+    ]
+    let taBooks = [
+        Book(title: "だいくとおにろく", author: "松居直", managementNumber: "た001", kanaGroup: .ta),
+        Book(title: "てぶくろ", author: "エウゲーニー・M・ラチョフ", managementNumber: "た002", kanaGroup: .ta),
+    ]
+    let haBooks = [
+        Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "は001", kanaGroup: .ha),
+        Book(title: "ぴっぽのたび", author: "駒形克己", managementNumber: "は002", kanaGroup: .ha),
+        Book(title: "ぶたやまさんたら", author: "土田義晴", managementNumber: "は003", kanaGroup: .ha),
+    ]
+    let maBooks = [
+        Book(title: "もこもこもこ", author: "谷川俊太郎", managementNumber: "ま001", kanaGroup: .ma),
+        Book(title: "みんなうんち", author: "五味太郎", managementNumber: "ま002", kanaGroup: .ma),
+    ]
+    let yaBooks = [
+        Book(title: "ゆかいなかえる", author: "松岡享子", managementNumber: "や001", kanaGroup: .ya)
+    ]
+    let raBooks = [
+        Book(title: "ろくべえまってろよ", author: "灰谷健次郎", managementNumber: "ら001", kanaGroup: .ra),
+        Book(title: "らいおんとねずみ", author: "いそっぷ", managementNumber: "ら002", kanaGroup: .ra),
+    ]
+    
+    let sections = [
+        BookSection(kanaGroup: .a, books: aBooks),
+        BookSection(kanaGroup: .ka, books: kaBooks),
+        BookSection(kanaGroup: .sa, books: saBooks),
+        BookSection(kanaGroup: .ta, books: taBooks),
+        BookSection(kanaGroup: .ha, books: haBooks),
+        BookSection(kanaGroup: .ma, books: maBooks),
+        BookSection(kanaGroup: .ya, books: yaBooks),
+        BookSection(kanaGroup: .ra, books: raBooks),
+    ]
+    
+    NavigationStack {
+        BookListView(
+            sections: sections,
+            searchText: $searchText,
+            selectedKanaFilter: $selectedKanaFilter,
+            selectedSortType: $selectedSortType,
+            displayMode: $displayMode,
             isEditMode: true,
             onEdit: { _ in },
             onDelete: { _ in },

@@ -38,6 +38,7 @@ struct BorrowListContainerView: View {
     /// 図書一覧をトップへ戻すトリガ（貸出完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
+    @State private var displayMode: BookDisplayMode = .grid
     /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
     @State private var bookSectionsState: BookSectionsState = .init(books: [])
     @State private var alertState = AlertState()
@@ -77,6 +78,7 @@ struct BorrowListContainerView: View {
                 // 貸出完了ごとに一覧を先頭へ戻す（次の貸出への引き継ぎ）
                 scrollToTopTrigger: scrollToTopTrigger,
                 selectedSortType: $selectedSortType,
+                displayMode: $displayMode,
                 onEdit: { _ in },
                 onDelete: { _ in },
                 onSelect: openBorrowSheet(for:),

@@ -18,6 +18,9 @@ struct SettingsBookListContainerView: View {
     @State private var isEditMode = false
     @State private var alertState = AlertState()
     @State private var selectedSortType: BookSortType = .title
+    /// 管理業務では著者・管理番号・貸出状況の情報密度が必要なためリストを既定にする
+    /// （貸出タブは実物の表紙との照合が主タスクなのでグリッド既定。使い分けの経緯はissue #179）
+    @State private var displayMode: BookDisplayMode = .list
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
     @State private var bookSectionsState: BookSectionsState = .init(books: [])
     
@@ -30,6 +33,7 @@ struct SettingsBookListContainerView: View {
             searchText: searchTextBinding,
             selectedKanaFilter: kanaFilterBinding,
             selectedSortType: $selectedSortType,
+            displayMode: $displayMode,
             isEditMode: isEditMode,
             onEdit: handleEditBook,
             onDelete: handleDeleteBook,
