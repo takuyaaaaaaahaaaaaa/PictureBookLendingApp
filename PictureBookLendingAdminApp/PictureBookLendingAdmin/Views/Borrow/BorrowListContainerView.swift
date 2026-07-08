@@ -242,7 +242,6 @@ struct BorrowListContainerView: View {
                     }
                     
                     FamilyLoanSlotsContainerView(
-                        alertState: $alertState,
                         undoFeedback: $undoFeedback,
                         userId: route.userId,
                         context: .borrowing(onSlotSelected: { slotUserId in
