@@ -34,8 +34,6 @@ struct BorrowListContainerView: View {
     /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
     @State private var selectedClassGroupId: UUID?
     @State private var searchText = ""
-    /// サジェスト候補算出用にデバウンスした検索テキスト（一覧の絞り込み自体は即時のsearchTextを使う）
-    @State private var debouncedSearchText = ""
     @State private var selectedKanaFilter: KanaGroup?
     @State private var selectedSortType: BookSortType = .title
     /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
@@ -97,20 +95,14 @@ struct BorrowListContainerView: View {
                 }
             }
             .navigationTitle("貸出")
-            .bookSearchable(
-                text: $searchText,
-                suggestions: bookSectionsState.suggestions(
-                    for: debouncedSearchText, kanaFilter: selectedKanaFilter)
-            )
-            .task(id: searchText) {
-                do {
-                    try await Task.sleep(for: .milliseconds(300))
-                    debouncedSearchText = searchText
-                } catch {
-                    // キャンセル（新しい入力があった）ので何もしない
-                    return
-                }
-            }
+            #if os(iOS)
+                .searchable(
+                    text: $searchText,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "図書のタイトルまたは著者で検索")
+            #else
+                .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
+            #endif
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("設定", systemImage: "gearshape") {
