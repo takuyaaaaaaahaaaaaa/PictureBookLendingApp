@@ -65,6 +65,10 @@ private enum Layout {
 /// 五十音チップによる絞り込みとセクション表示に対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
+    #if os(iOS)
+        /// 水平サイズクラス（かなチップの表示可否の判定に使用）
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
     
@@ -147,20 +151,26 @@ public struct BookListView<RowAction: View>: View {
     
     // MARK: - Private Views
     
+    /// かなチップを表示できる幅があるか
+    ///
+    /// 幅が確保できない環境（iPhoneやiPadの狭いSplit View＝compact）では
+    /// チップを出さず、検索を主動線とする。macOSは常に表示する
+    private var isKanaChipsVisible: Bool {
+        #if os(iOS)
+            horizontalSizeClass == .regular
+        #else
+            true
+        #endif
+    }
+    
     /// 五十音チップ（タップでそのかなグループに絞り込み・再タップで解除）＋ソート選択メニュー
     private var kanaFilterSection: some View {
         HStack {
-            ScrollView(.horizontal) {
-                HStack {
-                    ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
-                        Button(kanaGroup.displayName) {
-                            handleChipTap(kanaGroup: kanaGroup)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
-                    }
+            if isKanaChipsVisible {
+                ScrollView(.horizontal) {
+                    kanaChips
+                        .padding(.leading)
                 }
-                .padding(.leading)
             }
             
             Spacer()
@@ -196,6 +206,19 @@ public struct BookListView<RowAction: View>: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6))
             }
             .padding(.trailing)
+        }
+    }
+    
+    /// 五十音チップの並び
+    private var kanaChips: some View {
+        HStack {
+            ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
+                Button(kanaGroup.displayName) {
+                    handleChipTap(kanaGroup: kanaGroup)
+                }
+                .buttonStyle(.bordered)
+                .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
+            }
         }
     }
     
