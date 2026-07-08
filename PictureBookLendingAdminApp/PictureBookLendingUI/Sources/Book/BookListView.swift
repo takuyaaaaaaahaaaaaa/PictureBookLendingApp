@@ -47,12 +47,28 @@ public struct BookSection: Identifiable, Hashable {
     }
 }
 
+/// BookListViewのレイアウト定数
+///
+/// BookListViewはジェネリック構造体のため、static storedプロパティを
+/// ネストして持てない（"static stored properties not supported in generic types"）。
+/// そのためファイルスコープに切り出す
+private enum Layout {
+    /// 先頭へ戻すときの着地アンカー。上端(y:0)より少し下げて、
+    /// 先頭行の上にあるセクション見出しが視界に入るようにする
+    static let listTopAnchor = UnitPoint(x: 0.5, y: 0.06)
+}
+
 /// 絵本一覧のPresentation View
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-/// 五十音フィルターとセクション表示に対応
+/// 五十音チップによる絞り込みとセクション表示に対応し、
+/// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
+    #if os(iOS)
+        /// 水平サイズクラス（かなチップの表示可否の判定に使用）
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
     
@@ -60,10 +76,13 @@ public struct BookListView<RowAction: View>: View {
     public let sections: [BookSection]
     /// 検索テキスト
     @Binding public var searchText: String
-    /// 選択中の五十音フィルタ
+    /// 選択中の五十音フィルタ（そのかなグループだけに絞り込む・再タップで解除）
     @Binding public var selectedKanaFilter: KanaGroup?
     /// 五十音フィルタの選択肢
     public let kanaFilterOptions: [KanaGroup]
+    /// 一覧を先頭へ戻すトリガ。値がインクリメントされると先頭行までスクロールする。
+    /// 五十音チップの挙動とは独立しており、貸出完了後のリセット等から使う
+    public let scrollToTopTrigger: Int
     /// 選択中のソート方法
     @Binding public var selectedSortType: BookSortType
     /// 編集モードかどうか
@@ -86,6 +105,7 @@ public struct BookListView<RowAction: View>: View {
         searchText: Binding<String>,
         selectedKanaFilter: Binding<KanaGroup?>,
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
+        scrollToTopTrigger: Int = 0,
         selectedSortType: Binding<BookSortType>,
         isEditMode: Bool = false,
         onEdit: @escaping (Book) -> Void,
@@ -98,6 +118,7 @@ public struct BookListView<RowAction: View>: View {
         self._searchText = searchText
         self._selectedKanaFilter = selectedKanaFilter
         self.kanaFilterOptions = kanaFilterOptions
+        self.scrollToTopTrigger = scrollToTopTrigger
         self._selectedSortType = selectedSortType
         self.isEditMode = isEditMode
         self.onEdit = onEdit
@@ -108,38 +129,48 @@ public struct BookListView<RowAction: View>: View {
     }
     
     public var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            kanaFilterSection
-            
-            if sections.allSatisfy({ $0.books.isEmpty }) {
-                emptyStateView
-            } else {
-                bookListSection
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: 5) {
+                kanaFilterSection
+                
+                if sections.allSatisfy({ $0.books.isEmpty }) {
+                    emptyStateView
+                } else {
+                    bookListSection
+                }
+            }
+            .onChange(of: scrollToTopTrigger) { _, _ in
+                // 貸出完了後の「次の貸出への引き継ぎ」：一覧を先頭へ戻す
+                guard let firstBookId = sections.first?.books.first?.id else { return }
+                withAnimation {
+                    proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
+                }
             }
         }
     }
     
     // MARK: - Private Views
     
-    /// 五十音フィルター
+    /// かなチップを表示できる幅があるか
+    ///
+    /// 幅が確保できない環境（iPhoneやiPadの狭いSplit View＝compact）では
+    /// チップを出さず、検索を主動線とする。macOSは常に表示する
+    private var isKanaChipsVisible: Bool {
+        #if os(iOS)
+            horizontalSizeClass == .regular
+        #else
+            true
+        #endif
+    }
+    
+    /// 五十音チップ（タップでそのかなグループに絞り込み・再タップで解除）＋ソート選択メニュー
     private var kanaFilterSection: some View {
         HStack {
-            ScrollView(.horizontal) {
-                HStack {
-                    ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
-                        Button(kanaGroup.displayName) {
-                            // 未選択の場合は選択、選択中の場合は解除
-                            if selectedKanaFilter == kanaGroup {
-                                selectedKanaFilter = nil
-                            } else {
-                                selectedKanaFilter = kanaGroup
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
-                    }
+            if isKanaChipsVisible {
+                ScrollView(.horizontal) {
+                    kanaChips
+                        .padding(.leading)
                 }
-                .padding(.leading)
             }
             
             Spacer()
@@ -176,6 +207,27 @@ public struct BookListView<RowAction: View>: View {
             }
             .padding(.trailing)
         }
+    }
+    
+    /// 五十音チップの並び
+    private var kanaChips: some View {
+        HStack {
+            ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
+                Button(kanaGroup.displayName) {
+                    handleChipTap(kanaGroup: kanaGroup)
+                }
+                .buttonStyle(.bordered)
+                .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
+            }
+        }
+    }
+    
+    /// 五十音チップのタップ処理（絞り込みトグル）
+    ///
+    /// 未選択なら選択、選択中なら解除する。検索との排他（選択時に検索欄をクリアする等）は
+    /// バインディング経由でContainer側のStateが担う
+    private func handleChipTap(kanaGroup: KanaGroup) {
+        selectedKanaFilter = selectedKanaFilter == kanaGroup ? nil : kanaGroup
     }
     
     private var emptyStateView: some View {
