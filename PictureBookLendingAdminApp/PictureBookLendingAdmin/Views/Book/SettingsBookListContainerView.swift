@@ -90,10 +90,6 @@ struct SettingsBookListContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .onAppear {
-            bookModel.refreshBooks()
-            loanModel.refreshLoans()
-        }
         .refreshable {
             bookModel.refreshBooks()
             loanModel.refreshLoans()
