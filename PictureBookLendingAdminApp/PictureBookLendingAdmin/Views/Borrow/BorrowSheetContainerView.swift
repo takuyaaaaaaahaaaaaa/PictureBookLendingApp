@@ -82,8 +82,10 @@ struct BorrowSheetContainerView: View {
             }
         }
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
-        // 絵本管理の貸出フォームと同じ作法）
-        .interactiveDismissDisabled()
+        // 絵本管理の貸出フォームと同じ作法）。
+        // ただし「貸出中です」の案内だけの画面は入力途中のタスクがなく、
+        // すぐ閉じてよい画面なのでスワイプでの閉じるを許可する
+        .interactiveDismissDisabled(!context.isAlreadyLent)
     }
     
     // MARK: - Private Views
