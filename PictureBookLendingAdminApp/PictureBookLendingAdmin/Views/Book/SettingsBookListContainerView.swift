@@ -21,12 +21,10 @@ struct SettingsBookListContainerView: View {
     /// 管理業務では著者・管理番号・貸出状況の情報密度が必要なためリストを既定にする
     /// （貸出タブは実物の表紙との照合が主タスクなのでグリッド既定。使い分けの経緯はissue #179）
     @State private var displayMode: BookDisplayMode = .list
-    /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
-    @State private var bookSectionsState: BookSectionsState = .init(books: [])
     
     var body: some View {
         BookListView(
-            sections: bookSectionsState.filter(
+            sections: bookSections.filter(
                 searchText: filterState.searchText,
                 kanafilter: filterState.selectedKanaFilter,
                 sortType: selectedSortType),
@@ -92,22 +90,24 @@ struct SettingsBookListContainerView: View {
         } message: {
             Text(alertState.message)
         }
-        .onChange(of: bookModel.books) {
-            loadBookSections()
-        }
         .onAppear {
             bookModel.refreshBooks()
             loanModel.refreshLoans()
-            loadBookSections()
         }
         .refreshable {
             bookModel.refreshBooks()
             loanModel.refreshLoans()
-            loadBookSections()
         }
     }
     
     // MARK: - Computed Properties
+    
+    /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
+    ///
+    /// `bookModel.books`から都度導出する。値型なので手動同期（onChange/onAppear）は不要。
+    private var bookSections: BookSections {
+        BookSections(books: bookModel.books)
+    }
     
     /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var searchTextBinding: Binding<String> {
@@ -126,11 +126,6 @@ struct SettingsBookListContainerView: View {
     }
     
     // MARK: - Actions
-    
-    /// 絵本データから基本セクションを作成・更新
-    private func loadBookSections() {
-        bookSectionsState = BookSectionsState(books: bookModel.books)
-    }
     
     private func handleEditBook(_ book: Book) {
         editingBook = book
