@@ -80,9 +80,6 @@ struct ReturnListContainerView: View {
                 popToListAndScrollTop()
             }
         }
-        .onAppear {
-            refreshData()
-        }
         .refreshable {
             refreshData()
         }
@@ -94,7 +91,6 @@ struct ReturnListContainerView: View {
     private func familyScreen(for userId: UUID) -> some View {
         ScrollView {
             FamilyLoanSlotsContainerView(
-                alertState: $alertState,
                 undoFeedback: $undoFeedback,
                 userId: userId,
                 context: .returning(onReturnCompleted: handleReturnCompleted(hasRemainingLoans:))

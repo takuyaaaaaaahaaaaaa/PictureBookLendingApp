@@ -107,9 +107,6 @@ struct UserListContainerView: View {
         } message: {
             Text(deleteConfirmationState.message)
         }
-        .onAppear {
-            userModel.refreshUsers()
-        }
         .refreshable {
             userModel.refreshUsers()
         }
