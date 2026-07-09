@@ -1,32 +1,31 @@
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
-import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
 
 /// 絵本自動入力ボタンのContainer View
 ///
-/// RegisterModelを使用してビジネスロジックを処理し、
+/// BookRegisterViewModelを使用してビジネスロジックを処理し、
 /// BookAutoFillButtonに状態とアクションを提供します。
 struct BookAutoFillContainerButton: View {
     @Binding var targetBook: Book
     let onAutoFillComplete: (Book) -> Void
     
-    @State private var registerModel: RegisterModel
+    @State private var registerViewModel: BookRegisterViewModel
     @State private var isResultSheetPresented = false
     
     init(targetBook: Binding<Book>, onAutoFillComplete: @escaping (Book) -> Void) {
         self._targetBook = targetBook
         self.onAutoFillComplete = onAutoFillComplete
         
-        // RegisterModelを初期化
+        // BookRegisterViewModelを初期化
         let repositoryFactory = SwiftDataRepositoryFactory.shared
         let gateway = repositoryFactory.makeBookSearchGateway()
         let normalizer = GoogleBooksOptimizedNormalizer()
         let repository = repositoryFactory.makeBookRepository()
         
-        self._registerModel = State(
-            initialValue: RegisterModel(
+        self._registerViewModel = State(
+            initialValue: BookRegisterViewModel(
                 gateway: gateway,
                 normalizer: normalizer,
                 repository: repository
@@ -36,15 +35,15 @@ struct BookAutoFillContainerButton: View {
     
     var body: some View {
         BookAutoFillButton(
-            isSearching: registerModel.isSearching,
-            searchError: registerModel.searchError,
+            isSearching: registerViewModel.isSearching,
+            searchError: registerViewModel.searchError,
             onSearch: handleSearch
         )
         .sheet(isPresented: $isResultSheetPresented) {
             searchResultsSheet
                 .interactiveDismissDisabled()  // スワイプで閉じないように
         }
-        .onChange(of: registerModel.searchResults) { _, newResults in
+        .onChange(of: registerViewModel.searchResults) { _, newResults in
             if !newResults.isEmpty {
                 isResultSheetPresented = true
             }
@@ -54,11 +53,11 @@ struct BookAutoFillContainerButton: View {
     @ViewBuilder
     private var searchResultsSheet: some View {
         BookSearchResultsView(
-            searchResults: registerModel.searchResults,
+            searchResults: registerViewModel.searchResults,
             onBookSelect: selectBook,
             onCancel: {
                 isResultSheetPresented = false
-                registerModel.clearSearchResults()
+                registerViewModel.clearSearchResults()
             }
         )
     }
@@ -67,13 +66,13 @@ struct BookAutoFillContainerButton: View {
     
     private func handleSearch() {
         // BookFormViewのタイトルと著者名を使用して検索
-        registerModel.searchTitle = targetBook.title
-        registerModel.searchAuthor = targetBook.author ?? ""
+        registerViewModel.searchTitle = targetBook.title
+        registerViewModel.searchAuthor = targetBook.author ?? ""
         
         do {
-            try registerModel.searchBooks()
+            try registerViewModel.searchBooks()
         } catch {
-            // エラーはregisterModel.searchErrorに設定される
+            // エラーはregisterViewModel.searchErrorに設定される
         }
     }
     
@@ -100,7 +99,7 @@ struct BookAutoFillContainerButton: View {
         
         // UI状態をリセット
         isResultSheetPresented = false
-        registerModel.clearSearchResults()
+        registerViewModel.clearSearchResults()
     }
 }
 
