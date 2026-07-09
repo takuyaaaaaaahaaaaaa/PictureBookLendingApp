@@ -5,15 +5,18 @@ import XCTest
 
 final class LoanFormatterTests: XCTestCase {
     
-    /// 2026年6月20日（土）12:00 JST の Date を生成する
+    /// 2026年6月20日（土）12:00 の Date を生成する
+    ///
+    /// `dueDateText` は実行環境の現在タイムゾーンで整形されるため、
+    /// 期待値と日付がズレないよう現在のタイムゾーンで組み立てる
+    /// （JST固定にするとCI（米国太平洋時間）で6月19日(金)に整形されて失敗する）
     private func makeDate() -> Date {
         var components = DateComponents()
         components.year = 2026
         components.month = 6
         components.day = 20
         components.hour = 12
-        var calendar = Calendar(identifier: .gregorian)
-        calendar.timeZone = TimeZone(identifier: "Asia/Tokyo")!
+        let calendar = Calendar(identifier: .gregorian)
         return calendar.date(from: components)!
     }
     
