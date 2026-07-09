@@ -180,6 +180,21 @@ public final class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @
     }
 }
 
+/// テスト用のモック図書画像リポジトリ
+public final class MockImageStorageRepository: ImageStorageRepositoryProtocol, @unchecked Sendable {
+    private var images: [String: Data] = [:]
+    
+    public init() {}
+    
+    public func loadImageData(fileName: String) -> Data? {
+        images[fileName]
+    }
+    
+    public func saveImageData(_ data: Data, fileName: String) throws {
+        images[fileName] = data
+    }
+}
+
 /// テスト用のモックリポジトリファクトリ
 public final class MockRepositoryFactory: RepositoryFactory {
     public let bookRepository = MockBookRepository()
@@ -187,6 +202,7 @@ public final class MockRepositoryFactory: RepositoryFactory {
     public let loanRepository = MockLoanRepository()
     public let classGroupRepository = MockClassGroupRepository()
     public let loanSettingsRepository = MockLoanSettingsRepository()
+    public let imageStorageRepository = MockImageStorageRepository()
     
     public init() {}
     
@@ -208,6 +224,10 @@ public final class MockRepositoryFactory: RepositoryFactory {
     
     public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
         return loanSettingsRepository
+    }
+    
+    public func makeImageStorageRepository() -> ImageStorageRepositoryProtocol {
+        return imageStorageRepository
     }
     
     public func makeBookSearchGateway() -> BookSearchGatewayProtocol {

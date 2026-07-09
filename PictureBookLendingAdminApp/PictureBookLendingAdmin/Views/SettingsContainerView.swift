@@ -3,6 +3,7 @@ import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// 設定画面のコンテナビュー
 /// 管理者用の図書・利用者・組管理機能を提供します
@@ -12,6 +13,7 @@ struct SettingsContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
+    @Environment(BackupModel.self) private var backupModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     
@@ -23,6 +25,11 @@ struct SettingsContainerView: View {
     @State private var isParentFeedbackQRCodeSheetPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
+    @State private var isBackupExporterPresented = false
+    @State private var isBackupImporterPresented = false
+    @State private var isRestoreConfirmationPresented = false
+    @State private var backupExportDocument: BackupDocument?
+    @State private var pendingRestoreSnapshot: BackupSnapshot?
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -58,6 +65,12 @@ struct SettingsContainerView: View {
                 },
                 onSelectParentFeedbackQRCode: {
                     isParentFeedbackQRCodeSheetPresented = true
+                },
+                onSelectBackupExport: {
+                    handleBackupExport()
+                },
+                onSelectBackupImport: {
+                    isBackupImporterPresented = true
                 }
             )
             .navigationTitle("設定")
@@ -127,10 +140,34 @@ struct SettingsContainerView: View {
             } message: {
                 Text("すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。")
             }
+            .alert("復元の確認", isPresented: $isRestoreConfirmationPresented) {
+                Button("復元", role: .destructive) {
+                    handleBackupImportConfirmed()
+                }
+                Button("キャンセル", role: .cancel) {
+                    pendingRestoreSnapshot = nil
+                }
+            } message: {
+                Text("現在の利用者・図書・貸出記録・貸出設定はすべて削除され、バックアップファイルの内容に置き換わります。この操作は元に戻せません。")
+            }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(alertState.message)
+            }
+            .fileExporter(
+                isPresented: $isBackupExporterPresented,
+                document: backupExportDocument,
+                contentType: .json,
+                defaultFilename: "picture-book-lending-backup"
+            ) { result in
+                handleBackupExportResult(result)
+            }
+            .fileImporter(
+                isPresented: $isBackupImporterPresented,
+                allowedContentTypes: [.json]
+            ) { result in
+                handleBackupImportSelection(result)
             }
         }
     }
@@ -274,6 +311,77 @@ struct SettingsContainerView: View {
         }
     }
     
+    private func handleBackupExport() {
+        do {
+            let snapshot = try backupModel.createSnapshot()
+            backupExportDocument = BackupDocument(snapshot: snapshot)
+            isBackupExporterPresented = true
+        } catch {
+            alertState = .error("バックアップの作成に失敗しました", message: "\(error.localizedDescription)")
+        }
+    }
+    
+    private func handleBackupExportResult(_ result: Result<URL, Error>) {
+        switch result {
+        case .success:
+            alertState = .info("バックアップの書き出しが完了しました")
+        case .failure(let error):
+            alertState = .error("バックアップの書き出しに失敗しました", message: "\(error.localizedDescription)")
+        }
+        backupExportDocument = nil
+    }
+    
+    private func handleBackupImportSelection(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                let snapshot = try loadBackupSnapshot(from: url)
+                pendingRestoreSnapshot = snapshot
+                isRestoreConfirmationPresented = true
+            } catch {
+                alertState = .error(
+                    "バックアップファイルの読み込みに失敗しました", message: "\(error.localizedDescription)")
+            }
+        case .failure(let error):
+            alertState = .error("バックアップファイルの選択に失敗しました", message: "\(error.localizedDescription)")
+        }
+    }
+    
+    private func loadBackupSnapshot(from url: URL) throws -> BackupSnapshot {
+        guard url.startAccessingSecurityScopedResource() else {
+            throw CocoaError(.fileReadNoPermission)
+        }
+        defer { url.stopAccessingSecurityScopedResource() }
+        
+        let data = try Data(contentsOf: url)
+        return try BackupDocument.decoder.decode(BackupSnapshot.self, from: data)
+    }
+    
+    private func handleBackupImportConfirmed() {
+        guard let snapshot = pendingRestoreSnapshot else { return }
+        pendingRestoreSnapshot = nil
+        
+        do {
+            let summary = try backupModel.restore(from: snapshot)
+            
+            // 各Modelのキャッシュをリポジトリの最新状態に合わせる
+            // （復元は全件置き換えのため、削除分も反映される全件再読み込みを使う）
+            classGroupModel.refreshClassGroups()
+            userModel.refreshUsers()
+            bookModel.refreshBooks()
+            loanModel.reloadAllLoans()
+            loanSettingsModel.reload()
+            
+            alertState = .info(
+                "復元が完了しました",
+                message:
+                    "組: \(summary.classGroupCount)件 / 利用者: \(summary.userCount)人 / 図書: \(summary.bookCount)冊 / 貸出記録: \(summary.loanCount)件"
+            )
+        } catch {
+            alertState = .error("データの復元に失敗しました", message: "\(error.localizedDescription)")
+        }
+    }
+    
     private enum SettingsDestination: Hashable {
         case user
         case userList(UUID)
@@ -297,4 +405,13 @@ struct SettingsContainerView: View {
             )
         )
         .environment(LoanSettingsModel(repository: mockFactory.loanSettingsRepository))
+        .environment(
+            BackupModel(
+                bookRepository: mockFactory.bookRepository,
+                userRepository: mockFactory.userRepository,
+                classGroupRepository: mockFactory.classGroupRepository,
+                loanRepository: mockFactory.loanRepository,
+                loanSettingsRepository: mockFactory.loanSettingsRepository,
+                imageStorageRepository: mockFactory.imageStorageRepository
+            ))
 }

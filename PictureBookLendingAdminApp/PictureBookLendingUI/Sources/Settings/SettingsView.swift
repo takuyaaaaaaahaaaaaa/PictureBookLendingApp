@@ -19,6 +19,8 @@ public struct SettingsView: View {
     let onSelectDeviceReset: () -> Void
     let onSelectFeedback: () -> Void
     let onSelectParentFeedbackQRCode: () -> Void
+    let onSelectBackupExport: () -> Void
+    let onSelectBackupImport: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -34,7 +36,9 @@ public struct SettingsView: View {
         onPromoteToNextYear: @escaping () -> Void,
         onSelectDeviceReset: @escaping () -> Void,
         onSelectFeedback: @escaping () -> Void,
-        onSelectParentFeedbackQRCode: @escaping () -> Void
+        onSelectParentFeedbackQRCode: @escaping () -> Void,
+        onSelectBackupExport: @escaping () -> Void,
+        onSelectBackupImport: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -50,109 +54,138 @@ public struct SettingsView: View {
         self.onSelectDeviceReset = onSelectDeviceReset
         self.onSelectFeedback = onSelectFeedback
         self.onSelectParentFeedbackQRCode = onSelectParentFeedbackQRCode
+        self.onSelectBackupExport = onSelectBackupExport
+        self.onSelectBackupImport = onSelectBackupImport
     }
     
     public var body: some View {
-        VStack(spacing: 16) {
-            SettingsMenuItem(
-                iconName: "person",
-                title: "利用者管理",
-                subtitle: "\(classGroupCount)組・\(userCount)人登録済み",
-                action: onSelectUser
-            )
-            
-            SettingsMenuItem(
-                iconName: "book",
-                title: "図書管理",
-                subtitle: "\(bookCount)冊登録済み",
-                action: onSelectBook
-            )
-            
-            SettingsMenuItem(
-                iconName: "clock",
-                title: "貸出設定",
-                subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
-                action: onSelectLoanSettings,
-                showChevron: false
-            )
-            
-            Divider()
-                .padding(.vertical, 8)
-            
-            // お試し機能セクション
-            VStack(alignment: .leading, spacing: 8) {
-                Text("お試し機能")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
-                
+        ScrollView {
+            VStack(spacing: 16) {
                 SettingsMenuItem(
-                    iconName: "person.2.badge.plus",
-                    title: "全園児に保護者を作成",
-                    subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
-                    action: onCreateGuardiansForAllChildren,
-                    showChevron: false
+                    iconName: "person",
+                    title: "利用者管理",
+                    subtitle: "\(classGroupCount)組・\(userCount)人登録済み",
+                    action: onSelectUser
                 )
                 
                 SettingsMenuItem(
-                    iconName: "books.vertical",
-                    title: "図書一括登録",
-                    subtitle: "CSVファイルから複数の図書を一括登録",
-                    action: onSelectBookBulkRegistration,
-                    showChevron: false
+                    iconName: "book",
+                    title: "図書管理",
+                    subtitle: "\(bookCount)冊登録済み",
+                    action: onSelectBook
                 )
                 
                 SettingsMenuItem(
-                    iconName: "graduationcap",
-                    title: "進級処理",
-                    subtitle: "年度変更時に園児を次の年齢区分に進級（5歳児は卒業として削除）",
-                    action: onPromoteToNextYear,
+                    iconName: "clock",
+                    title: "貸出設定",
+                    subtitle: "貸出期間：\(loanPeriodDays)日 / 一人\(maxBooksPerUser)冊まで貸出可能",
+                    action: onSelectLoanSettings,
+                    showChevron: false
+                )
+                
+                Divider()
+                    .padding(.vertical, 8)
+                
+                // お試し機能セクション
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("お試し機能")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                    
+                    SettingsMenuItem(
+                        iconName: "person.2.badge.plus",
+                        title: "全園児に保護者を作成",
+                        subtitle: "現在登録中の園児すべてに対して保護者を自動作成",
+                        action: onCreateGuardiansForAllChildren,
+                        showChevron: false
+                    )
+                    
+                    SettingsMenuItem(
+                        iconName: "books.vertical",
+                        title: "図書一括登録",
+                        subtitle: "CSVファイルから複数の図書を一括登録",
+                        action: onSelectBookBulkRegistration,
+                        showChevron: false
+                    )
+                    
+                    SettingsMenuItem(
+                        iconName: "graduationcap",
+                        title: "進級処理",
+                        subtitle: "年度変更時に園児を次の年齢区分に進級（5歳児は卒業として削除）",
+                        action: onPromoteToNextYear,
+                        showChevron: false
+                    )
+                }
+                
+                Divider()
+                    .padding(.vertical, 8)
+                
+                // サポートセクション
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("サポート")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                    
+                    SettingsMenuItem(
+                        iconName: "envelope",
+                        title: "不具合・ご要望を報告",
+                        subtitle: "報告フォームを開きます",
+                        action: onSelectFeedback,
+                        showChevron: false
+                    )
+                    
+                    SettingsMenuItem(
+                        iconName: "qrcode",
+                        title: "保護者向けQRコードを表示",
+                        subtitle: "掲示・印刷して保護者からの報告を受け付けます",
+                        action: onSelectParentFeedbackQRCode,
+                        showChevron: false
+                    )
+                }
+                
+                Divider()
+                    .padding(.vertical, 8)
+                
+                // データ引き継ぎセクション
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("データ引き継ぎ")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal)
+                    
+                    SettingsMenuItem(
+                        iconName: "square.and.arrow.up",
+                        title: "バックアップを書き出す",
+                        subtitle: "図書・利用者・貸出記録などをファイルに保存",
+                        action: onSelectBackupExport,
+                        showChevron: false
+                    )
+                    
+                    SettingsMenuItem(
+                        iconName: "square.and.arrow.down",
+                        title: "バックアップから復元する",
+                        subtitle: "書き出したファイルから全データを復元（既存データは置き換わります）",
+                        action: onSelectBackupImport,
+                        showChevron: false
+                    )
+                }
+                
+                Divider()
+                    .padding(.vertical, 8)
+                
+                SettingsMenuItem(
+                    iconName: "trash.circle",
+                    title: "端末初期化",
+                    subtitle: "利用者・図書・貸出記録のデータを削除",
+                    action: onSelectDeviceReset,
+                    style: .destructive,
                     showChevron: false
                 )
             }
-            
-            Divider()
-                .padding(.vertical, 8)
-            
-            // サポートセクション
-            VStack(alignment: .leading, spacing: 8) {
-                Text("サポート")
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
-                
-                SettingsMenuItem(
-                    iconName: "envelope",
-                    title: "不具合・ご要望を報告",
-                    subtitle: "報告フォームを開きます",
-                    action: onSelectFeedback,
-                    showChevron: false
-                )
-                
-                SettingsMenuItem(
-                    iconName: "qrcode",
-                    title: "保護者向けQRコードを表示",
-                    subtitle: "掲示・印刷して保護者からの報告を受け付けます",
-                    action: onSelectParentFeedbackQRCode,
-                    showChevron: false
-                )
-            }
-            
-            Divider()
-                .padding(.vertical, 8)
-            
-            SettingsMenuItem(
-                iconName: "trash.circle",
-                title: "端末初期化",
-                subtitle: "利用者・図書・貸出記録のデータを削除",
-                action: onSelectDeviceReset,
-                style: .destructive,
-                showChevron: false
-            )
-            
-            Spacer()
+            .padding()
         }
-        .padding()
         .background(.regularMaterial)
     }
 }
@@ -243,7 +276,9 @@ private struct SettingsMenuItem: View {
             onPromoteToNextYear: {},
             onSelectDeviceReset: {},
             onSelectFeedback: {},
-            onSelectParentFeedbackQRCode: {}
+            onSelectParentFeedbackQRCode: {},
+            onSelectBackupExport: {},
+            onSelectBackupImport: {}
         )
         .navigationTitle("設定")
     }

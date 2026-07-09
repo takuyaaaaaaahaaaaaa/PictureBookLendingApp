@@ -294,6 +294,18 @@ public class LoanModel {
         refreshActiveLoans()
     }
     
+    /// キャッシュをリポジトリの内容で完全に置き換える
+    ///
+    /// `refreshLoans()` と異なり、リポジトリから削除された貸出情報もキャッシュから除去します。
+    /// バックアップ復元など、リポジトリの内容が丸ごと入れ替わった直後の同期に使用します。
+    public func reloadAllLoans() {
+        do {
+            loans = try repository.fetchAll()
+        } catch {
+            print("貸出情報の再読み込みに失敗しました: \(error)")
+        }
+    }
+    
     /// 貸出中の貸出情報を最新の状態に更新
     private func refreshActiveLoans() {
         do {

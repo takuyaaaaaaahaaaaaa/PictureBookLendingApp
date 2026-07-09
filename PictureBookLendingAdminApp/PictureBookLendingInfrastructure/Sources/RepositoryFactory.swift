@@ -23,6 +23,9 @@ public protocol RepositoryFactory {
     /// 貸出設定リポジトリを生成
     func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol
     
+    /// 図書画像リポジトリを生成
+    func makeImageStorageRepository() -> ImageStorageRepositoryProtocol
+    
     /// 書籍検索ゲートウェイを生成
     func makeBookSearchGateway() -> BookSearchGatewayProtocol
 }
@@ -125,6 +128,13 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
     /// - Returns: LoanSettingsRepositoryProtocolのインスタンス
     public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
         UserDefaultsLoanSettingsRepository()
+    }
+    
+    /// 図書画像リポジトリのインスタンスを生成
+    ///
+    /// - Returns: ImageStorageRepositoryProtocolのインスタンス
+    public func makeImageStorageRepository() -> ImageStorageRepositoryProtocol {
+        LocalImageStorageRepository()
     }
     
     /// 書籍検索ゲートウェイのインスタンスを生成

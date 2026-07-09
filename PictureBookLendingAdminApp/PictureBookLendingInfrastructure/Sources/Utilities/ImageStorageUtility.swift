@@ -26,19 +26,37 @@ public enum ImageStorageUtility {
         imageDirectoryURL.appendingPathComponent(fileName)
     }
     
-    #if canImport(UIKit)
-        
-        /// 画像保存用ディレクトリを作成
-        private static func createImageDirectoryIfNeeded() throws {
-            let imageDirectory = imageDirectoryURL
-            if !FileManager.default.fileExists(atPath: imageDirectory.path) {
-                try FileManager.default.createDirectory(
-                    at: imageDirectory,
-                    withIntermediateDirectories: true,
-                    attributes: nil
-                )
-            }
+    /// 画像保存用ディレクトリを作成
+    private static func createImageDirectoryIfNeeded() throws {
+        let imageDirectory = imageDirectoryURL
+        if !FileManager.default.fileExists(atPath: imageDirectory.path) {
+            try FileManager.default.createDirectory(
+                at: imageDirectory,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
         }
+    }
+    
+    /// 画像データをそのまま保存する（バックアップ復元用）
+    /// UIImageを経由せず、既に圧縮済みのバイナリデータを直接書き込みます。
+    /// - Parameters:
+    ///   - data: 保存する画像データ
+    ///   - fileName: 保存先のファイル名（拡張子込み）
+    /// - Throws: 保存に失敗した場合のエラー
+    public static func writeImageData(_ data: Data, fileName: String) throws {
+        try createImageDirectoryIfNeeded()
+        try data.write(to: imageDirectoryURL.appendingPathComponent(fileName))
+    }
+    
+    /// 画像ファイルをDataとして読み込む（バックアップ書き出し用）
+    /// - Parameter fileName: 画像ファイル名
+    /// - Returns: 画像データ（存在しない場合はnil）
+    public static func readImageData(fileName: String) -> Data? {
+        try? Data(contentsOf: imageDirectoryURL.appendingPathComponent(fileName))
+    }
+    
+    #if canImport(UIKit)
         
         /// 画像を保存してファイル名を返す
         /// - Parameters:
