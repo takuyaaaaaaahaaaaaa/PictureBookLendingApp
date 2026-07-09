@@ -202,9 +202,14 @@ public struct BookListView<RowAction: View>: View {
     private var kanaFilterSection: some View {
         HStack {
             if isKanaChipsVisible {
-                ScrollView(.horizontal) {
+                // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
+                // ScrollViewを使わず素のHStackで並べる（チップは全iPadのregular幅に収まる）。
+                // 収まらない幅（狭いSplit View等）ではcompact時と同じ思想でチップを出さない
+                ViewThatFits(in: .horizontal) {
                     kanaChips
                         .padding(.leading)
+                    Color.clear
+                        .frame(width: 0, height: 0)
                 }
             }
             
