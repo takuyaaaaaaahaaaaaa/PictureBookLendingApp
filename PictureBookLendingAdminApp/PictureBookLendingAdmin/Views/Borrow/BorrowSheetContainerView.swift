@@ -29,6 +29,8 @@ struct BorrowSheetContainerView: View {
     @State private var selectedClassGroupId: UUID?
     @State private var alertState = AlertState()
     @State private var successFeedback = SuccessFeedback()
+    /// 貸出が節目（同じ図書の繰り返し・連続週・種類数）に達したときの紙吹雪お祝いカード状態
+    @State private var celebrationFeedback = CelebrationFeedback()
     /// 貸出後、✓カードの表示が終わったらシートを閉じる（図書一覧へ戻す）ための予約フラグ
     @State private var isPopPendingAfterLend = false
     /// 選択画面の無操作タイマーのトークン（操作のたびに更新して待ち時間を延長する）
@@ -70,6 +72,9 @@ struct BorrowSheetContainerView: View {
             Text(alertState.message)
         }
         .successFeedback($successFeedback, displayDuration: Self.lendFeedbackDuration)
+        // 貸出が節目に達したときは✓カードの代わりに紙吹雪でお祝いする
+        // （自動終了・タップスキップ付き。DESIGN_PRINCIPLES「節目のお祝い」）
+        .celebrationFeedback($celebrationFeedback)
         // 枠確認画面での返却（本の入れ替え）に対するUndoカード。
         // 取り消してもその場に留まり、枠に本が戻るのを見せる
         .undoFeedback($undoFeedback, onUndo: handleUndoReturn)
@@ -78,6 +83,13 @@ struct BorrowSheetContainerView: View {
             if wasPresented && !isPresented && isPopPendingAfterLend {
                 isPopPendingAfterLend = false
                 // 貸出完了→次の貸出のために親へ通知（絞り込み解除・先頭スクロールは親側の状態）
+                onLendCompleted()
+            }
+        }
+        .onChange(of: celebrationFeedback.isPresented) { wasPresented, isPresented in
+            // お祝いが終わったら（自動終了・タップスキップとも）✓カードと同じ作法でシートを閉じる
+            if wasPresented && !isPresented && isPopPendingAfterLend {
+                isPopPendingAfterLend = false
                 onLendCompleted()
             }
         }
@@ -268,12 +280,21 @@ struct BorrowSheetContainerView: View {
         }
     }
     
-    /// 貸出の実行（枠選択のタップで確定・✓カードで完了を伝える）
+    /// 貸出の実行（枠選択のタップで確定・✓カードまたは節目のお祝いで完了を伝える）
     private func handleLend(book: Book, userId: UUID) {
         do {
-            _ = try loanModel.lendBook(bookId: book.id, userId: userId)
+            let loan = try loanModel.lendBook(bookId: book.id, userId: userId)
             let name = userModel.findUserById(userId)?.name ?? ""
-            successFeedback.show("\(name)さんに『\(book.title)』を貸出しました")
+            // 節目に達していたら✓カードの代わりに紙吹雪のお祝いを表示する。
+            // 同時に複数の節目に達した場合は、優先度の最も高い1つだけを祝う
+            if let milestone = loanModel.achievedMilestones(for: loan).first {
+                celebrationFeedback.show(
+                    title: milestone.celebrationTitle,
+                    message: milestone.celebrationMessage(userName: name, bookTitle: book.title)
+                )
+            } else {
+                successFeedback.show("\(name)さんに『\(book.title)』を貸出しました")
+            }
             isPopPendingAfterLend = true
             idleTicket += 1
         } catch {

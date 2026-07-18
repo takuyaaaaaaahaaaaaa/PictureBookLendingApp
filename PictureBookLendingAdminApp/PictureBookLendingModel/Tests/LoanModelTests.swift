@@ -407,4 +407,55 @@ struct LoanModelTests {
         #expect(allLoansBefore.map(\.id) == allLoansAfter.map(\.id))
         #expect(allLoansBefore.map(\.isReturned) == allLoansAfter.map(\.isReturned))
     }
+
+    /// 初回の貸出では節目に達しないことのテスト
+    @Test("初回の貸出は節目に達しないテスト")
+    @MainActor
+    func achievedMilestonesForFirstLoan() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+
+        #expect(loanModel.achievedMilestones(for: loan).isEmpty)
+    }
+
+    /// 同じ図書を5回借りると節目に達することのテスト
+    @Test("同じ図書の5回目の貸出で節目に達するテスト")
+    @MainActor
+    func achievedMilestonesForRepeatedBook() throws {
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+
+        // 4回借りて返す
+        for _ in 1...4 {
+            let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+            _ = try loanModel.returnBook(loanId: loan.id)
+        }
+
+        // 5回目の貸出で節目に達する
+        let fifthLoan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+
+        #expect(loanModel.achievedMilestones(for: fifthLoan) == [.repeatedBook(count: 5)])
+    }
+
+    /// 10種類目の図書を借りると節目に達することのテスト
+    @Test("10種類目の図書の貸出で節目に達するテスト")
+    @MainActor
+    func achievedMilestonesForDistinctBooks() throws {
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+
+        // 最初の図書を含めて9種類を借りて返す
+        var loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        for index in 2...9 {
+            let book = try mockRepositoryFactory.bookRepository.save(Book(title: "図書\(index)"))
+            loan = try loanModel.lendBook(bookId: book.id, userId: testUser.id)
+            _ = try loanModel.returnBook(loanId: loan.id)
+        }
+
+        // 10種類目の貸出で節目に達する
+        let tenthBook = try mockRepositoryFactory.bookRepository.save(Book(title: "図書10"))
+        let tenthLoan = try loanModel.lendBook(bookId: tenthBook.id, userId: testUser.id)
+
+        #expect(loanModel.achievedMilestones(for: tenthLoan) == [.distinctBooks(count: 10)])
+    }
 }

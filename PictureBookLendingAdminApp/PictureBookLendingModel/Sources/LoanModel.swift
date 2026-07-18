@@ -387,6 +387,18 @@ public class LoanModel {
         }
     }
     
+    /// 貸出が節目（お祝いの対象となる記念の回数）に達したかを判定する
+    ///
+    /// 同じ利用者の過去の貸出履歴と照らし合わせ、達した節目を返します。
+    /// `lendBook(bookId:userId:)` の直後に、その戻り値を渡して呼び出すことを想定しています。
+    ///
+    /// - Parameter loan: 判定対象の貸出情報
+    /// - Returns: 達した節目のリスト（お祝いの優先度が高い順）。達していなければ空
+    public func achievedMilestones(for loan: Loan) -> [LoanMilestone] {
+        let previousLoans = getLoansByUser(userId: loan.user.id).filter { $0.id != loan.id }
+        return LoanMilestoneEvaluator().evaluate(newLoan: loan, previousLoans: previousLoans)
+    }
+
     /// 指定された利用者の現在アクティブな貸出情報を取得する
     ///
     /// - Parameter userId: 取得したい利用者のID

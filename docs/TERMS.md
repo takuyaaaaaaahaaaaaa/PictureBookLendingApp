@@ -17,3 +17,6 @@
 | 貸出期間 | loanPeriod | 貸出日数, 借用期間, lendingDuration, borrowingPeriod | 図書を貸し出してから返却期限までの日数（例：14日間） |
 | あいまい検索 | fuzzy search | 曖昧検索, サジェスト, 検索候補, オートコンプリート | 部分一致で0件のとき、タイプミス（Levenshtein類似度）を許容して図書を探す検索フォールバック |
 | バックアップ | BackupSnapshot | エクスポートデータ, データ移行ファイル | 組・利用者・図書・貸出記録・貸出設定・図書画像を1つにまとめたデータ。端末変更やApple ID切替時のデータ引き継ぎに使用する |
+| 節目 | LoanMilestone | 実績, バッジ, Achievement, Badge | 貸出がお祝いに値する記念の回数に達したこと。同じ図書の繰り返し（repeatedBook：5回ごと）・連続週の貸出（consecutiveWeeks：4週ごと）・図書の種類数（distinctBooks：10冊ごと）の3種類。判定は`LoanMilestoneEvaluator`が行う |
+| お祝い | CelebrationFeedback | 演出, エフェクト, Effect | 節目に達したときに表示する紙吹雪＋メッセージカード。自動終了し、画面タップでスキップできる（DESIGN_PRINCIPLES「節目のお祝い」） |
+| 紙吹雪 | confetti | 花吹雪, パーティクル, particle | お祝い表示の背景で紙片が舞うアニメーション |
