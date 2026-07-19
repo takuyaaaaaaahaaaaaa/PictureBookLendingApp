@@ -32,24 +32,29 @@ public enum BookSortType: String, CaseIterable, Identifiable {
 public enum BookDisplayMode: String, CaseIterable, Identifiable {
     case list = "list"
     case grid = "grid"
-    
+    case shelf = "shelf"
+
     public var id: String { rawValue }
-    
+
     public var displayName: String {
         switch self {
         case .list:
             return "リスト表示"
         case .grid:
             return "グリッド表示"
+        case .shelf:
+            return "棚表示"
         }
     }
-    
+
     public var iconName: String {
         switch self {
         case .list:
             return "list.bullet"
         case .grid:
             return "square.grid.2x2"
+        case .shelf:
+            return "books.vertical"
         }
     }
 }
@@ -171,6 +176,8 @@ public struct BookListView<RowAction: View>: View {
                         bookListSection
                     case .grid:
                         bookGridSection
+                    case .shelf:
+                        bookShelfSection
                     }
                 }
             }
@@ -360,6 +367,52 @@ public struct BookListView<RowAction: View>: View {
         }
     }
     
+    /// 棚表示（木の本棚デザイン）のセクション
+    ///
+    /// 五十音セクション＝棚1段として、棚札＋横スクロールの絵本の並び＋棚板で構成する。
+    /// アプリの枠（ナビゲーション・検索・チップ等）はそのままに、
+    /// 一覧コンテンツエリアだけを木の世界にする（docs/SCREEN_DESIGN.md「棚表示」参照）
+    private var bookShelfSection: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: ShelfLayout.sectionSpacing) {
+                ForEach(sections) { section in
+                    shelfRow(for: section)
+                }
+            }
+            .padding(.vertical, ShelfLayout.sectionSpacing)
+        }
+        .background {
+            ShelfWoodBackgroundView()
+                .ignoresSafeArea(edges: .bottom)
+        }
+    }
+
+    /// 棚1段分のビュー（棚札＋絵本の並び＋棚板）
+    ///
+    /// 段内の絵本は横スクロールで見せる（本屋の棚を横にたどるイメージ）。
+    /// 絵本セルの下端が棚板の上面に接するよう、並びと棚板の間隔は空けない
+    @ViewBuilder
+    private func shelfRow(for section: BookSection) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            KanaShelfPlateView(text: section.title)
+                .padding(.leading, ShelfLayout.rowHorizontalPadding)
+                .padding(.bottom, ShelfLayout.plateSpacing)
+
+            ScrollView(.horizontal) {
+                LazyHStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
+                    ForEach(section.books) { book in
+                        bookGridCellContent(for: book)
+                            .frame(width: ShelfLayout.cellWidth)
+                    }
+                }
+                .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
+            }
+            .scrollIndicators(.hidden)
+
+            ShelfBoardView()
+        }
+    }
+
     /// 絵本グリッドセルのコンテンツ
     ///
     /// タップ領域（表紙＋タイトル）とrowAction（貸出ボタン等）を縦に分離し、
@@ -550,6 +603,54 @@ private struct BookGridCoverView: View {
             selectedSortType: $selectedSortType,
             displayMode: $displayMode,
             isEditMode: true,
+            onEdit: { _ in },
+            onDelete: { _ in },
+            imageURLProvider: { book in
+                book.displaySmallImageSource
+            }
+        ) { book in
+            RowActionButton(onTap: {})
+        }
+        .navigationTitle("図書一覧")
+    }
+}
+
+#Preview("棚表示") {
+    @Previewable @State var searchText = ""
+    @Previewable @State var selectedKanaFilter: KanaGroup?
+    @Previewable @State var selectedSortType: BookSortType = .title
+    @Previewable @State var displayMode: BookDisplayMode = .shelf
+
+    let aBooks = [
+        Book(title: "おおきなかぶ", author: "内田莉莎子", managementNumber: "あ001", kanaGroup: .a),
+        Book(title: "あおくんときいろちゃん", author: "レオ・レオニ", managementNumber: "あ002", kanaGroup: .a),
+        Book(title: "いないいないばあ", author: "松谷みよ子", managementNumber: "あ003", kanaGroup: .a),
+    ]
+    let kaBooks = [
+        Book(title: "ぐりとぐら", author: "中川李枝子", managementNumber: "か001", kanaGroup: .ka),
+        Book(title: "からすのパンやさん", author: "かこさとし", managementNumber: "か002", kanaGroup: .ka),
+        Book(title: "きんぎょがにげた", author: "五味太郎", managementNumber: "か003", kanaGroup: .ka),
+        Book(title: "ぐるんぱのようちえん", author: "西内ミナミ", managementNumber: "か004", kanaGroup: .ka),
+    ]
+    let saBooks = [
+        Book(title: "しろくまちゃんのほっとけーき", author: "わかやまけん", managementNumber: "さ001", kanaGroup: .sa),
+        Book(title: "３びきのやぎのがらがらどん", author: "せたていじ", managementNumber: "さ002", kanaGroup: .sa),
+        Book(title: "そらまめくんのベッド", author: "なかやみわ", managementNumber: "さ003", kanaGroup: .sa),
+    ]
+
+    let sections = [
+        BookSection(kanaGroup: .a, books: aBooks),
+        BookSection(kanaGroup: .ka, books: kaBooks),
+        BookSection(kanaGroup: .sa, books: saBooks),
+    ]
+
+    NavigationStack {
+        BookListView(
+            sections: sections,
+            searchText: $searchText,
+            selectedKanaFilter: $selectedKanaFilter,
+            selectedSortType: $selectedSortType,
+            displayMode: $displayMode,
             onEdit: { _ in },
             onDelete: { _ in },
             imageURLProvider: { book in
