@@ -6,14 +6,18 @@ import Foundation
 /// 判定は純粋な計算のみで、永続化や表示には関与しません。
 public struct LoanMilestoneEvaluator: Sendable {
     
-    /// 節目と判定する間隔
-    private enum Interval {
-        /// 同じ図書の貸出回数の節目間隔（5回・10回・15回…）
-        static let repeatedBook = 5
-        /// 連続週数の節目間隔（4週・8週・12週…）
-        static let consecutiveWeeks = 4
-        /// 図書の種類数の節目間隔（10冊・20冊・30冊…）
-        static let distinctBooks = 10
+    /// 節目と判定する回数（階段式）
+    ///
+    /// 毎週借りる園児だと等間隔（4週ごと等）ではお祝いが月1回以上発火して
+    /// 特別感が薄れるため、上の節目ほど間隔が広がる階段式にしている。
+    /// 熱心に借りる園児でも年5〜7回程度に収まる想定
+    private enum CelebrationCounts {
+        /// 同じ図書の貸出回数の節目（それ以降は祝わない）
+        static let repeatedBook: Set<Int> = [5, 10]
+        /// 連続週数の節目（約1ヶ月・学期・半年・通年の区切り）
+        static let consecutiveWeeks: Set<Int> = [4, 12, 24, 36]
+        /// 図書の種類数の節目
+        static let distinctBooks: Set<Int> = [10, 30, 50]
     }
     
     /// 週の区切りの計算に使うカレンダー
@@ -41,9 +45,7 @@ public struct LoanMilestoneEvaluator: Sendable {
     /// 同じ図書の繰り返し貸出の節目判定
     private func repeatedBookMilestone(newLoan: Loan, previousLoans: [Loan]) -> LoanMilestone? {
         let count = previousLoans.count(where: { $0.bookId == newLoan.bookId }) + 1
-        guard count >= Interval.repeatedBook, count.isMultiple(of: Interval.repeatedBook) else {
-            return nil
-        }
+        guard CelebrationCounts.repeatedBook.contains(count) else { return nil }
         return .repeatedBook(count: count)
     }
     
@@ -67,9 +69,7 @@ public struct LoanMilestoneEvaluator: Sendable {
             week = normalized
         }
         
-        guard streak >= Interval.consecutiveWeeks,
-            streak.isMultiple(of: Interval.consecutiveWeeks)
-        else { return nil }
+        guard CelebrationCounts.consecutiveWeeks.contains(streak) else { return nil }
         return .consecutiveWeeks(count: streak)
     }
     
@@ -81,9 +81,7 @@ public struct LoanMilestoneEvaluator: Sendable {
         guard !previousBookIds.contains(newLoan.bookId) else { return nil }
         
         let count = previousBookIds.count + 1
-        guard count >= Interval.distinctBooks, count.isMultiple(of: Interval.distinctBooks) else {
-            return nil
-        }
+        guard CelebrationCounts.distinctBooks.contains(count) else { return nil }
         return .distinctBooks(count: count)
     }
     

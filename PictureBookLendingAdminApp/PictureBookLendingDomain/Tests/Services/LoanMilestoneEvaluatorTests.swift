@@ -80,6 +80,17 @@ struct LoanMilestoneEvaluatorTests {
         #expect(milestones == [.repeatedBook(count: 10)])
     }
     
+    @Test("同じ図書の15回目の貸出はもう節目にしない（お祝いの薄まり防止）")
+    func fifteenthLoanOfSameBookHasNoMilestone() {
+        let bookId = UUID()
+        let previousLoans = (1...14).map { makeLoan(bookId: bookId, weeksAgo: 0, daysOffset: -$0) }
+        let newLoan = makeLoan(bookId: bookId)
+        
+        let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
+        
+        #expect(milestones.isEmpty)
+    }
+    
     // MARK: - 図書の種類数
     
     @Test("10種類目の図書の貸出で節目に達する")
@@ -103,6 +114,26 @@ struct LoanMilestoneEvaluatorTests {
         let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
         
         #expect(!milestones.contains(.distinctBooks(count: 10)))
+    }
+    
+    @Test("20種類目は節目にしない（次の節目は30冊）")
+    func twentiethDistinctBookHasNoMilestone() {
+        let previousLoans = (1...19).map { _ in makeLoan(bookId: UUID(), daysOffset: -1) }
+        let newLoan = makeLoan(bookId: UUID())
+        
+        let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
+        
+        #expect(milestones.isEmpty)
+    }
+    
+    @Test("30種類目の図書の貸出で節目に達する")
+    func thirtiethDistinctBookReachesMilestone() {
+        let previousLoans = (1...29).map { _ in makeLoan(bookId: UUID(), daysOffset: -1) }
+        let newLoan = makeLoan(bookId: UUID())
+        
+        let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
+        
+        #expect(milestones == [.distinctBooks(count: 30)])
     }
     
     @Test("同じ図書を10回借りても種類数の節目には達しない")
@@ -136,6 +167,26 @@ struct LoanMilestoneEvaluatorTests {
         let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
         
         #expect(milestones.isEmpty)
+    }
+    
+    @Test("8週連続は節目にしない（次の節目は12週）")
+    func eightConsecutiveWeeksHasNoMilestone() {
+        let previousLoans = (1...7).map { makeLoan(bookId: UUID(), weeksAgo: $0) }
+        let newLoan = makeLoan(bookId: UUID(), weeksAgo: 0)
+        
+        let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
+        
+        #expect(milestones.isEmpty)
+    }
+    
+    @Test("12週連続の貸出で節目に達する")
+    func twelveConsecutiveWeeksReachesMilestone() {
+        let previousLoans = (1...11).map { makeLoan(bookId: UUID(), weeksAgo: $0) }
+        let newLoan = makeLoan(bookId: UUID(), weeksAgo: 0)
+        
+        let milestones = evaluator.evaluate(newLoan: newLoan, previousLoans: previousLoans)
+        
+        #expect(milestones == [.consecutiveWeeks(count: 12)])
     }
     
     @Test("週が途切れると連続週数はリセットされる")
