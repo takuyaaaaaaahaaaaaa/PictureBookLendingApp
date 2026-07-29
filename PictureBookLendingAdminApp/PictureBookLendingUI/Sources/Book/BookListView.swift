@@ -186,11 +186,21 @@ public struct BookListView<RowAction: View>: View {
             }
             .onChange(of: scrollToTopTrigger) { _, _ in
                 // 貸出完了後の「次の貸出への引き継ぎ」：一覧を先頭へ戻す
-                guard let firstBookId = sections.first?.books.first?.id else { return }
-                withAnimation {
-                    proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
-                }
+                scrollToTop(proxy: proxy)
             }
+            .onChange(of: selectedKanaFilter) { _, _ in
+                // 五十音チップの切り替え時、スクロール位置が途中のままだと
+                // 絞り込み後のどこを見ているか分かりづらいため先頭へ戻す
+                scrollToTop(proxy: proxy)
+            }
+        }
+    }
+    
+    /// 一覧を先頭行までスクロールする
+    private func scrollToTop(proxy: ScrollViewProxy) {
+        guard let firstBookId = sections.first?.books.first?.id else { return }
+        withAnimation {
+            proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
         }
     }
     
