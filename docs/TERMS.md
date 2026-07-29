@@ -20,3 +20,5 @@
 | 節目 | LoanMilestone | 実績, バッジ, Achievement, Badge | 貸出がお祝いに値する記念の回数に達したこと。同じ図書の繰り返し（repeatedBook：5回・10回）・連続週の貸出（consecutiveWeeks：4週・12週・24週・36週）・図書の種類数（distinctBooks：10冊・30冊・50冊）の3種類。上の節目ほど間隔が広がる階段式。判定は`LoanMilestoneEvaluator`が行う |
 | お祝い | CelebrationFeedback | 演出, エフェクト, Effect | 節目に達したときに表示する紙吹雪＋メッセージカード。自動終了し、画面タップでスキップできる（DESIGN_PRINCIPLES「節目のお祝い」） |
 | 紙吹雪 | confetti | 花吹雪, パーティクル, particle | お祝い表示の背景で紙片が舞うアニメーション |
+| 表紙 | cover | カバー, ジャケット, jacket | 図書の表紙画像（thumbnail/smallThumbnail/ローカル保存画像から解決）。文脈上の縮小表示は「サムネイル」(thumbnail) と呼び分ける |
+| 表紙の拡大表示 | BookCoverZoomView | ズームモード, 拡大モード, zoom mode | 文字が見えづらい利用者向けに表紙を画面いっぱいに表示する画面。表紙タップで開き、画面タップか✕で閉じる。モード（状態の切替）ではなくその場限りの表示 |
