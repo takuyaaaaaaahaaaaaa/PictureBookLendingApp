@@ -12,7 +12,7 @@ extension LoanMilestone {
         case .distinctBooks(let count): "\(count)冊よんだよ！"
         }
     }
-
+    
     /// お祝いカードのメッセージ（利用者名・図書タイトルを添える）
     func celebrationMessage(userName: String, bookTitle: String) -> String {
         switch self {

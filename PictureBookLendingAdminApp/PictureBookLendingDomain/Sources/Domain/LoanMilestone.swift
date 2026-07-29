@@ -7,12 +7,12 @@ public enum LoanMilestone: Equatable, Hashable, Sendable, Codable {
     ///
     /// - Parameter count: その図書の通算貸出回数（例：5回目・10回目）
     case repeatedBook(count: Int)
-
+    
     /// 連続した週で借り続けた節目
     ///
     /// - Parameter count: 連続で借りた週数（例：4週連続）
     case consecutiveWeeks(count: Int)
-
+    
     /// いろいろな図書を借りた節目
     ///
     /// - Parameter count: これまでに借りた図書の種類数（例：10冊目）

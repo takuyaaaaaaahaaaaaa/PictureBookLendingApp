@@ -398,7 +398,7 @@ public class LoanModel {
         let previousLoans = getLoansByUser(userId: loan.user.id).filter { $0.id != loan.id }
         return LoanMilestoneEvaluator().evaluate(newLoan: loan, previousLoans: previousLoans)
     }
-
+    
     /// 指定された利用者の現在アクティブな貸出情報を取得する
     ///
     /// - Parameter userId: 取得したい利用者のID

@@ -19,14 +19,14 @@ public struct CelebrationFeedback: Equatable, Sendable {
     /// この値を `sensoryFeedback`・`task(id:)`・紙吹雪のシードに渡すことで、
     /// 毎回ハプティクスが鳴り、タイマーと紙吹雪が新しい表示から再スタートする。
     public private(set) var occurrenceCount: Int
-
+    
     public init() {
         self.isPresented = false
         self.title = ""
         self.message = ""
         self.occurrenceCount = 0
     }
-
+    
     /// お祝いフィードバックを表示する
     public mutating func show(title: String, message: String) {
         self.title = title
@@ -34,7 +34,7 @@ public struct CelebrationFeedback: Equatable, Sendable {
         isPresented = true
         occurrenceCount += 1
     }
-
+    
     /// お祝いフィードバックを非表示にする
     public mutating func dismiss() {
         isPresented = false
@@ -48,30 +48,30 @@ public struct CelebrationFeedback: Equatable, Sendable {
 public struct CelebrationFeedbackView: View {
     /// クラッカーアイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
-
+    
     let title: String
     let message: String
-
+    
     private enum Layout {
         static let spacing: CGFloat = 12
         static let padding: CGFloat = 32
         static let cornerRadius: CGFloat = 20
     }
-
+    
     public init(title: String, message: String) {
         self.title = title
         self.message = message
     }
-
+    
     public var body: some View {
         VStack(spacing: Layout.spacing) {
             Image(systemName: "party.popper.fill")
                 .font(.system(size: iconSize))
                 .foregroundStyle(.orange)
-
+            
             Text(title)
                 .font(.title2.bold())
-
+            
             Text(message)
                 .font(.title3.bold())
                 .multilineTextAlignment(.center)
@@ -93,9 +93,9 @@ public struct CelebrationFeedbackView: View {
 struct ConfettiView: View {
     /// 紙片の散り方を決めるシード（表示ごとに変えると散り方も変わる）
     let seed: Int
-
+    
     @State private var startDate = Date()
-
+    
     private enum Constants {
         /// 紙片の枚数
         static let particleCount = 90
@@ -106,19 +106,19 @@ struct ConfettiView: View {
         /// フェードアウトを開始する進行割合
         static let fadeStart: Double = 0.7
     }
-
+    
     var body: some View {
         TimelineView(.animation) { timeline in
             Canvas { context, size in
                 let elapsed = timeline.date.timeIntervalSince(startDate)
                 guard elapsed >= 0, elapsed <= Constants.duration else { return }
-
+                
                 let progress = elapsed / Constants.duration
                 let opacity =
                     progress < Constants.fadeStart
                     ? 1.0
                     : 1.0 - (progress - Constants.fadeStart) / (1.0 - Constants.fadeStart)
-
+                
                 var generator = SeededRandomNumberGenerator(seed: UInt64(max(seed, 0)))
                 for _ in 0..<Constants.particleCount {
                     let particle = ConfettiParticle(using: &generator, in: size)
@@ -162,7 +162,7 @@ private struct ConfettiParticle {
         /// ひらひら（面の反転）速度の範囲（rad/s）
         static let flutterSpeedRange: ClosedRange<Double> = 3...8
     }
-
+    
     let start: CGPoint
     let velocity: CGVector
     let color: Color
@@ -171,7 +171,7 @@ private struct ConfettiParticle {
     let spinSpeed: Double
     let flutterSpeed: Double
     let flutterPhase: Double
-
+    
     init(using generator: inout some RandomNumberGenerator, in canvasSize: CGSize) {
         let isFromLeft = Bool.random(using: &generator)
         let launchX =
@@ -179,7 +179,7 @@ private struct ConfettiParticle {
             ? canvasSize.width * Constants.launchInset
             : canvasSize.width * (1 - Constants.launchInset)
         start = CGPoint(x: launchX, y: canvasSize.height)
-
+        
         // 真上を基準に、左の発射台は内側（右上）へ、右の発射台は内側（左上）へ傾ける
         let baseAngle =
             isFromLeft
@@ -190,7 +190,7 @@ private struct ConfettiParticle {
         let angle = (baseAngle + spread) * .pi / 180
         let speed = Double.random(in: Constants.speedRange, using: &generator)
         velocity = CGVector(dx: cos(angle) * speed, dy: sin(angle) * speed)
-
+        
         color = Self.colors.randomElement(using: &generator) ?? .pink
         let side = Double.random(in: Constants.sideRange, using: &generator)
         size = CGSize(width: side, height: side * 0.6)
@@ -199,14 +199,14 @@ private struct ConfettiParticle {
         flutterSpeed = Double.random(in: Constants.flutterSpeedRange, using: &generator)
         flutterPhase = Double.random(in: 0...(2 * .pi), using: &generator)
     }
-
+    
     func draw(in context: GraphicsContext, elapsed: TimeInterval, gravity: Double, opacity: Double)
     {
         let position = CGPoint(
             x: start.x + velocity.dx * elapsed,
             y: start.y + velocity.dy * elapsed + 0.5 * gravity * elapsed * elapsed
         )
-
+        
         // GraphicsContextは値型なので、コピーに変換をかければ他の紙片に影響しない
         var particleContext = context
         particleContext.opacity = opacity
@@ -214,7 +214,7 @@ private struct ConfettiParticle {
         particleContext.rotate(by: .radians(initialAngle + spinSpeed * elapsed))
         // ひらひら：横方向のスケールを振動させ、紙片が翻る様子を表す
         particleContext.scaleBy(x: cos(flutterSpeed * elapsed + flutterPhase), y: 1)
-
+        
         let rect = CGRect(
             x: -size.width / 2, y: -size.height / 2,
             width: size.width, height: size.height
@@ -229,11 +229,11 @@ private struct ConfettiParticle {
 /// 毎フレーム同じ散り方で再生成するために使う。
 private struct SeededRandomNumberGenerator: RandomNumberGenerator {
     private var state: UInt64
-
+    
     init(seed: UInt64) {
         state = seed
     }
-
+    
     mutating func next() -> UInt64 {
         state &+= 0x9E37_79B9_7F4A_7C15
         var z = state
@@ -253,14 +253,14 @@ private struct CelebrationFeedbackModifier: ViewModifier {
     @Binding var feedback: CelebrationFeedback
     /// 自動終了までの表示時間
     let displayDuration: Duration
-
+    
     private enum Constants {
         /// 出現・消滅アニメーションの時間
         static let transitionDuration: TimeInterval = 0.3
         /// 出現時の初期スケール
         static let initialScale: CGFloat = 0.8
     }
-
+    
     func body(content: Content) -> some View {
         content
             .overlay {
@@ -307,7 +307,7 @@ extension View {
 
 #Preview {
     @Previewable @State var feedback = CelebrationFeedback()
-
+    
     List {
         Button("同じ図書の節目") {
             feedback.show(
