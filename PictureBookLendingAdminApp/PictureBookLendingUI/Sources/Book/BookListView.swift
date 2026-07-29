@@ -121,6 +121,8 @@ public struct BookListView<RowAction: View>: View {
     @Binding public var selectedSortType: BookSortType
     /// 一覧の表示形式（リスト／グリッド）
     @Binding public var displayMode: BookDisplayMode
+    /// 表示の大きさ（「大きく表示」トグルの状態。表紙・タイトルの寸法に反映）
+    public let displayScale: BookDisplayScale
     /// 編集モードかどうか
     public let isEditMode: Bool
     /// 絵本編集時の動作
@@ -144,6 +146,7 @@ public struct BookListView<RowAction: View>: View {
         scrollToTopTrigger: Int = 0,
         selectedSortType: Binding<BookSortType>,
         displayMode: Binding<BookDisplayMode>,
+        displayScale: BookDisplayScale = .standard,
         isEditMode: Bool = false,
         onEdit: @escaping (Book) -> Void,
         onDelete: @escaping (Book) -> Void,
@@ -158,6 +161,7 @@ public struct BookListView<RowAction: View>: View {
         self.scrollToTopTrigger = scrollToTopTrigger
         self._selectedSortType = selectedSortType
         self._displayMode = displayMode
+        self.displayScale = displayScale
         self.isEditMode = isEditMode
         self.onEdit = onEdit
         self.onDelete = onDelete
@@ -343,9 +347,10 @@ public struct BookListView<RowAction: View>: View {
         }
     }
     
-    /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）
+    /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）。
+    /// セル最小幅は表示の大きさ（displayScale）に従う
     private var gridColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: 140), spacing: 16)]
+        [GridItem(.adaptive(minimum: displayScale.minCellWidth), spacing: 16)]
     }
     
     private var bookGridSection: some View {
@@ -405,19 +410,19 @@ public struct BookListView<RowAction: View>: View {
         }
     }
     
-    /// 棚表示の折り返し列数（ビューポート幅から算出）
+    /// 棚表示の折り返し列数（ビューポート幅から算出。セル最小幅はdisplayScaleに従う）
     private var shelfColumnCount: Int {
         let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= ShelfLayout.minCellWidth else { return 1 }
+        guard available >= displayScale.minCellWidth else { return 1 }
         return Int(
             (available + ShelfLayout.bookSpacing)
-                / (ShelfLayout.minCellWidth + ShelfLayout.bookSpacing))
+                / (displayScale.minCellWidth + ShelfLayout.bookSpacing))
     }
     
     /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
     private var shelfCellWidth: CGFloat {
         let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= ShelfLayout.minCellWidth else { return ShelfLayout.minCellWidth }
+        guard available >= displayScale.minCellWidth else { return displayScale.minCellWidth }
         let columnCount = CGFloat(shelfColumnCount)
         return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
     }
@@ -479,19 +484,22 @@ public struct BookListView<RowAction: View>: View {
                     Button {
                         onEdit(book)
                     } label: {
-                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                        BookGridCoverView(
+                            book: book, imageURL: imageURLProvider(book), scale: displayScale)
                     }
                     .buttonStyle(.plain)
                 } else if let onSelect {
                     Button {
                         onSelect(book)
                     } label: {
-                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                        BookGridCoverView(
+                            book: book, imageURL: imageURLProvider(book), scale: displayScale)
                     }
                     .buttonStyle(.plain)
                 } else {
                     NavigationLink(value: book) {
-                        BookGridCoverView(book: book, imageURL: imageURLProvider(book))
+                        BookGridCoverView(
+                            book: book, imageURL: imageURLProvider(book), scale: displayScale)
                     }
                 }
             }
@@ -526,23 +534,31 @@ public struct BookListView<RowAction: View>: View {
             Button {
                 onEdit(book)
             } label: {
-                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
-                    // plainスタイルのボタンは不透明な描画部分しか当たり判定にならないため、
-                    // サムネイルと文字のすき間や余白も含めて行全体をタップ可能にする
-                    .contentShape(Rectangle())
+                BookRowView(
+                    book: book, imageURL: imageURLProvider(book), scale: displayScale,
+                    rowAction: rowAction
+                )
+                // plainスタイルのボタンは不透明な描画部分しか当たり判定にならないため、
+                // サムネイルと文字のすき間や余白も含めて行全体をタップ可能にする
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         } else if let onSelect {
             Button {
                 onSelect(book)
             } label: {
-                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
-                    .contentShape(Rectangle())
+                BookRowView(
+                    book: book, imageURL: imageURLProvider(book), scale: displayScale,
+                    rowAction: rowAction
+                )
+                .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         } else {
             NavigationLink(value: book) {
-                BookRowView(book: book, imageURL: imageURLProvider(book), rowAction: rowAction)
+                BookRowView(
+                    book: book, imageURL: imageURLProvider(book), scale: displayScale,
+                    rowAction: rowAction)
             }
         }
     }
@@ -554,6 +570,8 @@ public struct BookListView<RowAction: View>: View {
 public struct BookRowView<RowAction: View>: View {
     let book: Book
     let imageURL: String?
+    /// 表示の大きさ（「大きく表示」時はサムネイル・文字を一回り大きくする）
+    var scale: BookDisplayScale = .standard
     let rowAction: (Book) -> RowAction
     
     public var body: some View {
@@ -565,16 +583,16 @@ public struct BookRowView<RowAction: View>: View {
                     .font(.title2)
             }
             .aspectRatio(contentMode: .fit)
-            .frame(width: 50, height: 65)
+            .frame(width: scale.rowThumbnailWidth, height: scale.rowThumbnailHeight)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
-                    .font(.title3)
+                    .font(scale.rowTitleFont)
                 
                 Text(book.author ?? "")
-                    .font(.subheadline)
+                    .font(scale.rowAuthorFont)
                     .foregroundStyle(.secondary)
                 
                 if let managementNumber = book.managementNumber {
@@ -599,9 +617,14 @@ private struct BookGridCoverView: View {
     /// lineLimitは最大行数の制限に過ぎず高さは固定しないため、1行タイトルのセルだけ
     /// 高さが縮んでrowActionの縦位置がずれてしまう問題をこれで防ぐ
     @ScaledMetric(relativeTo: .subheadline) private var titleHeight: CGFloat = 38
+    /// 「大きく表示」時のタイトル表示領域の高さ（title3の2行分固定）
+    @ScaledMetric(relativeTo: .title3) private var largeTitleHeight: CGFloat = 52
     
     let book: Book
     let imageURL: String?
+    /// 表示の大きさ（「大きく表示」時はタイトル文字を一回り大きくする。
+    /// 表紙はセル幅いっぱいに描かれるため、列定義側のセル幅拡大に自動で追従する）
+    var scale: BookDisplayScale = .standard
     
     var body: some View {
         VStack(spacing: 6) {
@@ -624,13 +647,21 @@ private struct BookGridCoverView: View {
             .clipShape(RoundedRectangle(cornerRadius: 8))
             
             Text(book.title)
-                .font(.subheadline)
+                .font(scale.gridTitleFont)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
-                .frame(height: titleHeight, alignment: .top)
+                .frame(height: scaledTitleHeight, alignment: .top)
         }
         .contentShape(Rectangle())
+    }
+    
+    /// 表示の大きさに応じたタイトル表示領域の高さ
+    private var scaledTitleHeight: CGFloat {
+        switch scale {
+        case .standard: titleHeight
+        case .large: largeTitleHeight
+        }
     }
 }
 

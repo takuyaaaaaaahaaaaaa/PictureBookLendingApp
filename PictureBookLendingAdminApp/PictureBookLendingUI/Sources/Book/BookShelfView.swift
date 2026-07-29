@@ -20,8 +20,6 @@ enum ShelfLayout {
     static let boardFrontHeight: CGFloat = 16
     /// 棚1段内の絵本同士の間隔（グリッド表示のセル間隔と同値にそろえる）
     static let bookSpacing: CGFloat = 16
-    /// 絵本セルの最小幅（グリッド表示の適応的グリッドと同じ基準にそろえる）
-    static let minCellWidth: CGFloat = 140
     /// 絵本の並び（セル下端の貸出ボタン等）と棚板の間隔（段内の要素間）
     static let boardSpacing: CGFloat = 12
     /// 同じかなグループ内で折り返した棚段同士の間隔（段内の要素間の2倍）

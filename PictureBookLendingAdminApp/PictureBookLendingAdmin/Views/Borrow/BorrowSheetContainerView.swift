@@ -37,6 +37,10 @@ struct BorrowSheetContainerView: View {
     @State private var idleTicket = 0
     /// 枠確認画面での返却（本の入れ替え）用のUndoカード状態
     @State private var undoFeedback = UndoFeedback()
+    /// 表紙の拡大表示状態（枠確認画面の表紙タップで開く）
+    @State private var isCoverZoomPresented = false
+    /// 表紙⇄拡大表示のズーム遷移用Namespace
+    @Namespace private var coverZoomNamespace
     
     /// タップされた図書と開いた時点の貸出状態のスナップショット（シートの提示単位）
     let context: BorrowSheetContext
@@ -53,10 +57,19 @@ struct BorrowSheetContainerView: View {
         static let sectionSpacing: CGFloat = 24
         static let headerContentSpacing: CGFloat = 16
         static let headerTextSpacing: CGFloat = 4
-        /// 表紙サムネイル（家庭の枠の貸出中カードと同じ寸法で揃える）
-        static let thumbnailWidth: CGFloat = 56
-        static let thumbnailHeight: CGFloat = 72
-        static let thumbnailCornerRadius: CGFloat = 6
+        /// 表紙（図書確認の主役として大きく見せる。文字が見えづらい利用者への配慮のため、
+        /// 家庭の枠の貸出中カードのサムネイル寸法とはあえて揃えない）
+        static let coverWidth: CGFloat = 140
+        static let coverHeight: CGFloat = 180
+        static let coverCornerRadius: CGFloat = 10
+        /// 拡大できることを示す虫めがねバッジの内側余白と表紙端からの間隔
+        static let zoomBadgeInnerPadding: CGFloat = 6
+        static let zoomBadgeEdgePadding: CGFloat = 8
+    }
+    
+    /// 表紙⇄拡大表示のズーム遷移の対応付けID
+    private enum CoverZoomSource: Hashable {
+        case cover
     }
     
     var body: some View {
@@ -98,6 +111,19 @@ struct BorrowSheetContainerView: View {
         // ただし「貸出中です」の案内だけの画面は入力途中のタスクがなく、
         // すぐ閉じてよい画面なのでスワイプでの閉じるを許可する
         .interactiveDismissDisabled(!context.isAlreadyLent)
+        // 表紙の拡大表示（枠確認画面の表紙タップで開く）。
+        // 文字が見えづらい利用者向けに画面いっぱいのフルスクリーンで見せる。
+        // 拡大中もシート側の無操作15秒の置き去り復帰は生きており、
+        // 拡大したまま立ち去っても家庭の枠画面は残らない
+        #if os(iOS)
+            .fullScreenCover(isPresented: $isCoverZoomPresented) {
+                coverZoomScreen
+            }
+        #else
+            .sheet(isPresented: $isCoverZoomPresented) {
+                coverZoomScreen
+            }
+        #endif
     }
     
     // MARK: - Private Views
@@ -134,21 +160,13 @@ struct BorrowSheetContainerView: View {
     ///
     /// 選んだ図書の要約（表紙＋タイトル＋著者）を上部に示し、
     /// 家庭の枠領域（貸出文脈）で空き枠を選ばせる。
-    /// 表紙の見た目は家庭の枠の貸出中カードと同じ作法（サイズ・角丸）で揃える
+    /// 表紙は図書確認の主役として大きく見せ、タップでさらに全画面へ拡大できる
     private func slotConfirmScreen(for route: BorrowConfirmRoute) -> some View {
         sheetScreen(title: "どの枠で借りますか？") {
             ScrollView {
                 VStack(alignment: .leading, spacing: Layout.sectionSpacing) {
                     HStack(spacing: Layout.headerContentSpacing) {
-                        BookImageView(imageURL: route.book.resolvedSmallImageSource) {
-                            Image(systemName: "book.closed")
-                                .foregroundStyle(.secondary)
-                                .font(.title2)
-                        }
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: Layout.thumbnailWidth, height: Layout.thumbnailHeight)
-                        .background(.regularMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: Layout.thumbnailCornerRadius))
+                        coverZoomButton(for: route.book)
                         
                         VStack(alignment: .leading, spacing: Layout.headerTextSpacing) {
                             Text("『\(route.book.title)』")
@@ -172,6 +190,68 @@ struct BorrowSheetContainerView: View {
                 .padding()
             }
         }
+    }
+    
+    /// 枠確認画面の表紙（タップで全画面拡大・虫めがねバッジ付き）
+    ///
+    /// 文字が見えづらい利用者がタイトル等を確かめられるように、
+    /// タップで表紙を画面いっぱいに拡大する。虫めがねバッジは
+    /// 「押すと拡大できる」ことを示す視覚的な手がかり
+    private func coverZoomButton(for book: Book) -> some View {
+        Button {
+            idleTicket += 1
+            isCoverZoomPresented = true
+        } label: {
+            BookImageView(imageURL: book.resolvedSmallImageSource) {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(.secondary)
+                    .font(.largeTitle)
+            }
+            .aspectRatio(contentMode: .fit)
+            .frame(width: Layout.coverWidth, height: Layout.coverHeight)
+            .background(.regularMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: Layout.coverCornerRadius))
+            .overlay(alignment: .bottomTrailing) {
+                // 対象ユーザー（文字が見えづらい人）に見える手がかりであるため、
+                // 小さな飾りではなくはっきりした大きさ・コントラストで出す
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.title3.bold())
+                    .foregroundStyle(.primary)
+                    .padding(Layout.zoomBadgeInnerPadding)
+                    .background(.regularMaterial, in: Circle())
+                    .padding(Layout.zoomBadgeEdgePadding)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("表紙を拡大")
+        #if os(iOS)
+            .matchedTransitionSource(id: CoverZoomSource.cover, in: coverZoomNamespace)
+        #endif
+    }
+    
+    /// 表紙の拡大表示画面（タップか✕で閉じる）
+    ///
+    /// 拡大には小サムネイルではなく大きい画像（`resolvedImageSource`）を使い、
+    /// 読み込み中は小サムネイルを段階表示して「同じものが大きくなった」連続性を保つ。
+    /// シート側の無操作タイマーはfullScreenCover表示中も生き続けることを実測済みだが、
+    /// OSバージョン差でライフサイクルが変わっても置き去り復帰（家庭の枠画面を
+    /// 次の利用者に見せない）が破られないよう、拡大画面自身にも同じタイムアウトを掛ける
+    private var coverZoomScreen: some View {
+        BookCoverZoomView(
+            imageURL: context.book.resolvedImageSource,
+            placeholderImageURL: context.book.resolvedSmallImageSource,
+            title: context.book.title
+        ) {
+            idleTicket += 1
+            isCoverZoomPresented = false
+        }
+        .kioskIdleTimeout(ticket: idleTicket) {
+            isCoverZoomPresented = false
+            onClose()
+        }
+        #if os(iOS)
+            .navigationTransition(.zoom(sourceID: CoverZoomSource.cover, in: coverZoomNamespace))
+        #endif
     }
     
     /// シート内画面の共通装飾（無操作タイマー・インラインタイトル・✕閉じるボタン）
