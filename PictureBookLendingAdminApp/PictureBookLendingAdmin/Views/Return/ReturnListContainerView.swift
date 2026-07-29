@@ -169,7 +169,13 @@ struct ReturnListContainerView: View {
     
     /// 組セクション単位の表示データ（既存の貸出管理・絵本一覧と同じ見た目の慣習）
     private var filteredSections: [BorrowerListSection] {
-        Dictionary(grouping: filteredEntries) { $0.classGroupId }
+        let classGroupOrder = Dictionary(
+            uniqueKeysWithValues: classGroupModel.getAllClassGroups().enumerated().map {
+                ($1.id, $0)
+            }
+        )
+        
+        return Dictionary(grouping: filteredEntries) { $0.classGroupId }
             .map { classGroupId, entries in
                 BorrowerListSection(
                     id: classGroupId,
@@ -177,7 +183,14 @@ struct ReturnListContainerView: View {
                     rows: entries.map(\.row)
                 )
             }
-            .sorted { $0.title < $1.title }
+            .sorted { lhs, rhs in
+                switch (classGroupOrder[lhs.id], classGroupOrder[rhs.id]) {
+                case (let l?, let r?): l < r
+                case (nil, nil): lhs.title < rhs.title
+                case (nil, _): false
+                case (_, nil): true
+                }
+            }
     }
     
     // MARK: - Actions
