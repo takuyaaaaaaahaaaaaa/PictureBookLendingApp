@@ -1,4 +1,5 @@
 #if DEBUG
+    import PictureBookLendingDomain
     import PictureBookLendingUI
     import SwiftUI
     
@@ -8,12 +9,18 @@
     /// Phase 2のコンポーネントを実機で確認するための足場で、
     /// issue #40（UIカタログ）の最小実装を兼ねます。
     struct UICatalogContainerView: View {
+        @State private var celebrationFeedback = CelebrationFeedback()
+        
         private let childId = UUID()
         private let guardianId = UUID()
         
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    catalogSection("節目のお祝い：紙吹雪＋カード（タップでスキップ・3.5秒で自動終了）") {
+                        celebrationDemo
+                    }
+                    
                     catalogSection("家庭の枠：返却文脈（両方貸出中・1件延滞）") {
                         FamilyLoanSlotsView(
                             slots: [
@@ -89,6 +96,16 @@
             }
             .background(.background)
             .navigationTitle("UIカタログ（開発用）")
+            .celebrationFeedback($celebrationFeedback)
+        }
+        
+        /// 節目のお祝いフィードバックの発火ボタン（節目の種類ごとに文言も確認できる）
+        private var celebrationDemo: some View {
+            HStack(spacing: 12) {
+                celebrationButton("同じ図書 5回", milestone: .repeatedBook(count: 5))
+                celebrationButton("4週連続", milestone: .consecutiveWeeks(count: 4))
+                celebrationButton("10冊目", milestone: .distinctBooks(count: 10))
+            }
         }
         
         /// 借用者一覧（組インデックスのスクロール確認用・ダミー5組×6人）
@@ -120,6 +137,18 @@
                     .foregroundStyle(.secondary)
                 content()
             }
+        }
+        
+        /// 節目のお祝いを発火するボタン（実際の貸出時と同じ文言生成を通す）
+        private func celebrationButton(_ label: String, milestone: LoanMilestone) -> some View {
+            Button(label) {
+                celebrationFeedback.show(
+                    title: milestone.celebrationTitle,
+                    message: milestone.celebrationMessage(
+                        userName: "いとう さくら", bookTitle: "ぐりとぐら")
+                )
+            }
+            .buttonStyle(.bordered)
         }
     }
     
