@@ -20,9 +20,6 @@ struct BorrowListContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     
-    /// 「大きく表示」フローティングボタンの画面端からの余白
-    private static let displayScaleButtonPadding: CGFloat = 24
-    
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
     /// 「貸出中だったか」はitemに焼き込んだスナップショットで持つ。
@@ -45,6 +42,9 @@ struct BorrowListContainerView: View {
     /// 文字が見えづらい利用者は毎回見えづらいため、一時的なモードではなく
     /// アプリを再起動しても維持される永続設定にする
     @AppStorage("borrowListDisplayScale") private var displayScale: BookDisplayScale = .standard
+    
+    /// 「大きく表示」フローティングボタンの画面端からの余白
+    private static let displayScaleButtonPadding: CGFloat = 24
     
     var body: some View {
         NavigationStack {
@@ -82,8 +82,10 @@ struct BorrowListContainerView: View {
                 }
             }
             // 「大きく表示」フローティングボタン。文字が見えづらい利用者が
-            // 最初に見つけられるよう、表示メニューの中ではなく常時見える位置に置く
-            .overlay(alignment: .bottomTrailing) {
+            // 最初に見つけられるよう、表示メニューの中ではなく常時見える位置に置く。
+            // overlayではなくsafeAreaInsetにすることで一覧側に下端の余白が効き、
+            // 最下段のセル・「借りる」ボタンがボタンの下に隠れたままにならない
+            .safeAreaInset(edge: .bottom, alignment: .trailing) {
                 BookDisplayScaleToggleButton(scale: $displayScale)
                     .padding(Self.displayScaleButtonPadding)
             }

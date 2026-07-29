@@ -6,8 +6,8 @@ import SwiftUI
 /// 切り替えられるようにする。モード（自動で戻る一時状態）ではなく、
 /// もう一度切り替えるまで維持される永続的な表示設定
 public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
-    case standard = "standard"
-    case large = "large"
+    case standard
+    case large
     
     public var id: String { rawValue }
     

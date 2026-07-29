@@ -651,11 +651,17 @@ private struct BookGridCoverView: View {
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
-                .frame(
-                    height: scale == .large ? largeTitleHeight : titleHeight,
-                    alignment: .top)
+                .frame(height: scaledTitleHeight, alignment: .top)
         }
         .contentShape(Rectangle())
+    }
+    
+    /// 表示の大きさに応じたタイトル表示領域の高さ
+    private var scaledTitleHeight: CGFloat {
+        switch scale {
+        case .standard: titleHeight
+        case .large: largeTitleHeight
+        }
     }
 }
 

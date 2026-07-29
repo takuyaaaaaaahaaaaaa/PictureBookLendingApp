@@ -9,11 +9,24 @@ import SwiftUI
 public struct BookCoverZoomView: View {
     /// 表示する表紙画像のURL（App層で解決済み・大きいサムネイル優先）
     let imageURL: String?
+    /// 大きい画像の読み込み中に表示する小サムネイルのURL（低解像度→高解像度の段階表示用）。
+    /// ズーム遷移の瞬間にプレースホルダーアイコンへ退行して
+    /// 「同じものが大きくなった」という連続性が崩れるのを防ぐ
+    let placeholderImageURL: String?
+    /// 図書のタイトル（VoiceOver用。拡大画面の目的がタイトル確認のため必須）
+    let title: String
     /// 閉じる要求（タップ・✕ボタン共通）
     let onClose: () -> Void
     
-    public init(imageURL: String?, onClose: @escaping () -> Void) {
+    public init(
+        imageURL: String?,
+        placeholderImageURL: String? = nil,
+        title: String,
+        onClose: @escaping () -> Void
+    ) {
         self.imageURL = imageURL
+        self.placeholderImageURL = placeholderImageURL
+        self.title = title
         self.onClose = onClose
     }
     
@@ -30,18 +43,29 @@ public struct BookCoverZoomView: View {
             .ignoresSafeArea()
             .overlay {
                 BookImageView(imageURL: imageURL) {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                        .font(.system(size: Layout.placeholderIconSize))
+                    if let placeholderImageURL {
+                        BookImageView(imageURL: placeholderImageURL) {
+                            placeholderIcon
+                        }
+                    } else {
+                        placeholderIcon
+                    }
                 }
                 .aspectRatio(contentMode: .fit)
                 .padding(Layout.imagePadding)
+                .accessibilityLabel("『\(title)』の表紙")
             }
             .contentShape(Rectangle())
             .onTapGesture(perform: onClose)
             .overlay(alignment: .topTrailing) {
                 closeButton
             }
+    }
+    
+    private var placeholderIcon: some View {
+        Image(systemName: "book.closed")
+            .foregroundStyle(.secondary)
+            .font(.system(size: Layout.placeholderIconSize))
     }
     
     private var closeButton: some View {
@@ -58,5 +82,5 @@ public struct BookCoverZoomView: View {
 
 #Preview {
     // 画像が無い場合のプレースホルダー表示（実画像はURLが必要なため）
-    BookCoverZoomView(imageURL: nil, onClose: {})
+    BookCoverZoomView(imageURL: nil, title: "ぐりとぐら", onClose: {})
 }

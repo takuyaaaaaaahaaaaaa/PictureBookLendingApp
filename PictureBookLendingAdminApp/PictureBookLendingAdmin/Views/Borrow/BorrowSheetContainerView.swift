@@ -212,9 +212,11 @@ struct BorrowSheetContainerView: View {
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: Layout.coverCornerRadius))
             .overlay(alignment: .bottomTrailing) {
+                // 対象ユーザー（文字が見えづらい人）に見える手がかりであるため、
+                // 小さな飾りではなくはっきりした大きさ・コントラストで出す
                 Image(systemName: "plus.magnifyingglass")
-                    .font(.footnote.bold())
-                    .foregroundStyle(.secondary)
+                    .font(.title3.bold())
+                    .foregroundStyle(.primary)
                     .padding(Layout.zoomBadgeInnerPadding)
                     .background(.regularMaterial, in: Circle())
                     .padding(Layout.zoomBadgeEdgePadding)
@@ -229,12 +231,23 @@ struct BorrowSheetContainerView: View {
     
     /// 表紙の拡大表示画面（タップか✕で閉じる）
     ///
-    /// 拡大には小サムネイルではなく大きい画像（`resolvedImageSource`）を使う。
-    /// 表紙からのズーム遷移で「同じものが大きくなった」と分かるようにする
+    /// 拡大には小サムネイルではなく大きい画像（`resolvedImageSource`）を使い、
+    /// 読み込み中は小サムネイルを段階表示して「同じものが大きくなった」連続性を保つ。
+    /// シート側の無操作タイマーはfullScreenCover表示中も生き続けることを実測済みだが、
+    /// OSバージョン差でライフサイクルが変わっても置き去り復帰（家庭の枠画面を
+    /// 次の利用者に見せない）が破られないよう、拡大画面自身にも同じタイムアウトを掛ける
     private var coverZoomScreen: some View {
-        BookCoverZoomView(imageURL: context.book.resolvedImageSource) {
+        BookCoverZoomView(
+            imageURL: context.book.resolvedImageSource,
+            placeholderImageURL: context.book.resolvedSmallImageSource,
+            title: context.book.title
+        ) {
             idleTicket += 1
             isCoverZoomPresented = false
+        }
+        .kioskIdleTimeout(ticket: idleTicket) {
+            isCoverZoomPresented = false
+            onClose()
         }
         #if os(iOS)
             .navigationTransition(.zoom(sourceID: CoverZoomSource.cover, in: coverZoomNamespace))
