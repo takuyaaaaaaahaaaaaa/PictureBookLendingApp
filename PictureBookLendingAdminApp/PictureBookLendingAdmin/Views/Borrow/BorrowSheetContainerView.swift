@@ -208,7 +208,7 @@ struct BorrowSheetContainerView: View {
     
     // MARK: - Computed Properties
     
-    /// 利用者選択画面の組セクション（組ごとに名前順）
+    /// 利用者選択画面の組セクション（組は組一覧の並び順、組内は利用者名順）
     ///
     /// 一覧から隠すのは「別の入口から構造的に到達できる利用者」＝保護者だけ
     /// （保護者の枠は園児タップ後の家庭の画面から必ず選べる。IA_REVIEW 追記12）。
@@ -219,6 +219,11 @@ struct BorrowSheetContainerView: View {
     private var allUserSections: [BorrowerListSection] {
         let allUsers = userModel.getAllUsers()
         let entranceUsers = userModel.getFamilyEntranceUsers()
+        let classGroupOrder = Dictionary(
+            uniqueKeysWithValues: classGroupModel.getAllClassGroups().enumerated().map {
+                ($1.id, $0)
+            }
+        )
         
         // 空き枠判定の材料：借用中の利用者IDと、園児→紐づく保護者の対応表
         let borrowedUserIds = Set(loanModel.activeLoans.map { $0.user.id })
@@ -252,7 +257,14 @@ struct BorrowSheetContainerView: View {
                         }
                 )
             }
-            .sorted { $0.title < $1.title }
+            .sorted { lhs, rhs in
+                switch (classGroupOrder[lhs.id], classGroupOrder[rhs.id]) {
+                case (let l?, let r?): l < r
+                case (nil, nil): lhs.title < rhs.title
+                case (nil, _): false
+                case (_, nil): true
+                }
+            }
     }
     
     /// 貸出中の図書の説明文（「いつ戻るか」の目安を日付だけで知らせる）
