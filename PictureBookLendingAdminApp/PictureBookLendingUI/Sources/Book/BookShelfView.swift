@@ -8,6 +8,9 @@ import SwiftUI
 /// （設計方針は docs/SCREEN_DESIGN.md「棚表示」を参照）。
 
 /// 棚表示のレイアウト定数
+///
+/// 間隔は4ptグリッドに乗せ、「かなグループ間(40) > 棚段間(24) > 段内の要素間(12)」の
+/// 3階層で差をつける。同じ階層の間隔は同じ値にそろえ、位置関係のリズムを保つ
 enum ShelfLayout {
     /// 背景の板1枚分の幅（継ぎ目線の間隔）
     static let plankWidth: CGFloat = 96
@@ -15,16 +18,23 @@ enum ShelfLayout {
     static let boardTopHeight: CGFloat = 8
     /// 棚板の前板の高さ
     static let boardFrontHeight: CGFloat = 16
-    /// 棚1段内の絵本同士の間隔
-    static let bookSpacing: CGFloat = 18
-    /// 絵本セル1つの幅
-    static let cellWidth: CGFloat = 120
-    /// 棚札と絵本の並びの間隔
-    static let plateSpacing: CGFloat = 8
-    /// 棚段同士の間隔
-    static let sectionSpacing: CGFloat = 26
+    /// 棚1段内の絵本同士の間隔（グリッド表示のセル間隔と同値にそろえる）
+    static let bookSpacing: CGFloat = 16
+    /// 絵本セルの最小幅（グリッド表示の適応的グリッドと同じ基準にそろえる）
+    static let minCellWidth: CGFloat = 140
+    /// 絵本の並び（セル下端の貸出ボタン等）と棚板の間隔（段内の要素間）
+    static let boardSpacing: CGFloat = 12
+    /// 同じかなグループ内で折り返した棚段同士の間隔（段内の要素間の2倍）
+    static let rowSpacing: CGFloat = 24
+    /// かなグループ同士の間隔
+    /// （棚段間より明確に大きくし、棚板からぶら下がるかなラベルを収める余白を兼ねる）
+    static let sectionSpacing: CGFloat = 56
+    /// 棚板とぶら下がるかなラベルの間隔
+    static let plateHangGap: CGFloat = 8
     /// 棚段の左右余白
     static let rowHorizontalPadding: CGFloat = 20
+    /// 一覧コンテンツ全体の上下余白
+    static let contentVerticalPadding: CGFloat = 24
 }
 
 /// 棚表示の配色
@@ -52,7 +62,7 @@ struct ShelfWoodColors {
     let plateText: Color
     /// 棚板が落とす影
     let boardShadow: Color
-
+    
     /// ライトモード配色（明るいクリーム〜薄茶の木地×濃茶のパーツ）
     static let light = ShelfWoodColors(
         backgroundTop: Color(red: 0.886, green: 0.780, blue: 0.612),
@@ -62,11 +72,11 @@ struct ShelfWoodColors {
         boardTopDark: Color(red: 0.824, green: 0.655, blue: 0.424),
         boardFrontLight: Color(red: 0.745, green: 0.561, blue: 0.345),
         boardFrontDark: Color(red: 0.659, green: 0.486, blue: 0.275),
-        plateBackground: Color(red: 0.420, green: 0.271, blue: 0.125),
-        plateText: Color(red: 0.976, green: 0.929, blue: 0.839),
+        plateBackground: Color(red: 0.992, green: 0.973, blue: 0.929),
+        plateText: Color(red: 0.302, green: 0.196, blue: 0.094),
         boardShadow: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.35)
     )
-
+    
     /// ダークモード配色（焦げ茶の木地×クリームの文字）
     static let dark = ShelfWoodColors(
         backgroundTop: Color(red: 0.333, green: 0.224, blue: 0.118),
@@ -76,11 +86,11 @@ struct ShelfWoodColors {
         boardTopDark: Color(red: 0.420, green: 0.282, blue: 0.149),
         boardFrontLight: Color(red: 0.369, green: 0.247, blue: 0.122),
         boardFrontDark: Color(red: 0.306, green: 0.204, blue: 0.094),
-        plateBackground: Color(red: 0.184, green: 0.118, blue: 0.047),
-        plateText: Color(red: 0.937, green: 0.851, blue: 0.706),
+        plateBackground: Color(red: 0.929, green: 0.882, blue: 0.796),
+        plateText: Color(red: 0.216, green: 0.137, blue: 0.063),
         boardShadow: Color.black.opacity(0.45)
     )
-
+    
     /// カラースキームに応じた配色を返す
     static func colors(for colorScheme: ColorScheme) -> ShelfWoodColors {
         colorScheme == .dark ? .dark : .light
@@ -92,10 +102,10 @@ struct ShelfWoodColors {
 /// 継ぎ目線は静的な描画のためCanvasで軽量に引く
 struct ShelfWoodBackgroundView: View {
     @Environment(\.colorScheme) private var colorScheme
-
+    
     var body: some View {
         let colors = ShelfWoodColors.colors(for: colorScheme)
-
+        
         LinearGradient(
             colors: [colors.backgroundTop, colors.backgroundBottom],
             startPoint: .top,
@@ -117,12 +127,18 @@ struct ShelfWoodBackgroundView: View {
 }
 
 /// 棚板（絵本が乗る上面＋手前に見える前板の2面構成）
+///
+/// `hangingLabelText` を渡すと、棚板の下にかなラベルをぶら下げる。
+/// 「棚板の下にぶら下がっている札は、その下に並ぶ絵本の見出し」という
+/// 一貫したルールで読めるようにする（最上段の横木にも同じルールを適用できる）
 struct ShelfBoardView: View {
     @Environment(\.colorScheme) private var colorScheme
-
+    
+    var hangingLabelText: String? = nil
+    
     var body: some View {
         let colors = ShelfWoodColors.colors(for: colorScheme)
-
+        
         VStack(spacing: 0) {
             LinearGradient(
                 colors: [colors.boardTopLight, colors.boardTopDark],
@@ -130,7 +146,7 @@ struct ShelfBoardView: View {
                 endPoint: .bottom
             )
             .frame(height: ShelfLayout.boardTopHeight)
-
+            
             LinearGradient(
                 colors: [colors.boardFrontLight, colors.boardFrontDark],
                 startPoint: .top,
@@ -140,36 +156,48 @@ struct ShelfBoardView: View {
         }
         .compositingGroup()
         .shadow(color: colors.boardShadow, radius: 6, y: 5)
+        .overlay(alignment: .bottomLeading) {
+            if let hangingLabelText {
+                KanaShelfPlateView(text: hangingLabelText)
+                    .padding(.leading, ShelfLayout.rowHorizontalPadding)
+                    .alignmentGuide(.bottom) { dimensions in
+                        // ラベルのbottomガイドを自身のtopより上に設定することで、
+                        // 棚板の下側へgapぶん離してぶら下げる
+                        dimensions[.top] - ShelfLayout.plateHangGap
+                    }
+            }
+        }
     }
 }
 
-/// 棚札（かなグループ名を表示する木の札）
+/// 棚札（かなグループ名を表示する紙ラベル）
+///
+/// 棚板の前面に貼って使う。木の札だと木地と同系色で埋もれるため、
+/// 「クリーム色の紙×濃茶の文字」でコントラストを確保する
 struct KanaShelfPlateView: View {
     @Environment(\.colorScheme) private var colorScheme
-
+    
     let text: String
-
+    
     var body: some View {
         let colors = ShelfWoodColors.colors(for: colorScheme)
-
+        
         Text(text)
-            .font(.subheadline.bold())
+            .font(.title3.bold())
             .foregroundStyle(colors.plateText)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 3)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
             .background(colors.plateBackground, in: RoundedRectangle(cornerRadius: 6))
+            .shadow(color: colors.boardShadow.opacity(0.5), radius: 2, y: 1)
     }
 }
 
 #Preview("棚パーツ") {
     VStack(alignment: .leading, spacing: ShelfLayout.sectionSpacing) {
-        KanaShelfPlateView(text: "あ")
-            .padding(.leading, ShelfLayout.rowHorizontalPadding)
-        ShelfBoardView()
-        KanaShelfPlateView(text: "か")
-            .padding(.leading, ShelfLayout.rowHorizontalPadding)
+        ShelfBoardView(hangingLabelText: "あ")
+        ShelfBoardView(hangingLabelText: "か")
         ShelfBoardView()
     }
-    .padding(.vertical, 40)
+    .padding(.vertical, 60)
     .background { ShelfWoodBackgroundView() }
 }

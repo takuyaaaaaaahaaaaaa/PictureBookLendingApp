@@ -33,9 +33,9 @@ public enum BookDisplayMode: String, CaseIterable, Identifiable {
     case list = "list"
     case grid = "grid"
     case shelf = "shelf"
-
+    
     public var id: String { rawValue }
-
+    
     public var displayName: String {
         switch self {
         case .list:
@@ -46,7 +46,7 @@ public enum BookDisplayMode: String, CaseIterable, Identifiable {
             return "棚表示"
         }
     }
-
+    
     public var iconName: String {
         switch self {
         case .list:
@@ -102,6 +102,9 @@ public struct BookListView<RowAction: View>: View {
     #endif
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
+    
+    /// 棚表示のビューポート幅（折り返し列数の計算に使用）
+    @State private var shelfViewportWidth: CGFloat = 0
     
     /// 五十音グループでセクション化された絵本
     public let sections: [BookSection]
@@ -369,50 +372,101 @@ public struct BookListView<RowAction: View>: View {
     
     /// 棚表示（木の本棚デザイン）のセクション
     ///
-    /// 五十音セクション＝棚1段として、棚札＋横スクロールの絵本の並び＋棚板で構成する。
+    /// 五十音セクション＝棚のまとまりとして、棚札＋折り返しの絵本の並びで構成する。
+    /// 絵本はグリッド表示と同等の大きさのセルを画面幅に応じて折り返し、
+    /// 折り返してできた各行の下に棚板を敷く（本が多いかなグループは棚が複数段になる）。
+    /// 横スクロールは使わず、縦スクロールだけで全冊を見られるようにする。
     /// アプリの枠（ナビゲーション・検索・チップ等）はそのままに、
     /// 一覧コンテンツエリアだけを木の世界にする（docs/SCREEN_DESIGN.md「棚表示」参照）
     private var bookShelfSection: some View {
-        ScrollView {
+        let visibleSections = sections.filter { !$0.books.isEmpty }
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: ShelfLayout.sectionSpacing) {
-                ForEach(sections) { section in
-                    shelfRow(for: section)
+                // 最上段の横木。最初のかなグループのラベルをここからぶら下げる
+                if let firstSection = visibleSections.first {
+                    ShelfBoardView(hangingLabelText: firstSection.title)
+                }
+                ForEach(Array(visibleSections.enumerated()), id: \.element.id) { index, section in
+                    let nextTitle =
+                        index + 1 < visibleSections.count ? visibleSections[index + 1].title : nil
+                    shelfSection(for: section, hangingNextLabelText: nextTitle)
                 }
             }
-            .padding(.vertical, ShelfLayout.sectionSpacing)
+            .padding(.vertical, ShelfLayout.contentVerticalPadding)
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            shelfViewportWidth = width
         }
         .background {
             ShelfWoodBackgroundView()
                 .ignoresSafeArea(edges: .bottom)
         }
     }
-
-    /// 棚1段分のビュー（棚札＋絵本の並び＋棚板）
+    
+    /// 棚表示の折り返し列数（ビューポート幅から算出）
+    private var shelfColumnCount: Int {
+        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        guard available >= ShelfLayout.minCellWidth else { return 1 }
+        return Int(
+            (available + ShelfLayout.bookSpacing)
+                / (ShelfLayout.minCellWidth + ShelfLayout.bookSpacing))
+    }
+    
+    /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
+    private var shelfCellWidth: CGFloat {
+        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        guard available >= ShelfLayout.minCellWidth else { return ShelfLayout.minCellWidth }
+        let columnCount = CGFloat(shelfColumnCount)
+        return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
+    }
+    
+    /// かなグループ1つ分の棚のまとまり（折り返しの棚段の集まり）
     ///
-    /// 段内の絵本は横スクロールで見せる（本屋の棚を横にたどるイメージ）。
-    /// 絵本セルの下端が棚板の上面に接するよう、並びと棚板の間隔は空けない
+    /// かなラベルは独立した棚札としては置かず、1つ上の棚板の下にぶら下げる。
+    /// このグループ自身のラベルは直前のグループの最後の棚板（先頭グループは最上段の横木）が
+    /// 持つため、ここでは最後の棚板に「次のグループのラベル」をぶら下げる
     @ViewBuilder
-    private func shelfRow(for section: BookSection) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            KanaShelfPlateView(text: section.title)
-                .padding(.leading, ShelfLayout.rowHorizontalPadding)
-                .padding(.bottom, ShelfLayout.plateSpacing)
-
-            ScrollView(.horizontal) {
-                LazyHStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
-                    ForEach(section.books) { book in
-                        bookGridCellContent(for: book)
-                            .frame(width: ShelfLayout.cellWidth)
-                    }
-                }
-                .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
+    private func shelfSection(for section: BookSection, hangingNextLabelText: String?) -> some View
+    {
+        let rows = Self.chunked(section.books, into: shelfColumnCount)
+        VStack(alignment: .leading, spacing: ShelfLayout.rowSpacing) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                shelfRow(
+                    of: row,
+                    hangingLabelText: index == rows.count - 1 ? hangingNextLabelText : nil)
             }
-            .scrollIndicators(.hidden)
-
-            ShelfBoardView()
         }
     }
-
+    
+    /// 棚1段分のビュー（絵本の並び＋棚板）
+    ///
+    /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
+    @ViewBuilder
+    private func shelfRow(of books: [Book], hangingLabelText: String?) -> some View {
+        VStack(alignment: .leading, spacing: ShelfLayout.boardSpacing) {
+            HStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
+                ForEach(books) { book in
+                    bookGridCellContent(for: book)
+                        .frame(width: shelfCellWidth)
+                }
+            }
+            .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            ShelfBoardView(hangingLabelText: hangingLabelText)
+        }
+    }
+    
+    /// 配列を指定サイズごとの行に分割する（棚表示の折り返し用）
+    private static func chunked(_ books: [Book], into size: Int) -> [[Book]] {
+        guard size > 0 else { return books.isEmpty ? [] : [books] }
+        return stride(from: 0, to: books.count, by: size).map {
+            Array(books[$0..<min($0 + size, books.count)])
+        }
+    }
+    
     /// 絵本グリッドセルのコンテンツ
     ///
     /// タップ領域（表紙＋タイトル）とrowAction（貸出ボタン等）を縦に分離し、
@@ -620,7 +674,7 @@ private struct BookGridCoverView: View {
     @Previewable @State var selectedKanaFilter: KanaGroup?
     @Previewable @State var selectedSortType: BookSortType = .title
     @Previewable @State var displayMode: BookDisplayMode = .shelf
-
+    
     let aBooks = [
         Book(title: "おおきなかぶ", author: "内田莉莎子", managementNumber: "あ001", kanaGroup: .a),
         Book(title: "あおくんときいろちゃん", author: "レオ・レオニ", managementNumber: "あ002", kanaGroup: .a),
@@ -637,13 +691,13 @@ private struct BookGridCoverView: View {
         Book(title: "３びきのやぎのがらがらどん", author: "せたていじ", managementNumber: "さ002", kanaGroup: .sa),
         Book(title: "そらまめくんのベッド", author: "なかやみわ", managementNumber: "さ003", kanaGroup: .sa),
     ]
-
+    
     let sections = [
         BookSection(kanaGroup: .a, books: aBooks),
         BookSection(kanaGroup: .ka, books: kaBooks),
         BookSection(kanaGroup: .sa, books: saBooks),
     ]
-
+    
     NavigationStack {
         BookListView(
             sections: sections,
