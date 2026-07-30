@@ -52,16 +52,24 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 ## 3. イベント一覧（v1：10個）
 
 命名はGA4流のsnake_case。用語はTERMS.mdの英語列に従う（Book／User／Loan）。
+表は Phase A（2026-07-31 実装）の実装内容に合わせて更新済み。
 
 ### 貸出フロー（Q1・Q2・Q4）
 
 | イベント | 発火タイミング | プロパティ |
 |---|---|---|
-| `borrow_flow_started` | 図書一覧で図書をタップし貸出シートが開いた | `find_method`: search / kana_index / shelf / scroll |
-| `borrow_user_selected` | 名前一覧で名前をタップした | `elapsed_ms`（シート表示からの経過）, `search_used`: Bool |
+| `borrow_flow_started` | 図書一覧で図書をタップし貸出シートが開いた（貸出中の案内シートは除く） | `find_method`: search / kana_index / shelf / scroll |
+| `borrow_user_selected` | 名前一覧で名前をタップした | `elapsed_ms`（シート表示からの経過） |
 | `borrow_completed` | 枠タップで貸出が確定した | `total_ms`（シート表示から完了まで）, `slot_type`: child / guardian, `guardian_fallback`: Bool（園児枠満杯で保護者枠を使ったか） |
 | `borrow_abandoned` | 貸出シートが完了せず閉じた | `last_step`: user_selection / slot_selection, `reason`: user_closed / idle_timeout, `elapsed_ms` |
-| `borrow_blocked_no_slot` | 家庭の画面に到達したが空き枠がなかった | `elapsed_ms` |
+| `borrow_blocked_no_slot` | 家庭の画面に到達したが空き枠がなかった | なし |
+
+- `borrow_user_selected` から `search_used` を落とした：貸出シートの名前一覧
+  （`BorrowerListView`）には検索フィールドが無く、絞り込み手段は組チップだけのため
+  （検索の有無を答えられるイベントが存在しない）
+- `borrow_blocked_no_slot` から `elapsed_ms` を落とした：このイベントは
+  家庭の枠領域が表示された時点で発火するもので、利用者の操作の完了を表さないため
+  所要時間に意味がない
 
 ### 検索（Q3）
 
@@ -76,8 +84,15 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 
 | イベント | 発火タイミング | プロパティ |
 |---|---|---|
-| `return_family_opened` | 名前一覧から家庭の画面を開いた | `find_method`: search_name / search_book_title / group_index / scroll, `overdue_filter_active`: Bool |
+| `return_family_opened` | 名前一覧から家庭の画面を開いた | `find_method`: search_name / search_book_title / browse, `overdue_filter_active`: Bool |
 | `return_completed` | 返却が確定した | `elapsed_ms`（家庭の画面表示から）, `was_overdue`: Bool |
+
+v1の`find_method`は `group_index` / `scroll` を `browse`（検索せず一覧から選んだ）に
+統合した。組チップは`BorrowerListView`内でスクロール位置を動かすだけで、
+どのチップを押したかは呼び出し側のContainerに伝わらないため、
+判別にはUI層の改修（チップ操作のコールバック追加）が必要になる。
+「検索が使われているか」が先に知りたい問いであり、
+ブラウズ内訳が必要になった時点で改修する（将来課題）。
 
 ### つまずき・俯瞰（Q4・Q5）
 
@@ -85,6 +100,10 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 |---|---|---|
 | `undo_performed` | Undoカードで取り消した | `flow`: borrow / return |
 | `overdue_filter_toggled` | 返却タブ「延滞のみ」フィルタをONにした | なし（先生の月末俯瞰＝1タップ動線の答え合わせ） |
+
+`flow: borrow` は**貸出フローの中で行われた返却の取り消し**を意味する
+（枠が埋まっている人がその場で返して借り直す「本の入れ替え」のやり直し）。
+貸出そのものを取り消すUndoは存在しない。`flow: return` は返却タブでの返却の取り消し。
 
 ---
 

@@ -14,6 +14,8 @@ struct ReturnListContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(\.analytics) private var analytics
+    @Environment(\.scenePhase) private var scenePhase
     
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
@@ -28,6 +30,8 @@ struct ReturnListContainerView: View {
     @State private var undoFeedback = UndoFeedback()
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
+    /// 家庭の画面を開いてからの所要時間の計測（一覧に居る間はnil）
+    @State private var familyStopwatch: FlowStopwatch?
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -80,6 +84,20 @@ struct ReturnListContainerView: View {
                 popToListAndScrollTop()
             }
         }
+        .onChange(of: scenePhase) { _, newPhase in
+            // バックグラウンドに居た時間は返却の所要時間として意味を持たないため計測を捨てる
+            // （docs/ANALYTICS_DESIGN.md §4）
+            if newPhase != .active {
+                familyStopwatch?.invalidate()
+            }
+        }
+        .onChange(of: isOverdueOnly) { _, isOn in
+            // 先生の月末俯瞰＝1タップ動線が使われているかの答え合わせ。
+            // ONにしたときだけ記録する（解除は同じ意味を持たない）
+            if isOn {
+                analytics.track(.overdueFilterToggled)
+            }
+        }
         .refreshable {
             refreshData()
         }
@@ -93,7 +111,8 @@ struct ReturnListContainerView: View {
             FamilyLoanSlotsContainerView(
                 undoFeedback: $undoFeedback,
                 userId: userId,
-                context: .returning(onReturnCompleted: handleReturnCompleted(hasRemainingLoans:))
+                context: .returning(
+                    onReturnCompleted: handleReturnCompleted(hasRemainingLoans:wasOverdue:))
             )
             .padding()
         }
@@ -193,9 +212,34 @@ struct ReturnListContainerView: View {
             }
     }
     
+    /// 家庭を見つけた方法（返却フロー開始の記録用）
+    ///
+    /// 検索中かどうかは`filteredEntries`と同じ判定で見分ける
+    /// （名前でヒットしたのか、手に持ってきた図書のタイトルでヒットしたのか）。
+    /// 組チップ・スクロールの判別はUI層の改修が必要なため、v1では`browse`にまとめる
+    private func findMethod(for row: BorrowerRowDisplay) -> AnalyticsEvent.ReturnFindMethod {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return .browse }
+        if row.name.localizedStandardContains(searchText) {
+            return .searchName
+        }
+        let matchesBookTitle =
+            borrowerEntries
+            .first { $0.row.id == row.id }?
+            .bookTitles
+            .contains { $0.localizedStandardContains(searchText) } ?? false
+        return matchesBookTitle ? .searchBookTitle : .browse
+    }
+    
     // MARK: - Actions
     
     private func handleSelect(_ row: BorrowerRowDisplay) {
+        analytics.track(
+            .returnFamilyOpened(
+                findMethod: findMethod(for: row),
+                overdueFilterActive: isOverdueOnly
+            )
+        )
+        familyStopwatch = FlowStopwatch()
         navigationPath.append(row.id)
     }
     
@@ -203,7 +247,10 @@ struct ReturnListContainerView: View {
     /// （枠が「借りていません」に変わるのを見せて確認とする＝状態が画面に残る原則）。
     /// 家庭の本がすべて返ったときだけ、カードが消えた後に一覧へ自動で戻る。
     /// まだ貸出が残っていれば留まり続け、2冊目の返却を時間制限なしで行える
-    private func handleReturnCompleted(hasRemainingLoans: Bool) {
+    private func handleReturnCompleted(hasRemainingLoans: Bool, wasOverdue: Bool) {
+        analytics.track(
+            .returnCompleted(elapsedMs: familyStopwatch?.elapsedMs(), wasOverdue: wasOverdue)
+        )
         isPopPendingAfterReturn = !hasRemainingLoans
         idleTicket += 1
     }
@@ -223,6 +270,7 @@ struct ReturnListContainerView: View {
         isPopPendingAfterReturn = false
         idleTicket += 1
         guard let loanId = undoFeedback.targetId else { return }
+        analytics.track(.undoPerformed(flow: .returning))
         do {
             try loanModel.undoReturn(loanId: loanId)
         } catch {

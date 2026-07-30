@@ -6,8 +6,9 @@ import SwiftUI
 
 /// 家庭の枠領域の利用文脈（呼び出し側から見た「何をしたら何が起きるか」）
 enum FamilyLoanSlotsContext {
-    /// 返却タブから：返却完了時のコールバック（引数は家庭内に貸出が残っているか）
-    case returning(onReturnCompleted: (_ hasRemainingLoans: Bool) -> Void)
+    /// 返却タブから：返却完了時のコールバック
+    /// （引数は家庭内に貸出が残っているか・返した貸出が延滞していたか）
+    case returning(onReturnCompleted: (_ hasRemainingLoans: Bool, _ wasOverdue: Bool) -> Void)
     /// 貸出フローから：空き枠が選ばれたときのコールバック（引数は枠の持ち主の利用者ID）。
     /// この文脈では返却完了後もその場に留まる（空いた枠で続けて借りるのが目的のため）
     case borrowing(onSlotSelected: (_ userId: UUID) -> Void)
@@ -122,6 +123,8 @@ struct FamilyLoanSlotsContainerView: View {
     /// 返却の実行（確認ダイアログなし・Undoカードでリカバリー）
     private func handleReturn(_ slot: FamilyLoanSlotDisplay) {
         guard let loan = loanModel.getUserActiveLoans(userId: slot.id).first else { return }
+        // 延滞判定は返却前の貸出に対して行う（返却後は期限との比較の意味が変わるため）
+        let wasOverdue = loan.isOverdue(at: Date())
         
         do {
             let returnedLoan = try loanModel.returnBook(loanId: loan.id)
@@ -135,7 +138,7 @@ struct FamilyLoanSlotsContainerView: View {
             if case .returning(let onReturnCompleted) = context {
                 let hasRemainingLoans = userModel.getFamilyMembers(of: slot.id)
                     .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
-                onReturnCompleted(hasRemainingLoans)
+                onReturnCompleted(hasRemainingLoans, wasOverdue)
             }
         } catch {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
@@ -176,7 +179,7 @@ struct FamilyLoanSlotsContainerView: View {
         FamilyLoanSlotsContainerView(
             undoFeedback: $undoFeedback,
             userId: mother.id,  // 保護者のIDから入っても同じ家庭に解決される
-            context: .returning(onReturnCompleted: { _ in })
+            context: .returning(onReturnCompleted: { _, _ in })
         )
         .padding()
     }
