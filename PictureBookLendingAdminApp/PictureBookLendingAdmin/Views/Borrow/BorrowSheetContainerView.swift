@@ -431,12 +431,15 @@ struct BorrowSheetContainerView: View {
             } else {
                 successFeedback.show("\(name)さんに『\(book.title)』を貸出しました")
             }
-            // 保護者枠へのフォールバック＝タップした本人とは違う枠で借りたか
+            // 保護者枠へのフォールバック＝園児の名前で入ったのに保護者の枠で借りたか
+            // （保護者の名前で入って園児の枠で借りるのは通常の代行操作でありフォールバックではない）
+            let usedSlotType = slotType(of: slotUserId)
             analytics.track(
                 .borrowCompleted(
                     totalMs: stopwatch.elapsedMs(),
-                    slotType: slotType(of: slotUserId),
-                    guardianFallback: slotUserId != route.userId
+                    slotType: usedSlotType,
+                    guardianFallback: usedSlotType == .guardian
+                        && slotType(of: route.userId) == .child
                 )
             )
             hasCompletedLend = true
