@@ -30,7 +30,7 @@ struct ReturnListContainerView: View {
     @State private var undoFeedback = UndoFeedback()
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
-    /// 家庭の画面を開いてからの所要時間の計測（一覧に居る間はnil）
+    /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す・popでは戻さない）
     @State private var familyStopwatch: FlowStopwatch?
     
     var body: some View {

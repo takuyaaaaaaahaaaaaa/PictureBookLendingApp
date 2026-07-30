@@ -60,10 +60,16 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 |---|---|---|
 | `borrow_flow_started` | 図書一覧で図書をタップし貸出シートが開いた（貸出中の案内シートは除く） | `find_method`: search / kana_index / shelf / scroll |
 | `borrow_user_selected` | 名前一覧で名前をタップした | `elapsed_ms`（シート表示からの経過） |
-| `borrow_completed` | 枠タップで貸出が確定した | `total_ms`（シート表示から完了まで）, `slot_type`: child / guardian, `guardian_fallback`: Bool（園児枠満杯で保護者枠を使ったか） |
+| `borrow_completed` | 枠タップで貸出が確定した | `total_ms`（シート表示から完了まで）, `slot_type`: child / guardian, `guardian_fallback`: Bool（園児の名前で入ったのに保護者の枠で借りたか） |
 | `borrow_abandoned` | 貸出シートが完了せず閉じた | `last_step`: user_selection / slot_selection, `reason`: user_closed / idle_timeout, `elapsed_ms` |
 | `borrow_blocked_no_slot` | 家庭の画面に到達したが空き枠がなかった | なし |
 
+- `borrow_flow_started.find_method` の `scroll` は「検索も五十音チップも使っておらず、
+  一覧が棚表示でもなかった」を意味する（積極的にスクロールしたことの検知ではない）
+- `borrow_completed.guardian_fallback` は「園児の名前で入って保護者の枠で借りた」の
+  近似であり、**園児枠が満杯だったかは判定していない**（園児枠が空いていても
+  保護者枠を選べばtrueになる）。保護者の名前で入って園児の枠で借りるのは
+  通常の代行操作のためfalse。厳密な満杯判定が必要になったら枠の状態も見る
 - `borrow_user_selected` から `search_used` を落とした：貸出シートの名前一覧
   （`BorrowerListView`）には検索フィールドが無く、絞り込み手段は組チップだけのため
   （検索の有無を答えられるイベントが存在しない）
@@ -118,7 +124,13 @@ v1の`find_method`は `group_index` / `scroll` を `browse`（検索せず一覧
 | あいまい検索発動率 | `fuzzy_triggered=true ÷ book_search_performed` | 高い→タイプミスが多い＝67歳基準の入力UIを疑う |
 | 図書の見つけ方の内訳 | `borrow_flow_started.find_method` の構成比 | 棚表示 vs 検索 vs 五十音。次に磨く機能の判断材料 |
 | 保護者枠フォールバック率 | `guardian_fallback=true ÷ borrow_completed` | 発見6「2枠が知られていない」の改善確認 |
-| Undo率 | `undo_performed ÷ (borrow_completed + return_completed)` | 高い→間違えやすいUI。`flow`別に見る |
+| Undo率 | `undo_performed ÷ (borrow_completed + return_completed)` | 高い→間違えやすいUI。`flow`別に見る（下記の注意） |
+
+Undo率を`flow`別に見るときは分母に注意する。`flow: return` は
+`return_completed` を分母にすればそのまま比率になるが、`flow: borrow`
+（貸出フロー内での返却取り消し）に対応する完了イベントは分母に存在しない
+（枠を空けるための返却は`return_completed`として記録されない）。
+`flow: borrow` は比率ではなく実数の推移として見る。
 
 ### 計測できないと分かっていること（v1の制約）
 

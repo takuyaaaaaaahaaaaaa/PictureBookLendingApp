@@ -2,8 +2,10 @@ import os
 
 /// アナリティクスイベントのパラメータ値
 ///
-/// 記録できるのは所要時間・件数・列挙値だけ（docs/ANALYTICS_DESIGN.md 大原則2）。
-/// 利用者ID・図書ID・検索文字列のような識別子を載せられる余地を型で塞ぐ。
+/// 値の形を所要時間・件数・列挙値に限定する（docs/ANALYTICS_DESIGN.md 大原則2）。
+/// ただし`.string`には任意の文字列が入るため、型だけでは識別子の混入は防げない。
+/// 混入を防いでいるのは「記録の唯一の入口をApp層の`AnalyticsEvent`にし、
+/// そこに識別子を受け取るケースを作らない」という規律のほう。
 public enum AnalyticsParamValue: Equatable, Sendable, CustomStringConvertible {
     /// 列挙値（`find_method: shelf` 等のraw value）
     case string(String)
