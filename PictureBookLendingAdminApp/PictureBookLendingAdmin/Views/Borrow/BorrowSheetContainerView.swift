@@ -41,12 +41,18 @@ struct BorrowSheetContainerView: View {
     @State private var undoFeedback = UndoFeedback()
     /// 表紙の拡大表示状態（枠確認画面の表紙タップで開く）
     @State private var isCoverZoomPresented = false
-    /// 表紙⇄拡大表示のズーム遷移用Namespace
-    @Namespace private var coverZoomNamespace
     /// 貸出フローの所要時間の計測（シート表示＝このViewの生成で開始）
     @State private var stopwatch = FlowStopwatch()
     /// 貸出が完了したか（完了後に閉じるのは離脱ではないと判定するために持つ）
     @State private var hasCompletedLend = false
+    /// 離脱を記録済みか（1回のシートにつき1件に抑えるためのフラグ）
+    ///
+    /// 無操作タイマーは選択画面と表紙の拡大表示の両方で同時に生きており、
+    /// 同じチケットで同時に発火しうる。閉じる要求は何度来てもよいが、
+    /// 記録は1件でなければ完了率・離脱率が狂う
+    @State private var hasTrackedAbandon = false
+    /// 表紙⇄拡大表示のズーム遷移用Namespace
+    @Namespace private var coverZoomNamespace
     
     /// タップされた図書と開いた時点の貸出状態のスナップショット（シートの提示単位）
     let context: BorrowSheetContext
@@ -383,9 +389,10 @@ struct BorrowSheetContainerView: View {
     ///
     /// 完了しなかった貸出フローは離脱として記録する。
     /// 「貸出中です」の案内だけのシート（フロー未開始）と、
-    /// 貸出が完了した後の閉じるは離脱ではないため記録しない
+    /// 貸出が完了した後の閉じるは離脱ではないため記録しない。
+    /// 複数の無操作タイマーが同時に発火しても記録は1件に抑える（`hasTrackedAbandon`）
     private func handleClose(reason: AnalyticsEvent.AbandonReason) {
-        if !context.isAlreadyLent && !hasCompletedLend {
+        if !context.isAlreadyLent && !hasCompletedLend && !hasTrackedAbandon {
             analytics.track(
                 .borrowAbandoned(
                     lastStep: sheetPath.isEmpty ? .userSelection : .slotSelection,
@@ -393,6 +400,7 @@ struct BorrowSheetContainerView: View {
                     elapsedMs: stopwatch.elapsedMs()
                 )
             )
+            hasTrackedAbandon = true
         }
         onClose()
     }
@@ -402,10 +410,11 @@ struct BorrowSheetContainerView: View {
     /// 取り消したらその場に留まり、枠に本が戻るのを見せる
     private func handleUndoReturn() {
         guard let loanId = undoFeedback.targetId else { return }
-        // 貸出フローの中で行われた返却の取り消し（枠の入れ替えのやり直し）
-        analytics.track(.undoPerformed(flow: .borrow))
         do {
             try loanModel.undoReturn(loanId: loanId)
+            // 貸出フローの中で行われた返却の取り消し（枠の入れ替えのやり直し）。
+            // 完了系のイベントと同じく、成立した操作だけを記録する
+            analytics.track(.undoPerformed(flow: .borrow))
         } catch {
             alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
         }

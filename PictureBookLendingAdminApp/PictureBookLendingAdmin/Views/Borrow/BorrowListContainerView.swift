@@ -39,6 +39,11 @@ struct BorrowListContainerView: View {
     @State private var displayMode: BookDisplayMode = .shelf
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
+    /// 直近に記録した検索テキスト（トリム後。未記録ならnil）
+    ///
+    /// `.task`はタブを行き来して画面が再表示されるたびに走り直すため、
+    /// これがないと同じ検索が何度も記録され0件ヒット率が歪む
+    @State private var lastTrackedSearchText: String?
     /// 一覧の表示の大きさ（「大きく表示」フローティングボタンのトグル状態）。
     /// 文字が見えづらい利用者は毎回見えづらいため、一時的なモードではなく
     /// アプリを再起動しても維持される永続設定にする
@@ -207,6 +212,14 @@ struct BorrowListContainerView: View {
     /// シート内フローの状態は子Container（`BorrowSheetContainerView`）の@Stateに任せるため、
     /// ここでは提示単位（図書＋貸出状態のスナップショット）を差し込むだけでよい。
     private func openBorrowSheet(for book: Book) {
+        // デバウンスの待ち時間より早く図書をタップした場合、その検索は記録されないまま
+        // 終わってしまう。「探せた検索」ほど早くタップされるため、放置すると
+        // 0件ヒット率が実態より高く出る。ここで先に確定させて取りこぼしを防ぐ
+        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
+        if !trimmedText.isEmpty {
+            trackBookSearchIfUnrecorded(trimmedText: trimmedText)
+        }
+        
         let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
         // 貸出中の案内シートは貸出フローの開始ではないため記録しない
         if !isAlreadyLent {
@@ -218,14 +231,28 @@ struct BorrowListContainerView: View {
     /// 検索の確定（デバウンス後）を利用ログに記録する
     ///
     /// 待っている間に検索テキストが変われば`.task(id:)`ごとキャンセルされ、
-    /// 入力途中の状態は記録されない。検索文字列そのものは載せず、
-    /// 文字数と結果の件数だけを残す（docs/ANALYTICS_DESIGN.md 大原則2）
+    /// 入力途中の状態は記録されない
     private func trackBookSearch() async {
         let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
-        guard !trimmedText.isEmpty else { return }
+        guard !trimmedText.isEmpty else {
+            // 検索をやめた（クリアした）ら、次に同じ語を打ち直したときは別の検索として扱う
+            lastTrackedSearchText = nil
+            return
+        }
         
         try? await Task.sleep(for: SearchTracking.debounce)
         if Task.isCancelled { return }
+        
+        trackBookSearchIfUnrecorded(trimmedText: trimmedText)
+    }
+    
+    /// まだ記録していない検索テキストであれば記録する
+    ///
+    /// 検索文字列そのものは載せず、文字数と結果の件数だけを残す
+    /// （docs/ANALYTICS_DESIGN.md 大原則2）。
+    /// 同じテキストの二重記録を避けるため、記録済みのテキストを覚えておく
+    private func trackBookSearchIfUnrecorded(trimmedText: String) {
+        guard lastTrackedSearchText != trimmedText else { return }
         
         let outcome = bookSections.filterOutcome(
             searchText: filterState.searchText,
@@ -240,6 +267,7 @@ struct BorrowListContainerView: View {
                 zeroHit: outcome.bookCount == 0
             )
         )
+        lastTrackedSearchText = trimmedText
     }
     
     /// 貸出完了（✓カードが消えた）ときの後始末。

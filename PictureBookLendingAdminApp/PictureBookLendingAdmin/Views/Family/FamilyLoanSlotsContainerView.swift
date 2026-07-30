@@ -39,6 +39,8 @@ struct FamilyLoanSlotsContainerView: View {
     ///
     /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
     @State private var alertState = AlertState()
+    /// 空き枠なしを記録済みか（`.task`の再実行で同じ到達が二重に記録されるのを防ぐ）
+    @State private var hasTrackedBlockedNoSlot = false
     
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
@@ -114,10 +116,11 @@ struct FamilyLoanSlotsContainerView: View {
     /// 「タップしたのに借りられない」体験がどれだけ起きているかを見るための記録
     /// （docs/ANALYTICS_DESIGN.md Q5）。返却文脈では枠が埋まっているのが通常のため記録しない
     private func trackBlockedIfNoOpenSlot() {
-        guard case .borrowing = context else { return }
+        guard case .borrowing = context, !hasTrackedBlockedNoSlot else { return }
         let currentSlots = slots
         guard !currentSlots.isEmpty, currentSlots.allSatisfy({ $0.loan != nil }) else { return }
         analytics.track(.borrowBlockedNoSlot)
+        hasTrackedBlockedNoSlot = true
     }
     
     /// 返却の実行（確認ダイアログなし・Undoカードでリカバリー）

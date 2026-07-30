@@ -50,7 +50,9 @@ public struct ConsoleAnalyticsService: AnalyticsService {
             .map { "\($0.key)=\($0.value.description)" }
             .joined(separator: " ")
         let message = formattedParams.isEmpty ? name : "\(name) \(formattedParams)"
-        logger.debug("📊 \(message, privacy: .public)")
+        // debugではなくinfo：debugレベルはデフォルトで永続化されず、
+        // 実機の操作を後からConsole.appで眺めるという Phase A の目的を果たせないため
+        logger.info("📊 \(message, privacy: .public)")
     }
 }
 

@@ -217,16 +217,17 @@ struct ReturnListContainerView: View {
     /// 検索中かどうかは`filteredEntries`と同じ判定で見分ける
     /// （名前でヒットしたのか、手に持ってきた図書のタイトルでヒットしたのか）。
     /// 組チップ・スクロールの判別はUI層の改修が必要なため、v1では`browse`にまとめる
-    private func findMethod(for row: BorrowerRowDisplay) -> AnalyticsEvent.ReturnFindMethod {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return .browse }
-        if row.name.localizedStandardContains(searchText) {
+    private func resolveFindMethod(for row: BorrowerRowDisplay) -> AnalyticsEvent.ReturnFindMethod {
+        let query = searchText.trimmingCharacters(in: .whitespaces)
+        guard !query.isEmpty else { return .browse }
+        if row.name.localizedStandardContains(query) {
             return .searchName
         }
         let matchesBookTitle =
             borrowerEntries
             .first { $0.row.id == row.id }?
             .bookTitles
-            .contains { $0.localizedStandardContains(searchText) } ?? false
+            .contains { $0.localizedStandardContains(query) } ?? false
         return matchesBookTitle ? .searchBookTitle : .browse
     }
     
@@ -235,7 +236,7 @@ struct ReturnListContainerView: View {
     private func handleSelect(_ row: BorrowerRowDisplay) {
         analytics.track(
             .returnFamilyOpened(
-                findMethod: findMethod(for: row),
+                findMethod: resolveFindMethod(for: row),
                 overdueFilterActive: isOverdueOnly
             )
         )
@@ -270,9 +271,10 @@ struct ReturnListContainerView: View {
         isPopPendingAfterReturn = false
         idleTicket += 1
         guard let loanId = undoFeedback.targetId else { return }
-        analytics.track(.undoPerformed(flow: .returning))
         do {
             try loanModel.undoReturn(loanId: loanId)
+            // 完了系のイベントと同じく、成立した操作だけを記録する
+            analytics.track(.undoPerformed(flow: .returning))
         } catch {
             alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
         }
