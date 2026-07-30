@@ -161,17 +161,14 @@ public struct BorrowerListView: View {
     /// チップは借用者がいる組だけ表示する（押しても何も起きないチップを作らない）。
     private func indexSection(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: Layout.chipSpacing) {
-            ScrollView(.horizontal) {
-                HStack(spacing: Layout.chipSpacing) {
-                    ForEach(sections) { section in
-                        Button(section.title) {
-                            handleChipTap(section: section, proxy: proxy)
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(isChipSelected(section) ? Color.accentColor : .secondary)
-                    }
-                }
-                .padding(.leading)
+            // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
+            // ScrollViewを使わず素のHStackで並べる（絵本一覧のかなチップと同じ回避策）。
+            // 収まらない幅（狭いSplit View等）ではかなチップと同じ思想でチップを出さない
+            ViewThatFits(in: .horizontal) {
+                chipRow(proxy: proxy)
+                    .padding(.leading)
+                Color.clear
+                    .frame(width: 0, height: 0)
             }
             
             Spacer()
@@ -182,6 +179,19 @@ public struct BorrowerListView: View {
                     .buttonStyle(.bordered)
                     .tint(isOverdueOnly.wrappedValue ? .red : .secondary)
                     .padding(.trailing)
+            }
+        }
+    }
+    
+    /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
+    private func chipRow(proxy: ScrollViewProxy) -> some View {
+        HStack(spacing: Layout.chipSpacing) {
+            ForEach(sections) { section in
+                Button(section.title) {
+                    handleChipTap(section: section, proxy: proxy)
+                }
+                .buttonStyle(.bordered)
+                .tint(isChipSelected(section) ? Color.accentColor : .secondary)
             }
         }
     }
