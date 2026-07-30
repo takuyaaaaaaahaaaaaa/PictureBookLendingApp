@@ -1,6 +1,6 @@
 # 利用ログ（アナリティクス）設計
 
-ステータス：**ドラフト（2026-07-29）・オーナーレビュー待ち**。
+ステータス：**設計確定（2026-07-31）**。送信先・クラッシュ検知ともFirebaseに決定済み・実装前。
 関連：[SCREEN_DESIGN_PHASE2.md](SCREEN_DESIGN_PHASE2.md)（計測対象の導線）／
 [DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)（数値目標）／[TERMS.md](TERMS.md)（用語）
 
@@ -15,7 +15,8 @@ SwiftDataに既に全部ある**ので、イベントログでは取らない（
 
 1. **記録は常時・送信は通信時**：イベントはまずローカルに保存し、ネットワーク接続時に
    まとめて送信する。完全オフライン運用の思想を崩さない。
-   通信の契機は既存の図書情報取得（Wi-Fi接続時）と同じ機会を想定
+   通信の契機は既存の図書情報取得（Wi-Fi接続時）と同じ機会を想定。
+   この仕組みはFirebase SDKのオフラインバッファに委譲する（自前スプールは作らない・§5）
 2. **イベントに識別子を一切載せない**：利用者ID・図書ID・家庭・組・検索文字列は記録しない。
    記録するのは**所要時間・件数・列挙値（enum）だけ**。これにより「個人情報ゼロ」を
    設計レベルで保証し、プライバシー説明を単純にする
@@ -117,7 +118,7 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 
 ```
 Infrastructure層  AnalyticsService プロトコル＋実装（track(name:params:) の汎用API）
-                  ConsoleAnalytics（DEBUG）／SpoolingAnalytics（ローカル保存＋通信時送信）
+                  ConsoleAnalytics（DEBUG）／FirebaseAnalyticsService（Analytics.logEventの薄いラッパー）
                   ── イベントの意味を知らない「記録して送る」だけの配管
 App層             AnalyticsEvent enum（画面語彙の型安全な定義）
                   ＋ name/params への変換（Presentation配下・+Formatterと同じ役回り）
@@ -134,23 +135,40 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
 - イベント追加時はApp層のenumに1ケース足すだけで、Infrastructure層は無変更
 - 所要時間の計測はContainerViewの`@State`（シート表示時刻の記録）で行い、
   Modelにはアナリティクスの関心事を持ち込まない
-- **段階導入**：
-  - **Phase A**：イベント定義＋ローカル記録のみ（送信なし）。実機で自分の操作を眺めて
-    イベント設計の妥当性を検証する。送信先の意思決定を遅延できる
-  - **Phase B**：送信先を決めて接続。候補は Firebase Analytics（無料・定番・Googleへ送信）
-    / TelemetryDeck（プライバシー特化・匿名前提）。
-    ※GA4は収集から約72時間超の遅延イベントを落とす仕様があるが、
+- **送信先は Firebase Analytics に決定**（2026-07-31 オーナー決定）。理由：
+  - Crashlytics（§6）と同一SDKファミリーで、導入・コンソール・学習コストが1回で済む
+  - SDK標準のオフラインバッファが「記録は常時・送信は通信時」をそのまま満たし、
+    自前スプールの実装が不要になる
+  - 無料で、無料配布・維持費ゼロの要件に合う
+  - ※GA4は収集から約72時間超の遅延イベントを落とす仕様があるが、
     園のiPadは図書情報取得でWi-Fi接続する運用のため許容と判断（2026-07-29）
+  - 将来の乗り換え（TelemetryDeck等）に備え、FirebaseはAnalyticsServiceプロトコルの
+    背後に隠しApp層へ露出させない
+- **広告ID無しの構成で導入する**：SPMでは `FirebaseAnalyticsWithoutAdIdSupport` を選択し、
+  Info.plistで広告パーソナライズ信号を無効化する
+  （`GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS = NO`）。
+  ATT（トラッキング許可ダイアログ）を不要にし、プライバシー申告を最小にする
+- **段階導入**：
+  - **Phase A**：イベント定義＋ConsoleAnalytics（DEBUG・送信なし）。実機で自分の操作を
+    眺めてイベント設計の妥当性を検証する
+  - **Phase B**：FirebaseAnalyticsService を接続し、§8のチェックリストを消化する
 
 ---
 
 ## 6. クラッシュレポート（Q6・別トラック最優先）
 
-イベントログとは独立に、**先にクラッシュ検知だけ導入する**ことを推奨する。
+イベントログとは独立に、**先にクラッシュ検知だけ導入する**。
+**Firebase Crashlytics に決定**（2026-07-31 オーナー決定）。
 
-- 候補：**MetricKit**（Apple純正・追加SDKなし・プライバシー説明が最も単純）
-  / Firebase Crashlytics（多機能・シンボリケーションが楽・Googleへ送信）
+- MetricKitを不採用とした理由：クラッシュ診断はアプリ内に届くだけで、
+  **送信先の収集基盤を自前で持つ必要がある**＝サーバレス・維持費ゼロの前提と矛盾する。
+  SDKなしの代替（Xcode Organizerのクラッシュレポート）は「デベロッパと共有」に
+  オプトインした端末の分しか届かず、数園規模では実質ゼロ件になる
+- CrashlyticsはAnalyticsと同居前提の設計で、クラッシュ直前のイベントが
+  パンくずとして残る（例：「貸出シート表示直後に落ちている」が特定できる）
 - 現場の保育士・保護者はクラッシュしても報告してくれない。検知手段ゼロの現状が最大のリスク
+- 導入時の注意：dSYMアップロードのビルドフェーズ設定が必要。
+  Xcode Cloudでビルドする場合はポストビルドスクリプトでのアップロードを別途構成する
 
 ---
 
@@ -165,7 +183,10 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
 
 ## 8. リリース前チェックリスト（Phase B着手時）
 
-- [ ] プライバシーポリシーに収集内容（匿名の操作イベント）を明記
-- [ ] App Storeプライバシー表示（Nutrition Label）の申告を更新
+- [ ] プライバシーポリシーに収集内容（匿名の操作イベント・クラッシュ情報）を明記
+- [ ] App Storeプライバシー表示（Nutrition Label）の申告を更新（利用状況データ・診断データ）
 - [ ] PrivacyInfo.xcprivacy（プライバシーマニフェスト）に収集データ種別を記載
+  （Firebase SDK側のマニフェストはSDKに同梱されるため、アプリ側の申告と整合を確認）
+- [ ] `FirebaseAnalyticsWithoutAdIdSupport` での導入と広告パーソナライズ無効化を確認（§5）
+- [ ] dSYMアップロードの動作確認（ローカルビルド・Xcode Cloud両方）
 - [ ] 導入園向けの説明文面（何を集めて何を集めないか）を用意
