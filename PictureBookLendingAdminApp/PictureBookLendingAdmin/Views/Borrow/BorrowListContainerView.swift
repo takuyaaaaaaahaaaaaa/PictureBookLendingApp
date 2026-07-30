@@ -35,7 +35,7 @@ struct BorrowListContainerView: View {
     /// 図書一覧をトップへ戻すトリガ（貸出完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
-    @State private var displayMode: BookDisplayMode = .grid
+    @State private var displayMode: BookDisplayMode = .shelf
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
     /// 一覧の表示の大きさ（「大きく表示」フローティングボタンのトグル状態）。
