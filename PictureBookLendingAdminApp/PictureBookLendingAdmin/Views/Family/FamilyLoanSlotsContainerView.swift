@@ -23,6 +23,7 @@ struct FamilyLoanSlotsContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
+    @Environment(\.analytics) private var analytics
     
     /// 返却のUndoフィードバック状態管理
     ///
@@ -54,6 +55,9 @@ struct FamilyLoanSlotsContainerView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
+        }
+        .task {
+            trackBlockedIfNoOpenSlot()
         }
     }
     
@@ -103,6 +107,17 @@ struct FamilyLoanSlotsContainerView: View {
     }
     
     // MARK: - Actions
+    
+    /// 空き枠がないまま家庭の画面に到達したことを記録する（貸出文脈のみ・画面表示ごとに1回）
+    ///
+    /// 「タップしたのに借りられない」体験がどれだけ起きているかを見るための記録
+    /// （docs/ANALYTICS_DESIGN.md Q5）。返却文脈では枠が埋まっているのが通常のため記録しない
+    private func trackBlockedIfNoOpenSlot() {
+        guard case .borrowing = context else { return }
+        let currentSlots = slots
+        guard !currentSlots.isEmpty, currentSlots.allSatisfy({ $0.loan != nil }) else { return }
+        analytics.track(.borrowBlockedNoSlot)
+    }
     
     /// 返却の実行（確認ダイアログなし・Undoカードでリカバリー）
     private func handleReturn(_ slot: FamilyLoanSlotDisplay) {

@@ -19,6 +19,7 @@ struct BorrowListContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(\.analytics) private var analytics
     
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
@@ -45,6 +46,13 @@ struct BorrowListContainerView: View {
     
     /// 「大きく表示」フローティングボタンの画面端からの余白
     private static let displayScaleButtonPadding: CGFloat = 24
+    
+    /// 検索イベントの記録設定
+    private enum SearchTracking {
+        /// 入力が止まった（検索が確定した）とみなすまでの待ち時間。
+        /// 1文字打つたびに記録すると0件ヒット率が入力途中で水増しされるため置く
+        static let debounce: Duration = .milliseconds(800)
+    }
     
     var body: some View {
         NavigationStack {
@@ -118,6 +126,11 @@ struct BorrowListContainerView: View {
         .refreshable {
             refreshData()
         }
+        // 検索の質（0件ヒット・あいまい検索の発動）を記録する。
+        // 入力が変わるたびにタスクごと作り直されるため、手が止まったときだけ残る
+        .task(id: filterState.searchText) {
+            await trackBookSearch()
+        }
         .sheet(item: $borrowSheetContext) { context in
             // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
             // 200人規模の名前一覧＋組チップを載せる貸出タスクは、
@@ -170,6 +183,22 @@ struct BorrowListContainerView: View {
         )
     }
     
+    /// いま図書をどうやって見つけたか（貸出フロー開始の記録用）
+    ///
+    /// 検索と五十音は排他制御されているため同時には成立しない。
+    /// どちらも使っていなければ、一覧の見た目（棚表示かどうか）で見分ける
+    private var currentBookFindMethod: AnalyticsEvent.BookFindMethod {
+        if !filterState.searchText.isEmpty {
+            .search
+        } else if filterState.selectedKanaFilter != nil {
+            .kanaIndex
+        } else if displayMode == .shelf {
+            .shelf
+        } else {
+            .scroll
+        }
+    }
+    
     // MARK: - Actions
     
     /// 図書の貸出シートを開く（行タップ・「借りる」ボタンの共通入口）
@@ -178,9 +207,38 @@ struct BorrowListContainerView: View {
     /// シート内フローの状態は子Container（`BorrowSheetContainerView`）の@Stateに任せるため、
     /// ここでは提示単位（図書＋貸出状態のスナップショット）を差し込むだけでよい。
     private func openBorrowSheet(for book: Book) {
-        borrowSheetContext = BorrowSheetContext(
-            book: book,
-            isAlreadyLent: loanModel.isBookLent(bookId: book.id)
+        let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
+        // 貸出中の案内シートは貸出フローの開始ではないため記録しない
+        if !isAlreadyLent {
+            analytics.track(.borrowFlowStarted(findMethod: currentBookFindMethod))
+        }
+        borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent)
+    }
+    
+    /// 検索の確定（デバウンス後）を利用ログに記録する
+    ///
+    /// 待っている間に検索テキストが変われば`.task(id:)`ごとキャンセルされ、
+    /// 入力途中の状態は記録されない。検索文字列そのものは載せず、
+    /// 文字数と結果の件数だけを残す（docs/ANALYTICS_DESIGN.md 大原則2）
+    private func trackBookSearch() async {
+        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmedText.isEmpty else { return }
+        
+        try? await Task.sleep(for: SearchTracking.debounce)
+        if Task.isCancelled { return }
+        
+        let outcome = bookSections.filterOutcome(
+            searchText: filterState.searchText,
+            kanafilter: filterState.selectedKanaFilter,
+            sortType: selectedSortType
+        )
+        analytics.track(
+            .bookSearchPerformed(
+                queryLength: trimmedText.count,
+                resultCount: outcome.bookCount,
+                fuzzyTriggered: outcome.isFuzzyFallback,
+                zeroHit: outcome.bookCount == 0
+            )
         )
     }
     
