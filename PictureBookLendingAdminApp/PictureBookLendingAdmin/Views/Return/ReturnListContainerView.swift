@@ -109,8 +109,10 @@ struct ReturnListContainerView: View {
     /// 利用者が削除済みの場合は貸出記録のスナップショットから名前を補う
     /// （一覧には貸出時の名前で並ぶため、開いた先が無題になるのを防ぐ）
     private func borrowerName(for userId: UUID) -> String {
-        userModel.findUserById(userId)?.name
-            ?? loanModel.activeLoanBorrowers(userId: userId).first?.name
+        // bodyから何度も評価されるため、キャッシュ済みの一覧だけを見る
+        // （findUserByIdは見つからないとリポジトリまで問い合わせに行く）
+        userModel.getAllUsers().first { $0.id == userId }?.name
+            ?? loanModel.activeLoanBorrower(userId: userId)?.name
             ?? ""
     }
     

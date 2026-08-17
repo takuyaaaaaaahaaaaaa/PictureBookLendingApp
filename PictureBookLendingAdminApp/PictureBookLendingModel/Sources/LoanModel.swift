@@ -414,13 +414,25 @@ public class LoanModel {
     /// 削除済みの利用者の貸出を返却できるよう、家庭の枠を組み立てるために使用します。
     ///
     /// - Parameter userId: 対象の利用者ID
-    /// - Returns: 貸出記録に残る利用者（同一利用者の重複は除く）。未返却の貸出がなければ空配列
-    public func activeLoanBorrowers(userId: UUID) -> [User] {
-        var seenIds: Set<UUID> = []
-        return
-            getUserActiveLoans(userId: userId)
-            .map(\.user)
-            .filter { seenIds.insert($0.id).inserted }
+    /// - Returns: 貸出記録に残る利用者。未返却の貸出がなければnil
+    public func activeLoanBorrower(userId: UUID) -> User? {
+        getUserActiveLoans(userId: userId).first?.user
+    }
+    
+    /// 複数の貸出をまとめて返却する
+    ///
+    /// 利用者の削除に先立つ自動返却で使用します。
+    /// 返却する手段のない貸出を残さないため、利用者を消す前に必ず呼んでください。
+    ///
+    /// - Parameter loans: 返却する貸出
+    /// - Returns: 返却した冊数
+    /// - Throws: 返却処理に失敗した場合は `LoanModelError` を投げます
+    @discardableResult
+    public func returnLoans(_ loans: [Loan]) throws -> Int {
+        for loan in loans {
+            _ = try returnBook(loanId: loan.id)
+        }
+        return loans.count
     }
     
     /// 指定された絵本の貸出履歴を取得する

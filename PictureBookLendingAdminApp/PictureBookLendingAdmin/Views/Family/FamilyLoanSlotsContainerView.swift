@@ -90,10 +90,15 @@ struct FamilyLoanSlotsContainerView: View {
     /// 借りたままの図書を返す手段がなくなり、その図書も貸出中のまま棚に戻せなくなる。
     /// 貸出フローでは削除済みの利用者に貸すことはないため、返却の文脈に限る
     private var familyMembers: [User] {
-        let members = userModel.getFamilyMembers(of: userId)
-        guard members.isEmpty, case .returning = context else { return members }
+        // bodyから何度も評価されるため、キャッシュ済みの一覧だけで生存を判定する
+        // （findUserByIdは見つからないとリポジトリまで問い合わせに行く）
+        let isDeleted = !userModel.getAllUsers().contains { $0.id == userId }
+        guard isDeleted, case .returning = context else {
+            return userModel.getFamilyMembers(of: userId)
+        }
+        guard let borrower = loanModel.activeLoanBorrower(userId: userId) else { return [] }
         
-        return loanModel.activeLoanBorrowers(userId: userId)
+        return [borrower]
     }
     
     private static func roleLabel(for member: User) -> String {
@@ -132,7 +137,9 @@ struct FamilyLoanSlotsContainerView: View {
                 }
             undoFeedback.show(message, targetId: returnedLoan.id)
             if case .returning(let onReturnCompleted) = context {
-                let hasRemainingLoans = userModel.getFamilyMembers(of: slot.id)
+                // 枠と同じ`familyMembers`で数える（削除済み利用者でも取りこぼさないため）
+                let hasRemainingLoans =
+                    familyMembers
                     .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
                 onReturnCompleted(hasRemainingLoans)
             }

@@ -21,7 +21,11 @@ struct SettingsContainerView: View {
     @State private var isLoanSettingsSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
     @State private var isDeviceResetDialogPresented = false
-    @State private var isPromoteConfirmationPresented = false
+    /// 進級処理の確認ダイアログ
+    ///
+    /// 借りたままの図書の冊数を含むため、確認を開いた時点の内容を控えて表示する
+    /// （body評価のたびに全利用者の貸出を数え直さないようにするため）
+    @State private var promoteConfirmationState = AlertState()
     @State private var isParentFeedbackQRCodeSheetPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
@@ -30,11 +34,6 @@ struct SettingsContainerView: View {
     @State private var isRestoreConfirmationPresented = false
     @State private var backupExportDocument: BackupDocument?
     @State private var pendingRestoreSnapshot: BackupSnapshot?
-    /// 進級処理の確認文
-    ///
-    /// 借りたままの図書の冊数を含むため、確認を開いた時点の内容を控えて表示する
-    /// （body評価のたびに全利用者の貸出を数え直さないようにするため）
-    @State private var promoteConfirmationMessage = ""
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -60,8 +59,11 @@ struct SettingsContainerView: View {
                     handleCreateGuardiansForAllChildren()
                 },
                 onPromoteToNextYear: {
-                    promoteConfirmationMessage = makePromoteConfirmationMessage()
-                    isPromoteConfirmationPresented = true
+                    promoteConfirmationState = AlertState(
+                        isPresented: true,
+                        title: "進級処理の確認",
+                        message: makePromoteConfirmationMessage()
+                    )
                 },
                 onSelectDeviceReset: {
                     isDeviceResetDialogPresented = true
@@ -138,13 +140,15 @@ struct SettingsContainerView: View {
                         }
                 }
             }
-            .alert("進級処理の確認", isPresented: $isPromoteConfirmationPresented) {
+            .alert(
+                promoteConfirmationState.title, isPresented: $promoteConfirmationState.isPresented
+            ) {
                 Button("実行", role: .destructive) {
                     handlePromoteToNextYear()
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text(promoteConfirmationMessage)
+                Text(promoteConfirmationState.message)
             }
             .alert("復元の確認", isPresented: $isRestoreConfirmationPresented) {
                 Button("復元", role: .destructive) {
@@ -255,7 +259,7 @@ struct SettingsContainerView: View {
                 // 貸出記録を残したまま利用者だけを消すと、返却する手段のない貸出が残るため、
                 // 借りたままの図書を先に返却しておく（記録ごと消す場合は不要）
                 if !options.deleteLoanRecords {
-                    returnedLoanCount = try returnAllActiveLoans()
+                    returnedLoanCount = try loanModel.returnLoans(loanModel.activeLoans)
                 }
                 
                 let userCount = try userModel.deleteAllUsers()
@@ -279,9 +283,7 @@ struct SettingsContainerView: View {
                 } else {
                     "削除するデータが選択されていません"
                 }
-            if returnedLoanCount > 0 {
-                message += "\n\n借りたままだった図書\(returnedLoanCount)冊は返却済みにしました。"
-            }
+            message = Self.appendingAutoReturnNotice(to: message, count: returnedLoanCount)
             
             alertState = .info(message)
             
@@ -308,12 +310,8 @@ struct SettingsContainerView: View {
                 
                 // 借りたままの図書を先に返却する
                 // （先に利用者を削除すると、返却する手段のない貸出だけが残ってしまう）
-                for user in usersInClass {
-                    for loan in loanModel.getUserActiveLoans(userId: user.id) {
-                        _ = try loanModel.returnBook(loanId: loan.id)
-                        returnedLoanCount += 1
-                    }
-                }
+                returnedLoanCount += try loanModel.returnLoans(
+                    usersInClass.flatMap { loanModel.getUserActiveLoans(userId: $0.id) })
                 
                 // ユーザー削除
                 _ = try userModel.deleteUsersInClassGroup(deletedClassGroup.id)
@@ -331,10 +329,8 @@ struct SettingsContainerView: View {
                 graduationTextArray.append("が卒業しました🌸")
                 return graduationTextArray.joined(separator: "\n")
             }()
-            if returnedLoanCount > 0 {
-                let separator = graduationMessage.isEmpty ? "" : "\n\n"
-                graduationMessage += "\(separator)借りたままだった図書\(returnedLoanCount)冊は返却済みにしました。"
-            }
+            graduationMessage = Self.appendingAutoReturnNotice(
+                to: graduationMessage, count: returnedLoanCount)
             
             alertState = .info("進級処理が完了しました。", message: graduationMessage)
             
@@ -369,15 +365,17 @@ struct SettingsContainerView: View {
             .flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
     }
     
-    /// 貸出中の図書をすべて返却する
+    /// 完了メッセージに自動返却の結果を書き添える
     ///
-    /// - Returns: 返却した冊数
-    private func returnAllActiveLoans() throws -> Int {
-        let activeLoans = loanModel.activeLoans
-        for loan in activeLoans {
-            _ = try loanModel.returnBook(loanId: loan.id)
-        }
-        return activeLoans.count
+    /// - Parameters:
+    ///   - message: 元のメッセージ
+    ///   - count: 自動返却した冊数（0なら何も足さない）
+    /// - Returns: 自動返却の案内を足したメッセージ
+    private static func appendingAutoReturnNotice(to message: String, count: Int) -> String {
+        guard count > 0 else { return message }
+        
+        let separator = message.isEmpty ? "" : "\n\n"
+        return message + "\(separator)借りたままだった図書\(count)冊は返却済みにしました。"
     }
     
     private func handleBackupExport() {

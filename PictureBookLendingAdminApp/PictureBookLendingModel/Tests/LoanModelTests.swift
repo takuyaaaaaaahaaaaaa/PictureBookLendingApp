@@ -459,32 +459,51 @@ struct LoanModelTests {
         #expect(loanModel.achievedMilestones(for: tenthLoan) == [.distinctBooks(count: 10)])
     }
     
-    // MARK: - 削除済み利用者の貸出（activeLoanBorrowers）
+    // MARK: - 削除済み利用者の貸出（activeLoanBorrower）
     
     /// 利用者が削除されても貸出記録から利用者情報を取り出せることのテスト
     ///
     /// 削除済みの利用者でも家庭の枠を組み立てて返却できるようにするために使います。
     @Test("削除済み利用者でも貸出記録から利用者情報が取れることのテスト")
     @MainActor
-    func activeLoanBorrowersAfterUserDeletion() throws {
+    func activeLoanBorrowerAfterUserDeletion() throws {
         // 1. Arrange - 準備
         let (_, _, userModel, loanModel, testBook, testUser) = try createLoanModel()
         _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
         _ = try userModel.deleteUser(testUser.id)
         
         // 2. Act - 実行
-        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        let borrower = loanModel.activeLoanBorrower(userId: testUser.id)
         
         // 3. Assert - 検証
         #expect(userModel.findUserById(testUser.id) == nil, "利用者は削除済み")
-        #expect(borrowers.count == 1)
-        #expect(borrowers.first?.name == "山田太郎", "貸出時のスナップショットから復元される")
+        #expect(borrower?.name == "山田太郎", "貸出時のスナップショットから復元される")
     }
     
-    /// 同じ利用者が複数冊借りていても1人分にまとまることのテスト
-    @Test("複数冊借りていても利用者は重複しないことのテスト")
+    /// 未返却の貸出がなければ取得できないことのテスト
+    @Test("未返却の貸出がなければ利用者情報が返らないことのテスト")
     @MainActor
-    func activeLoanBorrowersDeduplicatesUser() throws {
+    func activeLoanBorrowerWithoutActiveLoan() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        
+        // 2. Act - 実行
+        let borrower = loanModel.activeLoanBorrower(userId: testUser.id)
+        
+        // 3. Assert - 検証
+        #expect(borrower == nil)
+    }
+    
+    // MARK: - 貸出のまとめ返却（returnLoans）
+    
+    /// 複数の貸出をまとめて返却できることのテスト
+    ///
+    /// 利用者の削除（個別・進級・端末初期化）に先立つ自動返却で使います。
+    @Test("複数の貸出をまとめて返却できることのテスト")
+    @MainActor
+    func returnLoansReturnsAllGivenLoans() throws {
         // 1. Arrange - 準備
         let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
         try mockRepositoryFactory.loanSettingsRepository.save(
@@ -494,25 +513,26 @@ struct LoanModelTests {
         _ = try loanModel.lendBook(bookId: anotherBook.id, userId: testUser.id)
         
         // 2. Act - 実行
-        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        let returnedCount = try loanModel.returnLoans(loanModel.activeLoans)
         
         // 3. Assert - 検証
-        #expect(borrowers.count == 1)
+        #expect(returnedCount == 2)
+        #expect(loanModel.activeLoans.isEmpty)
+        #expect(loanModel.isBookLent(bookId: testBook.id) == false, "図書が棚に戻る")
+        #expect(loanModel.isBookLent(bookId: anotherBook.id) == false)
     }
     
-    /// 未返却の貸出がなければ空になることのテスト
-    @Test("未返却の貸出がなければ利用者情報が返らないことのテスト")
+    /// 返却対象がなければ0件になることのテスト
+    @Test("返却対象がなければ0冊を返すことのテスト")
     @MainActor
-    func activeLoanBorrowersWithoutActiveLoan() throws {
+    func returnLoansWithEmptyInput() throws {
         // 1. Arrange - 準備
-        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
-        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
-        _ = try loanModel.returnBook(loanId: loan.id)
+        let (_, _, _, loanModel, _, _) = try createLoanModel()
         
         // 2. Act - 実行
-        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        let returnedCount = try loanModel.returnLoans([])
         
         // 3. Assert - 検証
-        #expect(borrowers.isEmpty)
+        #expect(returnedCount == 0)
     }
 }
