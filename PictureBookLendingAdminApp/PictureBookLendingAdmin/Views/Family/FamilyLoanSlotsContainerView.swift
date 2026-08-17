@@ -38,12 +38,6 @@ struct FamilyLoanSlotsContainerView: View {
     /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
     @State private var alertState = AlertState()
     
-    /// 表示用の既定値
-    private enum Fallback {
-        /// 図書が削除済みで解決できない場合のタイトル表示
-        static let bookTitle = "不明な図書"
-    }
-    
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
     /// 文脈（返却／貸出）
@@ -119,7 +113,7 @@ struct FamilyLoanSlotsContainerView: View {
         
         let book = bookModel.findBookById(loan.bookId)
         return FamilyLoanSlotLoan(
-            bookTitle: book?.title ?? Fallback.bookTitle,
+            bookTitle: book?.title ?? DisplayFallback.bookTitle,
             imageURL: book?.resolvedSmallImageSource,
             dueDateText: loan.dueDateText,
             isOverdue: loan.isOverdue(at: Date())

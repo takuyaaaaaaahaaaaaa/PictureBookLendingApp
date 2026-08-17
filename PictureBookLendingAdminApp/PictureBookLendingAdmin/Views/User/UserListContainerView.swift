@@ -26,12 +26,6 @@ struct UserListContainerView: View {
     @State private var navigationPath = NavigationPath()
     @State private var usersToDelete: [User] = []
     
-    /// 削除確認まわりの表示用の既定値
-    private enum Fallback {
-        /// 貸出記録の図書が見つからない場合のタイトル表示
-        static let bookTitle = "不明な図書"
-    }
-    
     init(classGroupId: UUID? = nil) {
         self.classGroupId = classGroupId
     }
@@ -142,7 +136,7 @@ struct UserListContainerView: View {
                     UserDeletionMessage.AutoReturningLoan(
                         userName: loan.user.name,
                         bookTitle: bookModel.findBookById(loan.bookId)?.title
-                            ?? Fallback.bookTitle
+                            ?? DisplayFallback.bookTitle
                     )
                 }
             )

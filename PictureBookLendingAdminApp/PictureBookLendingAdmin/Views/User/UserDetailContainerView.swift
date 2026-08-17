@@ -78,7 +78,7 @@ struct UserDetailContainerView: View {
     /// - Returns: 図書タイトル
     private func getBookTitle(for bookId: UUID) -> String {
         guard let book = bookModel.findBookById(bookId) else {
-            return "不明な図書"
+            return DisplayFallback.bookTitle
         }
         return book.title
     }
@@ -88,7 +88,7 @@ struct UserDetailContainerView: View {
     /// - Returns: 組名
     private func getClassGroupName(for classGroupId: UUID) -> String {
         guard let classGroup = classGroupModel.findClassGroupById(classGroupId) else {
-            return "不明な組"
+            return DisplayFallback.classGroupName
         }
         return classGroup.name
     }
@@ -98,7 +98,7 @@ struct UserDetailContainerView: View {
     /// - Returns: ユーザー名
     private func getRelatedUserName(for userId: UUID) -> String {
         guard let relatedUser = userModel.users.first(where: { $0.id == userId }) else {
-            return "不明な利用者"
+            return DisplayFallback.userName
         }
         return relatedUser.name
     }
