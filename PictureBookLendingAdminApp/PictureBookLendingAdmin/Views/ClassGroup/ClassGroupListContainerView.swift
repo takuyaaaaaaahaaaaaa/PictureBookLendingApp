@@ -108,8 +108,10 @@ struct ClassGroupListContainerView: View {
     }
     
     private func handleDelete(at offsets: IndexSet) {
-        for index in offsets {
-            let classGroup = classGroupModel.classGroups[index]
+        // 削除するたびに classGroups が縮むため、ループ前に対象を確定させる
+        // （インデックスのまま引くと2件目以降がずれた組を削除してしまう）
+        let targets = offsets.map { classGroupModel.classGroups[$0] }
+        for classGroup in targets {
             do {
                 try classGroupModel.deleteClassGroup(classGroup.id)
             } catch {
