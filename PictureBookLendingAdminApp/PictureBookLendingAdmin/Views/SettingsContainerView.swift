@@ -249,15 +249,14 @@ struct SettingsContainerView: View {
         do {
             var deletedDetails: [String] = []
             
+            // 貸出記録を残したまま利用者や図書を消すと、返却する手段のない貸出が残るため、
+            // 借りたままの図書を先に返却しておく（記録ごと消す場合は不要）
             var returnedLoanCount = 0
+            if (options.deleteUsers || options.deleteBooks) && !options.deleteLoanRecords {
+                returnedLoanCount = try returnAllActiveLoans()
+            }
             
             if options.deleteUsers {
-                // 貸出記録を残したまま利用者だけを消すと、返却する手段のない貸出が残るため、
-                // 借りたままの図書を先に返却しておく（記録ごと消す場合は不要）
-                if !options.deleteLoanRecords {
-                    returnedLoanCount = try returnAllActiveLoans()
-                }
-                
                 let userCount = try userModel.deleteAllUsers()
                 let classGroupCount = try classGroupModel.deleteAllClassGroups()
                 deletedDetails.append("利用者データ(\(userCount)人)・クラス(\(classGroupCount)組)")

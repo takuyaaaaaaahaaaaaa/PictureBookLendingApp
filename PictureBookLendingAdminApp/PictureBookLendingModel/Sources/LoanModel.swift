@@ -423,6 +423,17 @@ public class LoanModel {
             .filter { seenIds.insert($0.id).inserted }
     }
     
+    /// 指定された絵本の現在アクティブな貸出情報を取得する
+    ///
+    /// 運用上は1冊につき1件ですが、図書を削除する前に自動返却する対象を洗い出す用途では
+    /// 取りこぼしが「返却する手段のない貸出」に直結するため、該当する貸出をすべて返します。
+    ///
+    /// - Parameter bookId: 取得したい絵本のID
+    /// - Returns: 指定された絵本の現在アクティブな貸出情報リスト
+    public func getBookActiveLoans(bookId: UUID) -> [Loan] {
+        return loans.filter { $0.bookId == bookId && !$0.isReturned }
+    }
+    
     /// 指定された絵本の貸出履歴を取得する
     ///
     /// - Parameter bookId: 取得したい絵本のID

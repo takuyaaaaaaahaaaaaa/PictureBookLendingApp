@@ -17,6 +17,12 @@ struct SettingsBookListContainerView: View {
     @State private var editingBook: Book?
     @State private var isEditMode = false
     @State private var alertState = AlertState()
+    @State private var deleteConfirmationState = AlertState()
+    /// 削除の確認待ちの図書
+    ///
+    /// 一覧の削除は1冊ずつ通知されるが、編集モードの複数削除では同じ実行ループ内で
+    /// 続けて呼ばれるため、単一の図書ではなく配列で受けて1回の確認にまとめる
+    @State private var booksToDelete: [Book] = []
     @State private var selectedSortType: BookSortType = .title
     /// 管理業務では著者・管理番号・貸出状況の情報密度が必要なためリストを既定にする
     /// （貸出タブは実物の表紙との照合が主タスクなので棚表示既定。使い分けの経緯はissue #179）
@@ -90,6 +96,16 @@ struct SettingsBookListContainerView: View {
         } message: {
             Text(alertState.message)
         }
+        .alert(deleteConfirmationState.title, isPresented: $deleteConfirmationState.isPresented) {
+            Button("削除", role: .destructive) {
+                executeDelete()
+            }
+            Button("キャンセル", role: .cancel) {
+                booksToDelete = []
+            }
+        } message: {
+            Text(deleteConfirmationState.message)
+        }
         .refreshable {
             bookModel.refreshBooks()
             loanModel.refreshLoans()
@@ -127,11 +143,65 @@ struct SettingsBookListContainerView: View {
         editingBook = book
     }
     
+    /// 削除の確認
+    ///
+    /// 貸出中の図書は削除と同時に自動返却されるため、貸出の有無にかかわらず必ず確認を挟む。
+    /// 確認なしに削除すると、返却する手段のない貸出（返却タブに借用者の名前だけ残り、
+    /// 開いても枠が出ないため返せない）が生まれてしまう
     private func handleDeleteBook(_ book: Book) {
+        // 編集モードの複数削除では1冊ずつ続けて呼ばれるため、貯めてから1回の確認にまとめる
+        if !booksToDelete.contains(where: { $0.id == book.id }) {
+            booksToDelete.append(book)
+        }
+        
+        deleteConfirmationState = AlertState(
+            isPresented: true,
+            title: "図書の削除",
+            message: BookDeletionMessage.make(
+                targetTitles: booksToDelete.map(\.title),
+                autoReturningLoans: autoReturningLoans(of: booksToDelete).map {
+                    BookDeletionMessage.AutoReturningLoan(
+                        bookTitle: $0.book.title,
+                        userName: $0.loan.user.name
+                    )
+                }
+            )
+        )
+    }
+    
+    private func executeDelete() {
+        let targetBooks = booksToDelete
+        booksToDelete = []
+        deleteConfirmationState = AlertState()
+        guard !targetBooks.isEmpty else { return }
+        
+        // 途中で失敗しても、すでに返却済みにした冊数は利用者に伝える必要がある
+        var returnedCount = 0
         do {
-            _ = try bookModel.deleteBook(book.id)
+            // 貸出中の図書は先に返却する
+            // （先に図書を削除すると、返却操作ができない貸出だけが残ってしまう）
+            for entry in autoReturningLoans(of: targetBooks) {
+                _ = try loanModel.returnBook(loanId: entry.loan.id)
+                returnedCount += 1
+            }
+            
+            for book in targetBooks {
+                _ = try bookModel.deleteBook(book.id)
+            }
         } catch {
-            alertState = .error("図書の削除に失敗しました", message: "\(error.localizedDescription)")
+            let returnedNote =
+                returnedCount > 0 ? "\n貸出中だった図書\(returnedCount)冊は返却済みになっています。" : ""
+            alertState = .error(
+                "図書の削除に失敗しました", message: "\(error.localizedDescription)\(returnedNote)")
+        }
+    }
+    
+    /// 削除に伴って自動返却される貸出（図書とその貸出の組）
+    ///
+    /// 運用上は1冊につき1件だが、取りこぼすと返却する手段のない貸出が残るため全件を対象にする
+    private func autoReturningLoans(of books: [Book]) -> [(book: Book, loan: Loan)] {
+        books.flatMap { book in
+            loanModel.getBookActiveLoans(bookId: book.id).map { (book: book, loan: $0) }
         }
     }
 }

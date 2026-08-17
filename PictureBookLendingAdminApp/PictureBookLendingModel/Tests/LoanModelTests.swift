@@ -515,4 +515,58 @@ struct LoanModelTests {
         // 3. Assert - 検証
         #expect(borrowers.isEmpty)
     }
+    
+    // MARK: - 図書ごとの未返却の貸出（getBookActiveLoans）
+    
+    /// 貸出中の図書の未返却の貸出が取得できることのテスト
+    ///
+    /// 図書を削除する前に自動返却する対象を洗い出すために使います。
+    @Test("貸出中の図書の未返却の貸出が取得できることのテスト")
+    @MainActor
+    func getBookActiveLoansWhileLent() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: testBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.map(\.id) == [loan.id])
+    }
+    
+    /// 返却済みの貸出は含まれないことのテスト
+    @Test("返却済みの貸出は図書の未返却の貸出に含まれないことのテスト")
+    @MainActor
+    func getBookActiveLoansExcludesReturnedLoan() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: testBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.isEmpty)
+    }
+    
+    /// 他の図書の貸出が混ざらないことのテスト
+    @Test("他の図書の貸出が混ざらないことのテスト")
+    @MainActor
+    func getBookActiveLoansIsScopedToBook() throws {
+        // 1. Arrange - 準備
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let anotherBook = try mockRepositoryFactory.bookRepository.save(Book(title: "ぐりとぐら"))
+        let anotherUser = try mockRepositoryFactory.userRepository.save(
+            User(name: "鈴木花子", classGroupId: testUser.classGroupId))
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        let anotherLoan = try loanModel.lendBook(bookId: anotherBook.id, userId: anotherUser.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: anotherBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.map(\.id) == [anotherLoan.id])
+    }
 }

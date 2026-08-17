@@ -38,6 +38,12 @@ struct FamilyLoanSlotsContainerView: View {
     /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
     @State private var alertState = AlertState()
     
+    /// 表示用の既定値
+    private enum Fallback {
+        /// 図書が削除済みで解決できない場合のタイトル表示
+        static let bookTitle = "不明な図書"
+    }
+    
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
     /// 文脈（返却／貸出）
@@ -103,14 +109,18 @@ struct FamilyLoanSlotsContainerView: View {
         }
     }
     
+    /// 枠に表示する貸出（借りていなければnil）
+    ///
+    /// 図書が削除済みで解決できない場合も、枠自体は貸出中として出す。
+    /// ここで枠を空にすると返却ボタンが出ず、借りたままの図書を返す手段がなくなるうえ、
+    /// 貸出の文脈では空き枠として選べてしまい上限エラーになる
     private func loanDisplay(for member: User) -> FamilyLoanSlotLoan? {
-        guard let loan = loanModel.getUserActiveLoans(userId: member.id).first,
-            let book = bookModel.findBookById(loan.bookId)
-        else { return nil }
+        guard let loan = loanModel.getUserActiveLoans(userId: member.id).first else { return nil }
         
+        let book = bookModel.findBookById(loan.bookId)
         return FamilyLoanSlotLoan(
-            bookTitle: book.title,
-            imageURL: book.resolvedSmallImageSource,
+            bookTitle: book?.title ?? Fallback.bookTitle,
+            imageURL: book?.resolvedSmallImageSource,
             dueDateText: loan.dueDateText,
             isOverdue: loan.isOverdue(at: Date())
         )
