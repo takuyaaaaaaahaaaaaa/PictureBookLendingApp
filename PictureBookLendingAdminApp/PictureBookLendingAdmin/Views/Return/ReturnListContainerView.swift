@@ -98,10 +98,20 @@ struct ReturnListContainerView: View {
             .padding()
         }
         .kioskIdleTimeout(ticket: idleTicket, onTimeout: popToListAndScrollTop)
-        .navigationTitle(userModel.findUserById(userId)?.name ?? "")
+        .navigationTitle(borrowerName(for: userId))
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
+    }
+    
+    /// 家庭の画面のタイトルに使う借用者名
+    ///
+    /// 利用者が削除済みの場合は貸出記録のスナップショットから名前を補う
+    /// （一覧には貸出時の名前で並ぶため、開いた先が無題になるのを防ぐ）
+    private func borrowerName(for userId: UUID) -> String {
+        userModel.findUserById(userId)?.name
+            ?? loanModel.activeLoanBorrowers(userId: userId).first?.name
+            ?? ""
     }
     
     // MARK: - Computed Properties

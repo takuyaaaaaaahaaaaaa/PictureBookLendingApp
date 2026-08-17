@@ -407,6 +407,22 @@ public class LoanModel {
         return loans.filter { $0.user.id == userId && !$0.isReturned }
     }
     
+    /// 未返却の貸出に記録されている利用者情報を取得する
+    ///
+    /// 貸出記録は貸出時点の利用者をスナップショットとして保持するため、
+    /// 利用者が削除されたあとでも借り手の名前や種別を復元できます。
+    /// 削除済みの利用者の貸出を返却できるよう、家庭の枠を組み立てるために使用します。
+    ///
+    /// - Parameter userId: 対象の利用者ID
+    /// - Returns: 貸出記録に残る利用者（同一利用者の重複は除く）。未返却の貸出がなければ空配列
+    public func activeLoanBorrowers(userId: UUID) -> [User] {
+        var seenIds: Set<UUID> = []
+        return
+            getUserActiveLoans(userId: userId)
+            .map(\.user)
+            .filter { seenIds.insert($0.id).inserted }
+    }
+    
     /// 指定された絵本の貸出履歴を取得する
     ///
     /// - Parameter bookId: 取得したい絵本のID

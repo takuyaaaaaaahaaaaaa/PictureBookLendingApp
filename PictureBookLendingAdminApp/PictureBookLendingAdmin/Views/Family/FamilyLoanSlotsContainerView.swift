@@ -72,7 +72,7 @@ struct FamilyLoanSlotsContainerView: View {
     /// 現状は1人1枠（maxBooksPerUser=1の運用前提）。複数冊設定時の枠の積み方は
     /// SCREEN_DESIGN_PHASE2 §8 の未決事項として実装時に拡張する。
     private var slots: [FamilyLoanSlotDisplay] {
-        userModel.getFamilyMembers(of: userId).map { member in
+        familyMembers.map { member in
             FamilyLoanSlotDisplay(
                 id: member.id,
                 roleLabel: Self.roleLabel(for: member),
@@ -80,6 +80,20 @@ struct FamilyLoanSlotsContainerView: View {
                 loan: loanDisplay(for: member)
             )
         }
+    }
+    
+    /// 枠を組み立てる家族
+    ///
+    /// 通常は利用者一覧から家庭を解決するが、利用者が削除済みで解決できない場合は
+    /// 貸出記録のスナップショット（`loan.user`）から復元する。
+    /// 返却の一覧には削除済み利用者の貸出も並ぶため、ここで枠を出さないと
+    /// 借りたままの図書を返す手段がなくなり、その図書も貸出中のまま棚に戻せなくなる。
+    /// 貸出フローでは削除済みの利用者に貸すことはないため、返却の文脈に限る
+    private var familyMembers: [User] {
+        let members = userModel.getFamilyMembers(of: userId)
+        guard members.isEmpty, case .returning = context else { return members }
+        
+        return loanModel.activeLoanBorrowers(userId: userId)
     }
     
     private static func roleLabel(for member: User) -> String {
