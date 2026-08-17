@@ -151,6 +151,97 @@ struct UserModelTests {
         }
     }
     
+    // MARK: - 削除の波及範囲（usersDeletedTogether）
+    
+    /// 園児を削除すると紐づく保護者も削除対象になることのテスト
+    @Test("園児の削除対象に紐づく保護者が含まれることのテスト")
+    @MainActor
+    func usersDeletedTogetherWithChild() throws {
+        // 1. Arrange - 準備
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        let father = try userModel.registerUser(
+            User(
+                name: "伊藤 健一", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        // 2. Act - 実行
+        let targets = userModel.usersDeletedTogether(with: child.id)
+        
+        // 3. Assert - 検証
+        #expect(targets.count == 3)
+        #expect(targets.first?.id == child.id, "削除を指示された園児が先頭に来る")
+        #expect(targets.contains { $0.id == mother.id })
+        #expect(targets.contains { $0.id == father.id })
+    }
+    
+    /// 保護者の削除は本人のみで、園児や他の保護者に波及しないことのテスト
+    @Test("保護者の削除対象が本人のみであることのテスト")
+    @MainActor
+    func usersDeletedTogetherWithGuardian() throws {
+        // 1. Arrange - 準備
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let mother = try userModel.registerUser(
+            User(
+                name: "伊藤 由美子", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        _ = try userModel.registerUser(
+            User(
+                name: "伊藤 健一", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: child.id)))
+        
+        // 2. Act - 実行
+        let targets = userModel.usersDeletedTogether(with: mother.id)
+        
+        // 3. Assert - 検証
+        #expect(targets.count == 1, "保護者の削除は本人のみで家族に波及しない")
+        #expect(targets.first?.id == mother.id)
+    }
+    
+    /// 他の家庭の保護者が削除対象に混ざらないことのテスト
+    @Test("他の家庭の保護者が削除対象に含まれないことのテスト")
+    @MainActor
+    func usersDeletedTogetherExcludesOtherFamilies() throws {
+        // 1. Arrange - 準備
+        let (userModel, _) = createUserModel()
+        let classGroupId = UUID()
+        let child = try userModel.registerUser(User(name: "いとう さくら", classGroupId: classGroupId))
+        let otherChild = try userModel.registerUser(
+            User(name: "たなか けんた", classGroupId: classGroupId))
+        _ = try userModel.registerUser(
+            User(
+                name: "田中 明", classGroupId: classGroupId,
+                userType: .guardian(relatedChildId: otherChild.id)))
+        
+        // 2. Act - 実行
+        let targets = userModel.usersDeletedTogether(with: child.id)
+        
+        // 3. Assert - 検証
+        #expect(targets.count == 1)
+        #expect(targets.first?.id == child.id)
+    }
+    
+    /// 存在しない利用者を指定した場合は空になることのテスト
+    @Test("存在しない利用者の削除対象が空であることのテスト")
+    @MainActor
+    func usersDeletedTogetherWithUnknownUser() throws {
+        // 1. Arrange - 準備
+        let (userModel, _) = createUserModel()
+        
+        // 2. Act - 実行
+        let targets = userModel.usersDeletedTogether(with: UUID())
+        
+        // 3. Assert - 検証
+        #expect(targets.isEmpty)
+    }
+    
     // MARK: - 家庭解決（getFamilyMembers）
     
     /// 園児IDから家族全員（本人＋保護者）を取得できることのテスト

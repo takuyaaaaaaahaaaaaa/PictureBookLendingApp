@@ -30,6 +30,11 @@ struct SettingsContainerView: View {
     @State private var isRestoreConfirmationPresented = false
     @State private var backupExportDocument: BackupDocument?
     @State private var pendingRestoreSnapshot: BackupSnapshot?
+    /// 進級処理の確認文
+    ///
+    /// 借りたままの図書の冊数を含むため、確認を開いた時点の内容を控えて表示する
+    /// （body評価のたびに全利用者の貸出を数え直さないようにするため）
+    @State private var promoteConfirmationMessage = ""
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -55,6 +60,7 @@ struct SettingsContainerView: View {
                     handleCreateGuardiansForAllChildren()
                 },
                 onPromoteToNextYear: {
+                    promoteConfirmationMessage = makePromoteConfirmationMessage()
                     isPromoteConfirmationPresented = true
                 },
                 onSelectDeviceReset: {
@@ -138,7 +144,7 @@ struct SettingsContainerView: View {
                 }
                 Button("キャンセル", role: .cancel) {}
             } message: {
-                Text("すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。")
+                Text(promoteConfirmationMessage)
             }
             .alert("復元の確認", isPresented: $isRestoreConfirmationPresented) {
                 Button("復元", role: .destructive) {
@@ -243,7 +249,15 @@ struct SettingsContainerView: View {
         do {
             var deletedDetails: [String] = []
             
+            var returnedLoanCount = 0
+            
             if options.deleteUsers {
+                // 貸出記録を残したまま利用者だけを消すと、返却する手段のない貸出が残るため、
+                // 借りたままの図書を先に返却しておく（記録ごと消す場合は不要）
+                if !options.deleteLoanRecords {
+                    returnedLoanCount = try returnAllActiveLoans()
+                }
+                
                 let userCount = try userModel.deleteAllUsers()
                 let classGroupCount = try classGroupModel.deleteAllClassGroups()
                 deletedDetails.append("利用者データ(\(userCount)人)・クラス(\(classGroupCount)組)")
@@ -259,12 +273,15 @@ struct SettingsContainerView: View {
                 deletedDetails.append("貸出記録(\(loanCount)件)")
             }
             
-            let message =
+            var message =
                 if !deletedDetails.isEmpty {
                     "以下のデータを削除しました:\n\(deletedDetails.joined(separator: "\n"))"
                 } else {
                     "削除するデータが選択されていません"
                 }
+            if returnedLoanCount > 0 {
+                message += "\n\n借りたままだった図書\(returnedLoanCount)冊は返却済みにしました。"
+            }
             
             alertState = .info(message)
             
@@ -280,11 +297,22 @@ struct SettingsContainerView: View {
             let deletedClassGroups = try classGroupModel.promoteToNextYear()
             var graduationTextArray: [String] = []
             
+            var returnedLoanCount = 0
+            
             // 削除されたクラスに所属していたユーザーも削除し、卒業メッセージを作成
             for deletedClassGroup in deletedClassGroups {
                 // 該当クラスのユーザーを取得（削除前に園児数をカウント）
                 let usersInClass = userModel.users.filter { user in
                     user.classGroupId == deletedClassGroup.id
+                }
+                
+                // 借りたままの図書を先に返却する
+                // （先に利用者を削除すると、返却する手段のない貸出だけが残ってしまう）
+                for user in usersInClass {
+                    for loan in loanModel.getUserActiveLoans(userId: user.id) {
+                        _ = try loanModel.returnBook(loanId: loan.id)
+                        returnedLoanCount += 1
+                    }
                 }
                 
                 // ユーザー削除
@@ -298,17 +326,58 @@ struct SettingsContainerView: View {
                 }
             }
             // 卒業メッセージ
-            let graduationMessage = {
+            var graduationMessage = {
                 guard !graduationTextArray.isEmpty else { return "" }
                 graduationTextArray.append("が卒業しました🌸")
                 return graduationTextArray.joined(separator: "\n")
             }()
+            if returnedLoanCount > 0 {
+                let separator = graduationMessage.isEmpty ? "" : "\n\n"
+                graduationMessage += "\(separator)借りたままだった図書\(returnedLoanCount)冊は返却済みにしました。"
+            }
             
             alertState = .info("進級処理が完了しました。", message: graduationMessage)
             
         } catch {
             alertState = .error("進級処理に失敗しました", message: "\(error.localizedDescription)")
         }
+    }
+    
+    /// 進級処理の確認文を組み立てる
+    ///
+    /// 卒業でいなくなる利用者が借りたままの図書は、進級と同時に自動返却される。
+    /// 実物の図書が園に戻っていなくても記録上は返却済みになるため、
+    /// 実行前に冊数を知らせて「先に返してもらってから進級する」判断ができるようにする
+    private func makePromoteConfirmationMessage() -> String {
+        var lines = ["すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。"]
+        
+        let graduatingLoanCount = graduatingActiveLoans().count
+        if graduatingLoanCount > 0 {
+            lines.append("")
+            lines.append("卒業する利用者が借りたままの図書が\(graduatingLoanCount)冊あります。削除と同時に自動的に返却されます。")
+        }
+        
+        return lines.joined(separator: "\n")
+    }
+    
+    /// 卒業する組に所属する利用者が借りたままの貸出
+    private func graduatingActiveLoans() -> [Loan] {
+        let graduatingClassGroupIds = Set(classGroupModel.graduatingClassGroups().map(\.id))
+        return
+            userModel.users
+            .filter { graduatingClassGroupIds.contains($0.classGroupId) }
+            .flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
+    }
+    
+    /// 貸出中の図書をすべて返却する
+    ///
+    /// - Returns: 返却した冊数
+    private func returnAllActiveLoans() throws -> Int {
+        let activeLoans = loanModel.activeLoans
+        for loan in activeLoans {
+            _ = try loanModel.returnBook(loanId: loan.id)
+        }
+        return activeLoans.count
     }
     
     private func handleBackupExport() {
