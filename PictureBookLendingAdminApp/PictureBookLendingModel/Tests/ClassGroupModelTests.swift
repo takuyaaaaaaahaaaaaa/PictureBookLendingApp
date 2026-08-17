@@ -187,4 +187,64 @@ struct ClassGroupModelTests {
         #expect(classGroups.count == 1)
         #expect(classGroups.first?.name == "ひよこ組")
     }
+    
+    // MARK: - 卒業クラスの事前確認（graduatingClassGroups）
+    
+    /// 進級で卒業となるクラスだけが返ることのテスト
+    ///
+    /// 進級処理の確認ダイアログで「どの組がいなくなるか」を事前に示すために使います。
+    @Test("進級で卒業となるクラスのみが返ること")
+    @MainActor
+    func graduatingClassGroupsReturnsOnlyOldestClass() throws {
+        // 1. Arrange - 準備
+        let (classGroupModel, _) = createClassGroupModel()
+        for age in 0...5 {
+            try classGroupModel.registerClassGroup(
+                ClassGroup(name: "\(age)歳児組", ageGroup: AgeGroup.age(age), year: 2025))
+        }
+        
+        // 2. Act - 実行
+        let graduating = classGroupModel.graduatingClassGroups()
+        
+        // 3. Assert - 検証
+        #expect(graduating.count == 1)
+        #expect(graduating.first?.ageGroup == AgeGroup.age(5), "5歳児クラスのみが卒業となる")
+    }
+    
+    /// 「その他」の組が卒業扱いにならないことのテスト
+    @Test("その他の組が卒業扱いにならないこと")
+    @MainActor
+    func graduatingClassGroupsExcludesOtherAgeGroup() throws {
+        // 1. Arrange - 準備
+        let (classGroupModel, _) = createClassGroupModel()
+        try classGroupModel.registerClassGroup(
+            ClassGroup(name: "未分類", ageGroup: AgeGroup.other, year: 2025))
+        
+        // 2. Act - 実行
+        let graduating = classGroupModel.graduatingClassGroups()
+        
+        // 3. Assert - 検証
+        #expect(graduating.isEmpty)
+    }
+    
+    /// 卒業クラスが `promoteToNextYear()` で実際に削除される組と一致することのテスト
+    ///
+    /// 事前確認と実処理がズレると、ダイアログの予告が嘘になるため
+    @Test("卒業クラスの事前確認が進級処理の結果と一致すること")
+    @MainActor
+    func graduatingClassGroupsMatchesPromoteResult() throws {
+        // 1. Arrange - 準備
+        let (classGroupModel, _) = createClassGroupModel()
+        for age in 0...5 {
+            try classGroupModel.registerClassGroup(
+                ClassGroup(name: "\(age)歳児組", ageGroup: AgeGroup.age(age), year: 2025))
+        }
+        let expected = classGroupModel.graduatingClassGroups()
+        
+        // 2. Act - 実行
+        let deleted = try classGroupModel.promoteToNextYear()
+        
+        // 3. Assert - 検証
+        #expect(Set(deleted.map(\.id)) == Set(expected.map(\.id)))
+    }
 }

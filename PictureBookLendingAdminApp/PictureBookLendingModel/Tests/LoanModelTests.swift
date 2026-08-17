@@ -458,4 +458,115 @@ struct LoanModelTests {
         
         #expect(loanModel.achievedMilestones(for: tenthLoan) == [.distinctBooks(count: 10)])
     }
+    
+    // MARK: - 削除済み利用者の貸出（activeLoanBorrowers）
+    
+    /// 利用者が削除されても貸出記録から利用者情報を取り出せることのテスト
+    ///
+    /// 削除済みの利用者でも家庭の枠を組み立てて返却できるようにするために使います。
+    @Test("削除済み利用者でも貸出記録から利用者情報が取れることのテスト")
+    @MainActor
+    func activeLoanBorrowersAfterUserDeletion() throws {
+        // 1. Arrange - 準備
+        let (_, _, userModel, loanModel, testBook, testUser) = try createLoanModel()
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try userModel.deleteUser(testUser.id)
+        
+        // 2. Act - 実行
+        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        
+        // 3. Assert - 検証
+        #expect(userModel.findUserById(testUser.id) == nil, "利用者は削除済み")
+        #expect(borrowers.count == 1)
+        #expect(borrowers.first?.name == "山田太郎", "貸出時のスナップショットから復元される")
+    }
+    
+    /// 同じ利用者が複数冊借りていても1人分にまとまることのテスト
+    @Test("複数冊借りていても利用者は重複しないことのテスト")
+    @MainActor
+    func activeLoanBorrowersDeduplicatesUser() throws {
+        // 1. Arrange - 準備
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        try mockRepositoryFactory.loanSettingsRepository.save(
+            LoanSettings(defaultLoanPeriodDays: 14, maxBooksPerUser: 2))
+        let anotherBook = try mockRepositoryFactory.bookRepository.save(Book(title: "ぐりとぐら"))
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.lendBook(bookId: anotherBook.id, userId: testUser.id)
+        
+        // 2. Act - 実行
+        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        
+        // 3. Assert - 検証
+        #expect(borrowers.count == 1)
+    }
+    
+    /// 未返却の貸出がなければ空になることのテスト
+    @Test("未返却の貸出がなければ利用者情報が返らないことのテスト")
+    @MainActor
+    func activeLoanBorrowersWithoutActiveLoan() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        
+        // 2. Act - 実行
+        let borrowers = loanModel.activeLoanBorrowers(userId: testUser.id)
+        
+        // 3. Assert - 検証
+        #expect(borrowers.isEmpty)
+    }
+    
+    // MARK: - 図書ごとの未返却の貸出（getBookActiveLoans）
+    
+    /// 貸出中の図書の未返却の貸出が取得できることのテスト
+    ///
+    /// 図書を削除する前に自動返却する対象を洗い出すために使います。
+    @Test("貸出中の図書の未返却の貸出が取得できることのテスト")
+    @MainActor
+    func getBookActiveLoansWhileLent() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: testBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.map(\.id) == [loan.id])
+    }
+    
+    /// 返却済みの貸出は含まれないことのテスト
+    @Test("返却済みの貸出は図書の未返却の貸出に含まれないことのテスト")
+    @MainActor
+    func getBookActiveLoansExcludesReturnedLoan() throws {
+        // 1. Arrange - 準備
+        let (_, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let loan = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        _ = try loanModel.returnBook(loanId: loan.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: testBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.isEmpty)
+    }
+    
+    /// 他の図書の貸出が混ざらないことのテスト
+    @Test("他の図書の貸出が混ざらないことのテスト")
+    @MainActor
+    func getBookActiveLoansIsScopedToBook() throws {
+        // 1. Arrange - 準備
+        let (mockRepositoryFactory, _, _, loanModel, testBook, testUser) = try createLoanModel()
+        let anotherBook = try mockRepositoryFactory.bookRepository.save(Book(title: "ぐりとぐら"))
+        let anotherUser = try mockRepositoryFactory.userRepository.save(
+            User(name: "鈴木花子", classGroupId: testUser.classGroupId))
+        _ = try loanModel.lendBook(bookId: testBook.id, userId: testUser.id)
+        let anotherLoan = try loanModel.lendBook(bookId: anotherBook.id, userId: anotherUser.id)
+        
+        // 2. Act - 実行
+        let activeLoans = loanModel.getBookActiveLoans(bookId: anotherBook.id)
+        
+        // 3. Assert - 検証
+        #expect(activeLoans.map(\.id) == [anotherLoan.id])
+    }
 }

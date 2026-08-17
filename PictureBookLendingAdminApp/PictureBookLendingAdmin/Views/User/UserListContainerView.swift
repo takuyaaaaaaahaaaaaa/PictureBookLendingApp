@@ -12,6 +12,8 @@ import SwiftUI
 struct UserListContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(LoanModel.self) private var loanModel
+    @Environment(BookModel.self) private var bookModel
     
     let classGroupId: UUID?
     
@@ -22,7 +24,7 @@ struct UserListContainerView: View {
     @State private var alertState = AlertState()
     @State private var deleteConfirmationState = AlertState()
     @State private var navigationPath = NavigationPath()
-    @State private var userToDelete: User?
+    @State private var usersToDelete: [User] = []
     
     init(classGroupId: UUID? = nil) {
         self.classGroupId = classGroupId
@@ -114,58 +116,75 @@ struct UserListContainerView: View {
     
     // MARK: - Actions
     
+    /// 削除の確認（スワイプ削除・複数選択削除の共通入口）
+    ///
+    /// 借りたままの図書は削除と同時に自動返却されるため、件数の多少にかかわらず必ず確認を挟む。
+    /// 確認なしに削除すると、返却する手段のない貸出（返却タブに名前だけ残り、
+    /// 開いても枠が無いため返せない）が生まれ、その図書も貸出中のまま棚に戻せなくなる
     private func handleDeleteUsers(at offsets: IndexSet) {
-        guard let index = offsets.first, offsets.count == 1 else {
-            // 複数選択の場合は通常の削除処理
-            for index in offsets {
-                let user = filteredUsers[index]
-                do {
-                    _ = try userModel.deleteUser(user.id)
-                } catch {
-                    alertState = .error("利用者の削除に失敗しました", message: "\(error.localizedDescription)")
-                }
-            }
-            return
-        }
+        let users = offsets.map { filteredUsers[$0] }
+        guard !users.isEmpty else { return }
         
-        let user = filteredUsers[index]
-        userToDelete = user
-        
-        // 園児かつ関連保護者がいる場合をチェック
-        let isChildAndHasGuardians =
-            user.userType == .child
-            && userModel.users.contains { child in
-                if case .guardian(let relatedChildId) = child.userType {
-                    return relatedChildId == child.id
-                }
-                return false
-            }
-        
-        let message =
-            if isChildAndHasGuardians {
-                "\(user.name)を削除しますか？\n関連する保護者も合わせて削除されます。"
-            } else {
-                "\(user.name)を削除しますか？"
-            }
-        
+        usersToDelete = users
         deleteConfirmationState = AlertState(
             isPresented: true,
             title: "利用者の削除",
-            message: message
+            message: UserDeletionMessage.make(
+                targetNames: users.map(\.name),
+                cascadedGuardianNames: cascadedGuardians(of: users).map(\.name),
+                autoReturningLoans: autoReturningLoans(of: users).map { loan in
+                    UserDeletionMessage.AutoReturningLoan(
+                        userName: loan.user.name,
+                        bookTitle: bookModel.findBookById(loan.bookId)?.title
+                            ?? DisplayFallback.bookTitle
+                    )
+                }
+            )
         )
     }
     
     private func executeDelete() {
-        guard let user = userToDelete else { return }
+        let targetUsers = usersToDelete
+        usersToDelete = []
+        deleteConfirmationState = AlertState()
+        guard !targetUsers.isEmpty else { return }
         
         do {
-            _ = try userModel.deleteUser(user.id)
+            // 借りたままの図書を先に返却する
+            // （先に利用者を削除すると、返却操作ができない貸出だけが残ってしまう）
+            for loan in autoReturningLoans(of: targetUsers) {
+                _ = try loanModel.returnBook(loanId: loan.id)
+            }
+            
+            // 園児の削除で保護者も連動して消えるため、すでに消えた利用者は飛ばす
+            for user in targetUsers where userModel.users.contains(where: { $0.id == user.id }) {
+                _ = try userModel.deleteUser(user.id)
+            }
         } catch {
             alertState = .error("利用者の削除に失敗しました", message: "\(error.localizedDescription)")
         }
-        
-        userToDelete = nil
-        deleteConfirmationState = AlertState()
+    }
+    
+    // MARK: - 削除の波及範囲
+    
+    /// 削除に連動して消える利用者も含めた削除対象（重複を除き、指示された順を保つ）
+    private func deletionTargets(of users: [User]) -> [User] {
+        var seenIds: Set<UUID> = []
+        return
+            users
+            .flatMap { userModel.usersDeletedTogether(with: $0.id) }
+            .filter { seenIds.insert($0.id).inserted }
+    }
+    
+    /// 選択された利用者に連動して削除される保護者（選択された本人は含まない）
+    private func cascadedGuardians(of users: [User]) -> [User] {
+        let selectedIds = Set(users.map(\.id))
+        return deletionTargets(of: users).filter { !selectedIds.contains($0.id) }
+    }
+    
+    /// 削除に伴って自動返却される貸出
+    private func autoReturningLoans(of users: [User]) -> [Loan] {
+        deletionTargets(of: users).flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
     }
 }
 
@@ -180,7 +199,17 @@ struct UserListContainerView: View {
     _ = try? mockFactory.userRepository.save(user2)
     
     let userModel = UserModel(repository: mockFactory.userRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    // 削除時の自動返却で参照するため、貸出まわりのModelもプレビューに必要
+    let loanModel = LoanModel(
+        repository: mockFactory.loanRepository,
+        bookRepository: mockFactory.bookRepository,
+        userRepository: mockFactory.userRepository,
+        loanSettingsRepository: mockFactory.loanSettingsRepository
+    )
     
     return UserListContainerView()
         .environment(userModel)
+        .environment(loanModel)
+        .environment(bookModel)
 }

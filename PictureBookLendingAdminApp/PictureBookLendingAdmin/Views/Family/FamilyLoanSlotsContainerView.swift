@@ -72,7 +72,7 @@ struct FamilyLoanSlotsContainerView: View {
     /// 現状は1人1枠（maxBooksPerUser=1の運用前提）。複数冊設定時の枠の積み方は
     /// SCREEN_DESIGN_PHASE2 §8 の未決事項として実装時に拡張する。
     private var slots: [FamilyLoanSlotDisplay] {
-        userModel.getFamilyMembers(of: userId).map { member in
+        familyMembers.map { member in
             FamilyLoanSlotDisplay(
                 id: member.id,
                 roleLabel: Self.roleLabel(for: member),
@@ -82,6 +82,20 @@ struct FamilyLoanSlotsContainerView: View {
         }
     }
     
+    /// 枠を組み立てる家族
+    ///
+    /// 通常は利用者一覧から家庭を解決するが、利用者が削除済みで解決できない場合は
+    /// 貸出記録のスナップショット（`loan.user`）から復元する。
+    /// 返却の一覧には削除済み利用者の貸出も並ぶため、ここで枠を出さないと
+    /// 借りたままの図書を返す手段がなくなり、その図書も貸出中のまま棚に戻せなくなる。
+    /// 貸出フローでは削除済みの利用者に貸すことはないため、返却の文脈に限る
+    private var familyMembers: [User] {
+        let members = userModel.getFamilyMembers(of: userId)
+        guard members.isEmpty, case .returning = context else { return members }
+        
+        return loanModel.activeLoanBorrowers(userId: userId)
+    }
+    
     private static func roleLabel(for member: User) -> String {
         switch member.userType.category {
         case .child: "園児の本"
@@ -89,14 +103,18 @@ struct FamilyLoanSlotsContainerView: View {
         }
     }
     
+    /// 枠に表示する貸出（借りていなければnil）
+    ///
+    /// 図書が削除済みで解決できない場合も、枠自体は貸出中として出す。
+    /// ここで枠を空にすると返却ボタンが出ず、借りたままの図書を返す手段がなくなるうえ、
+    /// 貸出の文脈では空き枠として選べてしまい上限エラーになる
     private func loanDisplay(for member: User) -> FamilyLoanSlotLoan? {
-        guard let loan = loanModel.getUserActiveLoans(userId: member.id).first,
-            let book = bookModel.findBookById(loan.bookId)
-        else { return nil }
+        guard let loan = loanModel.getUserActiveLoans(userId: member.id).first else { return nil }
         
+        let book = bookModel.findBookById(loan.bookId)
         return FamilyLoanSlotLoan(
-            bookTitle: book.title,
-            imageURL: book.resolvedSmallImageSource,
+            bookTitle: book?.title ?? DisplayFallback.bookTitle,
+            imageURL: book?.resolvedSmallImageSource,
             dueDateText: loan.dueDateText,
             isOverdue: loan.isOverdue(at: Date())
         )

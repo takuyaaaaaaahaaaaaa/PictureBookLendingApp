@@ -217,6 +217,17 @@ public class ClassGroupModel {
         return nil
     }
     
+    /// 進級処理で卒業（削除）となるクラスグループを取得する
+    ///
+    /// `promoteToNextYear()` を実行する前に、いなくなる組を確認するために使用します。
+    /// 判定は進級処理本体と同じ `nextClassGroup(current:)` で行うため、
+    /// 事前確認と実際に削除される組は一致します。
+    ///
+    /// - Returns: 卒業として削除されるクラスグループ
+    public func graduatingClassGroups() -> [ClassGroup] {
+        classGroups.filter { nextClassGroup(current: $0) == nil }
+    }
+    
     /// 進級処理を実行する
     ///
     /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。

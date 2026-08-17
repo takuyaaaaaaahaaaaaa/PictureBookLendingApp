@@ -215,6 +215,34 @@ public class UserModel {
         }
     }
     
+    /// 利用者を削除したときに、併せて削除される利用者を含めた一覧を取得する
+    ///
+    /// `deleteUser(_:)` のカスケード削除と同じ範囲を返します。
+    /// 園児を指定した場合は本人と紐づく保護者全員（保護者は名前順）、
+    /// 保護者を指定した場合は本人のみです。
+    /// 削除前に影響範囲（貸出中の図書など）を利用者へ提示するためにも使用します。
+    ///
+    /// - Parameter id: 削除する利用者のID
+    /// - Returns: 削除対象となる利用者一覧（先頭は指定した利用者）。利用者が存在しない場合は空配列
+    public func usersDeletedTogether(with id: UUID) -> [User] {
+        guard let targetUser = users.first(where: { $0.id == id }) else { return [] }
+        
+        // 保護者の削除は本人のみ（園児や他の保護者には波及しない）
+        guard case .child = targetUser.userType else { return [targetUser] }
+        
+        let relatedGuardians =
+            users
+            .filter { user in
+                if case .guardian(let relatedChildId) = user.userType {
+                    return relatedChildId == id
+                }
+                return false
+            }
+            .sorted { $0.name < $1.name }
+        
+        return [targetUser] + relatedGuardians
+    }
+    
     /// 利用者を削除する
     ///
     /// 指定されたIDの利用者を削除します。
@@ -224,27 +252,22 @@ public class UserModel {
     /// - Returns: 削除に成功したかどうか
     /// - Throws: 削除対象が見つからない場合は `UserModelError.userNotFound` を投げます
     public func deleteUser(_ id: UUID) throws -> Bool {
-        // 削除対象の利用者を特定
-        guard let targetUser = users.first(where: { $0.id == id }) else {
+        // 削除対象の利用者を特定（園児の場合は関連する保護者も含む）
+        let targetUsers = usersDeletedTogether(with: id)
+        guard !targetUsers.isEmpty else {
             throw UserModelError.userNotFound
         }
         
-        // 対象利用者をリポジトリから削除
-        let result = try repository.delete(id)
-        
-        // キャッシュからも削除
-        users.removeAll(where: { $0.id == id })
-        
-        // 園児を削除する場合は、関連する保護者も削除
-        if case .child = targetUser.userType {
-            let relatedGuardianIds = users.compactMap { user in
-                if case .guardian(let relatedChildId) = user.userType, relatedChildId == id {
-                    return user.id
-                }
-                return nil
-            }
-            for guardianId in relatedGuardianIds {
-                _ = try deleteUser(guardianId)
+        var result = false
+        for targetUser in targetUsers {
+            // リポジトリから削除
+            let deleted = try repository.delete(targetUser.id)
+            
+            // キャッシュからも削除
+            users.removeAll(where: { $0.id == targetUser.id })
+            
+            if targetUser.id == id {
+                result = deleted
             }
         }
         
