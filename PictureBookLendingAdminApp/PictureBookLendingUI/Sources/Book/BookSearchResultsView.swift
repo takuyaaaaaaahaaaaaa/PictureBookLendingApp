@@ -5,15 +5,18 @@ import SwiftUI
 /// 絵本検索結果を表示するPresentation View
 public struct BookSearchResultsView: View {
     let searchResults: [ScoredBook]
+    let attribution: SearchProviderAttribution?
     let onBookSelect: (Book) -> Void
     let onCancel: () -> Void
     
     public init(
         searchResults: [ScoredBook],
+        attribution: SearchProviderAttribution? = nil,
         onBookSelect: @escaping (Book) -> Void,
         onCancel: @escaping () -> Void
     ) {
         self.searchResults = searchResults
+        self.attribution = attribution
         self.onBookSelect = onBookSelect
         self.onCancel = onCancel
     }
@@ -28,13 +31,19 @@ public struct BookSearchResultsView: View {
                         description: Text("該当する絵本が見つかりませんでした")
                     )
                 } else {
-                    List(searchResults, id: \.book.id) { scoredBook in
-                        Button {
-                            onBookSelect(scoredBook.book)
-                        } label: {
-                            BookSearchResultRowView(scoredBook: scoredBook)
+                    List {
+                        ForEach(searchResults, id: \.book.id) { scoredBook in
+                            Button {
+                                onBookSelect(scoredBook.book)
+                            } label: {
+                                BookSearchResultRowView(scoredBook: scoredBook)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+                        if let attribution {
+                            SearchProviderAttributionView(attribution: attribution)
+                                .listRowSeparator(.hidden)
+                        }
                     }
                     .listStyle(.plain)
                 }
