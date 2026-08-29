@@ -125,14 +125,20 @@ struct UserListContainerView: View {
         let users = offsets.map { filteredUsers[$0] }
         guard !users.isEmpty else { return }
         
+        let selectedIds = Set(users.map(\.id))
+        let targetUsers = deletionTargets(of: users)
+        
         usersToDelete = users
         deleteConfirmationState = AlertState(
             isPresented: true,
             title: "利用者の削除",
             message: UserDeletionMessage.make(
                 targetNames: users.map(\.name),
-                cascadedGuardianNames: cascadedGuardians(of: users).map(\.name),
-                autoReturningLoans: autoReturningLoans(of: users).map { loan in
+                cascadedGuardianNames:
+                    targetUsers
+                    .filter { !selectedIds.contains($0.id) }
+                    .map(\.name),
+                autoReturningLoans: activeLoans(of: targetUsers).map { loan in
                     UserDeletionMessage.AutoReturningLoan(
                         userName: loan.user.name,
                         bookTitle: bookModel.findBookById(loan.bookId)?.title
@@ -152,9 +158,7 @@ struct UserListContainerView: View {
         do {
             // 借りたままの図書を先に返却する
             // （先に利用者を削除すると、返却操作ができない貸出だけが残ってしまう）
-            for loan in autoReturningLoans(of: targetUsers) {
-                _ = try loanModel.returnBook(loanId: loan.id)
-            }
+            try loanModel.returnLoans(activeLoans(of: deletionTargets(of: targetUsers)))
             
             // 園児の削除で保護者も連動して消えるため、すでに消えた利用者は飛ばす
             for user in targetUsers where userModel.users.contains(where: { $0.id == user.id }) {
@@ -176,15 +180,9 @@ struct UserListContainerView: View {
             .filter { seenIds.insert($0.id).inserted }
     }
     
-    /// 選択された利用者に連動して削除される保護者（選択された本人は含まない）
-    private func cascadedGuardians(of users: [User]) -> [User] {
-        let selectedIds = Set(users.map(\.id))
-        return deletionTargets(of: users).filter { !selectedIds.contains($0.id) }
-    }
-    
-    /// 削除に伴って自動返却される貸出
-    private func autoReturningLoans(of users: [User]) -> [Loan] {
-        deletionTargets(of: users).flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
+    /// 指定した利用者たちが借りたままの貸出
+    private func activeLoans(of users: [User]) -> [Loan] {
+        users.flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
     }
 }
 

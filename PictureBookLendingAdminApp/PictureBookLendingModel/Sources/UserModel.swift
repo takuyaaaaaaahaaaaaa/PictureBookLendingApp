@@ -252,26 +252,30 @@ public class UserModel {
     /// - Returns: 削除に成功したかどうか
     /// - Throws: 削除対象が見つからない場合は `UserModelError.userNotFound` を投げます
     public func deleteUser(_ id: UUID) throws -> Bool {
-        // 削除対象の利用者を特定（園児の場合は関連する保護者も含む）
+        // 削除対象の利用者を特定（先頭が指定された本人、続くのは連動して消える保護者）
         let targetUsers = usersDeletedTogether(with: id)
-        guard !targetUsers.isEmpty else {
+        guard let targetUser = targetUsers.first else {
             throw UserModelError.userNotFound
         }
         
-        var result = false
-        for targetUser in targetUsers {
-            // リポジトリから削除
-            let deleted = try repository.delete(targetUser.id)
-            
-            // キャッシュからも削除
-            users.removeAll(where: { $0.id == targetUser.id })
-            
-            if targetUser.id == id {
-                result = deleted
-            }
+        let result = try deleteFromRepositoryAndCache(targetUser)
+        
+        // 園児を削除する場合は、関連する保護者も削除
+        for relatedGuardian in targetUsers.dropFirst() {
+            _ = try deleteFromRepositoryAndCache(relatedGuardian)
         }
         
         return result
+    }
+    
+    /// 利用者をリポジトリとキャッシュの両方から削除する
+    ///
+    /// - Parameter user: 削除する利用者
+    /// - Returns: 削除に成功したかどうか
+    private func deleteFromRepositoryAndCache(_ user: User) throws -> Bool {
+        let deleted = try repository.delete(user.id)
+        users.removeAll(where: { $0.id == user.id })
+        return deleted
     }
     
     /// 全ての利用者を削除する
