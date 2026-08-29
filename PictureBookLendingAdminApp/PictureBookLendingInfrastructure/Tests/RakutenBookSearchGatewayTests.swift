@@ -16,6 +16,9 @@ struct RakutenBookSearchGatewayTests {
     /// テスト用のアプリID（モック環境では値は問われない）
     private let dummyAppId = "test-application-id"
     
+    /// テスト用のアクセスキー（モック環境では値は問われない）
+    private let dummyAccessKey = "test-access-key"
+    
     /// はらぺこあおむしを模したレスポンスJSON
     private func sampleResponseJSON(isbn: String = "9784834000825") -> Data {
         let json = """
@@ -50,7 +53,8 @@ struct RakutenBookSearchGatewayTests {
         let session = MockURLProtocol.makeSession { _ in
             (200, self.sampleResponseJSON())
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         let book = try await gateway.searchBook(by: "978-4-834-00082-5")
         
@@ -72,7 +76,8 @@ struct RakutenBookSearchGatewayTests {
             Issue.record("無効なISBNではネットワークを呼ぶべきではない")
             return (200, Data())
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         await #expect(throws: BookMetadataGatewayError.invalidISBN) {
             try await gateway.searchBook(by: "invalid-isbn")
@@ -84,7 +89,8 @@ struct RakutenBookSearchGatewayTests {
         let session = MockURLProtocol.makeSession { _ in
             (200, Data(#"{"Items": [], "count": 0}"#.utf8))
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
             try await gateway.searchBook(by: "9789999999991")
@@ -96,7 +102,8 @@ struct RakutenBookSearchGatewayTests {
         let session = MockURLProtocol.makeSession { _ in
             (404, Data(#"{"error": "not_found"}"#.utf8))
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
             try await gateway.searchBook(by: "9784834000825")
@@ -108,7 +115,8 @@ struct RakutenBookSearchGatewayTests {
         let session = MockURLProtocol.makeSession { _ in
             (400, Data(#"{"error": "wrong_parameter"}"#.utf8))
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         await #expect(throws: BookMetadataGatewayError.httpError(statusCode: 400)) {
             try await gateway.searchBook(by: "9784834000825")
@@ -121,7 +129,8 @@ struct RakutenBookSearchGatewayTests {
             // レスポンスのisbnがISBN-10（10桁）のケース
             (200, self.sampleResponseJSON(isbn: "4834000826"))
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         let book = try await gateway.searchBook(by: "9784834000825")
         
@@ -135,7 +144,8 @@ struct RakutenBookSearchGatewayTests {
         let session = MockURLProtocol.makeSession { _ in
             (200, self.sampleResponseJSON())
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         let books = try await gateway.searchBooks(title: "はらぺこあおむし", author: nil, maxResults: 20)
         
@@ -151,7 +161,8 @@ struct RakutenBookSearchGatewayTests {
             #expect(!query.contains("hits=100"))
             return (200, self.sampleResponseJSON())
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         _ = try await gateway.searchBooks(title: "絵本", author: nil, maxResults: 100)
     }
@@ -163,8 +174,28 @@ struct RakutenBookSearchGatewayTests {
             #expect(query.contains("author="))
             return (200, self.sampleResponseJSON())
         }
-        let gateway = RakutenBookSearchGateway(applicationId: dummyAppId, urlSession: session)
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
         
         _ = try await gateway.searchBooks(title: "ぐりとぐら", author: "なかがわりえこ", maxResults: 20)
+    }
+    
+    // MARK: - accessKey / Origin ヘッダー
+    
+    /// リクエストにaccessKeyヘッダーとOriginヘッダーが付与されることをテスト
+    ///
+    /// 楽天ウェブサービスの新API（2026年改定版）はapplicationIdに加えて
+    /// accessKeyヘッダーと、アプリ登録時の「許可されたWebサイト」と一致する
+    /// Originヘッダーが無いと403（REQUEST_CONTEXT_BODY_HTTP_REFERRER_MISSING）を返す。
+    @Test func searchBookSetsAccessKeyAndOriginHeaders() async throws {
+        let session = MockURLProtocol.makeSession { request in
+            #expect(request.value(forHTTPHeaderField: "accessKey") == self.dummyAccessKey)
+            #expect(request.value(forHTTPHeaderField: "Origin") == "https://github.com")
+            return (200, self.sampleResponseJSON())
+        }
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
+        
+        _ = try await gateway.searchBook(by: "9784834000825")
     }
 }
