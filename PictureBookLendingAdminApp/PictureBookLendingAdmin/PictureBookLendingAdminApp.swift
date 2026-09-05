@@ -1,3 +1,4 @@
+import FirebaseCore
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
@@ -27,6 +28,14 @@ struct PictureBookLendingAdminApp: App {
     @State private var backupModel: BackupModel
     
     init() {
+        // Firebase（Crashlytics）を初期化する。
+        // public repoのためGoogleService-Info.plistはコミットせず、
+        // 各開発環境が手元に配置し、CIは環境変数から生成する。
+        // plistが無い環境でもクラッシュ収集なしでアプリは動くよう、存在確認してから初期化する。
+        if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
+            FirebaseApp.configure()
+        }
+        
         // シングルトンのRepositoryFactoryを使用
         let repositoryFactory = SwiftDataRepositoryFactory.shared
         
