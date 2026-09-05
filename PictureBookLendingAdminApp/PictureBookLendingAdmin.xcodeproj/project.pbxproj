@@ -238,6 +238,7 @@
 				EFF77EED2DD66AAB009BD213 /* Frameworks */,
 				EFF77EEE2DD66AAB009BD213 /* Resources */,
 				EF9609662E6757CC006A557F /* Embed Foundation Extensions */,
+				FBC0000D2E90000100000004 /* Upload Crashlytics dSYM */,
 			);
 			buildRules = (
 			);
@@ -415,6 +416,30 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "#!/bin/bash\n\n# Skip in CI/CD environments\nif [ \"$CI\" = \"true\" ] || [ \"$GITHUB_ACTIONS\" = \"true\" ] || [ \"$BUILD_FOR_TESTING\" = \"YES\" ]; then\n  echo \"Skipping Swift Format/Lint in CI/CD environment\"\n  exit 0\nfi\n\necho \"Running Swift Format and Lint...\"\n\n# Check if swift format is available\nif ! command -v swift >/dev/null 2>&1; then\n  echo \"Warning: Swift toolchain not found, skipping format\"\n  exit 0\nfi\n\n# Change to project directory\ncd \"$PROJECT_DIR\"\n\n# First run lint to check for style violations\necho \"Linting Swift files...\"\nswift format lint --configuration .swift-format --recursive . || echo \"Warning: Lint issues found\"\n\n# Then format Swift files in main app\necho \"Formatting PictureBookLendingAdmin...\"\nswift format --configuration .swift-format --in-place --recursive . 2>/dev/null || echo \"Warning: Could not format some files in .\"\n\necho \"Swift Format and Lint completed!\"\n";
+		};
+		FBC0000D2E90000100000004 /* Upload Crashlytics dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# Crashlytics のシンボル(dSYM)アップロード。\n# public repo のため GoogleService-Info.plist はコミットしておらず、\n# plist が無い環境（CI の単体テスト等）ではスキップしてビルドを壊さない。\n\nPLIST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nRUN_SCRIPT=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n\nif [ ! -f \"$PLIST\" ]; then\n  echo \"note: Crashlytics: GoogleService-Info.plist が無いためdSYMアップロードをスキップします\"\n  exit 0\nfi\n\nif [ ! -x \"$RUN_SCRIPT\" ]; then\n  echo \"note: Crashlytics: run スクリプトが見つからないためスキップします ($RUN_SCRIPT)\"\n  exit 0\nfi\n\n# dSYMが生成されない設定（Debug: dwarf）では何もしない。\nif [ \"${DEBUG_INFORMATION_FORMAT}\" != \"dwarf-with-dsym\" ]; then\n  echo \"note: Crashlytics: dSYMを生成しない設定のためスキップします (DEBUG_INFORMATION_FORMAT=${DEBUG_INFORMATION_FORMAT})\"\n  exit 0\nfi\n\n\"$RUN_SCRIPT\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -665,7 +690,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
