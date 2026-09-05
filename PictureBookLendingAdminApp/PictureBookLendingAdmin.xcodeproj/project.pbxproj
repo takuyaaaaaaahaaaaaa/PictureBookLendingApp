@@ -25,6 +25,7 @@
 		EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91542DF0A0D6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91572DF0A1A6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91562DF0A1A6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91592DF0A1AB007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */; };
+		FBC0000C2E90000100000003 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FBC0000B2E90000100000002 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -138,6 +139,7 @@
 				EF6CC9292E21CB6E0092EEDE /* PictureBookLendingInfrastructure in Frameworks */,
 				EF8FCE702E2153450044F238 /* PictureBookLendingUI in Frameworks */,
 				EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */,
+				FBC0000C2E90000100000003 /* FirebaseCrashlytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -236,6 +238,7 @@
 				EFF77EED2DD66AAB009BD213 /* Frameworks */,
 				EFF77EEE2DD66AAB009BD213 /* Resources */,
 				EF9609662E6757CC006A557F /* Embed Foundation Extensions */,
+				FBC0000D2E90000100000004 /* Upload Crashlytics dSYM */,
 			);
 			buildRules = (
 			);
@@ -251,6 +254,7 @@
 				EF8FCE6F2E2153450044F238 /* PictureBookLendingUI */,
 				EF6CC9282E21CB6E0092EEDE /* PictureBookLendingInfrastructure */,
 				EF65430A2E225FB000D9B543 /* PictureBookLendingModel */,
+				FBC0000B2E90000100000002 /* FirebaseCrashlytics */,
 			);
 			productName = PictureBookLendingAdmin;
 			productReference = EFF77EF02DD66AAB009BD213 /* PictureBookLendingAdmin.app */;
@@ -344,6 +348,7 @@
 			mainGroup = EFF77EE72DD66AAB009BD213;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				FBC0000A2E90000100000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = EFF77EF12DD66AAB009BD213 /* Products */;
@@ -411,6 +416,30 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "#!/bin/bash\n\n# Skip in CI/CD environments\nif [ \"$CI\" = \"true\" ] || [ \"$GITHUB_ACTIONS\" = \"true\" ] || [ \"$BUILD_FOR_TESTING\" = \"YES\" ]; then\n  echo \"Skipping Swift Format/Lint in CI/CD environment\"\n  exit 0\nfi\n\necho \"Running Swift Format and Lint...\"\n\n# Check if swift format is available\nif ! command -v swift >/dev/null 2>&1; then\n  echo \"Warning: Swift toolchain not found, skipping format\"\n  exit 0\nfi\n\n# Change to project directory\ncd \"$PROJECT_DIR\"\n\n# First run lint to check for style violations\necho \"Linting Swift files...\"\nswift format lint --configuration .swift-format --recursive . || echo \"Warning: Lint issues found\"\n\n# Then format Swift files in main app\necho \"Formatting PictureBookLendingAdmin...\"\nswift format --configuration .swift-format --in-place --recursive . 2>/dev/null || echo \"Warning: Could not format some files in .\"\n\necho \"Swift Format and Lint completed!\"\n";
+		};
+		FBC0000D2E90000100000004 /* Upload Crashlytics dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${TARGET_NAME}",
+				"$(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Upload Crashlytics dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# Crashlytics のシンボル(dSYM)アップロード。\n# public repo のため GoogleService-Info.plist はコミットしておらず、\n# plist が無い環境（CI の単体テスト等）ではスキップしてビルドを壊さない。\n\nPLIST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/GoogleService-Info.plist\"\nRUN_SCRIPT=\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n\nif [ ! -f \"$PLIST\" ]; then\n  echo \"note: Crashlytics: GoogleService-Info.plist が無いためdSYMアップロードをスキップします\"\n  exit 0\nfi\n\nif [ ! -x \"$RUN_SCRIPT\" ]; then\n  echo \"note: Crashlytics: run スクリプトが見つからないためスキップします ($RUN_SCRIPT)\"\n  exit 0\nfi\n\n# dSYMが生成されない設定（Debug: dwarf）では何もしない。\nif [ \"${DEBUG_INFORMATION_FORMAT}\" != \"dwarf-with-dsym\" ]; then\n  echo \"note: Crashlytics: dSYMを生成しない設定のためスキップします (DEBUG_INFORMATION_FORMAT=${DEBUG_INFORMATION_FORMAT})\"\n  exit 0\nfi\n\n\"$RUN_SCRIPT\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -710,7 +739,7 @@
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
@@ -896,6 +925,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		FBC0000A2E90000100000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.18.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		EF6543062E225FA400D9B543 /* PictureBookLendingModel */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -944,6 +984,11 @@
 		EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = PictureBookLendingDomain;
+		};
+		FBC0000B2E90000100000002 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FBC0000A2E90000100000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
