@@ -22,6 +22,8 @@ struct BorrowSheetContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(\.analytics) private var analytics
+    @Environment(\.scenePhase) private var scenePhase
     
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
     @State private var sheetPath = NavigationPath()
@@ -39,6 +41,15 @@ struct BorrowSheetContainerView: View {
     @State private var undoFeedback = UndoFeedback()
     /// 表紙の拡大表示状態（枠確認画面の表紙タップで開く）
     @State private var isCoverZoomPresented = false
+    /// 貸出フローの所要時間の計測（シート表示＝このViewの生成で開始）
+    @State private var stopwatch = FlowStopwatch()
+    /// このシートの貸出フローの結末（離脱を記録してよいかの唯一の判断材料）
+    ///
+    /// 完了率・離脱率が狂わないよう、1回のシートにつき記録は高々1件に抑える。
+    /// 完了後の閉じるは離脱ではなく、また無操作タイマーは選択画面と表紙の拡大表示の
+    /// 両方で同時に生きていて同じチケットで同時に発火しうるため、
+    /// 閉じる要求が何度来ても`.inProgress`のときだけ記録する
+    @State private var sheetOutcome = SheetOutcome.inProgress
     /// 表紙⇄拡大表示のズーム遷移用Namespace
     @Namespace private var coverZoomNamespace
     
@@ -70,6 +81,16 @@ struct BorrowSheetContainerView: View {
     /// 表紙⇄拡大表示のズーム遷移の対応付けID
     private enum CoverZoomSource: Hashable {
         case cover
+    }
+    
+    /// 貸出フローの結末（`sheetOutcome`参照）
+    private enum SheetOutcome: Hashable {
+        /// まだ完了も離脱もしていない（＝閉じたら離脱として記録する）
+        case inProgress
+        /// 貸出が確定した
+        case completed
+        /// 離脱として記録済み
+        case abandoned
     }
     
     var body: some View {
@@ -104,6 +125,15 @@ struct BorrowSheetContainerView: View {
             if wasPresented && !isPresented && isPopPendingAfterLend {
                 isPopPendingAfterLend = false
                 onLendCompleted()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            // バックグラウンドに居た時間は貸出の所要時間として意味を持たないため計測を捨てる
+            // （docs/ANALYTICS_DESIGN.md §4）。
+            // `.inactive`（コントロールセンターの引き下げ・通知バナー等の一過性の遷移）では捨てない：
+            // 計測は復帰できないため、アプリを離れていない遷移で無効化すると所要時間を取りこぼす
+            if newPhase == .background {
+                stopwatch.invalidate()
             }
         }
         // 誤スワイプで貸出タスクが途中で消えないようにする（閉じるのは✕ボタンから。
@@ -149,6 +179,7 @@ struct BorrowSheetContainerView: View {
                     emptyStateTitle: "利用者が登録されていません",
                     emptyStateDescription: "設定画面から利用者を登録してください",
                     onSelect: { row in
+                        analytics.track(.borrowUserSelected(elapsedMs: stopwatch.elapsedMs()))
                         sheetPath.append(BorrowConfirmRoute(book: context.book, userId: row.id))
                     }
                 )
@@ -183,7 +214,7 @@ struct BorrowSheetContainerView: View {
                         undoFeedback: $undoFeedback,
                         userId: route.userId,
                         context: .borrowing(onSlotSelected: { slotUserId in
-                            handleLend(book: route.book, userId: slotUserId)
+                            handleLend(route: route, slotUserId: slotUserId)
                         })
                     )
                 }
@@ -247,7 +278,7 @@ struct BorrowSheetContainerView: View {
         }
         .kioskIdleTimeout(ticket: idleTicket) {
             isCoverZoomPresented = false
-            onClose()
+            handleClose(reason: .idleTimeout)
         }
         #if os(iOS)
             .navigationTransition(.zoom(sourceID: CoverZoomSource.cover, in: coverZoomNamespace))
@@ -270,14 +301,14 @@ struct BorrowSheetContainerView: View {
                 DragGesture(minimumDistance: 0)
                     .onEnded { _ in idleTicket += 1 }
             )
-            .kioskIdleTimeout(ticket: idleTicket) { onClose() }
+            .kioskIdleTimeout(ticket: idleTicket) { handleClose(reason: .idleTimeout) }
             .navigationTitle(title)
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            onClose()
+                            handleClose(reason: .userClosed)
                         } label: {
                             Image(systemName: "xmark")
                         }
@@ -323,7 +354,10 @@ struct BorrowSheetContainerView: View {
                         users
                         .sorted { $0.name < $1.name }
                         .map { user in
-                            // 家庭の全員（本人＋紐づく保護者）が借用中なら空き枠なし
+                            // 家庭の全員（本人＋紐づく保護者）が借用中なら空き枠なし。
+                            // `FamilyLoanSlotsContainerView.trackBlockedIfNoOpenSlot`と
+                            // 同じ判定意図だが、入力（利用者＋借用者IDの集合／枠の表示データ）が
+                            // 違うため別実装。判定を変えるときは両方を確認する
                             let familyMembers = [user] + (guardiansByChildId[user.id] ?? [])
                             return BorrowerRowDisplay(
                                 id: user.id,
@@ -358,7 +392,32 @@ struct BorrowSheetContainerView: View {
         }
     }
     
+    /// 貸出先の枠の種別（記録用。利用者を解決できない場合は園児枠として扱う）
+    private func slotType(of userId: UUID) -> AnalyticsEvent.SlotType {
+        userModel.findUserById(userId)?.userType.category == .guardian ? .guardian : .child
+    }
+    
     // MARK: - Actions
+    
+    /// シートを閉じる（✕ボタン・無操作タイムアウトの共通経路）
+    ///
+    /// 完了しなかった貸出フローは離脱として記録する。
+    /// 「貸出中です」の案内だけのシート（フロー未開始）と、
+    /// 貸出が完了した後の閉じるは離脱ではないため記録しない。
+    /// 複数の無操作タイマーが同時に発火しても記録は1件に抑える（`sheetOutcome`）
+    private func handleClose(reason: AnalyticsEvent.AbandonReason) {
+        if !context.isAlreadyLent && sheetOutcome == .inProgress {
+            analytics.track(
+                .borrowAbandoned(
+                    lastStep: sheetPath.isEmpty ? .userSelection : .slotSelection,
+                    reason: reason,
+                    elapsedMs: stopwatch.elapsedMs()
+                )
+            )
+            sheetOutcome = .abandoned
+        }
+        onClose()
+    }
     
     /// 枠確認画面での返却の取り消し（Undoカードの「元に戻す」）
     ///
@@ -367,16 +426,24 @@ struct BorrowSheetContainerView: View {
         guard let loanId = undoFeedback.targetId else { return }
         do {
             try loanModel.undoReturn(loanId: loanId)
+            // 貸出フローの中で行われた返却の取り消し（枠の入れ替えのやり直し）。
+            // 完了系のイベントと同じく、成立した操作だけを記録する
+            analytics.track(.undoPerformed(flow: .borrow))
         } catch {
             alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
         }
     }
     
     /// 貸出の実行（枠選択のタップで確定・✓カードまたは節目のお祝いで完了を伝える）
-    private func handleLend(book: Book, userId: UUID) {
+    ///
+    /// - Parameters:
+    ///   - route: 名前一覧でタップされた利用者と選んだ図書
+    ///   - slotUserId: 実際に借りる枠の持ち主（園児枠が埋まっていれば保護者枠になる）
+    private func handleLend(route: BorrowConfirmRoute, slotUserId: UUID) {
+        let book = route.book
         do {
-            let loan = try loanModel.lendBook(bookId: book.id, userId: userId)
-            let name = userModel.findUserById(userId)?.name ?? ""
+            let loan = try loanModel.lendBook(bookId: book.id, userId: slotUserId)
+            let name = userModel.findUserById(slotUserId)?.name ?? ""
             // 節目に達していたら✓カードの代わりに紙吹雪のお祝いを表示する。
             // 同時に複数の節目に達した場合は、優先度の最も高い1つだけを祝う
             if let milestone = loanModel.achievedMilestones(for: loan).first {
@@ -387,6 +454,18 @@ struct BorrowSheetContainerView: View {
             } else {
                 successFeedback.show("\(name)さんに『\(book.title)』を貸出しました")
             }
+            // 保護者枠へのフォールバック＝園児の名前で入ったのに保護者の枠で借りたか
+            // （保護者の名前で入って園児の枠で借りるのは通常の代行操作でありフォールバックではない）
+            let usedSlotType = slotType(of: slotUserId)
+            analytics.track(
+                .borrowCompleted(
+                    totalMs: stopwatch.elapsedMs(),
+                    slotType: usedSlotType,
+                    isGuardianFallback: usedSlotType == .guardian
+                        && slotType(of: route.userId) == .child
+                )
+            )
+            sheetOutcome = .completed
             isPopPendingAfterLend = true
             idleTicket += 1
         } catch {

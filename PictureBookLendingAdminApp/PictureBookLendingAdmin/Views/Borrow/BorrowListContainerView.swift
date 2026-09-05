@@ -19,6 +19,7 @@ struct BorrowListContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(\.analytics) private var analytics
     
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
@@ -38,6 +39,11 @@ struct BorrowListContainerView: View {
     @State private var displayMode: BookDisplayMode = .shelf
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
+    /// 直近に記録した検索テキスト（トリム後。未記録ならnil）
+    ///
+    /// `.task`はタブを行き来して画面が再表示されるたびに走り直すため、
+    /// これがないと同じ検索が何度も記録され0件ヒット率が歪む
+    @State private var lastTrackedSearchText: String?
     /// 一覧の表示の大きさ（「大きく表示」フローティングボタンのトグル状態）。
     /// 文字が見えづらい利用者は毎回見えづらいため、一時的なモードではなく
     /// アプリを再起動しても維持される永続設定にする
@@ -45,6 +51,13 @@ struct BorrowListContainerView: View {
     
     /// 「大きく表示」フローティングボタンの画面端からの余白
     private static let displayScaleButtonPadding: CGFloat = 24
+    
+    /// 検索イベントの記録設定
+    private enum SearchTracking {
+        /// 入力が止まった（検索が確定した）とみなすまでの待ち時間。
+        /// 1文字打つたびに記録すると0件ヒット率が入力途中で水増しされるため置く
+        static let debounce: Duration = .milliseconds(800)
+    }
     
     var body: some View {
         NavigationStack {
@@ -118,6 +131,11 @@ struct BorrowListContainerView: View {
         .refreshable {
             refreshData()
         }
+        // 検索の質（0件ヒット・あいまい検索の発動）を記録する。
+        // 入力が変わるたびにタスクごと作り直されるため、手が止まったときだけ残る
+        .task(id: filterState.searchText) {
+            await trackBookSearch()
+        }
         .sheet(item: $borrowSheetContext) { context in
             // 貸出中の案内だけの本は小さなフォームシートで十分（すぐ閉じられる）。
             // 200人規模の名前一覧＋組チップを載せる貸出タスクは、
@@ -163,11 +181,36 @@ struct BorrowListContainerView: View {
     }
     
     /// 五十音フィルタのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    ///
+    /// 五十音チップは検索テキストをクリアするため、先に未記録の検索を確定させる
+    /// （クリア後では`.task(id:)`がキャンセルされ、その検索が記録されないまま消える）
     private var kanaFilterBinding: Binding<KanaGroup?> {
         Binding(
             get: { filterState.selectedKanaFilter },
-            set: { filterState.setKanaFilter($0) }
+            set: {
+                flushPendingBookSearch()
+                filterState.setKanaFilter($0)
+            }
         )
+    }
+    
+    /// いま図書をどうやって見つけたか（貸出フロー開始の記録用）
+    ///
+    /// 検索と五十音は排他制御されているため同時には成立しない。
+    /// どちらも使っていなければ、一覧の見た目（棚表示かどうか）で見分ける。
+    /// `flushPendingBookSearch`と同じくトリム後の文字列で判定する
+    /// （揃えないと、空白のみの検索で`find_method: search`だけが記録され
+    /// 対応する`book_search_performed`が発火しない食い違いが起きる）
+    private var currentBookFindMethod: AnalyticsEvent.BookFindMethod {
+        if !filterState.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            .search
+        } else if filterState.selectedKanaFilter != nil {
+            .kanaIndex
+        } else if displayMode == .shelf {
+            .shelf
+        } else {
+            .scroll
+        }
     }
     
     // MARK: - Actions
@@ -178,10 +221,67 @@ struct BorrowListContainerView: View {
     /// シート内フローの状態は子Container（`BorrowSheetContainerView`）の@Stateに任せるため、
     /// ここでは提示単位（図書＋貸出状態のスナップショット）を差し込むだけでよい。
     private func openBorrowSheet(for book: Book) {
-        borrowSheetContext = BorrowSheetContext(
-            book: book,
-            isAlreadyLent: loanModel.isBookLent(bookId: book.id)
+        flushPendingBookSearch()
+        
+        let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
+        // 貸出中の案内シートは貸出フローの開始ではないため記録しない
+        if !isAlreadyLent {
+            analytics.track(.borrowFlowStarted(findMethod: currentBookFindMethod))
+        }
+        borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent)
+    }
+    
+    /// デバウンス待ちの検索をその場で確定させる（図書タップ・五十音チップの共通前処理）
+    ///
+    /// デバウンスの待ち時間より早く次の操作をした場合、その検索は記録されないまま
+    /// 終わってしまう。「探せた検索」ほど早く次の操作へ進むため、放置すると
+    /// 0件ヒット率が実態より高く出る。ここで先に確定させて取りこぼしを防ぐ
+    private func flushPendingBookSearch() {
+        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmedText.isEmpty else { return }
+        trackBookSearchIfUnrecorded(trimmedText: trimmedText)
+    }
+    
+    /// 検索の確定（デバウンス後）を利用ログに記録する
+    ///
+    /// 待っている間に検索テキストが変われば`.task(id:)`ごとキャンセルされ、
+    /// 入力途中の状態は記録されない
+    private func trackBookSearch() async {
+        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmedText.isEmpty else {
+            // 検索をやめた（クリアした）ら、次に同じ語を打ち直したときは別の検索として扱う
+            lastTrackedSearchText = nil
+            return
+        }
+        
+        try? await Task.sleep(for: SearchTracking.debounce)
+        if Task.isCancelled { return }
+        
+        trackBookSearchIfUnrecorded(trimmedText: trimmedText)
+    }
+    
+    /// まだ記録していない検索テキストであれば記録する
+    ///
+    /// 検索文字列そのものは載せず、文字数と結果の件数だけを残す
+    /// （docs/ANALYTICS_DESIGN.md 大原則2）。
+    /// 同じテキストの二重記録を避けるため、記録済みのテキストを覚えておく
+    private func trackBookSearchIfUnrecorded(trimmedText: String) {
+        guard lastTrackedSearchText != trimmedText else { return }
+        
+        let outcome = bookSections.filterOutcome(
+            searchText: filterState.searchText,
+            kanafilter: filterState.selectedKanaFilter,
+            sortType: selectedSortType
         )
+        analytics.track(
+            .bookSearchPerformed(
+                queryLength: trimmedText.count,
+                resultCount: outcome.bookCount,
+                isFuzzyTriggered: outcome.isFuzzyFallback,
+                isZeroHit: outcome.bookCount == 0
+            )
+        )
+        lastTrackedSearchText = trimmedText
     }
     
     /// 貸出完了（✓カードが消えた）ときの後始末。
