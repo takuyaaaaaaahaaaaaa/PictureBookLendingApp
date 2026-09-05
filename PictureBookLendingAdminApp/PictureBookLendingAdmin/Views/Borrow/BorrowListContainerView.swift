@@ -274,8 +274,8 @@ struct BorrowListContainerView: View {
             .bookSearchPerformed(
                 queryLength: trimmedText.count,
                 resultCount: outcome.bookCount,
-                fuzzyTriggered: outcome.isFuzzyFallback,
-                zeroHit: outcome.bookCount == 0
+                isFuzzyTriggered: outcome.isFuzzyFallback,
+                isZeroHit: outcome.bookCount == 0
             )
         )
         lastTrackedSearchText = trimmedText

@@ -114,7 +114,12 @@ struct FamilyLoanSlotsContainerView: View {
     /// 空き枠がないまま家庭の画面に到達したことを記録する（貸出文脈のみ・画面表示ごとに1回）
     ///
     /// 「タップしたのに借りられない」体験がどれだけ起きているかを見るための記録
-    /// （docs/ANALYTICS_DESIGN.md Q5）。返却文脈では枠が埋まっているのが通常のため記録しない
+    /// （docs/ANALYTICS_DESIGN.md Q5）。返却文脈では枠が埋まっているのが通常のため記録しない。
+    ///
+    /// 名前一覧の「空き枠なし」バッジ（`BorrowSheetContainerView.allUserSections`）と
+    /// 同じ判定意図だが、あちらは200人分をまとめて判定するため借用者IDの集合を
+    /// 一度だけ作る作りになっており、入力が違うので別実装のままにしている。
+    /// 判定を変えるときは両方を確認する
     private func trackBlockedIfNoOpenSlot() {
         guard case .borrowing = context, !hasTrackedBlockedNoSlot else { return }
         let currentSlots = slots

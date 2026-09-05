@@ -33,7 +33,7 @@ final class AnalyticsEventTests: XCTestCase {
     
     func testBorrowCompleted() {
         let event = AnalyticsEvent.borrowCompleted(
-            totalMs: 4200, slotType: .guardian, guardianFallback: true)
+            totalMs: 4200, slotType: .guardian, isGuardianFallback: true)
         
         XCTAssertEqual(event.name, "borrow_completed")
         XCTAssertEqual(
@@ -47,7 +47,7 @@ final class AnalyticsEventTests: XCTestCase {
     
     func testBorrowCompletedWithoutTotalDropsKey() {
         let event = AnalyticsEvent.borrowCompleted(
-            totalMs: nil, slotType: .child, guardianFallback: false)
+            totalMs: nil, slotType: .child, isGuardianFallback: false)
         
         XCTAssertEqual(
             event.params,
@@ -94,7 +94,7 @@ final class AnalyticsEventTests: XCTestCase {
     
     func testBookSearchPerformed() {
         let event = AnalyticsEvent.bookSearchPerformed(
-            queryLength: 4, resultCount: 0, fuzzyTriggered: true, zeroHit: true)
+            queryLength: 4, resultCount: 0, isFuzzyTriggered: true, isZeroHit: true)
         
         XCTAssertEqual(event.name, "book_search_performed")
         XCTAssertEqual(
@@ -111,7 +111,7 @@ final class AnalyticsEventTests: XCTestCase {
     
     func testReturnFamilyOpened() {
         let event = AnalyticsEvent.returnFamilyOpened(
-            findMethod: .searchBookTitle, overdueFilterActive: false)
+            findMethod: .searchBookTitle, isOverdueFilterActive: false)
         
         XCTAssertEqual(event.name, "return_family_opened")
         XCTAssertEqual(

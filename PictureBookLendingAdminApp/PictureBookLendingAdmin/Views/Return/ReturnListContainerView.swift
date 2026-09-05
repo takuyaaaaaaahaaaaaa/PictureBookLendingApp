@@ -251,7 +251,7 @@ struct ReturnListContainerView: View {
         analytics.track(
             .returnFamilyOpened(
                 findMethod: resolveFindMethod(for: row),
-                overdueFilterActive: isOverdueOnly
+                isOverdueFilterActive: isOverdueOnly
             )
         )
         familyStopwatch = FlowStopwatch()

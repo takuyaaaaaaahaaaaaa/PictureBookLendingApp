@@ -66,16 +66,16 @@ enum AnalyticsEvent {
     /// 名前一覧で名前をタップした
     case borrowUserSelected(elapsedMs: Int?)
     /// 枠タップで貸出が確定した
-    case borrowCompleted(totalMs: Int?, slotType: SlotType, guardianFallback: Bool)
+    case borrowCompleted(totalMs: Int?, slotType: SlotType, isGuardianFallback: Bool)
     /// 貸出シートが完了せず閉じた
     case borrowAbandoned(lastStep: BorrowLastStep, reason: AbandonReason, elapsedMs: Int?)
     /// 家庭の画面に到達したが空き枠がなかった
     case borrowBlockedNoSlot
     /// 図書検索の入力が確定した（デバウンス後）
     case bookSearchPerformed(
-        queryLength: Int, resultCount: Int, fuzzyTriggered: Bool, zeroHit: Bool)
+        queryLength: Int, resultCount: Int, isFuzzyTriggered: Bool, isZeroHit: Bool)
     /// 名前一覧から家庭の画面を開いた
-    case returnFamilyOpened(findMethod: ReturnFindMethod, overdueFilterActive: Bool)
+    case returnFamilyOpened(findMethod: ReturnFindMethod, isOverdueFilterActive: Bool)
     /// 返却が確定した
     case returnCompleted(elapsedMs: Int?, wasOverdue: Bool)
     /// Undoカードで取り消した
@@ -109,10 +109,10 @@ enum AnalyticsEvent {
             ["find_method": .string(findMethod.rawValue)]
         case .borrowUserSelected(let elapsedMs):
             Self.duration("elapsed_ms", elapsedMs)
-        case .borrowCompleted(let totalMs, let slotType, let guardianFallback):
+        case .borrowCompleted(let totalMs, let slotType, let isGuardianFallback):
             [
                 "slot_type": .string(slotType.rawValue),
-                "guardian_fallback": .bool(guardianFallback),
+                "guardian_fallback": .bool(isGuardianFallback),
             ].merging(Self.duration("total_ms", totalMs)) { current, _ in current }
         case .borrowAbandoned(let lastStep, let reason, let elapsedMs):
             [
@@ -122,17 +122,17 @@ enum AnalyticsEvent {
         case .borrowBlockedNoSlot:
             [:]
         case .bookSearchPerformed(
-            let queryLength, let resultCount, let fuzzyTriggered, let zeroHit):
+            let queryLength, let resultCount, let isFuzzyTriggered, let isZeroHit):
             [
                 "query_length": .int(queryLength),
                 "result_count": .int(resultCount),
-                "fuzzy_triggered": .bool(fuzzyTriggered),
-                "zero_hit": .bool(zeroHit),
+                "fuzzy_triggered": .bool(isFuzzyTriggered),
+                "zero_hit": .bool(isZeroHit),
             ]
-        case .returnFamilyOpened(let findMethod, let overdueFilterActive):
+        case .returnFamilyOpened(let findMethod, let isOverdueFilterActive):
             [
                 "find_method": .string(findMethod.rawValue),
-                "overdue_filter_active": .bool(overdueFilterActive),
+                "overdue_filter_active": .bool(isOverdueFilterActive),
             ]
         case .returnCompleted(let elapsedMs, let wasOverdue):
             ["was_overdue": .bool(wasOverdue)]

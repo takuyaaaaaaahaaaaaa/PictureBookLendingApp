@@ -43,14 +43,13 @@ struct BorrowSheetContainerView: View {
     @State private var isCoverZoomPresented = false
     /// 貸出フローの所要時間の計測（シート表示＝このViewの生成で開始）
     @State private var stopwatch = FlowStopwatch()
-    /// 貸出が完了したか（完了後に閉じるのは離脱ではないと判定するために持つ）
-    @State private var hasCompletedLend = false
-    /// 離脱を記録済みか（1回のシートにつき1件に抑えるためのフラグ）
+    /// このシートの貸出フローの結末（離脱を記録してよいかの唯一の判断材料）
     ///
-    /// 無操作タイマーは選択画面と表紙の拡大表示の両方で同時に生きており、
-    /// 同じチケットで同時に発火しうる。閉じる要求は何度来てもよいが、
-    /// 記録は1件でなければ完了率・離脱率が狂う
-    @State private var hasTrackedAbandon = false
+    /// 完了率・離脱率が狂わないよう、1回のシートにつき記録は高々1件に抑える。
+    /// 完了後の閉じるは離脱ではなく、また無操作タイマーは選択画面と表紙の拡大表示の
+    /// 両方で同時に生きていて同じチケットで同時に発火しうるため、
+    /// 閉じる要求が何度来ても`.inProgress`のときだけ記録する
+    @State private var sheetOutcome = SheetOutcome.inProgress
     /// 表紙⇄拡大表示のズーム遷移用Namespace
     @Namespace private var coverZoomNamespace
     
@@ -82,6 +81,16 @@ struct BorrowSheetContainerView: View {
     /// 表紙⇄拡大表示のズーム遷移の対応付けID
     private enum CoverZoomSource: Hashable {
         case cover
+    }
+    
+    /// 貸出フローの結末（`sheetOutcome`参照）
+    private enum SheetOutcome: Hashable {
+        /// まだ完了も離脱もしていない（＝閉じたら離脱として記録する）
+        case inProgress
+        /// 貸出が確定した
+        case completed
+        /// 離脱として記録済み
+        case abandoned
     }
     
     var body: some View {
@@ -345,7 +354,10 @@ struct BorrowSheetContainerView: View {
                         users
                         .sorted { $0.name < $1.name }
                         .map { user in
-                            // 家庭の全員（本人＋紐づく保護者）が借用中なら空き枠なし
+                            // 家庭の全員（本人＋紐づく保護者）が借用中なら空き枠なし。
+                            // `FamilyLoanSlotsContainerView.trackBlockedIfNoOpenSlot`と
+                            // 同じ判定意図だが、入力（利用者＋借用者IDの集合／枠の表示データ）が
+                            // 違うため別実装。判定を変えるときは両方を確認する
                             let familyMembers = [user] + (guardiansByChildId[user.id] ?? [])
                             return BorrowerRowDisplay(
                                 id: user.id,
@@ -392,9 +404,9 @@ struct BorrowSheetContainerView: View {
     /// 完了しなかった貸出フローは離脱として記録する。
     /// 「貸出中です」の案内だけのシート（フロー未開始）と、
     /// 貸出が完了した後の閉じるは離脱ではないため記録しない。
-    /// 複数の無操作タイマーが同時に発火しても記録は1件に抑える（`hasTrackedAbandon`）
+    /// 複数の無操作タイマーが同時に発火しても記録は1件に抑える（`sheetOutcome`）
     private func handleClose(reason: AnalyticsEvent.AbandonReason) {
-        if !context.isAlreadyLent && !hasCompletedLend && !hasTrackedAbandon {
+        if !context.isAlreadyLent && sheetOutcome == .inProgress {
             analytics.track(
                 .borrowAbandoned(
                     lastStep: sheetPath.isEmpty ? .userSelection : .slotSelection,
@@ -402,7 +414,7 @@ struct BorrowSheetContainerView: View {
                     elapsedMs: stopwatch.elapsedMs()
                 )
             )
-            hasTrackedAbandon = true
+            sheetOutcome = .abandoned
         }
         onClose()
     }
@@ -449,11 +461,11 @@ struct BorrowSheetContainerView: View {
                 .borrowCompleted(
                     totalMs: stopwatch.elapsedMs(),
                     slotType: usedSlotType,
-                    guardianFallback: usedSlotType == .guardian
+                    isGuardianFallback: usedSlotType == .guardian
                         && slotType(of: route.userId) == .child
                 )
             )
-            hasCompletedLend = true
+            sheetOutcome = .completed
             isPopPendingAfterLend = true
             idleTicket += 1
         } catch {
