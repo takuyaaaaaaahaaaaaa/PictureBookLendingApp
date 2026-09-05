@@ -197,9 +197,12 @@ struct BorrowListContainerView: View {
     /// いま図書をどうやって見つけたか（貸出フロー開始の記録用）
     ///
     /// 検索と五十音は排他制御されているため同時には成立しない。
-    /// どちらも使っていなければ、一覧の見た目（棚表示かどうか）で見分ける
+    /// どちらも使っていなければ、一覧の見た目（棚表示かどうか）で見分ける。
+    /// `flushPendingBookSearch`と同じくトリム後の文字列で判定する
+    /// （揃えないと、空白のみの検索で`find_method: search`だけが記録され
+    /// 対応する`book_search_performed`が発火しない食い違いが起きる）
     private var currentBookFindMethod: AnalyticsEvent.BookFindMethod {
-        if !filterState.searchText.isEmpty {
+        if !filterState.searchText.trimmingCharacters(in: .whitespaces).isEmpty {
             .search
         } else if filterState.selectedKanaFilter != nil {
             .kanaIndex
