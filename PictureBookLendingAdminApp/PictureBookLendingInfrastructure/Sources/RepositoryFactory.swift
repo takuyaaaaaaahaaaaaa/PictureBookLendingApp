@@ -129,8 +129,26 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
     
     /// 書籍検索ゲートウェイのインスタンスを生成
     ///
+    /// Info.plistに埋め込まれた楽天ウェブサービスのアプリID・アクセスキー
+    /// （xcconfig経由でビルド時に注入）を用いてRakutenBookSearchGatewayを生成する。
+    ///
     /// - Returns: BookSearchGatewayProtocolのインスタンス
     public func makeBookSearchGateway() -> BookSearchGatewayProtocol {
-        GoogleBookSearchGateway()
+        RakutenBookSearchGateway(
+            applicationId: Bundle.main.rakutenApplicationId,
+            accessKey: Bundle.main.rakutenAccessKey
+        )
+    }
+}
+
+extension Bundle {
+    /// Info.plistに埋め込まれた楽天ウェブサービスのアプリID
+    fileprivate var rakutenApplicationId: String {
+        infoDictionary?["RakutenApplicationId"] as? String ?? ""
+    }
+    
+    /// Info.plistに埋め込まれた楽天ウェブサービスのアクセスキー
+    fileprivate var rakutenAccessKey: String {
+        infoDictionary?["RakutenAccessKey"] as? String ?? ""
     }
 }

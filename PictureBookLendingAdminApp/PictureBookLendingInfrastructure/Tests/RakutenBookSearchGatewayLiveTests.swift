@@ -7,16 +7,18 @@ import Testing
 /// RakutenBookSearchGatewayのライブ統合テスト
 ///
 /// 実際の楽天ブックスAPIを使用します。
-/// 環境変数 RUN_LIVE_API_TESTS=1 と RAKUTEN_APPLICATION_ID=<アプリID> を
-/// 設定した場合のみ実行されます。
+/// 環境変数 RUN_LIVE_API_TESTS=1 と RAKUTEN_APPLICATION_ID=<アプリID> と
+/// RAKUTEN_ACCESS_KEY=<アクセスキー> を設定した場合のみ実行されます。
 ///
 /// 実行例:
-///   RUN_LIVE_API_TESTS=1 RAKUTEN_APPLICATION_ID=xxxx swift test
+///   RUN_LIVE_API_TESTS=1 RAKUTEN_APPLICATION_ID=xxxx RAKUTEN_ACCESS_KEY=yyyy swift test
 @Suite(.tags(.integrationTest), .rakutenLiveAPITest)
 struct RakutenBookSearchGatewayLiveTests {
     
     private var gateway: RakutenBookSearchGateway {
-        RakutenBookSearchGateway(applicationId: ProcessInfo.processInfo.rakutenApplicationId)
+        RakutenBookSearchGateway(
+            applicationId: ProcessInfo.processInfo.rakutenApplicationId,
+            accessKey: ProcessInfo.processInfo.rakutenAccessKey)
     }
     
     /// 有効なISBNで書籍情報が取得できることをテスト

@@ -14,18 +14,30 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     /// hitsパラメータの最大値（APIの制約）
     private static let maxHits = 30
     
+    /// Originヘッダーに設定する値
+    ///
+    /// 楽天ウェブサービスのアプリ登録時に指定した「許可されたWebサイト」と
+    /// 一致している必要がある。ネイティブアプリはブラウザと異なりOriginを
+    /// 自由に設定できるため、登録済みドメインを固定値として送信する。
+    private static let origin = "https://github.com"
+    
     /// URLSession（テスト時にモック可能）
     private let urlSession: URLSession
     
     /// 楽天ウェブサービスのアプリID
     private let applicationId: String
     
+    /// 楽天ウェブサービスのアクセスキー
+    private let accessKey: String
+    
     /// 初期化
     /// - Parameters:
     ///   - applicationId: 楽天ウェブサービスのアプリID
+    ///   - accessKey: 楽天ウェブサービスのアクセスキー
     ///   - urlSession: 使用するURLSession（デフォルトはshared）
-    public init(applicationId: String, urlSession: URLSession = .shared) {
+    public init(applicationId: String, accessKey: String, urlSession: URLSession = .shared) {
         self.applicationId = applicationId
+        self.accessKey = accessKey
         self.urlSession = urlSession
     }
     
@@ -102,9 +114,13 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     /// - Returns: 空でない書籍アイテムのリスト
     /// - Throws: BookMetadataGatewayError
     private func fetchItems(from url: URL) async throws -> [RakutenBookItem] {
+        var request = URLRequest(url: url)
+        request.setValue(accessKey, forHTTPHeaderField: "accessKey")
+        request.setValue(Self.origin, forHTTPHeaderField: "Origin")
+        
         let (data, response): (Data, URLResponse)
         do {
-            (data, response) = try await urlSession.data(from: url)
+            (data, response) = try await urlSession.data(for: request)
         } catch {
             throw BookMetadataGatewayError.networkError
         }
