@@ -86,8 +86,10 @@ struct ReturnListContainerView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             // バックグラウンドに居た時間は返却の所要時間として意味を持たないため計測を捨てる
-            // （docs/ANALYTICS_DESIGN.md §4）
-            if newPhase != .active {
+            // （docs/ANALYTICS_DESIGN.md §4）。
+            // `.inactive`（コントロールセンターの引き下げ・通知バナー等の一過性の遷移）では捨てない：
+            // 計測は復帰できないため、アプリを離れていない遷移で無効化すると所要時間を取りこぼす
+            if newPhase == .background {
                 familyStopwatch?.invalidate()
             }
         }
@@ -168,17 +170,29 @@ struct ReturnListContainerView: View {
             .sorted { $0.row.name < $1.row.name }
     }
     
+    /// 検索語（前後の空白を落としたもの）
+    ///
+    /// 表示の絞り込み（`filteredEntries`）と記録の判定（`resolveFindMethod`）で
+    /// 同じ検索語を使い、空白だけの入力で「絞り込まれているのに記録は`browse`」になる
+    /// 食い違いを防ぐ
+    private var trimmedSearchText: String {
+        searchText.trimmingCharacters(in: .whitespaces)
+    }
+    
     /// 検索・延滞フィルタを適用した借用者（組はフィルタせずインデックスでスクロール）
     private var filteredEntries: [BorrowerEntry] {
-        borrowerEntries
+        // 200人規模でbody評価のたびに走るため、トリムは1回だけ行って閉じ込める
+        let query = trimmedSearchText
+        return
+            borrowerEntries
             .filter { entry in
                 if isOverdueOnly && !entry.row.isOverdue {
                     return false
                 }
-                if !searchText.isEmpty {
-                    let matchesName = entry.row.name.localizedStandardContains(searchText)
+                if !query.isEmpty {
+                    let matchesName = entry.row.name.localizedStandardContains(query)
                     let matchesTitle = entry.bookTitles.contains {
-                        $0.localizedStandardContains(searchText)
+                        $0.localizedStandardContains(query)
                     }
                     return matchesName || matchesTitle
                 }
@@ -218,7 +232,7 @@ struct ReturnListContainerView: View {
     /// （名前でヒットしたのか、手に持ってきた図書のタイトルでヒットしたのか）。
     /// 組チップ・スクロールの判別はUI層の改修が必要なため、v1では`browse`にまとめる
     private func resolveFindMethod(for row: BorrowerRowDisplay) -> AnalyticsEvent.ReturnFindMethod {
-        let query = searchText.trimmingCharacters(in: .whitespaces)
+        let query = trimmedSearchText
         guard !query.isEmpty else { return .browse }
         if row.name.localizedStandardContains(query) {
             return .searchName

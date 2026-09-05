@@ -120,8 +120,10 @@ struct BorrowSheetContainerView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             // バックグラウンドに居た時間は貸出の所要時間として意味を持たないため計測を捨てる
-            // （docs/ANALYTICS_DESIGN.md §4）
-            if newPhase != .active {
+            // （docs/ANALYTICS_DESIGN.md §4）。
+            // `.inactive`（コントロールセンターの引き下げ・通知バナー等の一過性の遷移）では捨てない：
+            // 計測は復帰できないため、アプリを離れていない遷移で無効化すると所要時間を取りこぼす
+            if newPhase == .background {
                 stopwatch.invalidate()
             }
         }

@@ -181,10 +181,16 @@ struct BorrowListContainerView: View {
     }
     
     /// 五十音フィルタのバインディング（書き込みはStateの排他制御メソッドを経由させる）
+    ///
+    /// 五十音チップは検索テキストをクリアするため、先に未記録の検索を確定させる
+    /// （クリア後では`.task(id:)`がキャンセルされ、その検索が記録されないまま消える）
     private var kanaFilterBinding: Binding<KanaGroup?> {
         Binding(
             get: { filterState.selectedKanaFilter },
-            set: { filterState.setKanaFilter($0) }
+            set: {
+                flushPendingBookSearch()
+                filterState.setKanaFilter($0)
+            }
         )
     }
     
@@ -212,13 +218,7 @@ struct BorrowListContainerView: View {
     /// シート内フローの状態は子Container（`BorrowSheetContainerView`）の@Stateに任せるため、
     /// ここでは提示単位（図書＋貸出状態のスナップショット）を差し込むだけでよい。
     private func openBorrowSheet(for book: Book) {
-        // デバウンスの待ち時間より早く図書をタップした場合、その検索は記録されないまま
-        // 終わってしまう。「探せた検索」ほど早くタップされるため、放置すると
-        // 0件ヒット率が実態より高く出る。ここで先に確定させて取りこぼしを防ぐ
-        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
-        if !trimmedText.isEmpty {
-            trackBookSearchIfUnrecorded(trimmedText: trimmedText)
-        }
+        flushPendingBookSearch()
         
         let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
         // 貸出中の案内シートは貸出フローの開始ではないため記録しない
@@ -226,6 +226,17 @@ struct BorrowListContainerView: View {
             analytics.track(.borrowFlowStarted(findMethod: currentBookFindMethod))
         }
         borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent)
+    }
+    
+    /// デバウンス待ちの検索をその場で確定させる（図書タップ・五十音チップの共通前処理）
+    ///
+    /// デバウンスの待ち時間より早く次の操作をした場合、その検索は記録されないまま
+    /// 終わってしまう。「探せた検索」ほど早く次の操作へ進むため、放置すると
+    /// 0件ヒット率が実態より高く出る。ここで先に確定させて取りこぼしを防ぐ
+    private func flushPendingBookSearch() {
+        let trimmedText = filterState.searchText.trimmingCharacters(in: .whitespaces)
+        guard !trimmedText.isEmpty else { return }
+        trackBookSearchIfUnrecorded(trimmedText: trimmedText)
     }
     
     /// 検索の確定（デバウンス後）を利用ログに記録する
