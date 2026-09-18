@@ -29,18 +29,21 @@ struct PictureBookLendingAdminApp: App {
     
     /// 利用ログの記録先
     ///
-    /// Phase Aではローカルに記録するだけで送信はしない。DEBUGビルドでコンソールへ流し、
-    /// 実機で自分の操作を眺めてイベント設計の妥当性を検証する。
-    /// Phase BでInfrastructure層のFirebase実装へ差し替える
-    /// （docs/ANALYTICS_DESIGN.md §5「段階導入」）
+    /// DEBUGビルドでは引き続きコンソールへ流し、実機で自分の操作を眺めて
+    /// イベント設計の妥当性を検証する（Phase Aから変更なし）。
+    /// Release等ではGoogleService-Info.plistが存在する場合のみFirebase実装へ送信し、
+    /// plistが無い環境（配布前のクローン・CI等）ではNoopのまま動かす
+    /// （docs/ANALYTICS_DESIGN.md §5「段階導入」Phase B）
     private let analytics: any AnalyticsService
     
     init() {
-        // Firebase（Crashlytics）を初期化する。
+        // Firebase（Crashlytics・Analytics）を初期化する。
         // public repoのためGoogleService-Info.plistはコミットせず、
         // 各開発環境が手元に配置し、CIは環境変数から生成する。
-        // plistが無い環境でもクラッシュ収集なしでアプリは動くよう、存在確認してから初期化する。
-        if Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil {
+        // plistが無い環境でもクラッシュ収集・利用ログなしでアプリは動くよう、存在確認してから初期化する。
+        let isFirebaseConfigured =
+            Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil
+        if isFirebaseConfigured {
             FirebaseApp.configure()
         }
         
@@ -82,7 +85,7 @@ struct PictureBookLendingAdminApp: App {
         #if DEBUG
             analytics = ConsoleAnalyticsService()
         #else
-            analytics = NoopAnalyticsService()
+            analytics = isFirebaseConfigured ? FirebaseAnalyticsService() : NoopAnalyticsService()
         #endif
     }
     
