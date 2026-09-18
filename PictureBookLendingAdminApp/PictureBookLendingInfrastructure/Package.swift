@@ -16,7 +16,8 @@ let package = Package(
             targets: ["PictureBookLendingInfrastructure"])
     ],
     dependencies: [
-        .package(path: "../PictureBookLendingDomain")
+        .package(path: "../PictureBookLendingDomain"),
+        .package(url: "https://github.com/firebase/firebase-ios-sdk", from: "12.18.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -24,7 +25,10 @@ let package = Package(
         .target(
             name: "PictureBookLendingInfrastructure",
             dependencies: [
-                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain")
+                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
+                // FirebaseAnalyticsWithoutAdIdSupport は firebase-ios-sdk から削除済み（§5参照）。
+                // AdSupport/IDFAを一切リンクしない後継プロダクトとして FirebaseAnalyticsCore を使う。
+                .product(name: "FirebaseAnalyticsCore", package: "firebase-ios-sdk"),
             ],
             path: "Sources"
         ),
