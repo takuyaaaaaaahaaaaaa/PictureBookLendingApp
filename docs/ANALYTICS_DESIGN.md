@@ -1,6 +1,8 @@
 # 利用ログ（アナリティクス）設計
 
-ステータス：**設計確定（2026-07-31）**。送信先・クラッシュ検知ともFirebaseに決定済み・実装前。
+ステータス：**Phase B実装済み（2026-09-19）**。送信先・クラッシュ検知ともFirebaseに決定済み。
+Phase A（イベント定義・ローカル記録）・Crashlytics・Phase B（FirebaseAnalyticsServiceの接続）まで実装完了。
+残るのは§8チェックリストのうちオーナー（人間）が行うプライバシー関連の申告作業のみ。
 関連：[SCREEN_DESIGN_PHASE2.md](SCREEN_DESIGN_PHASE2.md)（計測対象の導線）／
 [DESIGN_PRINCIPLES.md](DESIGN_PRINCIPLES.md)（数値目標）／[TERMS.md](TERMS.md)（用語）
 
@@ -175,14 +177,21 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
     園のiPadは図書情報取得でWi-Fi接続する運用のため許容と判断（2026-07-29）
   - 将来の乗り換え（TelemetryDeck等）に備え、FirebaseはAnalyticsServiceプロトコルの
     背後に隠しApp層へ露出させない
-- **広告ID無しの構成で導入する**：SPMでは `FirebaseAnalyticsWithoutAdIdSupport` を選択し、
-  Info.plistで広告パーソナライズ信号を無効化する
+- **広告ID無しの構成で導入する**：SPMでは当初 `FirebaseAnalyticsWithoutAdIdSupport` を
+  選択する想定だったが、Phase B実装時点（2026-09-19、firebase-ios-sdk 12.18.0系）で
+  同プロダクトはSDKから削除済みだったため、AdSupport/IDFAを一切リンクしない後継の
+  `FirebaseAnalyticsCore` を使う（`import`は従来どおり`FirebaseAnalytics`）。
+  加えてInfo.plistで広告パーソナライズ信号を無効化する
   （`GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS = NO`）。
   ATT（トラッキング許可ダイアログ）を不要にし、プライバシー申告を最小にする
 - **段階導入**：
   - **Phase A**：イベント定義＋ConsoleAnalytics（DEBUG・送信なし）。実機で自分の操作を
-    眺めてイベント設計の妥当性を検証する
-  - **Phase B**：FirebaseAnalyticsService を接続し、§8のチェックリストを消化する
+    眺めてイベント設計の妥当性を検証する（実装済み）
+  - **Phase B**：FirebaseAnalyticsService を接続し、§8のチェックリストを消化する（実装済み）。
+    DEBUGビルドはPhase Aから変更せずConsoleAnalyticsServiceのまま
+    （実機ログをConsole.appで見る運用を継続）。GoogleService-Info.plistが存在する
+    Release等の構成でのみFirebaseAnalyticsServiceへ差し替え、plistが無い環境
+    （配布前のクローン・CI等）ではNoopAnalyticsServiceのまま動く
 
 ---
 
@@ -214,10 +223,17 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
 
 ## 8. リリース前チェックリスト（Phase B着手時）
 
+技術側（実装）で対応可能な項目はPhase Bで消化済み。以下はオーナー（人間）が行う
+プライバシー関連の申告・文面作業のため、実装対象外のまま残っている：
+
 - [ ] プライバシーポリシーに収集内容（匿名の操作イベント・クラッシュ情報）を明記
 - [ ] App Storeプライバシー表示（Nutrition Label）の申告を更新（利用状況データ・診断データ）
 - [ ] PrivacyInfo.xcprivacy（プライバシーマニフェスト）に収集データ種別を記載
   （Firebase SDK側のマニフェストはSDKに同梱されるため、アプリ側の申告と整合を確認）
-- [ ] `FirebaseAnalyticsWithoutAdIdSupport` での導入と広告パーソナライズ無効化を確認（§5）
-- [ ] dSYMアップロードの動作確認（ローカルビルド・Xcode Cloud両方）
+- [x] 広告ID無しでの導入と広告パーソナライズ無効化を確認（§5）。
+  `FirebaseAnalyticsWithoutAdIdSupport` はSDKから削除済みのため、後継の
+  `FirebaseAnalyticsCore` を採用し、`GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS`
+  を`NO`に設定した
+- [ ] dSYMアップロードの動作確認（ローカルビルド・Xcode Cloud両方）：
+  Crashlytics導入時に実機確認済みのため対象外
 - [ ] 導入園向けの説明文面（何を集めて何を集めないか）を用意
