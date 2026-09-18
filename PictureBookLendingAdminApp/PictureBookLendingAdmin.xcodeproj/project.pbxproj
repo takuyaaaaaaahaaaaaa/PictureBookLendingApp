@@ -26,6 +26,7 @@
 		EFDF91572DF0A1A6007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91562DF0A1A6007EB46B /* PictureBookLendingDomain */; };
 		EFDF91592DF0A1AB007EB46B /* PictureBookLendingDomain in Frameworks */ = {isa = PBXBuildFile; productRef = EFDF91582DF0A1AB007EB46B /* PictureBookLendingDomain */; };
 		FBC0000C2E90000100000003 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = FBC0000B2E90000100000002 /* FirebaseCrashlytics */; };
+		FBC0000F2E90000100000006 /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = FBC0000E2E90000100000005 /* FirebaseAnalyticsCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -140,6 +141,7 @@
 				EF8FCE702E2153450044F238 /* PictureBookLendingUI in Frameworks */,
 				EFDF91552DF0A0D6007EB46B /* PictureBookLendingDomain in Frameworks */,
 				FBC0000C2E90000100000003 /* FirebaseCrashlytics in Frameworks */,
+				FBC0000F2E90000100000006 /* FirebaseAnalyticsCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -255,6 +257,7 @@
 				EF6CC9282E21CB6E0092EEDE /* PictureBookLendingInfrastructure */,
 				EF65430A2E225FB000D9B543 /* PictureBookLendingModel */,
 				FBC0000B2E90000100000002 /* FirebaseCrashlytics */,
+				FBC0000E2E90000100000005 /* FirebaseAnalyticsCore */,
 			);
 			productName = PictureBookLendingAdmin;
 			productReference = EFF77EF02DD66AAB009BD213 /* PictureBookLendingAdmin.app */;
@@ -989,6 +992,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FBC0000A2E90000100000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCrashlytics;
+		};
+		FBC0000E2E90000100000005 /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FBC0000A2E90000100000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
