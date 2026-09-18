@@ -26,6 +26,14 @@ struct PictureBookLendingAdminApp: App {
     /// バックアップモデル
     @State private var backupModel: BackupModel
     
+    /// 利用ログの記録先
+    ///
+    /// Phase Aではローカルに記録するだけで送信はしない。DEBUGビルドでコンソールへ流し、
+    /// 実機で自分の操作を眺めてイベント設計の妥当性を検証する。
+    /// Phase BでInfrastructure層のFirebase実装へ差し替える
+    /// （docs/ANALYTICS_DESIGN.md §5「段階導入」）
+    private let analytics: any AnalyticsService
+    
     init() {
         // シングルトンのRepositoryFactoryを使用
         let repositoryFactory = SwiftDataRepositoryFactory.shared
@@ -62,6 +70,11 @@ struct PictureBookLendingAdminApp: App {
                 imageStorageRepository: imageStorageRepository
             ))
         
+        #if DEBUG
+            analytics = ConsoleAnalyticsService()
+        #else
+            analytics = NoopAnalyticsService()
+        #endif
     }
     
     var body: some Scene {
@@ -73,6 +86,7 @@ struct PictureBookLendingAdminApp: App {
                 .environment(classGroupModel)
                 .environment(loanSettingsModel)
                 .environment(backupModel)
+                .environment(\.analytics, analytics)
                 .task {
                     // TipKitを初期化
                     try? Tips.configure([

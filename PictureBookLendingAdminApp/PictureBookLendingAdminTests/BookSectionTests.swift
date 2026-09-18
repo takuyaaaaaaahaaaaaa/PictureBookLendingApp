@@ -495,6 +495,82 @@ struct BookSectionTests {
         #expect(sections.isEmpty)
     }
     
+    // MARK: - BookFilterOutcome Tests
+    
+    /// あいまい検索フォールバック発動時にフラグが立つことを確認するテスト
+    @Test("フォールバック発動時はisFuzzyFallbackが立つ")
+    func filterOutcomeFlagsFuzzyFallback() {
+        // 1. Arrange - 準備
+        let bookSections = BookSections(books: testBooks)
+        
+        // 2. Act - 実行（「あおむし」を「あおむち」と誤入力）
+        let outcome = bookSections.filterOutcome(
+            searchText: "はらぺこあおむち",
+            kanafilter: nil,
+            sortType: .title
+        )
+        
+        // 3. Assert - 検証
+        #expect(outcome.isFuzzyFallback)
+        #expect(outcome.bookCount == 1)
+    }
+    
+    /// 部分一致でヒットするときはフラグが立たないことを確認するテスト
+    @Test("部分一致でヒットすればisFuzzyFallbackは立たない")
+    func filterOutcomeDoesNotFlagWhenPartialMatchExists() {
+        // 1. Arrange - 準備
+        let bookSections = BookSections(books: testBooks)
+        
+        // 2. Act - 実行
+        let outcome = bookSections.filterOutcome(
+            searchText: "はらぺこ",
+            kanafilter: nil,
+            sortType: .title
+        )
+        
+        // 3. Assert - 検証
+        #expect(!outcome.isFuzzyFallback)
+        #expect(outcome.bookCount == 1)
+    }
+    
+    /// 検索していないときはフラグが立たないことを確認するテスト
+    @Test("検索していなければisFuzzyFallbackは立たない")
+    func filterOutcomeDoesNotFlagWithoutSearchText() {
+        // 1. Arrange - 準備
+        let bookSections = BookSections(books: testBooks)
+        
+        // 2. Act - 実行
+        let outcome = bookSections.filterOutcome(
+            searchText: "",
+            kanafilter: nil,
+            sortType: .title
+        )
+        
+        // 3. Assert - 検証
+        #expect(!outcome.isFuzzyFallback)
+        #expect(outcome.bookCount == testBooks.count)
+    }
+    
+    /// フォールバックしても0件のときはフラグが立ったまま0件になることを確認するテスト
+    ///
+    /// 「あいまい検索でも0件」＝0件ヒット率の分子になるケース。
+    @Test("フォールバックしても0件ならisFuzzyFallbackは立ち冊数は0")
+    func filterOutcomeFlagsFuzzyFallbackWithZeroHit() {
+        // 1. Arrange - 準備
+        let bookSections = BookSections(books: testBooks)
+        
+        // 2. Act - 実行（完全に無関係な長い文字列で検索）
+        let outcome = bookSections.filterOutcome(
+            searchText: "存在しない本のタイトル",
+            kanafilter: nil,
+            sortType: .title
+        )
+        
+        // 3. Assert - 検証
+        #expect(outcome.isFuzzyFallback)
+        #expect(outcome.bookCount == 0)
+    }
+    
     // MARK: - Integration Tests
     
     /// 全機能統合テスト

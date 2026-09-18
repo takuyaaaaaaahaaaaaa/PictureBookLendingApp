@@ -6,8 +6,9 @@ import SwiftUI
 
 /// 家庭の枠領域の利用文脈（呼び出し側から見た「何をしたら何が起きるか」）
 enum FamilyLoanSlotsContext {
-    /// 返却タブから：返却完了時のコールバック（引数は家庭内に貸出が残っているか）
-    case returning(onReturnCompleted: (_ hasRemainingLoans: Bool) -> Void)
+    /// 返却タブから：返却完了時のコールバック
+    /// （引数は家庭内に貸出が残っているか・返した貸出が延滞していたか）
+    case returning(onReturnCompleted: (_ hasRemainingLoans: Bool, _ wasOverdue: Bool) -> Void)
     /// 貸出フローから：空き枠が選ばれたときのコールバック（引数は枠の持ち主の利用者ID）。
     /// この文脈では返却完了後もその場に留まる（空いた枠で続けて借りるのが目的のため）
     case borrowing(onSlotSelected: (_ userId: UUID) -> Void)
@@ -23,6 +24,7 @@ struct FamilyLoanSlotsContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
+    @Environment(\.analytics) private var analytics
     
     /// 返却のUndoフィードバック状態管理
     ///
@@ -37,6 +39,8 @@ struct FamilyLoanSlotsContainerView: View {
     ///
     /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
     @State private var alertState = AlertState()
+    /// 空き枠なしを記録済みか（`.task`の再実行で同じ到達が二重に記録されるのを防ぐ）
+    @State private var hasTrackedBlockedNoSlot = false
     
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
@@ -54,6 +58,9 @@ struct FamilyLoanSlotsContainerView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
+        }
+        .task {
+            trackBlockedIfNoOpenSlot()
         }
     }
     
@@ -127,9 +134,28 @@ struct FamilyLoanSlotsContainerView: View {
     
     // MARK: - Actions
     
+    /// 空き枠がないまま家庭の画面に到達したことを記録する（貸出文脈のみ・画面表示ごとに1回）
+    ///
+    /// 「タップしたのに借りられない」体験がどれだけ起きているかを見るための記録
+    /// （docs/ANALYTICS_DESIGN.md Q5）。返却文脈では枠が埋まっているのが通常のため記録しない。
+    ///
+    /// 名前一覧の「空き枠なし」バッジ（`BorrowSheetContainerView.allUserSections`）と
+    /// 同じ判定意図だが、あちらは200人分をまとめて判定するため借用者IDの集合を
+    /// 一度だけ作る作りになっており、入力が違うので別実装のままにしている。
+    /// 判定を変えるときは両方を確認する
+    private func trackBlockedIfNoOpenSlot() {
+        guard case .borrowing = context, !hasTrackedBlockedNoSlot else { return }
+        let currentSlots = slots
+        guard !currentSlots.isEmpty, currentSlots.allSatisfy({ $0.loan != nil }) else { return }
+        analytics.track(.borrowBlockedNoSlot)
+        hasTrackedBlockedNoSlot = true
+    }
+    
     /// 返却の実行（確認ダイアログなし・Undoカードでリカバリー）
     private func handleReturn(_ slot: FamilyLoanSlotDisplay) {
         guard let loan = loanModel.getUserActiveLoans(userId: slot.id).first else { return }
+        // 延滞判定は返却前の貸出に対して行う（返却後は期限との比較の意味が変わるため）
+        let wasOverdue = loan.isOverdue(at: Date())
         
         do {
             let returnedLoan = try loanModel.returnBook(loanId: loan.id)
@@ -145,7 +171,7 @@ struct FamilyLoanSlotsContainerView: View {
                 let hasRemainingLoans =
                     familyMembers
                     .contains { !loanModel.getUserActiveLoans(userId: $0.id).isEmpty }
-                onReturnCompleted(hasRemainingLoans)
+                onReturnCompleted(hasRemainingLoans, wasOverdue)
             }
         } catch {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
@@ -186,7 +212,7 @@ struct FamilyLoanSlotsContainerView: View {
         FamilyLoanSlotsContainerView(
             undoFeedback: $undoFeedback,
             userId: mother.id,  // 保護者のIDから入っても同じ家庭に解決される
-            context: .returning(onReturnCompleted: { _ in })
+            context: .returning(onReturnCompleted: { _, _ in })
         )
         .padding()
     }

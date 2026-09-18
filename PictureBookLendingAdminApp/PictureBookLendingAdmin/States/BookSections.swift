@@ -20,12 +20,22 @@ struct BookSections {
     
     /// フィルタリング・ソート済みの絵本セクション
     ///
-    /// 部分一致（＋かなフィルタ）で0件のときは、タイプミスを許容した
-    /// あいまい検索（Levenshtein類似度）で図書を救済するフォールバックを行う。
-    /// かなフィルタ選択中は、フォールバックもそのグループ内に限定する。
+    /// 検索の質（あいまい検索の発動有無）に関心がない呼び出し側のための入口。
+    /// 中身は`filterOutcome(searchText:kanafilter:sortType:)`に委譲する。
     func filter(
         searchText: String, kanafilter: KanaGroup?, sortType: BookSortType
     ) -> [BookSection] {
+        filterOutcome(searchText: searchText, kanafilter: kanafilter, sortType: sortType).sections
+    }
+    
+    /// フィルタリング・ソート結果（あいまい検索の発動有無つき）
+    ///
+    /// 部分一致（＋かなフィルタ）で0件のときは、タイプミスを許容した
+    /// あいまい検索（Levenshtein類似度）で図書を救済するフォールバックを行う。
+    /// かなフィルタ選択中は、フォールバックもそのグループ内に限定する。
+    func filterOutcome(
+        searchText: String, kanafilter: KanaGroup?, sortType: BookSortType
+    ) -> BookFilterOutcome {
         // 1. フィルタリング（部分一致＋かなフィルタ）
         var filteredSections = Self.filtered(
             sections: bookSections,
@@ -34,13 +44,18 @@ struct BookSections {
         )
         
         // 2. 部分一致で0件のとき、タイプミスを許容したあいまい検索で救済するフォールバック
+        var isFuzzyFallback = false
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
         if filteredSections.isEmpty && !trimmed.isEmpty {
             filteredSections = fuzzyFallbackSections(searchText: trimmed, kanafilter: kanafilter)
+            isFuzzyFallback = true
         }
         
         // 3. ソート
-        return Self.sorted(sections: filteredSections, by: sortType)
+        return BookFilterOutcome(
+            sections: Self.sorted(sections: filteredSections, by: sortType),
+            isFuzzyFallback: isFuzzyFallback
+        )
     }
     
     /// 部分一致で0件のとき、タイプミスを許容したあいまい検索で図書を探すフォールバック
@@ -144,6 +159,24 @@ struct BookSections {
             }
             return BookSection(kanaGroup: section.kanaGroup, books: sortedBooks)
         }
+    }
+}
+
+/// 図書一覧の絞り込み結果
+///
+/// セクションだけでなく「あいまい検索で救済したか」も一緒に返す。
+/// 検索の質（0件ヒット率・あいまい検索発動率）は利用ログで見る指標であり
+/// （docs/ANALYTICS_DESIGN.md §4）、記録側が独自の判定を持たず
+/// 表示と同じフィルタ評価をそのまま使えるようにするため。
+struct BookFilterOutcome {
+    /// フィルタリング・ソート済みのセクション
+    let sections: [BookSection]
+    /// あいまい検索フォールバックが発動したか（発動して0件だった場合もtrue）
+    let isFuzzyFallback: Bool
+    
+    /// 結果に含まれる図書の冊数
+    var bookCount: Int {
+        sections.reduce(0) { $0 + $1.books.count }
     }
 }
 
