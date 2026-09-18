@@ -178,7 +178,8 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
   - 将来の乗り換え（TelemetryDeck等）に備え、FirebaseはAnalyticsServiceプロトコルの
     背後に隠しApp層へ露出させない
 - **広告ID無しの構成で導入する**：SPMでは当初 `FirebaseAnalyticsWithoutAdIdSupport` を
-  選択する想定だったが、Phase B実装時点（2026-09-19、firebase-ios-sdk 12.18.0系）で
+  選択する想定だったが、Phase B実装時点（2026-09-19、firebase-ios-sdk 12.x系、
+  `upToNextMajor`指定のためモジュールごとの解決バージョンは12.18.0〜12.19.2の幅がある）で
   同プロダクトはSDKから削除済みだったため、AdSupport/IDFAを一切リンクしない後継の
   `FirebaseAnalyticsCore` を使う（`import`は従来どおり`FirebaseAnalytics`）。
   加えてInfo.plistで広告パーソナライズ信号を無効化する
