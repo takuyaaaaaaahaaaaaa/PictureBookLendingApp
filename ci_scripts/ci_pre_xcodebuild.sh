@@ -3,6 +3,10 @@ set -euo pipefail
 
 # 使い方:
 #   GOOGLE_BOOKS_API_KEY=xxxx ./ci_pre_xcodebuild.sh
+#
+# 任意:
+#   GOOGLE_SERVICE_INFO_PLIST に GoogleService-Info.plist の中身をそのまま入れておくと、
+#   Firebase (Crashlytics) 用の設定ファイルを生成する。未設定ならスキップする。
 
 # スクリプトのディレクトリを取得
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -41,3 +45,16 @@ public enum Secrets {
 SWIFT
 
 echo "SecretsGenerated.swift を生成しました: ${OUT_PATH}"
+
+# GoogleService-Info.plist を生成（Firebase Crashlytics 用）
+# public repo のため plist はコミットしていない。
+# Secret が未設定の環境（PR時の単体テスト等）ではスキップし、
+# アプリ側のガードによりクラッシュ収集なしで動作する。
+PLIST_CONTENT="${GOOGLE_SERVICE_INFO_PLIST:-}"
+PLIST_PATH="${PROJECT_ROOT}/PictureBookLendingAdminApp/PictureBookLendingAdmin/GoogleService-Info.plist"
+if [[ -z "${PLIST_CONTENT}" ]]; then
+  echo "GOOGLE_SERVICE_INFO_PLIST が未設定のため GoogleService-Info.plist の生成をスキップします。"
+else
+  printf '%s\n' "${PLIST_CONTENT}" > "${PLIST_PATH}"
+  echo "GoogleService-Info.plist を生成しました: ${PLIST_PATH}"
+fi
