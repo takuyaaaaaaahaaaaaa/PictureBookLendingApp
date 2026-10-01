@@ -78,6 +78,14 @@ class BookRegisterViewModel {
         !isRegistering && (selectedResult != nil || manualBook != nil)
     }
     
+    /// 検索データ提供元のクレジット表記
+    ///
+    /// 規約でクレジット表記が必要なデータ源（例: 楽天）を使用している場合に
+    /// 表示すべきクレジットを返します。不要な場合は`nil`。
+    public var searchAttribution: SearchProviderAttribution? {
+        gateway.attribution
+    }
+    
     /// 現在の登録対象の絵本
     var bookToRegister: Book? {
         if isManualEntryMode {

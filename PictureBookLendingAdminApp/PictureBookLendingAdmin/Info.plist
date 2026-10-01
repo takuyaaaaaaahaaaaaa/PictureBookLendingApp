@@ -7,5 +7,9 @@
 	     docs/ANALYTICS_DESIGN.md §5・§8 -->
 	<key>GOOGLE_ANALYTICS_DEFAULT_ALLOW_AD_PERSONALIZATION_SIGNALS</key>
 	<false/>
+	<key>RakutenApplicationId</key>
+	<string>$(RAKUTEN_APPLICATION_ID)</string>
+	<key>RakutenAccessKey</key>
+	<string>$(RAKUTEN_ACCESS_KEY)</string>
 </dict>
 </plist>

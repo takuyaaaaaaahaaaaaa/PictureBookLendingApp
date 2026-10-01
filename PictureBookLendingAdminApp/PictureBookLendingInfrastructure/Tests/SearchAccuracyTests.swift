@@ -4,7 +4,7 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 検索精度テスト - 表記ゆれによる検索結果の違いを検証
-@Suite(.tags(.integrationTest))
+@Suite(.tags(.integrationTest), .liveAPITest)
 struct SearchAccuracyTests {
     private let apiClient = GoogleBookSearchGateway()
     

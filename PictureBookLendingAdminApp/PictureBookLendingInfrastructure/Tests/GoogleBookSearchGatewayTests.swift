@@ -8,7 +8,7 @@ import Testing
 ///
 /// 実際のGoogle Books APIを使用した統合テストです
 /// APIキーが設定されている必要があります
-@Suite(.tags(.integrationTest))
+@Suite(.tags(.integrationTest), .liveAPITest)
 struct GoogleBookSearchGatewayTests {
     
     private let gateway = GoogleBookSearchGateway()

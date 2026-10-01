@@ -5,7 +5,7 @@ import Testing
 @testable import PictureBookLendingInfrastructure
 
 /// 詳細な正規化効果検証テスト
-@Suite(.tags(.integrationTest))
+@Suite(.tags(.integrationTest), .liveAPITest)
 struct DetailedNormalizationTests {
     private let gateway = GoogleBookSearchGateway()
     private let normalizer = JapaneseStringNormalizer()

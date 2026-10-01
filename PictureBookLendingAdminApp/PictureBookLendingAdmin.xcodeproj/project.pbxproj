@@ -79,6 +79,7 @@
 		EFF77EF02DD66AAB009BD213 /* PictureBookLendingAdmin.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PictureBookLendingAdmin.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFF77F002DD66AAD009BD213 /* PictureBookLendingAdminTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PictureBookLendingAdminTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		EFF77F0A2DD66AAD009BD213 /* PictureBookLendingAdminUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PictureBookLendingAdminUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		67A10D51FE52C67858C3A07A /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -192,6 +193,7 @@
 				EFF77EF12DD66AAB009BD213 /* Products */,
 				EFDF91532DF0A0D6007EB46B /* Frameworks */,
 				EF960A172E67C253006A557F /* PictureBookApp.icon */,
+				67A10D51FE52C67858C3A07A /* Secrets.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -681,6 +683,7 @@
 		};
 		EFF77F152DD66AAD009BD213 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 67A10D51FE52C67858C3A07A /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBookApp;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -730,6 +733,7 @@
 		};
 		EFF77F162DD66AAD009BD213 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 67A10D51FE52C67858C3A07A /* Secrets.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = PictureBookApp;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
