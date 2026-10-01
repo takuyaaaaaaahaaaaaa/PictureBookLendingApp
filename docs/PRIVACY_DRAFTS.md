@@ -32,6 +32,7 @@ App Store Connect →「Appのプライバシー」での申告案。
 |---|---|---|---|---|
 | 利用状況データ ＞ 製品の操作 | する | **いいえ** | **いいえ** | アナリティクス |
 | 診断 ＞ クラッシュデータ | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
+| 診断 ＞ その他の診断データ（Crashlyticsが同梱マニフェストで宣言） | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
 | 利用状況データ ＞ その他の利用状況データ（起動・画面表示などの自動計測） | する | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ デバイスID（匿名のアプリインスタンスID） | **する** | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ ユーザID | しない | ― | ― | ― |
@@ -58,7 +59,7 @@ Firebase SDK・Kingfisher等は自前のマニフェストを同梱している�
 
 - トラッキングなし（`NSPrivacyTracking`=false、`NSPrivacyTrackingDomains`は空）
 - 収集データ種別：デバイスID・その他の利用状況データ・製品の操作（目的はアナリティクス）、
-  クラッシュデータ（目的はアプリの機能）。いずれもユーザーに紐づけず、トラッキングに使わない
+  クラッシュデータ・その他の診断データ（目的はアプリの機能）。いずれもユーザーに紐づけず、トラッキングに使わない
 - 必須理由API：`UserDefaults`のみ（`CA92.1`：アプリ自身の設定の読み書き）。
   貸出設定（`UserDefaultsLoanSettingsRepository`）と表示倍率（`BorrowListContainerView`の`@AppStorage`）で
   使用。App Group共有は使っていない（ウィジェットは`UserDefaults`を使わない）ためウィジェット側のマニフェストは不要
@@ -67,9 +68,8 @@ Firebase SDK・Kingfisher等は自前のマニフェストを同梱している�
 - 他の必須理由APIを追加で使う場合は、本ファイルに追記し、Xcodeの
   「Privacy Report」（Archive → Generate Privacy Report）で最終確認する
 - Nutrition Label（§2）と内容を一致させる
-- 注意：Firebase Crashlytics・Installations・GoogleDataTransportのマニフェストは
-  「その他の診断データ」（OtherDiagnosticData）を収集ありと宣言している。アプリ側・§2にはこの項目がないため、
-  Nutrition Label申告時にApp Store Connectの選択肢と合わせて要判断
+- Crashlytics・Installations・GoogleDataTransportの同梱マニフェストが「その他の診断データ」を宣言しているため、
+  アプリ側と§2にも含めた（Nutrition Labelは、SDKが集めるものも含めて申告する）
 
 ---
 
