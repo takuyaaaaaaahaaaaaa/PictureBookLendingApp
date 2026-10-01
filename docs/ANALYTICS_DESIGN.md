@@ -169,8 +169,7 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
 - プロトコルをApp層に置かない理由：Infrastructure → App の依存は禁止のため、
   App層定義のプロトコルはInfrastructure層から実装できない。またスプール実装
   （ファイルI/O・送信）は責任分離表で Container ❌ の「データ永続化・API通信」に当たる
-- プロトコルとFirebase非依存の実装（Console／Noop）はInfrastructure層に置く。App層はprotocol型で受けるため
-  Firebase実装・DEBUG用実装・テスト用モックへの差し替えは自由
+- App層はprotocol型で受けるため、Firebase実装・DEBUG用実装・テスト用モックへの差し替えは自由
 - イベント追加時はApp層のenumに1ケース足すだけで、Infrastructure層は無変更
 - 所要時間の計測はContainerViewの`@State`（シート表示時刻の記録）で行い、
   Modelにはアナリティクスの関心事を持ち込まない

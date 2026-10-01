@@ -23,7 +23,6 @@ enum FirebaseAnalyticsParameterMapper {
 /// `Analytics.logEvent(name:parameters:)` への薄いラッパー。
 /// イベントの意味・送信タイミングの判断はApp層／`AnalyticsService`の呼び出し側が持つため、
 /// ここではパラメータの型変換以外のロジックを持たない（docs/ANALYTICS_DESIGN.md §5）。
-/// Firebase SDKをアプリターゲットの1か所だけにリンクするため、Infrastructureではなく App層に置く。
 struct FirebaseAnalyticsService: AnalyticsService {
     func track(name: String, params: [String: AnalyticsParamValue]) {
         Analytics.logEvent(
