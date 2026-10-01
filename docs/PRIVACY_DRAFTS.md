@@ -32,7 +32,7 @@ App Store Connect →「Appのプライバシー」での申告案。
 |---|---|---|---|---|
 | 利用状況データ ＞ 製品の操作 | する | **いいえ** | **いいえ** | アナリティクス |
 | 診断 ＞ クラッシュデータ | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
-| 診断 ＞ その他の診断データ（Crashlyticsが同梱マニフェストで宣言） | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
+| 診断 ＞ その他の診断データ（Crashlytics・Installations・GoogleDataTransportが同梱マニフェストで宣言） | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応）**と**アナリティクス（両方を選ぶ） |
 | 利用状況データ ＞ その他の利用状況データ（起動・画面表示などの自動計測） | する | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ デバイスID（匿名のアプリインスタンスID） | **する** | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ ユーザID | しない | ― | ― | ― |
@@ -68,6 +68,8 @@ Firebase SDK・Kingfisher等は自前のマニフェストを同梱している�
 - 他の必須理由APIを追加で使う場合は、本ファイルに追記し、Xcodeの
   「Privacy Report」（Archive → Generate Privacy Report）で最終確認する
 - Nutrition Label（§2）と内容を一致させる
+- 2026-10-02にArchive → Generate Privacy Reportで確認済み：アプリ側とSDK側の宣言が揃って出力され、Tracking・Linkedはすべて NO、
+  広告ID（IDFA）の項目は出ない。「その他の診断データ」の目的はアプリの機能（Crashlytics）とアナリティクス（Installations・GoogleDataTransport）の両方
 - Crashlytics・Installations・GoogleDataTransportの同梱マニフェストが「その他の診断データ」を宣言しているため、
   アプリ側と§2にも含めた（Nutrition Labelは、SDKが集めるものも含めて申告する）
 
