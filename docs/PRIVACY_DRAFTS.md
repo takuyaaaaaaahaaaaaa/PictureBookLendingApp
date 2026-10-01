@@ -32,6 +32,7 @@ App Store Connect →「Appのプライバシー」での申告案。
 |---|---|---|---|---|
 | 利用状況データ ＞ 製品の操作 | する | **いいえ** | **いいえ** | アナリティクス |
 | 診断 ＞ クラッシュデータ | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
+| 診断 ＞ その他の診断データ（Crashlyticsが同梱マニフェストで宣言） | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
 | 利用状況データ ＞ その他の利用状況データ（起動・画面表示などの自動計測） | する | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ デバイスID（匿名のアプリインスタンスID） | **する** | **いいえ** | **いいえ** | アナリティクス |
 | 識別子 ＞ ユーザID | しない | ― | ― | ― |
@@ -50,89 +51,25 @@ App Store Connect →「Appのプライバシー」での申告案。
 
 ## 3. PrivacyInfo.xcprivacy（アプリ側マニフェスト）
 
-現状、アプリ側にPrivacyInfo.xcprivacyは**存在しない**（Firebase SDKは自前のものを同梱）。
-アプリ本体のターゲットに追加する案：
+実装済み：[`PictureBookLendingAdminApp/PictureBookLendingAdmin/PrivacyInfo.xcprivacy`](../PictureBookLendingAdminApp/PictureBookLendingAdmin/PrivacyInfo.xcprivacy)
+（アプリ本体ターゲットのファイルシステム同期グループに置いてあり、`.app` 直下にバンドルされる）。
+Firebase SDK・Kingfisher等は自前のマニフェストを同梱している。
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>NSPrivacyTracking</key>
-    <false/>
-    <key>NSPrivacyTrackingDomains</key>
-    <array/>
-    <key>NSPrivacyCollectedDataTypes</key>
-    <array>
-        <dict>
-            <key>NSPrivacyCollectedDataType</key>
-            <string>NSPrivacyCollectedDataTypeDeviceID</string>
-            <key>NSPrivacyCollectedDataTypeLinked</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypeTracking</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypePurposes</key>
-            <array>
-                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
-            </array>
-        </dict>
-        <dict>
-            <key>NSPrivacyCollectedDataType</key>
-            <string>NSPrivacyCollectedDataTypeOtherUsageData</string>
-            <key>NSPrivacyCollectedDataTypeLinked</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypeTracking</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypePurposes</key>
-            <array>
-                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
-            </array>
-        </dict>
-        <dict>
-            <key>NSPrivacyCollectedDataType</key>
-            <string>NSPrivacyCollectedDataTypeProductInteraction</string>
-            <key>NSPrivacyCollectedDataTypeLinked</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypeTracking</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypePurposes</key>
-            <array>
-                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
-            </array>
-        </dict>
-        <dict>
-            <key>NSPrivacyCollectedDataType</key>
-            <string>NSPrivacyCollectedDataTypeCrashData</string>
-            <key>NSPrivacyCollectedDataTypeLinked</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypeTracking</key>
-            <false/>
-            <key>NSPrivacyCollectedDataTypePurposes</key>
-            <array>
-                <string>NSPrivacyCollectedDataTypePurposeAppFunctionality</string>
-            </array>
-        </dict>
-    </array>
-    <key>NSPrivacyAccessedAPITypes</key>
-    <array>
-        <dict>
-            <key>NSPrivacyAccessedAPIType</key>
-            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
-            <key>NSPrivacyAccessedAPITypeReasons</key>
-            <array>
-                <string>CA92.1</string>
-            </array>
-        </dict>
-    </array>
-</dict>
-</plist>
-```
+内容（§2と一致させている）：
 
-- `UserDefaults`は貸出設定の保存（`UserDefaultsLoanSettingsRepository`）で使用しているため、
-  必須理由API（CA92.1：アプリ自身の設定の読み書き）を申告する
-- 他の必須理由API（ファイルタイムスタンプ等）の使用有無は、追加時にXcodeの
+- トラッキングなし（`NSPrivacyTracking`=false、`NSPrivacyTrackingDomains`は空）
+- 収集データ種別：デバイスID・その他の利用状況データ・製品の操作（目的はアナリティクス）、
+  クラッシュデータ・その他の診断データ（目的はアプリの機能）。いずれもユーザーに紐づけず、トラッキングに使わない
+- 必須理由API：`UserDefaults`のみ（`CA92.1`：アプリ自身の設定の読み書き）。
+  貸出設定（`UserDefaultsLoanSettingsRepository`）と表示倍率（`BorrowListContainerView`の`@AppStorage`）で
+  使用。App Group共有は使っていない（ウィジェットは`UserDefaults`を使わない）ためウィジェット側のマニフェストは不要
+- ファイルのタイムスタンプ・起動時刻・ディスク容量・キーボード情報のAPIは自前コードで使っていないため申告しない
+  （コード上の使用有無は`UserDefaults`/`creationDate`/`modificationDate`/`systemUptime`等のgrepで確認済み）
+- 他の必須理由APIを追加で使う場合は、本ファイルに追記し、Xcodeの
   「Privacy Report」（Archive → Generate Privacy Report）で最終確認する
 - Nutrition Label（§2）と内容を一致させる
+- Crashlytics・Installations・GoogleDataTransportの同梱マニフェストが「その他の診断データ」を宣言しているため、
+  アプリ側と§2にも含めた（Nutrition Labelは、SDKが集めるものも含めて申告する）
 
 ---
 
