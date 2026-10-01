@@ -1,6 +1,7 @@
+import PictureBookLendingInfrastructure
 import XCTest
 
-@testable import PictureBookLendingInfrastructure
+@testable import PictureBookLendingAdmin
 
 final class FirebaseAnalyticsParameterMapperTests: XCTestCase {
     
