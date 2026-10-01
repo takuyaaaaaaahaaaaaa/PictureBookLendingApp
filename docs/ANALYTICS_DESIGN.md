@@ -150,21 +150,26 @@ Undo率を`flow`別に見るときは分母に注意する。`flow: return` は
 **語彙はApp層・配管はInfrastructure層**に分ける（2026-07-31 オーナー相談で決定）。
 
 ```
-Infrastructure層  AnalyticsService プロトコル＋実装（track(name:params:) の汎用API）
-                  ConsoleAnalytics（DEBUG）／FirebaseAnalyticsService（Analytics.logEventの薄いラッパー）
+Infrastructure層  AnalyticsService プロトコル（track(name:params:) の汎用API）
+                  ConsoleAnalyticsService（DEBUG）／NoopAnalyticsService（Firebase非依存の実装）
                   ── イベントの意味を知らない「記録して送る」だけの配管
 App層             AnalyticsEvent enum（画面語彙の型安全な定義）
                   ＋ name/params への変換（Presentation配下・+Formatterと同じ役回り）
+                  FirebaseAnalyticsService（Analytics.logEventの薄いラッパー）
                   ContainerViewがフロー節目で track を呼ぶ
 ```
+
+- **`FirebaseAnalyticsService` はApp層に置く**。理由：Firebase SDKをアプリターゲットの
+  1か所だけにリンクするため。Infrastructureの動的frameworkにもFirebaseを入れると
+  同一クラスが二重にリンクされ、GoogleService-Info.plistがある環境で起動時にクラッシュする。
+  `AnalyticsService` プロトコルの背後に隠す方針は変わらない
 
 - イベント語彙（`find_method: shelf` 等）は**画面の関心事でありドメイン概念ではない**
   （TERMS.mdに載せる概念でもない）ため、Domain層には置かない
 - プロトコルをApp層に置かない理由：Infrastructure → App の依存は禁止のため、
   App層定義のプロトコルはInfrastructure層から実装できない。またスプール実装
   （ファイルI/O・送信）は責任分離表で Container ❌ の「データ永続化・API通信」に当たる
-- プロトコルは実装と同じInfrastructure層に同居するが、App層はprotocol型で受けるため
-  DEBUG用実装への差し替え・テスト用モックは従来どおり可能
+- App層はprotocol型で受けるため、Firebase実装・DEBUG用実装・テスト用モックへの差し替えは自由
 - イベント追加時はApp層のenumに1ケース足すだけで、Infrastructure層は無変更
 - 所要時間の計測はContainerViewの`@State`（シート表示時刻の記録）で行い、
   Modelにはアナリティクスの関心事を持ち込まない
@@ -176,7 +181,7 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
   - ※GA4は収集から約72時間超の遅延イベントを落とす仕様があるが、
     園のiPadは図書情報取得でWi-Fi接続する運用のため許容と判断（2026-07-29）
   - 将来の乗り換え（TelemetryDeck等）に備え、FirebaseはAnalyticsServiceプロトコルの
-    背後に隠しApp層へ露出させない
+    背後に隠し、呼び出し側（ContainerView等）へ露出させない
 - **広告ID無しの構成で導入する**：SPMでは当初 `FirebaseAnalyticsWithoutAdIdSupport` を
   選択する想定だったが、Phase B実装時点（2026-09-19、firebase-ios-sdk 12.x系、
   `upToNextMajor`指定のためモジュールごとの解決バージョンは12.18.0〜12.19.2の幅がある）で

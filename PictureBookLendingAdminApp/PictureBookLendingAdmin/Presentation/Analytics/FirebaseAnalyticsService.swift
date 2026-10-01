@@ -1,4 +1,5 @@
 import FirebaseAnalytics
+import PictureBookLendingInfrastructure
 
 /// `AnalyticsParamValue` をFirebase Analytics（GA4）に渡せるパラメータ辞書へ変換する
 ///
@@ -22,10 +23,8 @@ enum FirebaseAnalyticsParameterMapper {
 /// `Analytics.logEvent(name:parameters:)` への薄いラッパー。
 /// イベントの意味・送信タイミングの判断はApp層／`AnalyticsService`の呼び出し側が持つため、
 /// ここではパラメータの型変換以外のロジックを持たない（docs/ANALYTICS_DESIGN.md §5）。
-public struct FirebaseAnalyticsService: AnalyticsService {
-    public init() {}
-    
-    public func track(name: String, params: [String: AnalyticsParamValue]) {
+struct FirebaseAnalyticsService: AnalyticsService {
+    func track(name: String, params: [String: AnalyticsParamValue]) {
         Analytics.logEvent(
             name, parameters: FirebaseAnalyticsParameterMapper.makeParameters(from: params))
     }
