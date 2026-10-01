@@ -39,11 +39,12 @@
 > 利用者の情報は送信されません。
 >
 > **5. お問い合わせ**
-> （連絡先を記載）
+> majikani2011@gmail.com
 >
-> 制定日：（公開日を記載）
+> 制定日：2026年10月1日
 
-公開先はオーナーが決める（GitHub Pages等）。App Store Connectにはそのpolicy URLを登録する。
+公開先は GitHub Pages に決定（2026-10-01）。このリポジトリのSettings → Pagesで公開し、
+App Store Connectにはそのpolicy URLを登録する。
 
 ---
 
