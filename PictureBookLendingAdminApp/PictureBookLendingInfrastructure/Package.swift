@@ -16,7 +16,7 @@ let package = Package(
             targets: ["PictureBookLendingInfrastructure"])
     ],
     dependencies: [
-        .package(path: "../PictureBookLendingDomain"),
+        .package(path: "../PictureBookLendingDomain")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -24,7 +24,7 @@ let package = Package(
         .target(
             name: "PictureBookLendingInfrastructure",
             dependencies: [
-                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
+                .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain")
             ],
             path: "Sources"
         ),
