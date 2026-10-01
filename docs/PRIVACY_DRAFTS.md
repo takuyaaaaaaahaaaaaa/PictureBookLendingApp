@@ -9,7 +9,8 @@
 - イベントに識別子は載せない（利用者・図書・家庭・組・検索語は記録しない。所要時間・件数・列挙値のみ）
 - 広告ID（IDFA）は収集しない（`FirebaseAnalyticsCore`＋広告パーソナライズ無効）。ATTダイアログは出さない
 - 利用者名・貸出記録は端末内（SwiftData）にのみ保存し、外部へ送信しない
-- 図書情報の取得時のみ、ISBN・書名を外部の書誌検索サービスへ送る（要：公開前に現行の取得先を確認）
+- 図書情報の取得時のみ、ISBN・書名・著者名を楽天ブックスAPI（楽天グループ）へ送り、表紙画像を取得する（取得先は2026-10-01時点で`release/v1.0`の実装を確認。`main`はまだGoogle Books APIのため、リリース系統に合わせて確認する）
+- Firebase Analyticsは匿名のアプリインスタンスID（広告IDではない）を自動で付与する
 
 ---
 
@@ -25,6 +26,7 @@
 > アプリの改善のため、次の情報を匿名で収集します。
 >
 > - 操作の所要時間、検索結果の件数、操作の種類（貸出・返却・取り消し等）
+> - アプリをインストールした端末を区別するための匿名のID（広告用の識別子ではなく、個人とは結びつきません）
 > - アプリが異常終了した際のクラッシュ情報（端末の機種・OSバージョン・異常終了時の処理の記録）
 >
 > 利用者の名前、絵本の題名、検索した文字列など、個人や特定の絵本を識別できる情報は収集しません。
@@ -35,7 +37,7 @@
 > アプリの品質向上のためにのみ使用します。第三者へ販売・提供しません。
 >
 > **4. 絵本情報の取得**
-> 絵本の登録時、ISBNまたは書名を外部の書誌検索サービスへ送信して書誌情報を取得します。
+> 絵本の登録時、ISBN・書名・著者名を楽天ブックスAPI（楽天グループ株式会社）へ送信して書誌情報と表紙画像を取得します。
 > 利用者の情報は送信されません。
 >
 > **5. お問い合わせ**
@@ -55,16 +57,19 @@ App Store Connect →「Appのプライバシー」での申告案。
 | データの種類 | 収集 | ユーザーに紐づく | トラッキングに使用 | 利用目的 |
 |---|---|---|---|---|
 | 利用状況データ ＞ 製品の操作 | する | **いいえ** | **いいえ** | アナリティクス |
-| 診断 ＞ クラッシュデータ | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応）／アナリティクス |
-| 診断 ＞ パフォーマンスデータ | する | **いいえ** | **いいえ** | アプリの機能／アナリティクス |
-| 識別子（ユーザID・デバイスID） | しない | ― | ― | ― |
+| 診断 ＞ クラッシュデータ | する | **いいえ** | **いいえ** | アプリの機能（クラッシュ対応） |
+| 利用状況データ ＞ その他の利用状況データ（起動・画面表示などの自動計測） | する | **いいえ** | **いいえ** | アナリティクス |
+| 識別子 ＞ デバイスID（匿名のアプリインスタンスID） | **する** | **いいえ** | **いいえ** | アナリティクス |
+| 識別子 ＞ ユーザID | しない | ― | ― | ― |
 | 連絡先情報・ユーザコンテンツ・検索履歴 | しない | ― | ― | ― |
 
 注意：
 
-- 「デバイスID」を「収集しない」と申告するには、Crashlytics/AnalyticsがIDFAを使わないことが前提。
-  Firebaseは端末単位のインストールIDを内部で持つため、**申告前にFirebase公式の
-  「Apple privacy details」の案内と突き合わせて最終確認する**（未確認）
+- **「デバイスID」は収集ありで申告する**。Google公式（Google Analytics for Firebaseのプライバシーラベル案内）で、
+  アプリインスタンスIDが自動で割り当てられるためIDFAを使わなくても該当するとされている。
+  広告ID（AdSupport）はリンクしていないので、追加の識別子申告は不要
+- クラッシュレポートのパンくず（Analyticsと併用時の直前操作ログ）は、操作の種類のみで識別子を含まない
+- Googleは「ラベルの正確さは各アプリの責任」と明記している。申告前にApp Store ConnectのUIの選択肢と最終突き合わせをする
 - 「トラッキング」の質問は「いいえ」（他社アプリ・サイトをまたぐ追跡をしていないため）
 
 ---
@@ -85,6 +90,30 @@ App Store Connect →「Appのプライバシー」での申告案。
     <array/>
     <key>NSPrivacyCollectedDataTypes</key>
     <array>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeDeviceID</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
+        <dict>
+            <key>NSPrivacyCollectedDataType</key>
+            <string>NSPrivacyCollectedDataTypeOtherUsageData</string>
+            <key>NSPrivacyCollectedDataTypeLinked</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypeTracking</key>
+            <false/>
+            <key>NSPrivacyCollectedDataTypePurposes</key>
+            <array>
+                <string>NSPrivacyCollectedDataTypePurposeAnalytics</string>
+            </array>
+        </dict>
         <dict>
             <key>NSPrivacyCollectedDataType</key>
             <string>NSPrivacyCollectedDataTypeProductInteraction</string>
@@ -143,6 +172,8 @@ App Store Connect →「Appのプライバシー」での申告案。
 >
 > - 「貸出に何秒かかったか」「検索で何件見つかったか」といった、操作の回数や時間
 > - アプリが止まってしまったときの、機種名などの技術的な記録
+>
+> ※ 絵本の登録時には、ISBNや書名を楽天ブックスに送って書誌情報を取得します（園児・保護者の情報は含みません）。
 >
 > **送らないもの**：お子さま・保護者のお名前、絵本の題名、検索した言葉、どのご家庭が何を借りたか。
 > 広告のための情報も使いません。
