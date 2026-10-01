@@ -68,3 +68,4 @@ fastlane/test_output
 # Firebase
 # public repoのため設定ファイルはコミットしない（各開発環境で配置・CIは環境変数から生成）
 **/GoogleService-Info.plist
+**/Secrets.xcconfig

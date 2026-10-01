@@ -8,10 +8,16 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     /// URLSession（テスト時にモック可能）
     private let urlSession: URLSession
     
+    /// Google Books APIキー（nilの場合はキーなしでリクエストする）
+    private let apiKey: String?
+    
     /// 初期化
-    /// - Parameter urlSession: 使用するURLSession（デフォルトはshared）
-    public init(urlSession: URLSession = .shared) {
+    /// - Parameters:
+    ///   - urlSession: 使用するURLSession（デフォルトはshared）
+    ///   - apiKey: Google Books APIキー（省略時はキーなしで動作）
+    public init(urlSession: URLSession = .shared, apiKey: String? = nil) {
         self.urlSession = urlSession
+        self.apiKey = apiKey
     }
     
     /// タイトルと著者名で書籍を検索する
@@ -142,7 +148,7 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
         ]
 
         // APIキーが設定されている場合は追加
-        if let apiKey = Secrets.googleBooksAPIKey, !apiKey.isEmpty {
+        if let apiKey, !apiKey.isEmpty {
             queryItems.append(URLQueryItem(name: "key", value: apiKey))
         }
         
@@ -170,7 +176,7 @@ public struct GoogleBookSearchGateway: BookSearchGatewayProtocol, Sendable {
         ]
 
         // APIキーが設定されている場合は追加
-        if let apiKey = Secrets.googleBooksAPIKey, !apiKey.isEmpty {
+        if let apiKey, !apiKey.isEmpty {
             queryItems.append(URLQueryItem(name: "key", value: apiKey))
         }
         

@@ -25,4 +25,15 @@ public protocol BookSearchGatewayProtocol: Sendable {
     /// - Returns: 検索結果の書籍リスト
     /// - Throws: BookMetadataGatewayError
     func searchBooks(title: String, author: String?, maxResults: Int) async throws -> [Book]
+    
+    /// データ提供元のクレジット表記
+    ///
+    /// 規約でクレジット表記が義務付けられている場合に、表示すべき文言と
+    /// リンク先を返します。表記が不要な場合は`nil`を返します。
+    var attribution: SearchProviderAttribution? { get }
+}
+
+extension BookSearchGatewayProtocol {
+    /// クレジット表記のデフォルト実装（表記不要）
+    public var attribution: SearchProviderAttribution? { nil }
 }
