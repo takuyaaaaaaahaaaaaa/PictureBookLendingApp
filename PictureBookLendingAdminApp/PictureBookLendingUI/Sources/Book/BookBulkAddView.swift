@@ -6,6 +6,7 @@ public struct BookBulkAddView: View {
     @Binding var inputText: String
     let processedBooks: [ParsedBookEntry]
     let isProcessing: Bool
+    let attribution: SearchProviderAttribution?
     let onTextChange: (String) -> Void
     let onStartProcessing: () -> Void
     let onSave: () -> Void
@@ -16,6 +17,7 @@ public struct BookBulkAddView: View {
         inputText: Binding<String>,
         processedBooks: [ParsedBookEntry],
         isProcessing: Bool,
+        attribution: SearchProviderAttribution? = nil,
         onTextChange: @escaping (String) -> Void,
         onStartProcessing: @escaping () -> Void,
         onSave: @escaping () -> Void,
@@ -25,6 +27,7 @@ public struct BookBulkAddView: View {
         self._inputText = inputText
         self.processedBooks = processedBooks
         self.isProcessing = isProcessing
+        self.attribution = attribution
         self.onTextChange = onTextChange
         self.onStartProcessing = onStartProcessing
         self.onSave = onSave
@@ -42,6 +45,11 @@ public struct BookBulkAddView: View {
                     // 処理結果エリア
                     if !processedBooks.isEmpty {
                         resultsSection
+                    }
+                    
+                    // データ提供元のクレジット表記
+                    if let attribution {
+                        SearchProviderAttributionView(attribution: attribution)
                     }
                 }
                 .padding()
