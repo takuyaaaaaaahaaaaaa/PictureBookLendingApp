@@ -59,6 +59,13 @@ struct BorrowListContainerView: View {
         static let debounce: Duration = .milliseconds(800)
     }
     
+    /// 見本ホストでは実データを扱う設定への入口を表示しない。
+    let showsSettings: Bool
+    
+    init(showsSettings: Bool = true) {
+        self.showsSettings = showsSettings
+    }
+    
     var body: some View {
         NavigationStack {
             BookListView(
@@ -115,9 +122,11 @@ struct BorrowListContainerView: View {
                 .searchable(text: searchTextBinding, prompt: "図書のタイトルまたは著者で検索")
             #endif
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("設定", systemImage: "gearshape") {
-                        isSettingsPresented = true
+                if showsSettings {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("設定", systemImage: "gearshape") {
+                            isSettingsPresented = true
+                        }
                     }
                 }
             }

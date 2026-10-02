@@ -10,6 +10,7 @@
     /// issue #40（UIカタログ）の最小実装を兼ねます。
     struct UICatalogContainerView: View {
         @State private var celebrationFeedback = CelebrationFeedback()
+        @State private var showsContainerStatePreview = false
         
         private let childId = UUID()
         private let guardianId = UUID()
@@ -17,6 +18,13 @@
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    Button("本番Containerの状態を確認（メモリ内の見本）") {
+                        showsContainerStatePreview = true
+                    }
+                    .font(.title3)
+                    .fullScreenCover(isPresented: $showsContainerStatePreview) {
+                        ContainerStatePreview()
+                    }
                     NavigationLink("幅と状態を確認（375 / 744 / 1024pt）") {
                         AdaptiveLayoutPreview()
                     }
