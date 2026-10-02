@@ -17,6 +17,10 @@
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    NavigationLink("幅と状態を確認（375 / 744 / 1024pt）") {
+                        AdaptiveLayoutPreview()
+                    }
+                    .font(.title3)
                     NavigationLink("本棚を確認（サンプル・保存なし）") {
                         BookshelfColorPreview()
                     }
