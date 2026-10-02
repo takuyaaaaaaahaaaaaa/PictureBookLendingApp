@@ -21,6 +21,7 @@ public struct SettingsView: View {
     let onSelectParentFeedbackQRCode: () -> Void
     let onSelectBackupExport: () -> Void
     let onSelectBackupImport: () -> Void
+    let onSelectPrivacy: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -38,7 +39,8 @@ public struct SettingsView: View {
         onSelectFeedback: @escaping () -> Void,
         onSelectParentFeedbackQRCode: @escaping () -> Void,
         onSelectBackupExport: @escaping () -> Void,
-        onSelectBackupImport: @escaping () -> Void
+        onSelectBackupImport: @escaping () -> Void,
+        onSelectPrivacy: @escaping () -> Void = {}
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -56,11 +58,17 @@ public struct SettingsView: View {
         self.onSelectParentFeedbackQRCode = onSelectParentFeedbackQRCode
         self.onSelectBackupExport = onSelectBackupExport
         self.onSelectBackupImport = onSelectBackupImport
+        self.onSelectPrivacy = onSelectPrivacy
     }
     
     public var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                SettingsMenuItem(
+                    iconName: "hand.raised", title: "プライバシーとデータ送信",
+                    subtitle: "説明を読む・任意の送信を選ぶ・同意を取り消す",
+                    action: onSelectPrivacy)
+                
                 SettingsMenuItem(
                     iconName: "person",
                     title: "利用者管理",
