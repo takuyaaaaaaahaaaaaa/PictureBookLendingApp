@@ -153,13 +153,26 @@ public struct LoanDisplayData: Identifiable, Equatable {
 
 /// 個別の貸出記録行View
 private struct LoanListRowView<Action: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    
+    private var rowLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+            : AnyLayout(HStackLayout(spacing: 20))
+    }
+    
+    private var labelLayout: AnyLayout {
+        dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+            : AnyLayout(HStackLayout())
+    }
     /// 貸出記録データ
     let loan: LoanDisplayData
     /// 行に表示するアクションビュー
     let action: Action
     
     var body: some View {
-        HStack(spacing: 20) {
+        rowLayout {
             // サムネイル画像
             KFImage(URL(string: loan.bookThumbnail ?? loan.bookSmallThumbnail ?? ""))
                 .placeholder {
@@ -174,7 +187,7 @@ private struct LoanListRowView<Action: View>: View {
                 .clipShape(RoundedRectangle(cornerRadius: 6))
             
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
+                labelLayout {
                     Text(loan.userName)
                         .font(.headline)
                     
@@ -193,7 +206,7 @@ private struct LoanListRowView<Action: View>: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 
-                HStack {
+                labelLayout {
                     Text("返却期限:")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
@@ -208,9 +221,10 @@ private struct LoanListRowView<Action: View>: View {
                 }
             }
             
-            Spacer()
+            if !dynamicTypeSize.isAccessibilitySize { Spacer() }
             
             action
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.vertical, 4)
     }
