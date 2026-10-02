@@ -99,8 +99,10 @@ public struct BookListView<RowAction: View>: View {
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
     
-    @ScaledMetric(relativeTo: .subheadline) private var standardCellWidth: CGFloat = 140
-    @ScaledMetric(relativeTo: .title3) private var largeCellWidth: CGFloat = 210
+    @ScaledMetric(relativeTo: .subheadline) private var standardCellWidth = BookDisplayScale
+        .standard.minCellWidth
+    @ScaledMetric(relativeTo: .title3) private var largeCellWidth = BookDisplayScale.large
+        .minCellWidth
     @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
     
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
