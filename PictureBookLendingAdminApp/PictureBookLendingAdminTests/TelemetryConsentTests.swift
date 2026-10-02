@@ -219,7 +219,11 @@ struct TelemetryConsentTests {
     
     @Test("未知バージョン/破損した永続データは未同意扱い")
     func invalidStoredConsentFailsClosed() {
-        for data in [Data("broken".utf8), Data("{\"version\":999}".utf8)] {
+        for data in [
+            Data("broken".utf8),
+            Data("{\"version\":999}".utf8),
+            Data("{\"version\":999,\"analytics\":\"allowed\",\"diagnostics\":\"allowed\"}".utf8),
+        ] {
             let store = makeStore()
             store.data = data
             let runtime = TelemetryRuntimeSpy()
