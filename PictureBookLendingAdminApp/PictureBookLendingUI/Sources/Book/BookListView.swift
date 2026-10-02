@@ -96,12 +96,12 @@ private enum Layout {
 /// 五十音チップによる絞り込みとセクション表示に対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
-    #if os(iOS)
-        /// 水平サイズクラス（かなチップの表示可否の判定に使用）
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
+    
+    @ScaledMetric(relativeTo: .subheadline) private var standardCellWidth: CGFloat = 140
+    @ScaledMetric(relativeTo: .title3) private var largeCellWidth: CGFloat = 210
+    @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
     
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
     @State private var shelfViewportWidth: CGFloat = 0
@@ -173,7 +173,9 @@ public struct BookListView<RowAction: View>: View {
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: 5) {
-                kanaFilterSection
+                BookListControls(
+                    selectedKana: $selectedKanaFilter, sort: $selectedSortType,
+                    mode: $displayMode, kanaOptions: kanaFilterOptions)
                 
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView
@@ -210,113 +212,8 @@ public struct BookListView<RowAction: View>: View {
     
     // MARK: - Private Views
     
-    /// かなチップを表示できる幅があるか
-    ///
-    /// 幅が確保できない環境（iPhoneやiPadの狭いSplit View＝compact）では
-    /// チップを出さず、検索を主動線とする。macOSは常に表示する
-    private var isKanaChipsVisible: Bool {
-        #if os(iOS)
-            horizontalSizeClass == .regular
-        #else
-            true
-        #endif
-    }
-    
-    /// 五十音チップ（タップでそのかなグループに絞り込み・再タップで解除）＋ソート選択メニュー
-    private var kanaFilterSection: some View {
-        HStack {
-            if isKanaChipsVisible {
-                // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
-                // ScrollViewを使わず素のHStackで並べる（チップは全iPadのregular幅に収まる）。
-                // 収まらない幅（狭いSplit View等）ではcompact時と同じ思想でチップを出さない
-                ViewThatFits(in: .horizontal) {
-                    kanaChips
-                        .padding(.leading)
-                    Color.clear
-                        .frame(width: 0, height: 0)
-                }
-            }
-            
-            Spacer()
-            
-            // ソート選択メニュー
-            Menu {
-                ForEach(BookSortType.allCases) { sortType in
-                    Button {
-                        selectedSortType = sortType
-                    } label: {
-                        HStack {
-                            Image(systemName: sortType.iconName)
-                            Text(sortType.displayName)
-                            if selectedSortType == sortType {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: selectedSortType.iconName)
-                    Text(selectedSortType.displayName)
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
-            
-            // 表示形式切替（リスト／グリッド）。アイコンのみでコンパクト幅でも窮屈にならないようにする
-            Menu {
-                ForEach(BookDisplayMode.allCases) { mode in
-                    Button {
-                        displayMode = mode
-                    } label: {
-                        HStack {
-                            Image(systemName: mode.iconName)
-                            Text(mode.displayName)
-                            if displayMode == mode {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                Image(systemName: displayMode.iconName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(6)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
-            .padding(.trailing)
-        }
-    }
-    
-    /// 五十音チップの並び
-    private var kanaChips: some View {
-        HStack {
-            ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
-                Button(kanaGroup.displayName) {
-                    handleChipTap(kanaGroup: kanaGroup)
-                }
-                .buttonStyle(.bordered)
-                .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
-            }
-        }
-    }
-    
-    /// 五十音チップのタップ処理（絞り込みトグル）
-    ///
-    /// 未選択なら選択、選択中なら解除する。検索との排他（選択時に検索欄をクリアする等）は
-    /// バインディング経由でContainer側のStateが担う
-    private func handleChipTap(kanaGroup: KanaGroup) {
-        selectedKanaFilter = selectedKanaFilter == kanaGroup ? nil : kanaGroup
+    private var minimumCellWidth: CGFloat {
+        displayScale == .standard ? standardCellWidth : largeCellWidth
     }
     
     private var emptyStateView: some View {
@@ -360,7 +257,7 @@ public struct BookListView<RowAction: View>: View {
     /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）。
     /// セル最小幅は表示の大きさ（displayScale）に従う
     private var gridColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: displayScale.minCellWidth), spacing: 16)]
+        [GridItem(.adaptive(minimum: minimumCellWidth), spacing: 16)]
     }
     
     private var bookGridSection: some View {
@@ -423,16 +320,16 @@ public struct BookListView<RowAction: View>: View {
     /// 棚表示の折り返し列数（ビューポート幅から算出。セル最小幅はdisplayScaleに従う）
     private var shelfColumnCount: Int {
         let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= displayScale.minCellWidth else { return 1 }
+        guard available >= minimumCellWidth else { return 1 }
         return Int(
             (available + ShelfLayout.bookSpacing)
-                / (displayScale.minCellWidth + ShelfLayout.bookSpacing))
+                / (minimumCellWidth + ShelfLayout.bookSpacing))
     }
     
     /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
     private var shelfCellWidth: CGFloat {
         let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= displayScale.minCellWidth else { return displayScale.minCellWidth }
+        guard available >= minimumCellWidth else { return max(1, available) }
         let columnCount = CGFloat(shelfColumnCount)
         return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
     }
@@ -460,7 +357,7 @@ public struct BookListView<RowAction: View>: View {
     /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
     @ViewBuilder
     private func shelfRow(of books: [Book], hangingLabelText: String?) -> some View {
-        VStack(alignment: .leading, spacing: ShelfLayout.boardSpacing) {
+        VStack(alignment: .leading, spacing: shelfBoardSpacing) {
             HStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
                 ForEach(books) { book in
                     bookGridCellContent(for: book)
@@ -623,6 +520,7 @@ public struct BookRowView<RowAction: View>: View {
 /// rowAction（貸出ボタン等）は含まない。タップ領域とアクションボタンの
 /// ジェスチャ競合を避けるため、呼び出し側で別要素として縦に並べる
 private struct BookGridCoverView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// タイトル表示領域の高さ（2行分固定・Dynamic Typeに追従してスケール）。
     /// lineLimitは最大行数の制限に過ぎず高さは固定しないため、1行タイトルのセルだけ
     /// 高さが縮んでrowActionの縦位置がずれてしまう問題をこれで防ぐ
@@ -658,10 +556,11 @@ private struct BookGridCoverView: View {
             
             Text(book.title)
                 .font(scale.gridTitleFont)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
-                .frame(height: scaledTitleHeight, alignment: .top)
+                .frame(minHeight: scaledTitleHeight, alignment: .top)
         }
         .contentShape(Rectangle())
     }
