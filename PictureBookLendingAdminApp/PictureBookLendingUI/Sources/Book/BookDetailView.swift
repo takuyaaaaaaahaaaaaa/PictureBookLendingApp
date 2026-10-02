@@ -133,11 +133,11 @@ public struct BookDetailView<ActionButton: View>: View {
                                 if loan.isReturned {
                                     Label("返却済", systemImage: "checkmark.circle.fill")
                                         .font(.caption)
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(AppColor.returned)
                                 } else {
                                     Label("貸出中", systemImage: "clock.fill")
                                         .font(.caption)
-                                        .foregroundStyle(.orange)
+                                        .foregroundStyle(AppColor.lent)
                                 }
                             }
                             
@@ -161,7 +161,8 @@ public struct BookDetailView<ActionButton: View>: View {
                                         "返却期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
                                     )
                                     .font(.caption)
-                                    .foregroundStyle(Date() > loan.dueDate ? .red : .secondary)
+                                    .foregroundStyle(
+                                        Date() > loan.dueDate ? AppColor.overdue : .secondary)
                                 }
                             }
                         }

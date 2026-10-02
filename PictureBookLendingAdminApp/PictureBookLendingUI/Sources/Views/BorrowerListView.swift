@@ -177,7 +177,7 @@ public struct BorrowerListView: View {
                 Toggle("延滞のみ", isOn: isOverdueOnly)
                     .toggleStyle(.button)
                     .buttonStyle(.bordered)
-                    .tint(isOverdueOnly.wrappedValue ? .red : .secondary)
+                    .tint(isOverdueOnly.wrappedValue ? AppColor.overdue : .secondary)
                     .padding(.trailing)
             }
         }
@@ -250,30 +250,30 @@ public struct BorrowerListView: View {
                     .font(.caption)
                     .padding(.horizontal, Layout.badgePaddingH)
                     .padding(.vertical, Layout.badgePaddingV)
-                    .background(.quaternary, in: Capsule())
+                    .background(AppColor.chipSurface, in: Capsule())
                     .foregroundStyle(.secondary)
             }
             
             Spacer()
             
             if row.hasNoOpenSlot {
-                // グレー＝「いまは借りられない」の色（図書一覧の貸出中ボタンと同じ言葉遣い）。
+                // 藍色＝貸出中の色（図書一覧の貸出中ボタンと同じ言葉遣い）。
                 // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる
-                Text("空き枠なし")
+                Label("空き枠なし", systemImage: "book.closed")
                     .font(.caption.bold())
                     .padding(.horizontal, Layout.badgePaddingH)
                     .padding(.vertical, Layout.badgePaddingV)
-                    .background(.gray, in: Capsule())
-                    .foregroundStyle(.white)
+                    .background(AppColor.lentSurface, in: Capsule())
+                    .foregroundStyle(AppColor.lentForeground)
             }
             
             if row.isOverdue {
-                Text("延滞")
+                Label("延滞", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption.bold())
                     .padding(.horizontal, Layout.badgePaddingH)
                     .padding(.vertical, Layout.badgePaddingV)
-                    .background(.red, in: Capsule())
-                    .foregroundStyle(.white)
+                    .background(AppColor.overdue, in: Capsule())
+                    .foregroundStyle(AppColor.onEmphasis)
             }
             
             Image(systemName: "chevron.right")

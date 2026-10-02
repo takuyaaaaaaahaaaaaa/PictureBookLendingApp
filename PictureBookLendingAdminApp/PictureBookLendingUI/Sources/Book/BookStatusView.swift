@@ -11,20 +11,16 @@ public struct BookStatusView: View {
     }
     
     public var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(isCurrentlyLent ? .orange : .green)
-                .frame(width: 8, height: 8)
-            
-            Text(isCurrentlyLent ? "貸出中" : "利用可")
-                .font(.caption)
-                .fontWeight(.medium)
-        }
+        Label(
+            isCurrentlyLent ? "貸出中" : "貸出可",
+            systemImage: isCurrentlyLent ? "book.closed" : "checkmark.circle"
+        )
+        .font(.caption.weight(.medium))
+        .foregroundStyle(isCurrentlyLent ? AppColor.lent : AppColor.available)
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
         .background(
-            (isCurrentlyLent ? Color.orange : Color.green)
-                .opacity(0.1)
+            isCurrentlyLent ? AppColor.lentSurface : AppColor.available.opacity(0.1)
         )
         .clipShape(Capsule())
     }

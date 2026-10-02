@@ -28,7 +28,8 @@ let package = Package(
                 .product(name: "PictureBookLendingDomain", package: "PictureBookLendingDomain"),
                 .product(name: "Kingfisher", package: "Kingfisher"),
             ],
-            path: "Sources"
+            path: "Sources",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "PictureBookLendingUITests",
