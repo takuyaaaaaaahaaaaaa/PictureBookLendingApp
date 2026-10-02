@@ -156,16 +156,18 @@
         
         /// Crashlyticsの導入確認用ボタン（タップするとその場でクラッシュする）
         ///
-        /// GoogleService-Info.plistを配置してビルドし、これをタップして
-        /// アプリを終了させたあと、もう一度アプリを起動するとクラッシュレポートが
-        /// Firebaseへ送信される（次回起動時送信のため、この場では確認できない）。
+        /// GoogleService-Info.plistを配置し、設定でクラッシュ診断の自動送信を許可してから使う。
+        /// アプリを終了させたあと、もう一度起動すると保存済みのクラッシュレポートの
+        /// 送信を要求する（通信とConsoleへの反映はこの場では確認できない）。
         /// plistが無い場合はFirebaseが初期化されないため、タップしてもクラッシュはするが
         /// レポートはどこにも送られない
         private var crashlyticsTestButton: some View {
             VStack(alignment: .leading, spacing: 8) {
-                Text("タップするとアプリがその場で終了します。終了後にもう一度起動すると、Firebase Consoleにクラッシュレポートが届きます。")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "タップするとアプリがその場で終了します。Firebase設定ファイルを配置し、設定でクラッシュ診断の自動送信を許可してから使ってください。再起動後に送信が要求されます。Firebase Consoleへの反映は別途確認してください。"
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 Button("テストクラッシュを起こす", role: .destructive) {
                     fatalError("Crashlytics導入確認用のテストクラッシュ")
                 }
