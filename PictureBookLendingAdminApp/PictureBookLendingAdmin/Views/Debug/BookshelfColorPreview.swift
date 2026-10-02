@@ -11,20 +11,19 @@
         @State private var displayMode: BookDisplayMode = .shelf
         @State private var displayScale: BookDisplayScale = .standard
         
-        private let includesWrappedRow: Bool
+        @State private var sampleSections: [BookSection]
         
         init(includesWrappedRow: Bool = false) {
-            self.includesWrappedRow = includesWrappedRow
+            _sampleSections = State(
+                initialValue: Self.makeSections(includesWrappedRow: includesWrappedRow))
         }
         
-        private var additionalBooks: [Book] {
-            includesWrappedRow
-                ? (1...6).map { Book(title: "あ行の見本 \($0)", managementNumber: "見本\($0)") }
+        private static func makeSections(includesWrappedRow: Bool) -> [BookSection] {
+            let additionalBooks =
+                includesWrappedRow
+                ? (1...24).map { Book(title: "あ行の見本 \($0)", managementNumber: "見本\($0)") }
                 : []
-        }
-        
-        private var sections: [BookSection] {
-            [
+            return [
                 BookSection(
                     kanaGroup: .a,
                     books: [
@@ -41,6 +40,22 @@
                         Book(title: "ぐるんぱのようちえん", managementNumber: "か004"),
                     ]),
             ]
+        }
+        
+        private var sections: [BookSection] {
+            sampleSections.compactMap { section -> BookSection? in
+                guard selectedKanaFilter == nil || section.kanaGroup == selectedKanaFilter else {
+                    return nil
+                }
+                let books = section.books.filter {
+                    searchText.isEmpty || $0.title.localizedStandardContains(searchText)
+                }.sorted {
+                    selectedSortType == .title
+                        ? $0.title < $1.title
+                        : ($0.managementNumber ?? "") < ($1.managementNumber ?? "")
+                }
+                return books.isEmpty ? nil : BookSection(kanaGroup: section.kanaGroup, books: books)
+            }
         }
         
         var body: some View {
