@@ -14,23 +14,23 @@
 ## PRの分割方針
 
 オーナーへの説明どおり1本の巨大PRにはしない。依存する差分は順番にレビューし、本棚の余白とPrivacyも別PRにする。
-GitHubへの公開はこの文書作成時点で未実施。
+各PRはdraftで作成し、下記の依存baseで差分を最小化する。最終SHA・検証結果・未検証事項はPR本文を正とする。
 
-| ローカルの最小単位 | 含むコミット | 比較のbase | 検証/証拠 |
-| --- | --- | --- | --- |
-| #228 色方針 | a448948 | 1cee792 | 方針文書 |
-| #227 app/widget Accent | f5cdb1e | a448948 | Asset内容一致・全体build |
-| #229 semantic colors | 4936620 | f5cdb1e | 色resources/contrast tests・明暗実画面 |
-| #230 color catalog | 19fa276 | 4936620 | カタログbuild・明暗のトークン表示 |
-| 本棚余白/タイトルと見本 | bd5f610, 6108b06 | 19fa276 | 同じ本棚のbefore/after、明暗・大文字 |
-| #231 実幅で操作群切替・Tab | 7ce8056 | 6108b06 | 200 tests、広幅/AX3画面 |
-| #232 本IDで位置保持 | ca1a60f | 7ce8056 | 375→744→1024→375ptの棚実操作 |
-| #234 18 Preview/幅切替ホスト | 5dba528 | ca1a60f | 3画面×3幅×標準/AX3のコンパイル |
-| 貸出行のAX可読性 | 02f8e88 | 5dba528 | 375pt AX3のbefore/after、200 tests |
-| Privacy同意・撤回 | 後続の独立コミット | 02f8e88 | SDK呼出Spy、永続化、独立レビュー |
-| #233 オーナー決定 | 本文書のコミット | mainへ単独適用可能 | 上記の採否記録 |
+| 最小単位 | ブランチ | 比較のbase |
+| --- | --- | --- |
+| #228 色方針 | codex/release-228-color-policy | main |
+| #227 app/widget Accent | codex/release-227-accent | codex/release-228-color-policy |
+| #229 semantic colors | codex/release-229-semantic-colors | codex/release-227-accent |
+| #230 color catalog | codex/release-230-color-catalog | codex/release-229-semantic-colors |
+| 本棚余白/タイトルと見本 | codex/release-shelf-spacing | codex/release-230-color-catalog |
+| #231 実幅で操作群切替・Tab | codex/release-231-adaptive-controls | codex/release-shelf-spacing |
+| #232 本IDで位置保持 | codex/release-232-scroll-state | codex/release-231-adaptive-controls |
+| #234 18 Preview/幅切替ホスト | codex/release-234-preview-matrix | codex/release-232-scroll-state |
+| 貸出行のAX可読性 | codex/release-loan-accessibility | codex/release-234-preview-matrix |
+| #233 オーナー決定 | codex/release-233-action-position | codex/release-loan-accessibility |
+| Privacy同意・撤回 | codex/release-privacy-consent | codex/release-233-action-position |
 
-`bd5f610`の初期見本は本棚余白・タイトル検証の足場として本棚PRに含める。#234の完了対象となる18ケースは後の専用PRに分離する。
+本棚の初期見本は本棚余白・タイトル検証の足場として本棚PRに含める。#234の完了対象となる18ケースは後の専用PRに分離する。
 最初はstacked baseで重複差分を避け、先行PRを取り込んだ後に次のbaseをmainへ更新できる。各PRで比較baseと依存PRを明示する。
 ブランチを分けるだけで独立レビューを終えたことにはしない。PR公開前に最終差分へ必要なレビューと検証を行う。
 
