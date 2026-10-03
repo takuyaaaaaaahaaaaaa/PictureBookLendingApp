@@ -1,46 +1,67 @@
 import PictureBookLendingDomain
 import SwiftUI
 
-/// 必要な実幅で操作の畳み方だけを切り替える。狭幅でもかな選択・解除を残す。
+/// 表示設定は常に右側のMenuにまとめ、実幅に応じてかな選択だけを畳む。
 struct BookListControls: View {
     @Binding var selectedKana: KanaGroup?
     @Binding var sort: BookSortType
     @Binding var mode: BookDisplayMode
     let kanaOptions: [KanaGroup]
     
+    private enum Layout {
+        static let groupSpacing: CGFloat = 24
+        static let menuSpacing: CGFloat = 12
+        static let minimumControlSize: CGFloat = 44
+    }
+    
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) {
-                kanaChips
-                Spacer(minLength: 16)
-                sortPicker.pickerStyle(.segmented).fixedSize()
-                modePicker.pickerStyle(.segmented).fixedSize()
+            HStack(spacing: Layout.groupSpacing) {
+                kanaChips.fixedSize()
+                Spacer(minLength: 0)
+                displayMenus
             }
-            .fixedSize(horizontal: true, vertical: false)
             
-            HStack(spacing: 12) {
-                kanaMenu
-                Spacer(minLength: 8)
-                Menu {
-                    sortPicker
-                } label: {
-                    Image(systemName: sort.iconName)
-                }
-                .accessibilityLabel("並び順")
-                .accessibilityValue(sort.displayName)
-                .accessibilityIdentifier("book.sort.menu")
-                Menu {
-                    modePicker
-                } label: {
-                    Image(systemName: mode.iconName)
-                }
-                .accessibilityLabel("表示形式")
-                .accessibilityValue(mode.displayName)
-                .accessibilityIdentifier("book.mode.menu")
+            HStack(spacing: Layout.groupSpacing) {
+                kanaMenu.fixedSize()
+                Spacer(minLength: 0)
+                displayMenus
             }
-            .buttonStyle(.bordered)
+            
+            VStack(alignment: .leading, spacing: Layout.groupSpacing) {
+                kanaMenu
+                displayMenus.frame(maxWidth: .infinity, alignment: .trailing)
+            }
         }
+        .buttonStyle(.bordered)
         .padding(.horizontal)
+    }
+    
+    private var displayMenus: some View {
+        HStack(spacing: Layout.menuSpacing) {
+            Menu {
+                sortPicker
+            } label: {
+                Image(systemName: sort.iconName)
+                    .frame(
+                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("並び順")
+            .accessibilityValue(sort.displayName)
+            .accessibilityIdentifier("book.sort.menu")
+            
+            Menu {
+                modePicker
+            } label: {
+                Image(systemName: mode.iconName)
+                    .frame(
+                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("表示形式")
+            .accessibilityValue(mode.displayName)
+            .accessibilityIdentifier("book.mode.menu")
+        }
+        .fixedSize()
     }
     
     private var kanaChips: some View {
