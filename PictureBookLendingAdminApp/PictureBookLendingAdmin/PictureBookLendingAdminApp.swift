@@ -34,7 +34,8 @@ struct PictureBookLendingAdminApp: App {
             let privacy = TelemetryPrivacyController(
                 analyticsDestination: ConsoleAnalyticsService())
         #else
-            let privacy = TelemetryPrivacyController()
+            let privacy = TelemetryPrivacyController(
+                analyticsDestination: FirebaseAnalyticsService())
         #endif
         _privacy = State(initialValue: privacy)
         privacy.start()

@@ -194,6 +194,7 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
   - **Phase A**：イベント定義＋ConsoleAnalytics（DEBUG・送信なし）。実機で自分の操作を
     眺めてイベント設計の妥当性を検証する（実装済み）
   - **Phase B**：FirebaseAnalyticsService を接続し、§8のチェックリストを消化する（実装済み）。
+    送信の初期停止・個別同意・撤回を含む現在の動作は `TELEMETRY_CONSENT.md` を正とする。
     DEBUGビルドはPhase Aから変更せずConsoleAnalyticsServiceのまま
     （実機ログをConsole.appで見る運用を継続）。GoogleService-Info.plistが存在する
     Release等の構成でのみFirebaseAnalyticsServiceへ差し替え、plistが無い環境

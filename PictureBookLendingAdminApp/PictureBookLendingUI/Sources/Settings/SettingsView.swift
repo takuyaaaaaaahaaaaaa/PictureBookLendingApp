@@ -40,7 +40,7 @@ public struct SettingsView: View {
         onSelectParentFeedbackQRCode: @escaping () -> Void,
         onSelectBackupExport: @escaping () -> Void,
         onSelectBackupImport: @escaping () -> Void,
-        onSelectPrivacy: @escaping () -> Void = {}
+        onSelectPrivacy: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -286,7 +286,8 @@ private struct SettingsMenuItem: View {
             onSelectFeedback: {},
             onSelectParentFeedbackQRCode: {},
             onSelectBackupExport: {},
-            onSelectBackupImport: {}
+            onSelectBackupImport: {},
+            onSelectPrivacy: {}
         )
         .navigationTitle("設定")
     }
