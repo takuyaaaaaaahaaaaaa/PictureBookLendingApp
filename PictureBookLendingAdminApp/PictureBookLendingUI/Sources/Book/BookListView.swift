@@ -106,7 +106,9 @@ public struct BookListView<RowAction: View>: View {
     @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
     
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
-    @State private var shelfViewportWidth: CGFloat = 0
+    @State private var viewportWidth: CGFloat = 0
+    /// 列数が変わっても先頭の本を基準に位置を維持する。
+    @State private var visibleBookID: Book.ID?
     
     /// 五十音グループでセクション化された絵本
     public let sections: [BookSection]
@@ -192,6 +194,15 @@ public struct BookListView<RowAction: View>: View {
                     }
                 }
             }
+            .onChange(of: viewportWidth) { _, _ in
+                guard displayMode != .list, let bookID = visibleBookID else { return }
+                // Geometryで得た幅から列を再構成した後、同じ本を復元する。
+                // 行番号は列数変更で変わるためスクロール先には使わない。
+                Task { @MainActor in
+                    await Task.yield()
+                    proxy.scrollTo(bookID, anchor: .top)
+                }
+            }
             .onChange(of: scrollToTopTrigger) { _, _ in
                 // 貸出完了後の「次の貸出への引き継ぎ」：一覧を先頭へ戻す
                 scrollToTop(proxy: proxy)
@@ -207,6 +218,7 @@ public struct BookListView<RowAction: View>: View {
     /// 一覧を先頭行までスクロールする
     private func scrollToTop(proxy: ScrollViewProxy) {
         guard let firstBookId = sections.first?.books.first?.id else { return }
+        visibleBookID = firstBookId
         withAnimation {
             proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
         }
@@ -259,7 +271,8 @@ public struct BookListView<RowAction: View>: View {
     /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）。
     /// セル最小幅は表示の大きさ（displayScale）に従う
     private var gridColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: minimumCellWidth), spacing: 16)]
+        let availableWidth = viewportWidth > 0 ? max(1, viewportWidth - 32) : minimumCellWidth
+        return [GridItem(.adaptive(minimum: min(minimumCellWidth, availableWidth)), spacing: 16)]
     }
     
     private var bookGridSection: some View {
@@ -276,11 +289,18 @@ public struct BookListView<RowAction: View>: View {
                                 bookGridCellContent(for: book)
                             }
                         }
+                        .scrollTargetLayout()
                         .padding(.horizontal)
                     }
                 }
             }
             .padding(.vertical, 8)
+        }
+        .modifier(BookScrollPosition(bookID: $visibleBookID))
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            viewportWidth = width
         }
     }
     
@@ -308,10 +328,11 @@ public struct BookListView<RowAction: View>: View {
             }
             .padding(.vertical, ShelfLayout.contentVerticalPadding)
         }
+        .modifier(BookScrollPosition(bookID: $visibleBookID))
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.size.width
         } action: { width in
-            shelfViewportWidth = width
+            viewportWidth = width
         }
         .background {
             ShelfWoodBackgroundView()
@@ -321,7 +342,7 @@ public struct BookListView<RowAction: View>: View {
     
     /// 棚表示の折り返し列数（ビューポート幅から算出。セル最小幅はdisplayScaleに従う）
     private var shelfColumnCount: Int {
-        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
         guard available >= minimumCellWidth else { return 1 }
         return Int(
             (available + ShelfLayout.bookSpacing)
@@ -330,7 +351,7 @@ public struct BookListView<RowAction: View>: View {
     
     /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
     private var shelfCellWidth: CGFloat {
-        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
         guard available >= minimumCellWidth else { return max(1, available) }
         let columnCount = CGFloat(shelfColumnCount)
         return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
@@ -366,6 +387,7 @@ public struct BookListView<RowAction: View>: View {
                         .frame(width: shelfCellWidth)
                 }
             }
+            .scrollTargetLayout()
             .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -434,6 +456,7 @@ public struct BookListView<RowAction: View>: View {
             
             rowAction(book)
         }
+        .id(book.id)
     }
     
     /// 絵本行のコンテンツ
@@ -730,5 +753,31 @@ private struct BookGridCoverView: View {
             RowActionButton(onTap: {})
         }
         .navigationTitle("図書一覧")
+    }
+}
+
+/// 再配置による「行の先頭ID」の通知で、読んでいた本のIDを上書きしない。
+/// ユーザーのスクロール中だけ基準を更新し、幅を往復しても同じ本を残す。
+private struct BookScrollPosition: ViewModifier {
+    @Binding var bookID: UUID?
+    @State private var isUserScrolling = false
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 18, macOS 15, *) {
+            content
+                .scrollPosition(
+                    id: Binding(
+                        get: { bookID },
+                        set: { value in
+                            if isUserScrolling || bookID == nil { bookID = value }
+                        }), anchor: .top
+                )
+                .onScrollPhaseChange { _, phase in
+                    isUserScrolling =
+                        phase == .tracking || phase == .interacting || phase == .decelerating
+                }
+        } else {
+            content.scrollPosition(id: $bookID, anchor: .top)
+        }
     }
 }
