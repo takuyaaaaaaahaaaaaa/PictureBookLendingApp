@@ -79,6 +79,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectBackupImport: {
                     isBackupImporterPresented = true
+                },
+                onSelectPrivacy: {
+                    navigationPath.append(SettingsDestination.privacy)
                 }
             )
             .navigationTitle("設定")
@@ -99,6 +102,8 @@ struct SettingsContainerView: View {
                     UserListContainerView(classGroupId: classGroupId)
                 case .book:
                     SettingsBookListContainerView()
+                case .privacy:
+                    PrivacySettingsContainerView()
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -452,6 +457,7 @@ struct SettingsContainerView: View {
         case user
         case userList(UUID)
         case book
+        case privacy
     }
 }
 

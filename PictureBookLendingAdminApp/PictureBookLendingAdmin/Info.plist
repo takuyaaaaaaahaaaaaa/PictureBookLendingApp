@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <!-- SDK構成前の既定値。明示同意がない新規/既存インストールでは送信しない。 -->
+    <key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+    <false/>
+    <key>FirebaseCrashlyticsCollectionEnabled</key>
+    <false/>
+    <key>FirebaseDataCollectionDefaultEnabled</key>
+    <false/>
 	<!-- 広告IDを一切リンクしない構成（FirebaseAnalyticsCore）で導入するため、
 	     広告パーソナライズ信号を無効化する。ATT（トラッキング許可ダイアログ）を不要にする。
 	     docs/ANALYTICS_DESIGN.md §5・§8 -->

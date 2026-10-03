@@ -64,7 +64,7 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
                 configurations: [modelConfiguration],
             )
         } catch {
-            fatalError("ModelContainerの初期化に失敗しました: \(error)")
+            fatalError("ModelContainerの初期化に失敗しました")
         }
     }
     
@@ -91,7 +91,7 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
                 configurations: [modelConfiguration]
             )
         } catch {
-            fatalError("テスト用ModelContainerの初期化に失敗しました: \(error)")
+            fatalError("テスト用ModelContainerの初期化に失敗しました")
         }
     }
     

@@ -1,4 +1,3 @@
-import FirebaseCore
 import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
@@ -27,25 +26,19 @@ struct PictureBookLendingAdminApp: App {
     /// バックアップモデル
     @State private var backupModel: BackupModel
     
-    /// 利用ログの記録先
-    ///
-    /// DEBUGビルドでは引き続きコンソールへ流し、実機で自分の操作を眺めて
-    /// イベント設計の妥当性を検証する（Phase Aから変更なし）。
-    /// Release等ではGoogleService-Info.plistが存在する場合のみFirebase実装へ送信し、
-    /// plistが無い環境（配布前のクローン・CI等）ではNoopのまま動かす
-    /// （docs/ANALYTICS_DESIGN.md §5「段階導入」Phase B）
-    private let analytics: any AnalyticsService
+    /// 設定から後で撤回できる。未選択は送信しない。
+    @State private var privacy: TelemetryPrivacyController
     
     init() {
-        // Firebase（Crashlytics・Analytics）を初期化する。
-        // public repoのためGoogleService-Info.plistはコミットせず、
-        // 各開発環境が手元に配置し、CIは環境変数から生成する。
-        // plistが無い環境でもクラッシュ収集・利用ログなしでアプリは動くよう、存在確認してから初期化する。
-        let isFirebaseConfigured =
-            Bundle.main.url(forResource: "GoogleService-Info", withExtension: "plist") != nil
-        if isFirebaseConfigured {
-            FirebaseApp.configure()
-        }
+        #if DEBUG
+            let privacy = TelemetryPrivacyController(
+                analyticsDestination: ConsoleAnalyticsService())
+        #else
+            let privacy = TelemetryPrivacyController(
+                analyticsDestination: FirebaseAnalyticsService())
+        #endif
+        _privacy = State(initialValue: privacy)
+        privacy.start()
         
         // シングルトンのRepositoryFactoryを使用
         let repositoryFactory = SwiftDataRepositoryFactory.shared
@@ -82,30 +75,28 @@ struct PictureBookLendingAdminApp: App {
                 imageStorageRepository: imageStorageRepository
             ))
         
-        #if DEBUG
-            analytics = ConsoleAnalyticsService()
-        #else
-            analytics = isFirebaseConfigured ? FirebaseAnalyticsService() : NoopAnalyticsService()
-        #endif
     }
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environment(bookModel)
-                .environment(userModel)
-                .environment(loanModel)
-                .environment(classGroupModel)
-                .environment(loanSettingsModel)
-                .environment(backupModel)
-                .environment(\.analytics, analytics)
-                .task {
-                    // TipKitを初期化
-                    try? Tips.configure([
-                        .displayFrequency(.immediate),
-                        .datastoreLocation(.applicationDefault),
-                    ])
-                }
+            PrivacyLaunchContainerView {
+                ContentView()
+            }
+            .environment(bookModel)
+            .environment(userModel)
+            .environment(loanModel)
+            .environment(classGroupModel)
+            .environment(loanSettingsModel)
+            .environment(backupModel)
+            .environment(privacy)
+            .environment(\.analytics, privacy.analytics)
+            .task {
+                // TipKitを初期化
+                try? Tips.configure([
+                    .displayFrequency(.immediate),
+                    .datastoreLocation(.applicationDefault),
+                ])
+            }
         }
         .modelContainer(SwiftDataRepositoryFactory.shared.modelContainer)
     }
