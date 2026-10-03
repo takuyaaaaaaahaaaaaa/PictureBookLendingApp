@@ -17,6 +17,14 @@
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    NavigationLink("本棚を確認（サンプル・保存なし）") {
+                        BookshelfColorPreview()
+                    }
+                    .font(.title3)
+                    NavigationLink("本棚の段間を確認（折り返し見本）") {
+                        BookshelfColorPreview(includesWrappedRow: true)
+                    }
+                    .font(.title3)
                     catalogSection("カラー：操作と状態（ライト／ダーク）") {
                         ColorTokenCatalogView()
                     }
