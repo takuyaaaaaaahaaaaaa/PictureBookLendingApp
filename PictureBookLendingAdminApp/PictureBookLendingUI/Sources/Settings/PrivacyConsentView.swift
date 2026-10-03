@@ -17,6 +17,9 @@ public struct PrivacyConsentView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 32) {
+                Label("えほん台帳へようこそ", systemImage: "book.closed")
+                    .font(.title)
+                    .accessibilityAddTraits(.isHeader)
                 PrivacyConsentIntroduction()
                 PrivacyConsentDataExplanation()
                 PrivacyConsentActions(onAllow: onAllow, onDecline: onDecline)
@@ -34,11 +37,9 @@ public struct PrivacyConsentView: View {
 private struct PrivacyConsentIntroduction: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("えほん台帳へようこそ", systemImage: "book.closed")
-                .font(.title)
-                .accessibilityAddTraits(.isHeader)
             Text("アプリの改善にご協力ください")
                 .font(.title2)
+                .accessibilityAddTraits(.isHeader)
             Text("この端末の管理者の方が、利用状況とクラッシュ診断の送信を選んでください。同意するまで、どちらも送信しません。")
             Text("送信せずに始めても、貸出・返却などすべての機能を利用できます。")
         }
