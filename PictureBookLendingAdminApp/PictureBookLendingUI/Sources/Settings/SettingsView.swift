@@ -206,14 +206,14 @@ private struct SettingsMenuItem: View {
         var iconColor: Color {
             switch self {
             case .normal: return .primary
-            case .destructive: return .red
+            case .destructive: return AppColor.destructive
             }
         }
         
         var titleColor: Color {
             switch self {
             case .normal: return .primary
-            case .destructive: return .red
+            case .destructive: return AppColor.destructive
             }
         }
     }
@@ -253,7 +253,7 @@ private struct SettingsMenuItem: View {
                 }
             }
             .padding()
-            .background(.gray.opacity(0.1))
+            .background(AppColor.cardSurface)
             .cornerRadius(12)
         }
         .buttonStyle(.plain)

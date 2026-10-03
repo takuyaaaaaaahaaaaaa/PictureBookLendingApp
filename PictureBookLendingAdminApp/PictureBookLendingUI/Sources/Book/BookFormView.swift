@@ -274,7 +274,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                             Image(systemName: "camera")
                             Text("写真を撮影")
                         }
-                        .foregroundStyle(.white)
+                        .foregroundStyle(AppColor.onEmphasis)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 8)
                         .background(Color.accentColor)

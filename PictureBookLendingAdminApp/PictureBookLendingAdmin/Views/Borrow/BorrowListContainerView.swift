@@ -81,11 +81,14 @@ struct BorrowListContainerView: View {
                 }
             ) { book in
                 // 押せることが見た目でわかるように、行の右端は状態バッジではなく
-                // 同じ形のボタンで揃える：借りられる本＝青い「借りる」（主役の操作）、
-                // 貸出中＝グレーの「貸出中」（押すと返却予定日の案内シートが開く）。
+                // 同じ形のボタンで揃える：借りられる本＝暖色の「借りる」（主役の操作）、
+                // 貸出中＝藍色の「貸出中」（押すと返却予定日の案内シートが開く）。
                 // 行全体もタップ可能なので、ボタンの外を押しても同じ動きになる
                 if loanModel.isBookLent(bookId: book.id) {
-                    RowActionButton(title: "貸出中", systemImage: "book.closed", tint: .gray) {
+                    RowActionButton(
+                        title: "貸出中", systemImage: "book.closed", tint: AppColor.lentSurface,
+                        foreground: AppColor.lentForeground
+                    ) {
                         openBorrowSheet(for: book)
                     }
                 } else {

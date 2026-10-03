@@ -520,7 +520,7 @@ public struct BookListView<RowAction: View>: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .red)
+                            .foregroundStyle(AppColor.onEmphasis, AppColor.destructive)
                             .font(.title3)
                     }
                     .padding(6)

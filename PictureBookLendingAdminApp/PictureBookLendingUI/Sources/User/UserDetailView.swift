@@ -76,11 +76,11 @@ public struct UserDetailView: View {
             
             Section("貸出状況") {
                 if activeLoansCount > 0 {
-                    Text("現在 \(activeLoansCount) 冊借りています")
-                        .foregroundStyle(.orange)
+                    Label("現在 \(activeLoansCount) 冊借りています", systemImage: "book.closed")
+                        .foregroundStyle(AppColor.lent)
                 } else {
-                    Text("貸出中の本はありません")
-                        .foregroundStyle(.green)
+                    Label("貸出中の本はありません", systemImage: "checkmark.circle")
+                        .foregroundStyle(AppColor.available)
                 }
             }
             
@@ -121,8 +121,11 @@ public struct UserLoanHistoryRow: View {
                 Text(getBookTitle(loan.bookId))
                     .font(.headline)
                 Spacer()
-                Image(systemName: loan.isReturned ? "checkmark.circle.fill" : "clock")
-                    .foregroundStyle(loan.isReturned ? .green : .orange)
+                Label(
+                    loan.isReturned ? "返却済み" : "貸出中",
+                    systemImage: loan.isReturned ? "checkmark.circle.fill" : "clock"
+                )
+                .foregroundStyle(loan.isReturned ? AppColor.returned : AppColor.lent)
             }
             
             Text(
@@ -140,7 +143,7 @@ public struct UserLoanHistoryRow: View {
                     "返却期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
                 )
                 .font(.caption)
-                .foregroundStyle(isOverdue ? .red : .primary)
+                .foregroundStyle(isOverdue ? AppColor.overdue : .primary)
             }
         }
         .padding(.vertical, 4)

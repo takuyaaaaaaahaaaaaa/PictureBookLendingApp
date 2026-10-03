@@ -93,7 +93,7 @@ public struct StatisticsCardView: View {
                     title: "貸出中",
                     count: activeLoansCount,
                     iconName: "arrow.left.arrow.right",
-                    color: .orange
+                    color: AppColor.lent
                 )
             }
         }
@@ -158,7 +158,7 @@ public struct OverdueWarningView: View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.red)
+                    .foregroundStyle(AppColor.overdue)
                 
                 Text("返却期限切れ")
                     .font(.headline)
@@ -171,7 +171,7 @@ public struct OverdueWarningView: View {
                     .padding(.vertical, 4)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(Color.red.opacity(0.2))
+                            .fill(AppColor.overdue.opacity(0.2))
                     )
             }
             
@@ -198,7 +198,7 @@ public struct OverdueWarningView: View {
                         
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
                             .font(.caption)
-                            .foregroundStyle(.red)
+                            .foregroundStyle(AppColor.overdue)
                     }
                 }
                 .padding(.vertical, 4)

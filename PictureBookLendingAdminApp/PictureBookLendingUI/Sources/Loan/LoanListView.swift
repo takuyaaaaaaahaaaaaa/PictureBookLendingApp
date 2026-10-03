@@ -179,12 +179,12 @@ private struct LoanListRowView<Action: View>: View {
                         .font(.headline)
                     
                     if loan.isOverdue {
-                        Text("延滞")
+                        Label("延滞", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(.red.opacity(0.1))
-                            .foregroundStyle(.red)
+                            .background(AppColor.overdue.opacity(0.1))
+                            .foregroundStyle(AppColor.overdue)
                             .clipShape(Capsule())
                     }
                 }
@@ -204,7 +204,7 @@ private struct LoanListRowView<Action: View>: View {
                                 Locale(identifier: "ja_JP")))
                     )
                     .font(.caption)
-                    .foregroundStyle(loan.isOverdue ? .red : .secondary)
+                    .foregroundStyle(loan.isOverdue ? AppColor.overdue : .secondary)
                 }
             }
             

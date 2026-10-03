@@ -19,10 +19,10 @@ public struct ReturnButtonView: View {
                 Text("返却")
                     .font(.callout)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(AppColor.onEmphasis)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
-            .background(Color.orange)
+            .background(AppColor.accent)
             .cornerRadius(8)
         }
         .buttonStyle(.plain)

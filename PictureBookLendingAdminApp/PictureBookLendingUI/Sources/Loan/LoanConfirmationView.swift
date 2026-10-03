@@ -71,7 +71,7 @@ public struct LoanConfirmationView: View {
                     }
                 }
                 .padding()
-                .background(Color.gray.opacity(0.1))
+                .background(AppColor.cardSurface)
                 .cornerRadius(12)
                 
                 Spacer()
@@ -81,10 +81,10 @@ public struct LoanConfirmationView: View {
                     Button(action: onConfirm) {
                         Text("貸出を確定する")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundStyle(AppColor.onEmphasis)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(AppColor.accent)
                             .cornerRadius(12)
                     }
                     
