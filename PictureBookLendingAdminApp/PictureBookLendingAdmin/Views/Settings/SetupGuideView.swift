@@ -18,9 +18,9 @@ struct SetupProgress {
     }
 
     var nextExplanation: String {
-        if !hasClassGroup { return "設定の「利用者管理」から、まず組を追加します。" }
-        if !hasUser { return "登録した組を開いて、利用者を追加します。" }
-        if !hasBook { return "設定の「図書管理」から、最初の1冊を追加します。" }
+        if !hasClassGroup { return "組を追加すると、次に利用者を登録できます。" }
+        if !hasUser { return "利用者を追加すると、次に図書を登録できます。" }
+        if !hasBook { return "図書を追加すると、貸出を始められます。" }
         return "準備ができました。データ送信を選んで貸出画面へ進みます。"
     }
 }
@@ -78,7 +78,7 @@ struct SetupWelcomeView: View {
 
 struct SetupProgressView: View {
     let progress: SetupProgress
-    let onContinue: () -> Void
+    let onContinue: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -89,8 +89,10 @@ struct SetupProgressView: View {
             Text(progress.nextExplanation)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Button(progress.nextTitle, action: onContinue)
-                .buttonStyle(.borderedProminent)
+            if let onContinue {
+                Button(progress.nextTitle, action: onContinue)
+                    .buttonStyle(.borderedProminent)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding()

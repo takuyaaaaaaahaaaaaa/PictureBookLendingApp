@@ -42,56 +42,58 @@ struct SettingsContainerView: View {
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            SettingsView(
-                classGroupCount: classGroupModel.classGroups.count,
-                userCount: userModel.users.count,
-                bookCount: bookModel.books.count,
-                highlightUserManagement: setupStarted && setupProgress.completedCount == 0,
-                highlightBookManagement: setupStarted && setupProgress.hasUser
-                    && !setupProgress.hasBook,
-                loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
-                maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
-                onSelectUser: {
-                    navigationPath.append(SettingsDestination.user)
-                },
-                onSelectBook: {
-                    navigationPath.append(SettingsDestination.book)
-                },
-                onSelectBookBulkRegistration: {
-                    isBookBulkRegistrationSheetPresented = true
-                },
-                onSelectLoanSettings: {
-                    isLoanSettingsSheetPresented = true
-                },
-                onCreateGuardiansForAllChildren: {
-                    handleCreateGuardiansForAllChildren()
-                },
-                onPromoteToNextYear: {
-                    promoteConfirmationState = AlertState(
-                        isPresented: true,
-                        title: "進級処理の確認",
-                        message: makePromoteConfirmationMessage()
-                    )
-                },
-                onSelectDeviceReset: {
-                    isDeviceResetDialogPresented = true
-                },
-                onSelectFeedback: {
-                    openURL(FeedbackFormLinks.staff)
-                },
-                onSelectParentFeedbackQRCode: {
-                    isParentFeedbackQRCodeSheetPresented = true
-                },
-                onSelectBackupExport: {
-                    handleBackupExport()
-                },
-                onSelectBackupImport: {
-                    isBackupImporterPresented = true
-                },
-                onSelectPrivacy: {
-                    navigationPath.append(SettingsDestination.privacy)
-                }
-            )
+            guided {
+                SettingsView(
+                    classGroupCount: classGroupModel.classGroups.count,
+                    userCount: userModel.users.count,
+                    bookCount: bookModel.books.count,
+                    highlightUserManagement: setupStarted && setupProgress.completedCount == 0,
+                    highlightBookManagement: setupStarted && setupProgress.hasUser
+                        && !setupProgress.hasBook,
+                    loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
+                    maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
+                    onSelectUser: {
+                        navigationPath.append(SettingsDestination.user)
+                    },
+                    onSelectBook: {
+                        navigationPath.append(SettingsDestination.book)
+                    },
+                    onSelectBookBulkRegistration: {
+                        isBookBulkRegistrationSheetPresented = true
+                    },
+                    onSelectLoanSettings: {
+                        isLoanSettingsSheetPresented = true
+                    },
+                    onCreateGuardiansForAllChildren: {
+                        handleCreateGuardiansForAllChildren()
+                    },
+                    onPromoteToNextYear: {
+                        promoteConfirmationState = AlertState(
+                            isPresented: true,
+                            title: "進級処理の確認",
+                            message: makePromoteConfirmationMessage()
+                        )
+                    },
+                    onSelectDeviceReset: {
+                        isDeviceResetDialogPresented = true
+                    },
+                    onSelectFeedback: {
+                        openURL(FeedbackFormLinks.staff)
+                    },
+                    onSelectParentFeedbackQRCode: {
+                        isParentFeedbackQRCodeSheetPresented = true
+                    },
+                    onSelectBackupExport: {
+                        handleBackupExport()
+                    },
+                    onSelectBackupImport: {
+                        isBackupImporterPresented = true
+                    },
+                    onSelectPrivacy: {
+                        navigationPath.append(SettingsDestination.privacy)
+                    }
+                )
+            }
             .navigationTitle("設定")
             .toolbar {
                 if !setupStarted && setupProgress.completedCount < 3 {
@@ -108,13 +110,19 @@ struct SettingsContainerView: View {
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
                 case .user:
-                    ClassGroupListContainerView { classGroupId in
-                        navigationPath.append(SettingsDestination.userList(classGroupId))
+                    guided(showContinue: setupProgress.hasClassGroup) {
+                        ClassGroupListContainerView { classGroupId in
+                            navigationPath.append(SettingsDestination.userList(classGroupId))
+                        }
                     }
                 case .userList(let classGroupId):
-                    UserListContainerView(classGroupId: classGroupId)
+                    guided(showContinue: setupProgress.hasUser) {
+                        UserListContainerView(classGroupId: classGroupId)
+                    }
                 case .book:
-                    SettingsBookListContainerView()
+                    guided(showContinue: setupProgress.hasBook) {
+                        SettingsBookListContainerView()
+                    }
                 case .privacy:
                     PrivacySettingsContainerView()
                 }
@@ -197,11 +205,6 @@ struct SettingsContainerView: View {
             ) { result in
                 handleBackupImportSelection(result)
             }
-            .safeAreaInset(edge: .bottom) {
-                if setupStarted && !setupCompleted {
-                    SetupProgressView(progress: setupProgress, onContinue: continueSetup)
-                }
-            }
             .fullScreenCover(
                 isPresented: $isInitialConsentPresented,
                 onDismiss: {
@@ -228,6 +231,21 @@ struct SettingsContainerView: View {
         }
     }
     
+    private func guided<Content: View>(
+        showContinue: Bool = true,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: 0) {
+            if setupStarted && !setupCompleted {
+                SetupProgressView(
+                    progress: setupProgress,
+                    onContinue: showContinue ? continueSetup : nil
+                )
+            }
+            content()
+        }
+    }
+
     private var setupProgress: SetupProgress {
         SetupProgress(
             hasClassGroup: !classGroupModel.classGroups.isEmpty,
