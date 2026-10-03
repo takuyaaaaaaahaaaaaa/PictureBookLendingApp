@@ -17,6 +17,9 @@
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    catalogSection("カラー：操作と状態（ライト／ダーク）") {
+                        ColorTokenCatalogView()
+                    }
                     catalogSection("節目のお祝い：紙吹雪＋カード（タップでスキップ・3.5秒で自動終了）") {
                         celebrationDemo
                     }
