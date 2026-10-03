@@ -185,7 +185,7 @@ struct BorrowListContainerView: View {
                     .presentationSizing(.page)
             }
         }
-        .fullScreenCover(
+        .sheet(
             isPresented: $isWelcomePresented,
             onDismiss: {
                 if openSettingsAfterWelcome {
@@ -206,8 +206,10 @@ struct BorrowListContainerView: View {
                     isWelcomePresented = false
                 }
             )
+            .presentationSizing(.form)
+            .interactiveDismissDisabled()
         }
-        .fullScreenCover(isPresented: $isInitialConsentPresented) {
+        .sheet(isPresented: $isInitialConsentPresented) {
             PrivacyConsentView(
                 policyURL: PrivacySettingsContainerView.policyURL,
                 onAllow: { finishConsent(allowed: true) },
@@ -224,6 +226,8 @@ struct BorrowListContainerView: View {
             } message: {
                 Text(privacy.persistenceError ?? "")
             }
+            .presentationSizing(.page)
+            .interactiveDismissDisabled()
         }
         .task {
             if showsSettings && !welcomeSeen {

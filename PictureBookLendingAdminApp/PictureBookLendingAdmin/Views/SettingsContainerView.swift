@@ -205,7 +205,7 @@ struct SettingsContainerView: View {
             ) { result in
                 handleBackupImportSelection(result)
             }
-            .fullScreenCover(
+            .sheet(
                 isPresented: $isInitialConsentPresented,
                 onDismiss: {
                     if shouldCloseAfterConsent { dismiss() }
@@ -227,6 +227,8 @@ struct SettingsContainerView: View {
                 } message: {
                     Text(privacy.persistenceError ?? "")
                 }
+                .presentationSizing(.page)
+                .interactiveDismissDisabled()
             }
         }
     }
