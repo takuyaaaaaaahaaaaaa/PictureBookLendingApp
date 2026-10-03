@@ -16,7 +16,7 @@ public struct PrivacyConsentView: View {
     
     public var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 32) {
                 PrivacyConsentIntroduction()
                 PrivacyConsentDataExplanation()
                 PrivacyConsentActions(onAllow: onAllow, onDecline: onDecline)
@@ -33,7 +33,7 @@ public struct PrivacyConsentView: View {
 
 private struct PrivacyConsentIntroduction: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
             Label("えほん台帳へようこそ", systemImage: "book.closed")
                 .font(.title)
                 .accessibilityAddTraits(.isHeader)
@@ -47,14 +47,16 @@ private struct PrivacyConsentIntroduction: View {
 
 private struct PrivacyConsentDataExplanation: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("利用状況")
-                .font(.title3).accessibilityAddTraits(.isHeader)
-            Text("操作の種類・件数・所要時間、アプリの利用状況、広告用ではないIDをGoogleのFirebase Analyticsへ送り、使いやすさの改善に利用します。")
-            Text("クラッシュ診断")
-                .font(.title3).accessibilityAddTraits(.isHeader)
-            Text(
-                "機種・OS・アプリのバージョン、異常終了時の処理の記録、診断用IDをGoogleのFirebase Crashlyticsへ送り、不具合の原因調査に利用します。許可すると、同意前を含む端末に保存済みの診断も送信対象になり、通常は次回の起動時に自動送信します。"
+        VStack(alignment: .leading, spacing: 32) {
+            PrivacyConsentPurposeSection(
+                title: "利用状況",
+                explanation:
+                    "操作の種類・件数・所要時間、アプリの利用状況、広告用ではないIDをGoogleのFirebase Analyticsへ送り、使いやすさの改善に利用します。"
+            )
+            PrivacyConsentPurposeSection(
+                title: "クラッシュ診断",
+                explanation:
+                    "機種・OS・アプリのバージョン、異常終了時の処理の記録、診断用IDをGoogleのFirebase Crashlyticsへ送り、不具合の原因調査に利用します。許可すると、同意前を含む端末に保存済みの診断も送信対象になり、通常は次回の起動時に自動送信します。"
             )
             Text("園児・保護者の名前、絵本の題名、検索文字列、貸出記録そのものは分析・診断へ送りません。広告や他社アプリをまたぐ追跡にも利用しません。")
                 .bold()
@@ -62,6 +64,19 @@ private struct PrivacyConsentDataExplanation: View {
                 "後から「設定 → プライバシーとデータ送信」で項目ごとに変更できます。利用状況のオフはその場で、クラッシュ診断のオフは次回起動から反映します。送信済み・送信開始済みの情報は取り消せません。"
             )
             .foregroundStyle(.secondary)
+        }
+    }
+}
+
+private struct PrivacyConsentPurposeSection: View {
+    let title: LocalizedStringResource
+    let explanation: LocalizedStringResource
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.title3).accessibilityAddTraits(.isHeader)
+            Text(explanation)
         }
     }
 }
