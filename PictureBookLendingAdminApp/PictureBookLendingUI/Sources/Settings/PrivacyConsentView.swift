@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// 起動時に任意送信の用途を説明し、両項目への同意または拒否を受け取る。
+/// 初期設定の最後に任意送信の用途を説明し、両項目への同意または拒否を受け取る。
 public struct PrivacyConsentView: View {
     let policyURL: URL
     let onAllow: () -> Void
@@ -17,7 +17,7 @@ public struct PrivacyConsentView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 32) {
-                Label("えほん台帳へようこそ", systemImage: "book.closed")
+                Label("データ送信について", systemImage: "hand.raised")
                     .font(.title)
                     .accessibilityAddTraits(.isHeader)
                 PrivacyConsentIntroduction()
@@ -88,16 +88,16 @@ private struct PrivacyConsentActions: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            Text("「同意して始める」を選ぶと、利用状況とクラッシュ診断の送信が両方オンになります。")
+            Text("「同意して貸出へ」を選ぶと、利用状況とクラッシュ診断の送信が両方オンになります。")
                 .frame(maxWidth: .infinity, alignment: .leading)
             Button(action: onAllow) {
-                Text("同意して始める")
+                Text("同意して貸出へ")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
             .accessibilityIdentifier("privacy.allowAndStart")
             Button(action: onDecline) {
-                Text("送信せずに始める")
+                Text("送信せずに貸出へ")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)

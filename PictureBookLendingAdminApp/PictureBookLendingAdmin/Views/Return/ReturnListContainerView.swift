@@ -30,6 +30,10 @@ struct ReturnListContainerView: View {
     @State private var undoFeedback = UndoFeedback()
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
+    @AppStorage("setupGuideReturnHintSeen") private var returnHintSeen = false
+    @AppStorage("setupGuideStarted") private var setupStarted = false
+    @AppStorage("setupGuideCompleted") private var setupCompleted = false
+    @State private var showsReturnHint = false
     /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す・popでは戻さない）
     @State private var familyStopwatch: FlowStopwatch?
     
@@ -49,6 +53,18 @@ struct ReturnListContainerView: View {
                 onSelect: handleSelect(_:)
             )
             .navigationTitle("返却")
+            .safeAreaInset(edge: .top) {
+                if showsReturnHint {
+                    HStack {
+                        Text("名前を選び、借りている本の「返却」を押します。")
+                            .font(.subheadline)
+                        Spacer()
+                        Button("閉じる") { showsReturnHint = false }
+                    }
+                    .padding()
+                    .background(.regularMaterial)
+                }
+            }
             #if os(iOS)
                 .searchable(
                     text: $searchText,
@@ -111,6 +127,12 @@ struct ReturnListContainerView: View {
         }
         .refreshable {
             refreshData()
+        }
+        .onAppear {
+            if setupStarted && setupCompleted && !returnHintSeen && !loanModel.activeLoans.isEmpty {
+                showsReturnHint = true
+                returnHintSeen = true
+            }
         }
     }
     

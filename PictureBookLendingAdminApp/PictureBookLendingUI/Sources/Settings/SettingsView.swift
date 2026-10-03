@@ -8,6 +8,8 @@ public struct SettingsView: View {
     let classGroupCount: Int
     let userCount: Int
     let bookCount: Int
+    let highlightUserManagement: Bool
+    let highlightBookManagement: Bool
     let loanPeriodDays: Int
     let maxBooksPerUser: Int
     let onSelectUser: () -> Void
@@ -27,6 +29,8 @@ public struct SettingsView: View {
         classGroupCount: Int,
         userCount: Int,
         bookCount: Int,
+        highlightUserManagement: Bool = false,
+        highlightBookManagement: Bool = false,
         loanPeriodDays: Int,
         maxBooksPerUser: Int,
         onSelectUser: @escaping () -> Void,
@@ -45,6 +49,8 @@ public struct SettingsView: View {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
         self.bookCount = bookCount
+        self.highlightUserManagement = highlightUserManagement
+        self.highlightBookManagement = highlightBookManagement
         self.loanPeriodDays = loanPeriodDays
         self.maxBooksPerUser = maxBooksPerUser
         self.onSelectUser = onSelectUser
@@ -65,16 +71,23 @@ public struct SettingsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 SettingsMenuItem(
-                    iconName: "hand.raised", title: "プライバシーとデータ送信",
-                    subtitle: "説明を読む・任意の送信を選ぶ・同意を取り消す",
-                    action: onSelectPrivacy)
-                
-                SettingsMenuItem(
                     iconName: "person",
                     title: "利用者管理",
                     subtitle: "\(classGroupCount)組・\(userCount)人登録済み",
                     action: onSelectUser
                 )
+                .background(
+                    highlightUserManagement ? Color.orange.opacity(0.16) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+                .overlay {
+                    if highlightUserManagement {
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.orange, lineWidth: 2)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .accessibilityHint(highlightUserManagement ? "次の手順。ここから組と利用者を登録します" : "")
                 
                 SettingsMenuItem(
                     iconName: "book",
@@ -82,6 +95,23 @@ public struct SettingsView: View {
                     subtitle: "\(bookCount)冊登録済み",
                     action: onSelectBook
                 )
+                .background(
+                    highlightBookManagement ? Color.orange.opacity(0.16) : Color.clear,
+                    in: RoundedRectangle(cornerRadius: 16)
+                )
+                .overlay {
+                    if highlightBookManagement {
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(.orange, lineWidth: 2)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .accessibilityHint(highlightBookManagement ? "次の手順。ここから図書を登録します" : "")
+
+                SettingsMenuItem(
+                    iconName: "hand.raised", title: "プライバシーとデータ送信",
+                    subtitle: "説明を読む・任意の送信を選ぶ・同意を取り消す",
+                    action: onSelectPrivacy)
                 
                 SettingsMenuItem(
                     iconName: "clock",

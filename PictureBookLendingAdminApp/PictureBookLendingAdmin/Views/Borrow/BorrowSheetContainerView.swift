@@ -19,6 +19,8 @@ import SwiftUI
 /// - `onLendCompleted`: ✓カードが消えた後、シートを閉じて次の貸出へ引き継ぐ
 ///   （図書一覧の絞り込み解除・先頭スクロールは親側の状態なので親に委ねる）
 struct BorrowSheetContainerView: View {
+    @AppStorage("setupGuideStarted") private var setupStarted = false
+    @AppStorage("setupGuideCompleted") private var setupCompleted = false
     @Environment(LoanModel.self) private var loanModel
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
@@ -217,6 +219,11 @@ struct BorrowSheetContainerView: View {
                             handleLend(route: route, slotUserId: slotUserId)
                         })
                     )
+                    if setupStarted && !setupCompleted {
+                        Text("「この枠で借りる」を押すと、貸出が確定します。")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding()
             }

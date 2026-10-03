@@ -14,6 +14,7 @@ struct SettingsContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(BackupModel.self) private var backupModel
+    @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     
@@ -34,6 +35,10 @@ struct SettingsContainerView: View {
     @State private var isRestoreConfirmationPresented = false
     @State private var backupExportDocument: BackupDocument?
     @State private var pendingRestoreSnapshot: BackupSnapshot?
+    @State private var isInitialConsentPresented = false
+    @State private var shouldCloseAfterConsent = false
+    @AppStorage("setupGuideStarted") private var setupStarted = false
+    @AppStorage("setupGuideCompleted") private var setupCompleted = false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -41,6 +46,9 @@ struct SettingsContainerView: View {
                 classGroupCount: classGroupModel.classGroups.count,
                 userCount: userModel.users.count,
                 bookCount: bookModel.books.count,
+                highlightUserManagement: setupStarted && setupProgress.completedCount == 0,
+                highlightBookManagement: setupStarted && setupProgress.hasUser
+                    && !setupProgress.hasBook,
                 loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
                 maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
                 onSelectUser: {
@@ -86,6 +94,11 @@ struct SettingsContainerView: View {
             )
             .navigationTitle("設定")
             .toolbar {
+                if !setupStarted && setupProgress.completedCount < 3 {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("準備ガイド") { setupStarted = true }
+                    }
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") {
                         dismiss()
@@ -184,9 +197,68 @@ struct SettingsContainerView: View {
             ) { result in
                 handleBackupImportSelection(result)
             }
+            .safeAreaInset(edge: .bottom) {
+                if setupStarted && !setupCompleted {
+                    SetupProgressView(progress: setupProgress, onContinue: continueSetup)
+                }
+            }
+            .fullScreenCover(
+                isPresented: $isInitialConsentPresented,
+                onDismiss: {
+                    if shouldCloseAfterConsent { dismiss() }
+                }
+            ) {
+                PrivacyConsentView(
+                    policyURL: PrivacySettingsContainerView.policyURL,
+                    onAllow: { finishConsent(allowed: true) },
+                    onDecline: { finishConsent(allowed: false) }
+                )
+                .alert(
+                    "変更を保存できませんでした",
+                    isPresented: Binding(
+                        get: { privacy.persistenceError != nil },
+                        set: { if !$0 { privacy.dismissPersistenceError() } }
+                    )
+                ) {
+                    Button("確認", role: .cancel) { privacy.dismissPersistenceError() }
+                } message: {
+                    Text(privacy.persistenceError ?? "")
+                }
+            }
         }
     }
     
+    private var setupProgress: SetupProgress {
+        SetupProgress(
+            hasClassGroup: !classGroupModel.classGroups.isEmpty,
+            hasUser: !userModel.users.isEmpty,
+            hasBook: !bookModel.books.isEmpty
+        )
+    }
+
+    private func continueSetup() {
+        if !setupProgress.hasClassGroup {
+            navigationPath.append(SettingsDestination.user)
+        } else if !setupProgress.hasUser {
+            if let classGroupId = classGroupModel.classGroups.first?.id {
+                navigationPath.append(SettingsDestination.userList(classGroupId))
+            }
+        } else if !setupProgress.hasBook {
+            navigationPath.append(SettingsDestination.book)
+        } else if privacy.needsInitialConsent {
+            isInitialConsentPresented = true
+        } else {
+            dismiss()
+        }
+    }
+
+    private func finishConsent(allowed: Bool) {
+        privacy.completeInitialConsent(allowed: allowed)
+        guard !privacy.needsInitialConsent else { return }
+        shouldCloseAfterConsent = true
+        isInitialConsentPresented = false
+    }
+
     // MARK: - Action Handlers
     
     private func handleDeviceReset(_ options: DeviceResetOptions) {

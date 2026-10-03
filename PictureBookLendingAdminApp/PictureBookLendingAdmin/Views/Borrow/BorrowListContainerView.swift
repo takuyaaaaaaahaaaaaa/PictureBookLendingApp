@@ -19,6 +19,7 @@ struct BorrowListContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
+    @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.analytics) private var analytics
     
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
@@ -39,6 +40,12 @@ struct BorrowListContainerView: View {
     @State private var displayMode: BookDisplayMode = .shelf
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
+    @State private var isInitialConsentPresented = false
+    @State private var isWelcomePresented = false
+    @State private var openSettingsAfterWelcome = false
+    @AppStorage("setupGuideWelcomeSeen") private var welcomeSeen = false
+    @AppStorage("setupGuideStarted") private var setupStarted = false
+    @AppStorage("setupGuideCompleted") private var setupCompleted = false
     /// 直近に記録した検索テキスト（トリム後。未記録ならnil）
     ///
     /// `.task`はタブを行き来して画面が再表示されるたびに走り直すため、
@@ -113,6 +120,21 @@ struct BorrowListContainerView: View {
                     .padding(Self.displayScaleButtonPadding)
             }
             .navigationTitle("貸出")
+            .safeAreaInset(edge: .top) {
+                if showsSettings && setupStarted && !setupCompleted {
+                    if setupProgress.completedCount == 3 {
+                        Text("本を選んで「借りる」をタップすると、貸出を始められます。")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding()
+                            .background(.regularMaterial)
+                    } else {
+                        SetupProgressView(progress: setupProgress) {
+                            isSettingsPresented = true
+                        }
+                    }
+                }
+            }
             #if os(iOS)
                 .searchable(
                     text: searchTextBinding,
@@ -131,11 +153,13 @@ struct BorrowListContainerView: View {
                 }
             }
             #if os(macOS)
-                .sheet(isPresented: $isSettingsPresented) {
+                .sheet(isPresented: $isSettingsPresented, onDismiss: presentConsentIfNeeded) {
                     SettingsContainerView()
                 }
             #else
-                .fullScreenCover(isPresented: $isSettingsPresented) {
+                .fullScreenCover(
+                    isPresented: $isSettingsPresented, onDismiss: presentConsentIfNeeded
+                ) {
                     SettingsContainerView()
                 }
             #endif
@@ -161,6 +185,55 @@ struct BorrowListContainerView: View {
                     .presentationSizing(.page)
             }
         }
+        .fullScreenCover(
+            isPresented: $isWelcomePresented,
+            onDismiss: {
+                if openSettingsAfterWelcome {
+                    openSettingsAfterWelcome = false
+                    isSettingsPresented = true
+                }
+            }
+        ) {
+            SetupWelcomeView(
+                onStart: {
+                    welcomeSeen = true
+                    setupStarted = true
+                    openSettingsAfterWelcome = true
+                    isWelcomePresented = false
+                },
+                onSkip: {
+                    welcomeSeen = true
+                    isWelcomePresented = false
+                }
+            )
+        }
+        .fullScreenCover(isPresented: $isInitialConsentPresented) {
+            PrivacyConsentView(
+                policyURL: PrivacySettingsContainerView.policyURL,
+                onAllow: { finishConsent(allowed: true) },
+                onDecline: { finishConsent(allowed: false) }
+            )
+            .alert(
+                "変更を保存できませんでした",
+                isPresented: Binding(
+                    get: { privacy.persistenceError != nil },
+                    set: { if !$0 { privacy.dismissPersistenceError() } }
+                )
+            ) {
+                Button("確認", role: .cancel) { privacy.dismissPersistenceError() }
+            } message: {
+                Text(privacy.persistenceError ?? "")
+            }
+        }
+        .task {
+            if showsSettings && !welcomeSeen {
+                if setupProgress.completedCount == 0 {
+                    isWelcomePresented = true
+                } else {
+                    welcomeSeen = true
+                }
+            }
+        }
     }
     
     /// 貸出シート（子Container）。シート内フローの状態はすべて子の@Stateが持つ。
@@ -184,6 +257,14 @@ struct BorrowListContainerView: View {
         BookSections(books: bookModel.books)
     }
     
+    private var setupProgress: SetupProgress {
+        SetupProgress(
+            hasClassGroup: !classGroupModel.classGroups.isEmpty,
+            hasUser: !userModel.users.isEmpty,
+            hasBook: !bookModel.books.isEmpty
+        )
+    }
+
     /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var searchTextBinding: Binding<String> {
         Binding(
@@ -300,11 +381,23 @@ struct BorrowListContainerView: View {
     ///
     /// シートを閉じ、次の貸出のために絞り込みを解除して図書一覧を先頭へ戻す
     private func handleLendCompleted() {
+        if setupStarted { setupCompleted = true }
         borrowSheetContext = nil
         filterState.reset()
         scrollToTopTrigger += 1
     }
     
+    private func presentConsentIfNeeded() {
+        if setupStarted && setupProgress.completedCount == 3 && privacy.needsInitialConsent {
+            isInitialConsentPresented = true
+        }
+    }
+
+    private func finishConsent(allowed: Bool) {
+        privacy.completeInitialConsent(allowed: allowed)
+        if !privacy.needsInitialConsent { isInitialConsentPresented = false }
+    }
+
     private func refreshData() {
         bookModel.refreshBooks()
         loanModel.refreshLoans()
