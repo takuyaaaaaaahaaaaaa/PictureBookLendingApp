@@ -96,15 +96,19 @@ private enum Layout {
 /// 五十音チップによる絞り込みとセクション表示に対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
-    #if os(iOS)
-        /// 水平サイズクラス（かなチップの表示可否の判定に使用）
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
     
+    @ScaledMetric(relativeTo: .subheadline) private var standardCellWidth = BookDisplayScale
+        .standard.minCellWidth
+    @ScaledMetric(relativeTo: .title3) private var largeCellWidth = BookDisplayScale.large
+        .minCellWidth
+    @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
+    
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
-    @State private var shelfViewportWidth: CGFloat = 0
+    @State private var viewportWidth: CGFloat = 0
+    /// 列数が変わっても先頭の本を基準に位置を維持する。
+    @State private var visibleBookID: Book.ID?
     
     /// 五十音グループでセクション化された絵本
     public let sections: [BookSection]
@@ -173,7 +177,9 @@ public struct BookListView<RowAction: View>: View {
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: 5) {
-                kanaFilterSection
+                BookListControls(
+                    selectedKana: $selectedKanaFilter, sort: $selectedSortType,
+                    mode: $displayMode, kanaOptions: kanaFilterOptions)
                 
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView
@@ -186,6 +192,15 @@ public struct BookListView<RowAction: View>: View {
                     case .shelf:
                         bookShelfSection
                     }
+                }
+            }
+            .onChange(of: viewportWidth) { _, _ in
+                guard displayMode != .list, let bookID = visibleBookID else { return }
+                // Geometryで得た幅から列を再構成した後、同じ本を復元する。
+                // 行番号は列数変更で変わるためスクロール先には使わない。
+                Task { @MainActor in
+                    await Task.yield()
+                    proxy.scrollTo(bookID, anchor: .top)
                 }
             }
             .onChange(of: scrollToTopTrigger) { _, _ in
@@ -203,6 +218,7 @@ public struct BookListView<RowAction: View>: View {
     /// 一覧を先頭行までスクロールする
     private func scrollToTop(proxy: ScrollViewProxy) {
         guard let firstBookId = sections.first?.books.first?.id else { return }
+        visibleBookID = firstBookId
         withAnimation {
             proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
         }
@@ -210,113 +226,8 @@ public struct BookListView<RowAction: View>: View {
     
     // MARK: - Private Views
     
-    /// かなチップを表示できる幅があるか
-    ///
-    /// 幅が確保できない環境（iPhoneやiPadの狭いSplit View＝compact）では
-    /// チップを出さず、検索を主動線とする。macOSは常に表示する
-    private var isKanaChipsVisible: Bool {
-        #if os(iOS)
-            horizontalSizeClass == .regular
-        #else
-            true
-        #endif
-    }
-    
-    /// 五十音チップ（タップでそのかなグループに絞り込み・再タップで解除）＋ソート選択メニュー
-    private var kanaFilterSection: some View {
-        HStack {
-            if isKanaChipsVisible {
-                // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
-                // ScrollViewを使わず素のHStackで並べる（チップは全iPadのregular幅に収まる）。
-                // 収まらない幅（狭いSplit View等）ではcompact時と同じ思想でチップを出さない
-                ViewThatFits(in: .horizontal) {
-                    kanaChips
-                        .padding(.leading)
-                    Color.clear
-                        .frame(width: 0, height: 0)
-                }
-            }
-            
-            Spacer()
-            
-            // ソート選択メニュー
-            Menu {
-                ForEach(BookSortType.allCases) { sortType in
-                    Button {
-                        selectedSortType = sortType
-                    } label: {
-                        HStack {
-                            Image(systemName: sortType.iconName)
-                            Text(sortType.displayName)
-                            if selectedSortType == sortType {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: selectedSortType.iconName)
-                    Text(selectedSortType.displayName)
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
-                }
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
-            
-            // 表示形式切替（リスト／グリッド）。アイコンのみでコンパクト幅でも窮屈にならないようにする
-            Menu {
-                ForEach(BookDisplayMode.allCases) { mode in
-                    Button {
-                        displayMode = mode
-                    } label: {
-                        HStack {
-                            Image(systemName: mode.iconName)
-                            Text(mode.displayName)
-                            if displayMode == mode {
-                                Spacer()
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
-            } label: {
-                Image(systemName: displayMode.iconName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(6)
-                    .background(.regularMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
-            }
-            .padding(.trailing)
-        }
-    }
-    
-    /// 五十音チップの並び
-    private var kanaChips: some View {
-        HStack {
-            ForEach(kanaFilterOptions, id: \.self) { kanaGroup in
-                Button(kanaGroup.displayName) {
-                    handleChipTap(kanaGroup: kanaGroup)
-                }
-                .buttonStyle(.bordered)
-                .tint(selectedKanaFilter == kanaGroup ? .accentColor : .secondary)
-            }
-        }
-    }
-    
-    /// 五十音チップのタップ処理（絞り込みトグル）
-    ///
-    /// 未選択なら選択、選択中なら解除する。検索との排他（選択時に検索欄をクリアする等）は
-    /// バインディング経由でContainer側のStateが担う
-    private func handleChipTap(kanaGroup: KanaGroup) {
-        selectedKanaFilter = selectedKanaFilter == kanaGroup ? nil : kanaGroup
+    private var minimumCellWidth: CGFloat {
+        displayScale == .standard ? standardCellWidth : largeCellWidth
     }
     
     private var emptyStateView: some View {
@@ -360,7 +271,8 @@ public struct BookListView<RowAction: View>: View {
     /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）。
     /// セル最小幅は表示の大きさ（displayScale）に従う
     private var gridColumns: [GridItem] {
-        [GridItem(.adaptive(minimum: displayScale.minCellWidth), spacing: 16)]
+        let availableWidth = viewportWidth > 0 ? max(1, viewportWidth - 32) : minimumCellWidth
+        return [GridItem(.adaptive(minimum: min(minimumCellWidth, availableWidth)), spacing: 16)]
     }
     
     private var bookGridSection: some View {
@@ -377,11 +289,18 @@ public struct BookListView<RowAction: View>: View {
                                 bookGridCellContent(for: book)
                             }
                         }
+                        .scrollTargetLayout()
                         .padding(.horizontal)
                     }
                 }
             }
             .padding(.vertical, 8)
+        }
+        .modifier(BookScrollPosition(bookID: $visibleBookID))
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            viewportWidth = width
         }
     }
     
@@ -409,10 +328,11 @@ public struct BookListView<RowAction: View>: View {
             }
             .padding(.vertical, ShelfLayout.contentVerticalPadding)
         }
+        .modifier(BookScrollPosition(bookID: $visibleBookID))
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.size.width
         } action: { width in
-            shelfViewportWidth = width
+            viewportWidth = width
         }
         .background {
             ShelfWoodBackgroundView()
@@ -422,17 +342,17 @@ public struct BookListView<RowAction: View>: View {
     
     /// 棚表示の折り返し列数（ビューポート幅から算出。セル最小幅はdisplayScaleに従う）
     private var shelfColumnCount: Int {
-        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= displayScale.minCellWidth else { return 1 }
+        let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        guard available >= minimumCellWidth else { return 1 }
         return Int(
             (available + ShelfLayout.bookSpacing)
-                / (displayScale.minCellWidth + ShelfLayout.bookSpacing))
+                / (minimumCellWidth + ShelfLayout.bookSpacing))
     }
     
     /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
     private var shelfCellWidth: CGFloat {
-        let available = shelfViewportWidth - ShelfLayout.rowHorizontalPadding * 2
-        guard available >= displayScale.minCellWidth else { return displayScale.minCellWidth }
+        let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
+        guard available >= minimumCellWidth else { return max(1, available) }
         let columnCount = CGFloat(shelfColumnCount)
         return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
     }
@@ -460,13 +380,14 @@ public struct BookListView<RowAction: View>: View {
     /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
     @ViewBuilder
     private func shelfRow(of books: [Book], hangingLabelText: String?) -> some View {
-        VStack(alignment: .leading, spacing: ShelfLayout.boardSpacing) {
+        VStack(alignment: .leading, spacing: shelfBoardSpacing) {
             HStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
                 ForEach(books) { book in
                     bookGridCellContent(for: book)
                         .frame(width: shelfCellWidth)
                 }
             }
+            .scrollTargetLayout()
             .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             
@@ -520,7 +441,7 @@ public struct BookListView<RowAction: View>: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .symbolRenderingMode(.palette)
-                            .foregroundStyle(.white, .red)
+                            .foregroundStyle(AppColor.onEmphasis, AppColor.destructive)
                             .font(.title3)
                     }
                     .padding(6)
@@ -535,6 +456,7 @@ public struct BookListView<RowAction: View>: View {
             
             rowAction(book)
         }
+        .id(book.id)
     }
     
     /// 絵本行のコンテンツ
@@ -623,6 +545,7 @@ public struct BookRowView<RowAction: View>: View {
 /// rowAction（貸出ボタン等）は含まない。タップ領域とアクションボタンの
 /// ジェスチャ競合を避けるため、呼び出し側で別要素として縦に並べる
 private struct BookGridCoverView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     /// タイトル表示領域の高さ（2行分固定・Dynamic Typeに追従してスケール）。
     /// lineLimitは最大行数の制限に過ぎず高さは固定しないため、1行タイトルのセルだけ
     /// 高さが縮んでrowActionの縦位置がずれてしまう問題をこれで防ぐ
@@ -658,10 +581,11 @@ private struct BookGridCoverView: View {
             
             Text(book.title)
                 .font(scale.gridTitleFont)
-                .lineLimit(2)
+                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.primary)
-                .frame(height: scaledTitleHeight, alignment: .top)
+                .frame(minHeight: scaledTitleHeight, alignment: .top)
         }
         .contentShape(Rectangle())
     }
@@ -829,5 +753,31 @@ private struct BookGridCoverView: View {
             RowActionButton(onTap: {})
         }
         .navigationTitle("図書一覧")
+    }
+}
+
+/// 再配置による「行の先頭ID」の通知で、読んでいた本のIDを上書きしない。
+/// ユーザーのスクロール中だけ基準を更新し、幅を往復しても同じ本を残す。
+private struct BookScrollPosition: ViewModifier {
+    @Binding var bookID: Book.ID?
+    @State private var isUserScrolling = false
+    
+    func body(content: Content) -> some View {
+        if #available(iOS 18, macOS 15, *) {
+            content
+                .scrollPosition(
+                    id: Binding(
+                        get: { bookID },
+                        set: { value in
+                            if isUserScrolling || bookID == nil { bookID = value }
+                        }), anchor: .top
+                )
+                .onScrollPhaseChange { _, phase in
+                    isUserScrolling =
+                        phase == .tracking || phase == .interacting || phase == .decelerating
+                }
+        } else {
+            content.scrollPosition(id: $bookID, anchor: .top)
+        }
     }
 }

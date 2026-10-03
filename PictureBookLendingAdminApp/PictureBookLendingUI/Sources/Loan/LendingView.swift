@@ -100,14 +100,14 @@ public struct LoanRowView: View {
                 if loan.isReturned {
                     // 返却済みの場合
                     Label("返却済", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppColor.returned)
                 } else {
                     // 貸出中の場合
                     Button(action: {
                         isReturnConfirmationPresented = true
                     }) {
                         Text("返却")
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(AppColor.accent)
                     }
                     .buttonStyle(.bordered)
                 }
@@ -130,7 +130,7 @@ public struct LoanRowView: View {
                         "返却期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
                     )
                     .font(.caption)
-                    .foregroundStyle(isOverdue ? .red : .primary)
+                    .foregroundStyle(isOverdue ? AppColor.overdue : .primary)
                 }
             }
         }

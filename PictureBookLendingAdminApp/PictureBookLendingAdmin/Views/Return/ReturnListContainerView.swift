@@ -33,6 +33,13 @@ struct ReturnListContainerView: View {
     /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す・popでは戻さない）
     @State private var familyStopwatch: FlowStopwatch?
     
+    /// 見本ホストでは実データを扱う設定への入口を表示しない。
+    let showsSettings: Bool
+    
+    init(showsSettings: Bool = true) {
+        self.showsSettings = showsSettings
+    }
+    
     var body: some View {
         NavigationStack(path: $navigationPath) {
             BorrowerListView(
@@ -54,9 +61,11 @@ struct ReturnListContainerView: View {
                 familyScreen(for: userId)
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("設定", systemImage: "gearshape") {
-                        isSettingsPresented = true
+                if showsSettings {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("設定", systemImage: "gearshape") {
+                            isSettingsPresented = true
+                        }
                     }
                 }
             }
