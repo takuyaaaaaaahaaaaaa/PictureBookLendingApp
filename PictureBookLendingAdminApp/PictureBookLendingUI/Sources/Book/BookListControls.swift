@@ -67,8 +67,12 @@ struct BookListControls: View {
     private var kanaChips: some View {
         HStack {
             ForEach(kanaOptions, id: \.self) { group in
-                Button(group.displayName) {
+                Button {
                     selectedKana = selectedKana == group ? nil : group
+                } label: {
+                    Text(group.displayName)
+                        // 標準の外観を保ち、1文字のラベルにも押しやすい余白を確保する。
+                        .frame(minWidth: 24, minHeight: 32)
                 }
                 .buttonStyle(.bordered)
                 .tint(selectedKana == group ? .accentColor : .secondary)
@@ -121,4 +125,38 @@ struct BookListControls: View {
         .labelStyle(.iconOnly)
         .accessibilityIdentifier("book.mode.picker")
     }
+}
+
+#Preview("かなチップ・幅と文字サイズ", traits: .fixedLayout(width: 1024, height: 660)) {
+    @Previewable @State var selectedKana: KanaGroup? = .ka
+    @Previewable @State var sort: BookSortType = .title
+    @Previewable @State var mode: BookDisplayMode = .shelf
+
+    VStack(alignment: .leading, spacing: 24) {
+        Text(verbatim: "1024pt：全チップ")
+        BookListControls(
+            selectedKana: $selectedKana, sort: $sort, mode: $mode,
+            kanaOptions: KanaGroup.allCases)
+        Text(verbatim: "744pt：かな選択の収まり")
+        BookListControls(
+            selectedKana: $selectedKana, sort: $sort, mode: $mode,
+            kanaOptions: KanaGroup.allCases
+        )
+        .frame(width: 744)
+        Text(verbatim: "375pt：かな選択の収まり")
+        BookListControls(
+            selectedKana: $selectedKana, sort: $sort, mode: $mode,
+            kanaOptions: KanaGroup.allCases
+        )
+        .frame(width: 375)
+        Text(verbatim: "1024pt・AX3：文字の拡大")
+        BookListControls(
+            selectedKana: $selectedKana, sort: $sort, mode: $mode,
+            kanaOptions: KanaGroup.allCases
+        )
+        .dynamicTypeSize(.accessibility3)
+    }
+    .padding(.vertical, 24)
+    .background(Color(.systemBackground))
+    .preferredColorScheme(.light)
 }
