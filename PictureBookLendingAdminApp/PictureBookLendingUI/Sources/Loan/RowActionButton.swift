@@ -5,26 +5,29 @@ import SwiftUI
 /// 純粋なUIコンポーネントとして行内のアクションボタン表示を担当します。
 /// アクション処理はContainer Viewに委譲します。
 /// ラベル・アイコン・色をホストする文脈に合わせて差し替えられます
-/// （例：貸出フローの「借りる」＝青、「貸出中」の案内＝グレー。
+/// （例：貸出フローの「借りる」＝暖色、「貸出中」の案内＝藍色。
 /// 同じ形で並べることでボタン同士のデザインが揃う）。
 public struct RowActionButton: View {
     /// ボタンのラベル（例：貸出フローでは「借りる」）
     let title: String
     /// 先頭のSFシンボル名
     let systemImage: String
-    /// ボタンの背景色（主役の操作は青、案内などの脇役はグレー）
+    /// ボタンの背景色（主役の操作はアクセント、貸出中の案内はlent）
     let tint: Color
+    let foreground: Color
     let onTap: () -> Void
     
     public init(
         title: String = "貸出",
         systemImage: String = "plus.circle",
-        tint: Color = .blue,
+        tint: Color = AppColor.accent,
+        foreground: Color = AppColor.onEmphasis,
         onTap: @escaping () -> Void
     ) {
         self.title = title
         self.systemImage = systemImage
         self.tint = tint
+        self.foreground = foreground
         self.onTap = onTap
     }
     
@@ -41,7 +44,7 @@ public struct RowActionButton: View {
                 Text(title)
                     .font(.body)
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(foreground)
             .padding(.horizontal, 16)
             .frame(minHeight: Layout.minTapTargetHeight)
             .background(tint)

@@ -10,6 +10,7 @@
     /// issue #40（UIカタログ）の最小実装を兼ねます。
     struct UICatalogContainerView: View {
         @State private var celebrationFeedback = CelebrationFeedback()
+        @State private var showsContainerStatePreview = false
         
         private let childId = UUID()
         private let guardianId = UUID()
@@ -17,6 +18,28 @@
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
+                    Button("本番Containerの状態を確認（メモリ内の見本）") {
+                        showsContainerStatePreview = true
+                    }
+                    .font(.title3)
+                    .fullScreenCover(isPresented: $showsContainerStatePreview) {
+                        ContainerStatePreview()
+                    }
+                    NavigationLink("幅と状態を確認（375 / 744 / 1024pt）") {
+                        AdaptiveLayoutPreview()
+                    }
+                    .font(.title3)
+                    NavigationLink("本棚を確認（サンプル・保存なし）") {
+                        BookshelfColorPreview()
+                    }
+                    .font(.title3)
+                    NavigationLink("本棚の段間を確認（折り返し見本）") {
+                        BookshelfColorPreview(includesWrappedRow: true)
+                    }
+                    .font(.title3)
+                    catalogSection("カラー：操作と状態（ライト／ダーク）") {
+                        ColorTokenCatalogView()
+                    }
                     catalogSection("節目のお祝い：紙吹雪＋カード（タップでスキップ・3.5秒で自動終了）") {
                         celebrationDemo
                     }

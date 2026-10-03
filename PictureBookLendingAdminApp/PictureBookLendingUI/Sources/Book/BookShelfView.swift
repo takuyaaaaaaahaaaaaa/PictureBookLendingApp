@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 棚表示のレイアウト定数
 ///
-/// 間隔は4ptグリッドに乗せ、「かなグループ間(40) > 棚段間(24) > 段内の要素間(12)」の
+/// 間隔は4ptグリッドに乗せ、「かなグループ間(56) > 棚段間(32) > 段内の要素間(24)」の
 /// 3階層で差をつける。同じ階層の間隔は同じ値にそろえ、位置関係のリズムを保つ
 enum ShelfLayout {
     /// 背景の板1枚分の幅（継ぎ目線の間隔）
@@ -21,9 +21,9 @@ enum ShelfLayout {
     /// 棚1段内の絵本同士の間隔（グリッド表示のセル間隔と同値にそろえる）
     static let bookSpacing: CGFloat = 16
     /// 絵本の並び（セル下端の貸出ボタン等）と棚板の間隔（段内の要素間）
-    static let boardSpacing: CGFloat = 12
-    /// 同じかなグループ内で折り返した棚段同士の間隔（段内の要素間の2倍）
-    static let rowSpacing: CGFloat = 24
+    static let boardSpacing: CGFloat = 24
+    /// 同じかなグループ内で折り返した棚段同士の間隔
+    static let rowSpacing: CGFloat = 32
     /// かなグループ同士の間隔
     /// （棚段間より明確に大きくし、棚板からぶら下がるかなラベルを収める余白を兼ねる）
     static let sectionSpacing: CGFloat = 56

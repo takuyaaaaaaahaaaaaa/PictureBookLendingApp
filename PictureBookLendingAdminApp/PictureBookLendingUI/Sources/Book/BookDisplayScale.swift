@@ -93,6 +93,7 @@ public struct BookDisplayScaleToggleButton: View {
             .padding(.vertical, Layout.labelVerticalPadding)
         }
         .buttonStyle(.borderedProminent)
+        .foregroundStyle(AppColor.onEmphasis)
         .buttonBorderShape(.capsule)
         .accessibilityLabel(scale == .standard ? "一覧を大きく表示" : "一覧をふつうの大きさで表示")
     }

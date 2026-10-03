@@ -22,28 +22,18 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             // 貸出タブ（左＝旧アプリで図書一覧が左だった並びに合わせる・オーナー決定。
             // タブ状態は自動リセットされないため既定タブの実害は小さく、並びを優先）
-            BorrowListContainerView()
-                .tabItem {
-                    Label("貸出", systemImage: "book.circle")
-                }
-                .tag(0)
-            
-            // 返却タブ
-            ReturnListContainerView()
-                .tabItem {
-                    Label("返却", systemImage: "arrow.uturn.backward.circle")
-                }
-                .tag(1)
-            
+            Tab("貸出", systemImage: "book.circle", value: 0) {
+                BorrowListContainerView()
+            }
+            Tab("返却", systemImage: "arrow.uturn.backward.circle", value: 1) {
+                ReturnListContainerView()
+            }
             #if DEBUG
-                // UIカタログタブ（開発用・DEBUGビルド限定）
-                NavigationStack {
-                    UICatalogContainerView()
+                Tab("カタログ", systemImage: "square.grid.2x2", value: 2) {
+                    NavigationStack {
+                        UICatalogContainerView()
+                    }
                 }
-                .tabItem {
-                    Label("カタログ", systemImage: "square.grid.2x2")
-                }
-                .tag(2)
             #endif
         }
         // 各Modelは配列をキャッシュするため、他画面での変更に自動では気づかない。

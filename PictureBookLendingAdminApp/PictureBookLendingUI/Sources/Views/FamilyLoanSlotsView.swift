@@ -145,14 +145,14 @@ public struct FamilyLoanSlotsView: View {
                 HStack(spacing: Layout.headerSpacing) {
                     Text("返却期限：\(loan.dueDateText)")
                         .font(.subheadline)
-                        .foregroundStyle(loan.isOverdue ? .red : .secondary)
+                        .foregroundStyle(loan.isOverdue ? AppColor.overdue : .secondary)
                     if loan.isOverdue {
-                        Text("延滞")
+                        Label("延滞", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption.bold())
                             .padding(.horizontal, Layout.badgePaddingH)
                             .padding(.vertical, Layout.badgePaddingV)
-                            .background(.red, in: Capsule())
-                            .foregroundStyle(.white)
+                            .background(AppColor.overdue, in: Capsule())
+                            .foregroundStyle(AppColor.onEmphasis)
                     }
                 }
             }
@@ -171,7 +171,7 @@ public struct FamilyLoanSlotsView: View {
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, minHeight: Layout.cardMinHeight, alignment: .leading)
         .background(
-            .background.secondary,
+            AppColor.cardSurface,
             in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
         )
     }
@@ -195,14 +195,14 @@ public struct FamilyLoanSlotsView: View {
             
             Text("返却期限：\(loan.dueDateText)")
                 .font(.subheadline)
-                .foregroundStyle(loan.isOverdue ? .red : .secondary)
+                .foregroundStyle(loan.isOverdue ? AppColor.overdue : .secondary)
             if loan.isOverdue {
-                Text("延滞")
+                Label("延滞", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption.bold())
                     .padding(.horizontal, Layout.badgePaddingH)
                     .padding(.vertical, Layout.badgePaddingV)
-                    .background(.red, in: Capsule())
-                    .foregroundStyle(.white)
+                    .background(AppColor.overdue, in: Capsule())
+                    .foregroundStyle(AppColor.onEmphasis)
             }
             
             // 返却タブの家庭の画面と同じ大きさ・フォントで揃える
@@ -216,7 +216,7 @@ public struct FamilyLoanSlotsView: View {
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            .background.secondary,
+            AppColor.cardSurface,
             in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
         )
     }
@@ -236,6 +236,7 @@ public struct FamilyLoanSlotsView: View {
                 }
                 .font(.title3)
                 .buttonStyle(.borderedProminent)
+                .foregroundStyle(AppColor.onEmphasis)
                 .controlSize(.large)
             }
         }
