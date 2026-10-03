@@ -56,6 +56,9 @@ final class TelemetryPrivacyController {
     
     var analyticsConsent: TelemetryConsent { record.analytics }
     var diagnosticsConsent: TelemetryConsent { record.diagnostics }
+    var needsInitialConsent: Bool {
+        record.analytics == .unspecified && record.diagnostics == .unspecified
+    }
     
     init(
         store: (any TelemetryConsentStore)? = nil,
@@ -80,6 +83,18 @@ final class TelemetryPrivacyController {
     func start() {
         guard !started else { return }
         started = true
+        activateIfNeeded()
+    }
+    
+    /// 起動時の選択は両項目を一度に保存し、成功後だけ送信を有効にする。
+    func completeInitialConsent(allowed: Bool) {
+        guard needsInitialConsent else { return }
+        guard
+            updateRecord({
+                $0.analytics = allowed ? .allowed : .denied
+                $0.diagnostics = allowed ? .allowed : .denied
+            })
+        else { return }
         activateIfNeeded()
     }
     

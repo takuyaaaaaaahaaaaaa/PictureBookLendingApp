@@ -17,7 +17,133 @@ struct TelemetryConsentTests {
         controller.start()
         #expect(controller.analyticsConsent == .unspecified)
         #expect(controller.diagnosticsConsent == .unspecified)
+        #expect(controller.needsInitialConsent)
         #expect(runtime.calls.isEmpty)
+    }
+    
+    @Test("起動時の同意/拒否は両項目を一度に保存し、次回起動で再表示しない", arguments: [true, false])
+    func initialChoicePersistsBothConsents(allowed: Bool) {
+        let store = makeStore()
+        let runtime = TelemetryRuntimeSpy()
+        let recorder = AnalyticsRecorder()
+        let controller = TelemetryPrivacyController(
+            store: store, runtime: runtime, analyticsDestination: recorder)
+        controller.start()
+        controller.analytics.track(name: "beforeChoice", params: [:])
+        #expect(runtime.calls.isEmpty)
+        #expect(recorder.names.withLock { $0 }.isEmpty)
+        
+        controller.completeInitialConsent(allowed: allowed)
+        #expect(store.saveCount == 1)
+        #expect(controller.analyticsConsent == (allowed ? .allowed : .denied))
+        #expect(controller.diagnosticsConsent == (allowed ? .allowed : .denied))
+        #expect(!controller.needsInitialConsent)
+        #expect(
+            runtime.calls
+                == (allowed ? ["configure", "resetAnalytics", "analytics:true", "send"] : []))
+        controller.analytics.track(name: "afterChoice", params: [:])
+        #expect(recorder.names.withLock { $0 } == (allowed ? ["afterChoice"] : []))
+        
+        let nextRuntime = TelemetryRuntimeSpy()
+        let next = TelemetryPrivacyController(store: store, runtime: nextRuntime)
+        next.start()
+        #expect(!next.needsInitialConsent)
+        #expect(next.analyticsConsent == controller.analyticsConsent)
+        #expect(next.diagnosticsConsent == controller.diagnosticsConsent)
+        #expect(nextRuntime.calls == (allowed ? ["configure", "analytics:true", "send"] : []))
+    }
+    
+    @Test("起動時の保存失敗では未選択を維持し、送信せず再試行できる", arguments: [true, false])
+    func initialChoiceSaveFailureCanRetry(allowed: Bool) {
+        let store = makeStore()
+        let runtime = TelemetryRuntimeSpy()
+        let controller = TelemetryPrivacyController(store: store, runtime: runtime)
+        controller.start()
+        store.failsSave = true
+        controller.completeInitialConsent(allowed: allowed)
+        #expect(controller.needsInitialConsent)
+        #expect(controller.analyticsConsent == .unspecified)
+        #expect(controller.diagnosticsConsent == .unspecified)
+        #expect(controller.persistenceError != nil)
+        #expect(runtime.calls.isEmpty)
+        
+        controller.dismissPersistenceError()
+        #expect(controller.needsInitialConsent)
+        store.failsSave = false
+        controller.completeInitialConsent(allowed: allowed)
+        #expect(!controller.needsInitialConsent)
+        #expect(controller.persistenceError == nil)
+        #expect(runtime.calls.filter { $0 == "send" }.count == (allowed ? 1 : 0))
+    }
+    
+    @Test("起動時のファイル置換後の保存失敗でも送信せず、拒否で再試行できる")
+    func initialChoicePostWriteFailureDoesNotSend() {
+        let store = makeStore()
+        let runtime = TelemetryRuntimeSpy()
+        let controller = TelemetryPrivacyController(store: store, runtime: runtime)
+        controller.start()
+        store.failsAfterWrite = true
+        controller.completeInitialConsent(allowed: true)
+        #expect(controller.needsInitialConsent)
+        #expect(controller.persistenceError != nil)
+        #expect(runtime.calls.isEmpty)
+        store.failsAfterWrite = false
+        controller.completeInitialConsent(allowed: false)
+        let next = TelemetryPrivacyController(store: store, runtime: TelemetryRuntimeSpy())
+        #expect(next.analyticsConsent == .denied)
+        #expect(next.diagnosticsConsent == .denied)
+        #expect(!next.needsInitialConsent)
+    }
+    
+    @Test("送信サービスがなくても起動時の同意を保存して利用を開始できる")
+    func initialChoiceWithoutFirebaseConfiguration() {
+        let store = makeStore()
+        let runtime = TelemetryRuntimeSpy()
+        runtime.canConfigure = false
+        let controller = TelemetryPrivacyController(store: store, runtime: runtime)
+        controller.start()
+        controller.completeInitialConsent(allowed: true)
+        #expect(!controller.needsInitialConsent)
+        #expect(!controller.isRuntimeAvailable)
+        #expect(runtime.calls == ["configure"])
+        #expect(
+            !TelemetryPrivacyController(store: store, runtime: TelemetryRuntimeSpy())
+                .needsInitialConsent)
+    }
+    
+    @Test("一部でも設定済みなら再表示せず、古い起動画面の操作で上書きしない", arguments: [true, false])
+    func initialChoicePreservesExistingIndividualChoices(allowed: Bool) {
+        for selectsAnalytics in [true, false] {
+            let store = makeStore()
+            let existing = TelemetryPrivacyController(store: store, runtime: TelemetryRuntimeSpy())
+            if selectsAnalytics {
+                existing.setAnalyticsConsent(allowed)
+            } else {
+                existing.setDiagnosticsConsent(allowed)
+            }
+            let controller = TelemetryPrivacyController(
+                store: store, runtime: TelemetryRuntimeSpy())
+            let original = store.data
+            #expect(!controller.needsInitialConsent)
+            controller.completeInitialConsent(allowed: !allowed)
+            #expect(store.data == original)
+            #expect(store.saveCount == 1)
+        }
+    }
+    
+    @Test("起動時の選択後に重複操作しても同意を書き換えず、送信要求を重複しない")
+    func initialChoiceIsNotRepeated() {
+        let store = makeStore()
+        let runtime = TelemetryRuntimeSpy()
+        let controller = TelemetryPrivacyController(store: store, runtime: runtime)
+        controller.start()
+        controller.completeInitialConsent(allowed: true)
+        controller.completeInitialConsent(allowed: false)
+        controller.start()
+        #expect(store.saveCount == 1)
+        #expect(controller.analyticsConsent == .allowed)
+        #expect(controller.diagnosticsConsent == .allowed)
+        #expect(runtime.calls.filter { $0 == "send" }.count == 1)
     }
     
     @Test("初回analytics同意後だけSDKを構成し、撤回で停止・ローカルリセット")
@@ -259,10 +385,12 @@ private final class AnalyticsRecorder: AnalyticsService {
 @MainActor
 private final class MemoryConsentStore: TelemetryConsentStore {
     var data: Data?
+    var saveCount = 0
     var failsSave = false
     var failsAfterWrite = false
     func load() throws -> Data? { data }
     func save(_ data: Data) throws {
+        saveCount += 1
         if failsSave { throw CocoaError(.fileWriteNoPermission) }
         self.data = data
         if failsAfterWrite { throw CocoaError(.fileWriteUnknown) }

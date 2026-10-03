@@ -5,7 +5,7 @@ struct PrivacySettingsContainerView: View {
     @Environment(TelemetryPrivacyController.self) private var privacy
     
     /// GitHub Pagesの設定と公開ページの200応答を2026-10-02に確認。
-    private let policyURL = URL(
+    static let policyURL = URL(
         string: "https://takuyaaaaaaahaaaaaa.github.io/PictureBookLendingApp/privacy-policy")!
     
     var body: some View {
@@ -17,7 +17,7 @@ struct PrivacySettingsContainerView: View {
             analyticsStatus: status(privacy.analyticsConsent),
             diagnosticsStatus: status(privacy.diagnosticsConsent),
             serviceAvailable: privacy.isRuntimeAvailable,
-            policyURL: policyURL
+            policyURL: Self.policyURL
         )
         .navigationTitle("プライバシーとデータ送信")
         .alert(
