@@ -2,6 +2,7 @@ import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
+import StoreKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -16,6 +17,7 @@ struct SettingsContainerView: View {
     @Environment(BackupModel.self) private var backupModel
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.requestReview) private var requestReview
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
@@ -29,6 +31,7 @@ struct SettingsContainerView: View {
     @State private var isParentFeedbackQRCodeSheetPresented = false
     @State private var deviceResetOptions = DeviceResetOptions()
     @State private var alertState = AlertState()
+    @State private var shouldRequestReviewAfterPromotion = false
     @State private var isBackupExporterPresented = false
     @State private var isBackupImporterPresented = false
     @State private var isRestoreConfirmationPresented = false
@@ -169,6 +172,11 @@ struct SettingsContainerView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text(alertState.message)
+            }
+            .onChange(of: alertState.isPresented) { _, isPresented in
+                guard !isPresented, shouldRequestReviewAfterPromotion else { return }
+                shouldRequestReviewAfterPromotion = false
+                requestReview()
             }
             .fileExporter(
                 isPresented: $isBackupExporterPresented,
@@ -336,6 +344,7 @@ struct SettingsContainerView: View {
             graduationMessage = Self.appendingAutoReturnNotice(
                 to: graduationMessage, count: returnedLoanCount)
             
+            shouldRequestReviewAfterPromotion = true
             alertState = .info("進級処理が完了しました。", message: graduationMessage)
             
         } catch {
