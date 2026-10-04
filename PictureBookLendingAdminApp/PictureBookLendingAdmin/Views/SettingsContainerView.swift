@@ -121,7 +121,7 @@ struct SettingsContainerView: View {
                     }
                 case .book:
                     guided(showContinue: setupProgress.hasBook) {
-                        SettingsBookListContainerView()
+                        SettingsBookListContainerView(onBookRegistered: handleBookRegistered)
                     }
                 case .privacy:
                     PrivacySettingsContainerView()
@@ -270,6 +270,14 @@ struct SettingsContainerView: View {
         } else {
             isInitialConsentPresented = true
         }
+    }
+
+    private func handleBookRegistered() {
+        guard
+            setupStarted && !setupCompleted && setupProgress.isComplete
+                && privacy.needsInitialConsent
+        else { return }
+        isInitialConsentPresented = true
     }
 
     private func finishConsent(allowed: Bool) {
