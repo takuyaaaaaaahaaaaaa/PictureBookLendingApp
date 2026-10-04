@@ -6,16 +6,20 @@ enum ExternalBookCoverCache {
     private static let cache = ImageCache(name: "ExternalBookCovers-30Days-v1")
 
     @MainActor
-    static func image(for url: URL?) -> KFImage {
+    static func image(
+        for url: URL?,
+        cache overrideCache: ImageCache? = nil,
+        expiration: StorageExpiration = .days(30)
+    ) -> KFImage {
         let image = KFImage(url)
         guard let scheme = url?.scheme?.lowercased(), scheme == "https" || scheme == "http" else {
             return image
         }
         let cachedImage =
             image
-            .targetCache(cache)
+            .targetCache(overrideCache ?? cache)
             .memoryCacheExpiration(.expired)
-            .diskCacheExpiration(.days(30))
+            .diskCacheExpiration(expiration)
             .diskCacheAccessExtending(.none)
         return cachedImage
     }
