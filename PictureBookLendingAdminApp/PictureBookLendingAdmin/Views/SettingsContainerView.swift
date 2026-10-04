@@ -85,6 +85,9 @@ struct SettingsContainerView: View {
                 },
                 onSelectPrivacy: {
                     navigationPath.append(SettingsDestination.privacy)
+                },
+                onSelectLicenses: {
+                    navigationPath.append(SettingsDestination.licenses)
                 }
             )
             .navigationTitle("設定")
@@ -107,6 +110,8 @@ struct SettingsContainerView: View {
                     SettingsBookListContainerView()
                 case .privacy:
                     PrivacySettingsContainerView()
+                case .licenses:
+                    ThirdPartyLicensesView()
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -467,6 +472,7 @@ struct SettingsContainerView: View {
         case userList(UUID)
         case book
         case privacy
+        case licenses
     }
 }
 

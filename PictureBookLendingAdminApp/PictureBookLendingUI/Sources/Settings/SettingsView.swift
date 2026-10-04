@@ -22,6 +22,7 @@ public struct SettingsView: View {
     let onSelectBackupExport: () -> Void
     let onSelectBackupImport: () -> Void
     let onSelectPrivacy: () -> Void
+    let onSelectLicenses: () -> Void
     
     public init(
         classGroupCount: Int,
@@ -40,7 +41,8 @@ public struct SettingsView: View {
         onSelectParentFeedbackQRCode: @escaping () -> Void,
         onSelectBackupExport: @escaping () -> Void,
         onSelectBackupImport: @escaping () -> Void,
-        onSelectPrivacy: @escaping () -> Void
+        onSelectPrivacy: @escaping () -> Void,
+        onSelectLicenses: @escaping () -> Void
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -59,6 +61,7 @@ public struct SettingsView: View {
         self.onSelectBackupExport = onSelectBackupExport
         self.onSelectBackupImport = onSelectBackupImport
         self.onSelectPrivacy = onSelectPrivacy
+        self.onSelectLicenses = onSelectLicenses
     }
     
     public var body: some View {
@@ -150,6 +153,13 @@ public struct SettingsView: View {
                         subtitle: "掲示・印刷して保護者からの報告を受け付けます",
                         action: onSelectParentFeedbackQRCode,
                         showChevron: false
+                    )
+
+                    SettingsMenuItem(
+                        iconName: "doc.text",
+                        title: "オープンソースライセンス",
+                        subtitle: "使用ライブラリのライセンスを確認",
+                        action: onSelectLicenses
                     )
                 }
                 
@@ -287,7 +297,8 @@ private struct SettingsMenuItem: View {
             onSelectParentFeedbackQRCode: {},
             onSelectBackupExport: {},
             onSelectBackupImport: {},
-            onSelectPrivacy: {}
+            onSelectPrivacy: {},
+            onSelectLicenses: {}
         )
         .navigationTitle("設定")
     }
