@@ -10,6 +10,10 @@ struct SetupProgress {
         [hasClassGroup, hasUser, hasBook].filter { $0 }.count
     }
 
+    var isComplete: Bool {
+        hasClassGroup && hasUser && hasBook
+    }
+
     var nextTitle: String {
         if !hasClassGroup { return "組を登録" }
         if !hasUser { return "利用者を登録" }

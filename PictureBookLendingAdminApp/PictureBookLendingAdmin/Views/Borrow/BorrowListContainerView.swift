@@ -46,6 +46,7 @@ struct BorrowListContainerView: View {
     @AppStorage("setupGuideWelcomeSeen") private var welcomeSeen = false
     @AppStorage("setupGuideStarted") private var setupStarted = false
     @AppStorage("setupGuideCompleted") private var setupCompleted = false
+    @AppStorage("consentPendingAfterWelcomeSkip") private var consentPendingAfterWelcomeSkip = false
     /// 直近に記録した検索テキスト（トリム後。未記録ならnil）
     ///
     /// `.task`はタブを行き来して画面が再表示されるたびに走り直すため、
@@ -121,17 +122,11 @@ struct BorrowListContainerView: View {
             }
             .navigationTitle("貸出")
             .safeAreaInset(edge: .top) {
-                if showsSettings && setupStarted && !setupCompleted {
-                    if setupProgress.completedCount == 3 {
-                        Text("本を選んで「借りる」をタップすると、貸出を始められます。")
-                            .font(.subheadline)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding()
-                            .background(.regularMaterial)
-                    } else {
-                        SetupProgressView(progress: setupProgress) {
-                            isSettingsPresented = true
-                        }
+                if showsSettings && setupStarted && !setupCompleted
+                    && !setupProgress.isComplete
+                {
+                    SetupProgressView(progress: setupProgress) {
+                        isSettingsPresented = true
                     }
                 }
             }
@@ -191,6 +186,8 @@ struct BorrowListContainerView: View {
                 if openSettingsAfterWelcome {
                     openSettingsAfterWelcome = false
                     isSettingsPresented = true
+                } else if privacy.needsInitialConsent {
+                    isInitialConsentPresented = true
                 }
             }
         ) {
@@ -202,6 +199,7 @@ struct BorrowListContainerView: View {
                     isWelcomePresented = false
                 },
                 onSkip: {
+                    consentPendingAfterWelcomeSkip = true
                     welcomeSeen = true
                     isWelcomePresented = false
                 }
@@ -230,7 +228,18 @@ struct BorrowListContainerView: View {
             .interactiveDismissDisabled()
         }
         .task {
-            if showsSettings && !welcomeSeen {
+            guard showsSettings else { return }
+            if consentPendingAfterWelcomeSkip && !privacy.needsInitialConsent {
+                consentPendingAfterWelcomeSkip = false
+            }
+            if privacy.needsInitialConsent && !isWelcomePresented && !isSettingsPresented
+                && (consentPendingAfterWelcomeSkip
+                    || (setupStarted && setupProgress.isComplete && !setupCompleted))
+            {
+                isInitialConsentPresented = true
+                return
+            }
+            if !welcomeSeen {
                 if setupProgress.completedCount == 0 {
                     isWelcomePresented = true
                 } else {
@@ -392,14 +401,17 @@ struct BorrowListContainerView: View {
     }
     
     private func presentConsentIfNeeded() {
-        if setupStarted && setupProgress.completedCount == 3 && privacy.needsInitialConsent {
+        if setupStarted && setupProgress.isComplete && privacy.needsInitialConsent {
             isInitialConsentPresented = true
         }
     }
 
     private func finishConsent(allowed: Bool) {
         privacy.completeInitialConsent(allowed: allowed)
-        if !privacy.needsInitialConsent { isInitialConsentPresented = false }
+        if !privacy.needsInitialConsent {
+            consentPendingAfterWelcomeSkip = false
+            isInitialConsentPresented = false
+        }
     }
 
     private func refreshData() {
