@@ -238,7 +238,9 @@ struct SettingsContainerView: View {
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(spacing: 0) {
-            if setupStarted && !setupCompleted {
+            if setupStarted && !setupCompleted
+                && (!setupProgress.isComplete || privacy.needsInitialConsent)
+            {
                 SetupProgressView(
                     progress: setupProgress,
                     onContinue: showContinue ? continueSetup : nil
@@ -265,10 +267,8 @@ struct SettingsContainerView: View {
             }
         } else if !setupProgress.hasBook {
             navigationPath.append(SettingsDestination.book)
-        } else if privacy.needsInitialConsent {
-            isInitialConsentPresented = true
         } else {
-            dismiss()
+            isInitialConsentPresented = true
         }
     }
 

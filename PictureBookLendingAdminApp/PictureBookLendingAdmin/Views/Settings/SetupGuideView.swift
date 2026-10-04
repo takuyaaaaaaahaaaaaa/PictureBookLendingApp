@@ -18,7 +18,7 @@ struct SetupProgress {
         if !hasClassGroup { return "組を登録" }
         if !hasUser { return "利用者を登録" }
         if !hasBook { return "図書を登録" }
-        return "貸出を始める"
+        return "データ送信を選ぶ"
     }
 
     var nextExplanation: String {
