@@ -79,24 +79,22 @@ struct PictureBookLendingAdminApp: App {
     
     var body: some Scene {
         WindowGroup {
-            PrivacyLaunchContainerView {
-                ContentView()
-            }
-            .environment(bookModel)
-            .environment(userModel)
-            .environment(loanModel)
-            .environment(classGroupModel)
-            .environment(loanSettingsModel)
-            .environment(backupModel)
-            .environment(privacy)
-            .environment(\.analytics, privacy.analytics)
-            .task {
-                // TipKitを初期化
-                try? Tips.configure([
-                    .displayFrequency(.immediate),
-                    .datastoreLocation(.applicationDefault),
-                ])
-            }
+            ContentView()
+                .environment(bookModel)
+                .environment(userModel)
+                .environment(loanModel)
+                .environment(classGroupModel)
+                .environment(loanSettingsModel)
+                .environment(backupModel)
+                .environment(privacy)
+                .environment(\.analytics, privacy.analytics)
+                .task {
+                    // TipKitを初期化
+                    try? Tips.configure([
+                        .displayFrequency(.immediate),
+                        .datastoreLocation(.applicationDefault),
+                    ])
+                }
         }
         .modelContainer(SwiftDataRepositoryFactory.shared.modelContainer)
     }

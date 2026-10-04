@@ -14,6 +14,7 @@ struct SettingsBookListContainerView: View {
     /// 図書一覧の絞り込み状態（検索テキスト・五十音フィルタ。両者は排他制御される）
     @State private var filterState = BookListFilterState()
     @State private var isAddSheetPresented = false
+    @State private var didRegisterBook = false
     @State private var editingBook: Book?
     @State private var isEditMode = false
     @State private var alertState = AlertState()
@@ -28,6 +29,8 @@ struct SettingsBookListContainerView: View {
     /// （貸出タブは実物の表紙との照合が主タスクなので棚表示既定。使い分けの経緯はissue #179）
     @State private var displayMode: BookDisplayMode = .list
     
+    let onBookRegistered: () -> Void
+
     var body: some View {
         BookListView(
             sections: bookSections.filter(
@@ -77,15 +80,15 @@ struct SettingsBookListContainerView: View {
             }
         }
         #if os(macOS)
-            .sheet(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(mode: .add)
+            .sheet(isPresented: $isAddSheetPresented, onDismiss: finishAddingBook) {
+                BookFormContainerView(mode: .add) { _ in didRegisterBook = true }
             }
             .sheet(item: $editingBook) { book in
                 BookFormContainerView(mode: .edit(book))
             }
         #else
-            .fullScreenCover(isPresented: $isAddSheetPresented) {
-                BookFormContainerView(mode: .add)
+            .fullScreenCover(isPresented: $isAddSheetPresented, onDismiss: finishAddingBook) {
+                BookFormContainerView(mode: .add) { _ in didRegisterBook = true }
             }
             .fullScreenCover(item: $editingBook) { book in
                 BookFormContainerView(mode: .edit(book))
@@ -139,6 +142,12 @@ struct SettingsBookListContainerView: View {
     
     // MARK: - Actions
     
+    private func finishAddingBook() {
+        guard didRegisterBook else { return }
+        didRegisterBook = false
+        onBookRegistered()
+    }
+
     private func handleEditBook(_ book: Book) {
         editingBook = book
     }
@@ -223,7 +232,7 @@ struct SettingsBookListContainerView: View {
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     
-    return SettingsBookListContainerView()
+    return SettingsBookListContainerView(onBookRegistered: {})
         .environment(bookModel)
         .environment(loanModel)
 }

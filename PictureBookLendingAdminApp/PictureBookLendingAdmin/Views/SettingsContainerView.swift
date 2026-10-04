@@ -15,6 +15,7 @@ struct SettingsContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(BackupModel.self) private var backupModel
+    @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
@@ -37,61 +38,75 @@ struct SettingsContainerView: View {
     @State private var isRestoreConfirmationPresented = false
     @State private var backupExportDocument: BackupDocument?
     @State private var pendingRestoreSnapshot: BackupSnapshot?
+    @State private var isInitialConsentPresented = false
+    @State private var shouldCloseAfterConsent = false
+    @AppStorage("setupGuideStarted") private var setupStarted = false
+    @AppStorage("setupGuideCompleted") private var setupCompleted = false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            SettingsView(
-                classGroupCount: classGroupModel.classGroups.count,
-                userCount: userModel.users.count,
-                bookCount: bookModel.books.count,
-                loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
-                maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
-                onSelectUser: {
-                    navigationPath.append(SettingsDestination.user)
-                },
-                onSelectBook: {
-                    navigationPath.append(SettingsDestination.book)
-                },
-                onSelectBookBulkRegistration: {
-                    isBookBulkRegistrationSheetPresented = true
-                },
-                onSelectLoanSettings: {
-                    isLoanSettingsSheetPresented = true
-                },
-                onCreateGuardiansForAllChildren: {
-                    handleCreateGuardiansForAllChildren()
-                },
-                onPromoteToNextYear: {
-                    promoteConfirmationState = AlertState(
-                        isPresented: true,
-                        title: "進級処理の確認",
-                        message: makePromoteConfirmationMessage()
-                    )
-                },
-                onSelectDeviceReset: {
-                    isDeviceResetDialogPresented = true
-                },
-                onSelectFeedback: {
-                    openURL(FeedbackFormLinks.staff)
-                },
-                onSelectParentFeedbackQRCode: {
-                    isParentFeedbackQRCodeSheetPresented = true
-                },
-                onSelectBackupExport: {
-                    handleBackupExport()
-                },
-                onSelectBackupImport: {
-                    isBackupImporterPresented = true
-                },
-                onSelectPrivacy: {
-                    navigationPath.append(SettingsDestination.privacy)
-                },
-                onSelectLicenses: {
-                    navigationPath.append(SettingsDestination.licenses)
-                }
-            )
+            guided {
+                SettingsView(
+                    classGroupCount: classGroupModel.classGroups.count,
+                    userCount: userModel.users.count,
+                    bookCount: bookModel.books.count,
+                    highlightUserManagement: setupStarted && setupProgress.completedCount == 0,
+                    highlightBookManagement: setupStarted && setupProgress.hasUser
+                        && !setupProgress.hasBook,
+                    loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
+                    maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
+                    onSelectUser: {
+                        navigationPath.append(SettingsDestination.user)
+                    },
+                    onSelectBook: {
+                        navigationPath.append(SettingsDestination.book)
+                    },
+                    onSelectBookBulkRegistration: {
+                        isBookBulkRegistrationSheetPresented = true
+                    },
+                    onSelectLoanSettings: {
+                        isLoanSettingsSheetPresented = true
+                    },
+                    onCreateGuardiansForAllChildren: {
+                        handleCreateGuardiansForAllChildren()
+                    },
+                    onPromoteToNextYear: {
+                        promoteConfirmationState = AlertState(
+                            isPresented: true,
+                            title: "進級処理の確認",
+                            message: makePromoteConfirmationMessage()
+                        )
+                    },
+                    onSelectDeviceReset: {
+                        isDeviceResetDialogPresented = true
+                    },
+                    onSelectFeedback: {
+                        openURL(FeedbackFormLinks.staff)
+                    },
+                    onSelectParentFeedbackQRCode: {
+                        isParentFeedbackQRCodeSheetPresented = true
+                    },
+                    onSelectBackupExport: {
+                        handleBackupExport()
+                    },
+                    onSelectBackupImport: {
+                        isBackupImporterPresented = true
+                    },
+                    onSelectPrivacy: {
+                        navigationPath.append(SettingsDestination.privacy)
+                    },
+                    onSelectLicenses: {
+                        navigationPath.append(SettingsDestination.licenses)
+                    }
+                )
+            }
             .navigationTitle("設定")
             .toolbar {
+                if !setupStarted && setupProgress.completedCount < 3 {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("準備ガイド") { setupStarted = true }
+                    }
+                }
                 ToolbarItem(placement: .cancellationAction) {
                     Button("閉じる") {
                         dismiss()
@@ -101,13 +116,19 @@ struct SettingsContainerView: View {
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
                 case .user:
-                    ClassGroupListContainerView { classGroupId in
-                        navigationPath.append(SettingsDestination.userList(classGroupId))
+                    guided(showContinue: setupProgress.hasClassGroup) {
+                        ClassGroupListContainerView { classGroupId in
+                            navigationPath.append(SettingsDestination.userList(classGroupId))
+                        }
                     }
                 case .userList(let classGroupId):
-                    UserListContainerView(classGroupId: classGroupId)
+                    guided(showContinue: setupProgress.hasUser) {
+                        UserListContainerView(classGroupId: classGroupId)
+                    }
                 case .book:
-                    SettingsBookListContainerView()
+                    guided(showContinue: setupProgress.hasBook) {
+                        SettingsBookListContainerView(onBookRegistered: handleBookRegistered)
+                    }
                 case .privacy:
                     PrivacySettingsContainerView()
                 case .licenses:
@@ -140,7 +161,7 @@ struct SettingsContainerView: View {
             .sheet(isPresented: $isParentFeedbackQRCodeSheetPresented) {
                 NavigationStack {
                     FeedbackQRCodeView(url: FeedbackFormLinks.parent)
-                        .navigationTitle("保護者向けQRコード")
+                        .navigationTitle("保護者向けフォームのQRコード")
                         #if !os(macOS)
                             .navigationBarTitleDisplayMode(.inline)
                         #endif
@@ -197,9 +218,88 @@ struct SettingsContainerView: View {
             ) { result in
                 handleBackupImportSelection(result)
             }
+            .sheet(
+                isPresented: $isInitialConsentPresented,
+                onDismiss: {
+                    if shouldCloseAfterConsent { dismiss() }
+                }
+            ) {
+                PrivacyConsentView(
+                    policyURL: PrivacySettingsContainerView.policyURL,
+                    onAllow: { finishConsent(allowed: true) },
+                    onDecline: { finishConsent(allowed: false) }
+                )
+                .alert(
+                    "変更を保存できませんでした",
+                    isPresented: Binding(
+                        get: { privacy.persistenceError != nil },
+                        set: { if !$0 { privacy.dismissPersistenceError() } }
+                    )
+                ) {
+                    Button("確認", role: .cancel) { privacy.dismissPersistenceError() }
+                } message: {
+                    Text(privacy.persistenceError ?? "")
+                }
+                .presentationSizing(.page)
+                .interactiveDismissDisabled()
+            }
         }
     }
     
+    private func guided<Content: View>(
+        showContinue: Bool = true,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: 0) {
+            if setupStarted && !setupCompleted
+                && (!setupProgress.isComplete || privacy.needsInitialConsent)
+            {
+                SetupProgressView(
+                    progress: setupProgress,
+                    onContinue: showContinue ? continueSetup : nil
+                )
+            }
+            content()
+        }
+    }
+
+    private var setupProgress: SetupProgress {
+        SetupProgress(
+            hasClassGroup: !classGroupModel.classGroups.isEmpty,
+            hasUser: !userModel.users.isEmpty,
+            hasBook: !bookModel.books.isEmpty
+        )
+    }
+
+    private func continueSetup() {
+        if !setupProgress.hasClassGroup {
+            navigationPath.append(SettingsDestination.user)
+        } else if !setupProgress.hasUser {
+            if let classGroupId = classGroupModel.classGroups.first?.id {
+                navigationPath.append(SettingsDestination.userList(classGroupId))
+            }
+        } else if !setupProgress.hasBook {
+            navigationPath.append(SettingsDestination.book)
+        } else {
+            isInitialConsentPresented = true
+        }
+    }
+
+    private func handleBookRegistered() {
+        guard
+            setupStarted && !setupCompleted && setupProgress.isComplete
+                && privacy.needsInitialConsent
+        else { return }
+        isInitialConsentPresented = true
+    }
+
+    private func finishConsent(allowed: Bool) {
+        privacy.completeInitialConsent(allowed: allowed)
+        guard !privacy.needsInitialConsent else { return }
+        shouldCloseAfterConsent = true
+        isInitialConsentPresented = false
+    }
+
     // MARK: - Action Handlers
     
     private func handleDeviceReset(_ options: DeviceResetOptions) {
