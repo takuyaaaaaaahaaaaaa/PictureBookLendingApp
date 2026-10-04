@@ -107,11 +107,6 @@ public struct SettingsView: View {
                     }
                 }
                 .accessibilityHint(highlightBookManagement ? "次の手順。ここから図書を登録します" : "")
-
-                SettingsMenuItem(
-                    iconName: "hand.raised", title: "プライバシーとデータ送信",
-                    subtitle: "説明を読む・任意の送信を選ぶ・同意を取り消す",
-                    action: onSelectPrivacy)
                 
                 SettingsMenuItem(
                     iconName: "clock",
@@ -176,10 +171,17 @@ public struct SettingsView: View {
                     
                     SettingsMenuItem(
                         iconName: "qrcode",
-                        title: "保護者向けQRコードを表示",
-                        subtitle: "掲示・印刷して保護者からの報告を受け付けます",
+                        title: "保護者向け不具合・ご要望フォームのQRコード",
+                        subtitle: "掲示・印刷して保護者に案内できます",
                         action: onSelectParentFeedbackQRCode,
                         showChevron: false
+                    )
+
+                    SettingsMenuItem(
+                        iconName: "hand.raised",
+                        title: "プライバシーとデータ送信",
+                        subtitle: "説明を読む・任意の送信を選ぶ・同意を取り消す",
+                        action: onSelectPrivacy
                     )
                 }
                 

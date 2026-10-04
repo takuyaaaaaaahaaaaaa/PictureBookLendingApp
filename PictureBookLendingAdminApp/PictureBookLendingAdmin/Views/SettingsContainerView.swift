@@ -153,7 +153,7 @@ struct SettingsContainerView: View {
             .sheet(isPresented: $isParentFeedbackQRCodeSheetPresented) {
                 NavigationStack {
                     FeedbackQRCodeView(url: FeedbackFormLinks.parent)
-                        .navigationTitle("保護者向けQRコード")
+                        .navigationTitle("保護者向けフォームのQRコード")
                         #if !os(macOS)
                             .navigationBarTitleDisplayMode(.inline)
                         #endif
