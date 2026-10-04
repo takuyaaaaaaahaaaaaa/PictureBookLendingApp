@@ -36,7 +36,7 @@ struct SetupWelcomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                Image("OnboardingOwl")
+                Image("OnboardingBookshelf")
                     .resizable()
                     .scaledToFit()
                     .frame(width: 180, height: 180)
