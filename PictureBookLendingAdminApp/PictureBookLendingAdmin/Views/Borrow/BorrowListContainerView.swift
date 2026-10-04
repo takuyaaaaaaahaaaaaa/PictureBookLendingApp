@@ -83,6 +83,7 @@ struct BorrowListContainerView: View {
                     sortType: selectedSortType),
                 searchText: searchTextBinding,
                 selectedKanaFilter: kanaFilterBinding,
+                showsControls: false,
                 // 貸出完了ごとに一覧を先頭へ戻す（次の貸出への引き継ぎ）
                 scrollToTopTrigger: scrollToTopTrigger,
                 selectedSortType: $selectedSortType,
@@ -121,6 +122,9 @@ struct BorrowListContainerView: View {
                     .padding(Self.displayScaleButtonPadding)
             }
             .navigationTitle("貸出")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
             .safeAreaInset(edge: .top) {
                 if showsSettings && setupStarted && !setupCompleted
                     && !setupProgress.isComplete
@@ -134,12 +138,18 @@ struct BorrowListContainerView: View {
                 .searchable(
                     text: searchTextBinding,
                     placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "図書のタイトルまたは著者で検索")
+                    prompt: "図書のタイトルまたは著者で検索"
+                )
+                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: searchTextBinding, prompt: "図書のタイトルまたは著者で検索")
             #endif
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
+                }
                 if showsSettings {
+                    ToolbarSpacer(.fixed)
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("設定", systemImage: "gearshape") {
                             isSettingsPresented = true

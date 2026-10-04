@@ -93,7 +93,7 @@ private enum Layout {
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-/// 五十音チップによる絞り込みとセクション表示に対応し、
+/// 必要な画面では五十音チップによる絞り込みとセクション表示に対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
@@ -118,6 +118,8 @@ public struct BookListView<RowAction: View>: View {
     @Binding public var selectedKanaFilter: KanaGroup?
     /// 五十音フィルタの選択肢
     public let kanaFilterOptions: [KanaGroup]
+    /// 五十音チップと表示メニューを一覧の上に表示するか
+    public let showsControls: Bool
     /// 一覧を先頭へ戻すトリガ。値がインクリメントされると先頭行までスクロールする。
     /// 五十音チップの挙動とは独立しており、貸出完了後のリセット等から使う
     public let scrollToTopTrigger: Int
@@ -147,6 +149,7 @@ public struct BookListView<RowAction: View>: View {
         searchText: Binding<String>,
         selectedKanaFilter: Binding<KanaGroup?>,
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
+        showsControls: Bool = true,
         scrollToTopTrigger: Int = 0,
         selectedSortType: Binding<BookSortType>,
         displayMode: Binding<BookDisplayMode>,
@@ -162,6 +165,7 @@ public struct BookListView<RowAction: View>: View {
         self._searchText = searchText
         self._selectedKanaFilter = selectedKanaFilter
         self.kanaFilterOptions = kanaFilterOptions
+        self.showsControls = showsControls
         self.scrollToTopTrigger = scrollToTopTrigger
         self._selectedSortType = selectedSortType
         self._displayMode = displayMode
@@ -177,9 +181,11 @@ public struct BookListView<RowAction: View>: View {
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: 5) {
-                BookListControls(
-                    selectedKana: $selectedKanaFilter, sort: $selectedSortType,
-                    mode: $displayMode, kanaOptions: kanaFilterOptions)
+                if showsControls {
+                    BookListControls(
+                        selectedKana: $selectedKanaFilter, sort: $selectedSortType,
+                        mode: $displayMode, kanaOptions: kanaFilterOptions)
+                }
                 
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView

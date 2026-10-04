@@ -50,10 +50,15 @@ struct ReturnListContainerView: View {
             )
             .navigationTitle("返却")
             #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+            #if os(iOS)
                 .searchable(
                     text: $searchText,
                     placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "名前 または 図書のタイトルで検索")
+                    prompt: "名前 または 図書のタイトルで検索"
+                )
+                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif

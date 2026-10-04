@@ -63,6 +63,7 @@
                 sections: sections,
                 searchText: $searchText,
                 selectedKanaFilter: $selectedKanaFilter,
+                showsControls: false,
                 selectedSortType: $selectedSortType,
                 displayMode: $displayMode,
                 displayScale: displayScale,
@@ -82,12 +83,19 @@
                 BookDisplayScaleToggleButton(scale: $displayScale).padding(24)
             }
             .navigationTitle("貸出")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
+                }
+            }
             #if os(iOS)
-                .navigationBarTitleDisplayMode(.large)
+                .navigationBarTitleDisplayMode(.inline)
                 .searchable(
                     text: $searchText,
                     placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "図書のタイトルまたは著者で検索")
+                    prompt: "図書のタイトルまたは著者で検索"
+                )
+                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
             #endif

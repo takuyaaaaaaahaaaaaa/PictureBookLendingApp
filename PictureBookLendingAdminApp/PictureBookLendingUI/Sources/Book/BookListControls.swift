@@ -10,8 +10,6 @@ struct BookListControls: View {
     
     private enum Layout {
         static let groupSpacing: CGFloat = 24
-        static let menuSpacing: CGFloat = 12
-        static let minimumControlSize: CGFloat = 44
     }
     
     var body: some View {
@@ -19,49 +17,23 @@ struct BookListControls: View {
             HStack(spacing: Layout.groupSpacing) {
                 kanaChips.fixedSize()
                 Spacer(minLength: 0)
-                displayMenus
+                BookDisplayMenus(sort: $sort, mode: $mode)
             }
             
             HStack(spacing: Layout.groupSpacing) {
                 kanaMenu.fixedSize()
                 Spacer(minLength: 0)
-                displayMenus
+                BookDisplayMenus(sort: $sort, mode: $mode)
             }
             
             VStack(alignment: .leading, spacing: Layout.groupSpacing) {
                 kanaMenu
-                displayMenus.frame(maxWidth: .infinity, alignment: .trailing)
+                BookDisplayMenus(sort: $sort, mode: $mode)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .buttonStyle(.bordered)
         .padding(.horizontal)
-    }
-    
-    private var displayMenus: some View {
-        HStack(spacing: Layout.menuSpacing) {
-            Menu {
-                sortPicker
-            } label: {
-                Image(systemName: sort.iconName)
-                    .frame(
-                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("並び順")
-            .accessibilityValue(sort.displayName)
-            .accessibilityIdentifier("book.sort.menu")
-            
-            Menu {
-                modePicker
-            } label: {
-                Image(systemName: mode.iconName)
-                    .frame(
-                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("表示形式")
-            .accessibilityValue(mode.displayName)
-            .accessibilityIdentifier("book.mode.menu")
-        }
-        .fixedSize()
     }
     
     private var kanaChips: some View {
@@ -105,6 +77,42 @@ struct BookListControls: View {
         .accessibilityLabel("五十音の絞り込み")
         .accessibilityValue(selectedKana?.displayName ?? "すべて")
         .accessibilityIdentifier("book.kana.menu")
+    }
+}
+
+/// 現在の一覧だけに作用する並び順・表示形式の操作
+public struct BookDisplayMenus: View {
+    @Binding private var sort: BookSortType
+    @Binding private var mode: BookDisplayMode
+
+    public init(sort: Binding<BookSortType>, mode: Binding<BookDisplayMode>) {
+        self._sort = sort
+        self._mode = mode
+    }
+
+    public var body: some View {
+        HStack(spacing: 0) {
+            Menu {
+                sortPicker
+            } label: {
+                Image(systemName: sort.iconName)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel("並び順")
+            .accessibilityValue(sort.displayName)
+            .accessibilityIdentifier("book.sort.menu")
+
+            Menu {
+                modePicker
+            } label: {
+                Image(systemName: mode.iconName)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .accessibilityLabel("表示形式")
+            .accessibilityValue(mode.displayName)
+            .accessibilityIdentifier("book.mode.menu")
+        }
+        .fixedSize()
     }
     
     private var sortPicker: some View {
