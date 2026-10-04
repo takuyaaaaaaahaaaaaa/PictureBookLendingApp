@@ -15,21 +15,24 @@ public struct PrivacyConsentView: View {
     }
     
     public var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 32) {
-                Label("データ送信について", systemImage: "hand.raised")
-                    .font(.title)
-                    .accessibilityAddTraits(.isHeader)
-                PrivacyConsentIntroduction()
-                PrivacyConsentDataExplanation()
-                PrivacyConsentActions(onAllow: onAllow, onDecline: onDecline)
-                Link("公開プライバシーポリシーを読む", destination: policyURL)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 32) {
+                    PrivacyConsentIntroduction()
+                    PrivacyConsentDataExplanation()
+                    PrivacyConsentActions(onAllow: onAllow, onDecline: onDecline)
+                    Link("公開プライバシーポリシーを読む", destination: policyURL)
+                }
+                .frame(maxWidth: 600, alignment: .leading)
+                .padding(24)
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: 600, alignment: .leading)
-            .padding(24)
-            .frame(maxWidth: .infinity)
+            .background(.background)
+            .navigationTitle("データ送信について")
+            #if !os(macOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
         }
-        .background(.background)
         .accessibilityIdentifier("privacy.initialConsent")
     }
 }
