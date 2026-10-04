@@ -179,6 +179,7 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             description: item.itemCaption?.nonEmpty,
             smallThumbnail: smallThumbnail,
             thumbnail: thumbnail,
+            rakutenItemURL: item.itemUrl?.nonEmpty,
             targetAge: nil,  // APIからは取得できないため、後でユーザーが設定
             pageCount: nil,  // 楽天APIはページ数を提供しない
             categories: categories,

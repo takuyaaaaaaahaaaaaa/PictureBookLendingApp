@@ -89,6 +89,7 @@ struct BookAutoFillContainerButton: View {
             description: book.description ?? targetBook.description,
             smallThumbnail: book.smallThumbnail ?? targetBook.smallThumbnail,
             thumbnail: book.thumbnail ?? targetBook.thumbnail,
+            rakutenItemURL: book.rakutenItemURL,
             targetAge: book.targetAge ?? targetBook.targetAge,
             pageCount: book.pageCount ?? targetBook.pageCount,
             categories: book.categories.isEmpty ? targetBook.categories : book.categories,

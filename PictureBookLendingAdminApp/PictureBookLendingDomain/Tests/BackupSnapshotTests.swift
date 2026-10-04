@@ -7,7 +7,9 @@ final class BackupSnapshotTests: XCTestCase {
     func testEncodeDecodeRoundTrip() throws {
         let classGroup = ClassGroup(name: "ひよこ組", ageGroup: .age(3), year: 2026)
         let user = User(name: "たろう", classGroupId: classGroup.id, userType: .child)
-        let book = Book(title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "あ001")
+        let book = Book(
+            title: "はらぺこあおむし", author: "エリック・カール",
+            rakutenItemURL: "https://books.rakuten.co.jp/rb/123456/", managementNumber: "あ001")
         let loan = Loan(
             bookId: book.id, user: user, loanDate: Date(timeIntervalSince1970: 0),
             dueDate: Date(timeIntervalSince1970: 86400))
@@ -46,5 +48,25 @@ final class BackupSnapshotTests: XCTestCase {
         )
         
         XCTAssertEqual(snapshot.schemaVersion, 1)
+    }
+
+    func testOldBookWithoutPurchaseURLDecodes() throws {
+        let oldBook = Book(title: "古い絵本", managementNumber: "あ001")
+        let data = try JSONEncoder().encode(oldBook)
+        let decoded = try JSONDecoder().decode(Book.self, from: data)
+        XCTAssertNil(decoded.rakutenItemURL)
+        XCTAssertEqual(decoded.managementNumber, "あ001")
+    }
+
+    func testOnlyRakutenHTTPSPurchaseURLIsOpened() {
+        XCTAssertNotNil(
+            Book(title: "絵本", rakutenItemURL: "https://books.rakuten.co.jp/rb/123456/")
+                .validatedRakutenItemURL)
+        for value in [
+            "javascript:alert(1)", "file:///tmp/book", "http://books.rakuten.co.jp/rb/1",
+            "https://books.rakuten.co.jp.evil.test/rb/1",
+        ] {
+            XCTAssertNil(Book(title: "絵本", rakutenItemURL: value).validatedRakutenItemURL)
+        }
     }
 }

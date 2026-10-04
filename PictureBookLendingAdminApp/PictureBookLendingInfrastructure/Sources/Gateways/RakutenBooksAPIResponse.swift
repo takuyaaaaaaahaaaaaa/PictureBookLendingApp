@@ -46,6 +46,8 @@ struct RakutenBookItem: Decodable {
     let mediumImageUrl: String?
     /// 大サイズの書影URL
     let largeImageUrl: String?
+    /// 楽天ブックスの商品ページURL
+    let itemUrl: String?
     /// 書籍サイズ（例: "絵本", "単行本"）
     let size: String?
     /// シリーズ名

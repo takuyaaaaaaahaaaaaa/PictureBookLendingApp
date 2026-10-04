@@ -21,6 +21,8 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var smallThumbnail: String?
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
+    /// 楽天ブックスAPIから取得した商品ページURL
+    public var rakutenItemURL: String?
     /// ローカル保存された画像のファイル名
     public var localImageFileName: String?
     /// 対象読者
@@ -61,6 +63,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         description: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
+        rakutenItemURL: String? = nil,
         localImageFileName: String? = nil,
         targetAge: TargetAudience? = nil,
         pageCount: Int? = nil,
@@ -78,6 +81,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.description = description
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
+        self.rakutenItemURL = rakutenItemURL
         self.localImageFileName = localImageFileName
         self.targetAge = targetAge
         self.pageCount = pageCount
@@ -97,5 +101,16 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     /// - Returns: 画像のURL（存在しない場合はnil）
     public var displaySmallImageSource: String? {
         smallThumbnail ?? thumbnail
+    }
+
+    /// 外部リンクに使用できる楽天ブックスの商品ページ
+    public var validatedRakutenItemURL: URL? {
+        guard let rakutenItemURL,
+            let url = URL(string: rakutenItemURL),
+            url.scheme?.lowercased() == "https",
+            url.host?.lowercased() == "books.rakuten.co.jp",
+            url.user == nil, url.password == nil
+        else { return nil }
+        return url
     }
 }

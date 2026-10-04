@@ -32,6 +32,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             bookDescription: book.description,
             smallThumbnail: book.smallThumbnail,
             thumbnail: book.thumbnail,
+            rakutenItemURL: book.rakutenItemURL,
             localImageFileName: book.localImageFileName,
             targetAge: book.targetAge?.rawValue,
             pageCount: book.pageCount,
@@ -71,6 +72,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                     description: swiftDataBook.bookDescription,
                     smallThumbnail: swiftDataBook.smallThumbnail,
                     thumbnail: swiftDataBook.thumbnail,
+                    rakutenItemURL: swiftDataBook.rakutenItemURL,
                     localImageFileName: swiftDataBook.localImageFileName,
                     targetAge: swiftDataBook.targetAge.flatMap {
                         TargetAudience(rawValue: $0)
@@ -111,6 +113,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
                 description: swiftDataBook.bookDescription,
                 smallThumbnail: swiftDataBook.smallThumbnail,
                 thumbnail: swiftDataBook.thumbnail,
+                rakutenItemURL: swiftDataBook.rakutenItemURL,
                 localImageFileName: swiftDataBook.localImageFileName,
                 targetAge: swiftDataBook.targetAge.flatMap { TargetAudience(rawValue: $0) },
                 pageCount: swiftDataBook.pageCount,
@@ -148,6 +151,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.bookDescription = book.description
             swiftDataBook.smallThumbnail = book.smallThumbnail
             swiftDataBook.thumbnail = book.thumbnail
+            swiftDataBook.rakutenItemURL = book.rakutenItemURL
             swiftDataBook.localImageFileName = book.localImageFileName
             swiftDataBook.targetAge = book.targetAge?.rawValue
             swiftDataBook.pageCount = book.pageCount

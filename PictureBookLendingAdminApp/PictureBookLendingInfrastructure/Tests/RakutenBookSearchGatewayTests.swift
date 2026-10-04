@@ -35,6 +35,7 @@ struct RakutenBookSearchGatewayTests {
                     "smallImageUrl": "https://example.com/small.jpg?_ex=64x64",
                     "mediumImageUrl": "https://example.com/medium.jpg?_ex=128x128",
                     "largeImageUrl": "https://example.com/large.jpg?_ex=200x200",
+                    "itemUrl": "https://books.rakuten.co.jp/rb/123456/",
                     "size": "絵本",
                     "seriesName": "はらぺこ"
                   }
@@ -66,6 +67,7 @@ struct RakutenBookSearchGatewayTests {
         #expect(book.description == "ちいさなあおむしが、たくさん食べて…")
         #expect(book.thumbnail == "https://example.com/large.jpg?_ex=200x200")
         #expect(book.smallThumbnail == "https://example.com/small.jpg?_ex=64x64")
+        #expect(book.rakutenItemURL == "https://books.rakuten.co.jp/rb/123456/")
         #expect(book.categories == ["絵本"])
         #expect(book.pageCount == nil)
     }
