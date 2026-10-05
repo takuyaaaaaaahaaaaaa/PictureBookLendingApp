@@ -23,5 +23,6 @@ public struct LibrarySurfaceBackgroundView: View {
                     .clipped()
             }
         }
+        .allowsHitTesting(false)
     }
 }
