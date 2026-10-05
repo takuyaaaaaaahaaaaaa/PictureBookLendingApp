@@ -87,6 +87,13 @@ public struct BookDetailView<ActionButton: View>: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            if let itemURL = book.validatedRakutenItemURL {
+                Section {
+                    Link(destination: itemURL) {
+                        Label("楽天ブックスで見る", systemImage: "arrow.up.right.square")
+                    }
+                }
+            }
             
             if let description = book.description, !description.isEmpty {
                 Section("内容説明") {

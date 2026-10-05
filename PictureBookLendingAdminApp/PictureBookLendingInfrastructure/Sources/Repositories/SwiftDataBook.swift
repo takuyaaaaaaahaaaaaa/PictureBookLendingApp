@@ -41,6 +41,8 @@ final public class SwiftDataBook {
     
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
+    /// 楽天ブックスの商品ページURL
+    public var rakutenItemURL: String?
     
     /// ローカル保存された画像のファイル名
     public var localImageFileName: String?
@@ -85,6 +87,7 @@ final public class SwiftDataBook {
         bookDescription: String? = nil,
         smallThumbnail: String? = nil,
         thumbnail: String? = nil,
+        rakutenItemURL: String? = nil,
         localImageFileName: String? = nil,
         targetAge: String? = nil,
         pageCount: Int? = nil,
@@ -102,6 +105,7 @@ final public class SwiftDataBook {
         self.bookDescription = bookDescription
         self.smallThumbnail = smallThumbnail
         self.thumbnail = thumbnail
+        self.rakutenItemURL = rakutenItemURL
         self.localImageFileName = localImageFileName
         self.targetAge = targetAge
         self.pageCount = pageCount
