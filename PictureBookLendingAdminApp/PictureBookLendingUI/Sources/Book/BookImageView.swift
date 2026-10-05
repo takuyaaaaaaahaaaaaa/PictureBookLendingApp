@@ -24,13 +24,37 @@ public struct BookImageView<PlaceholderContent: View>: View {
     
 }
 
+/// 絵本一覧の画像未設定・読み込み中・読み込み失敗時に表示する表紙。
+struct BookCoverPlaceholder: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let font: Font
+    let cornerRadius: CGFloat
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius)
+        // ダークは親のマテリアルをそのまま使い、ライトだけ面と輪郭を補う。
+        let isLight = colorScheme == .light
+        Image(systemName: "book.closed")
+            .foregroundStyle(.secondary)
+            .font(font)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                shape.fill(isLight ? AppColor.chipSurface : .clear)
+            }
+            .overlay {
+                shape.strokeBorder(
+                    isLight ? AppColor.returnCardBorder : .clear,
+                    lineWidth: 1
+                )
+            }
+    }
+}
+
 #Preview {
     VStack {
         // ローカル画像のプレビューは実際のファイルが必要なので、プレースホルダーを表示
         BookImageView(imageURL: nil) {
-            Image(systemName: "book.closed")
-                .foregroundStyle(.secondary)
-                .font(.system(size: 40))
+            BookCoverPlaceholder(font: .system(size: 40), cornerRadius: 8)
         }
         .frame(width: 100, height: 130)
         .background(.regularMaterial)
