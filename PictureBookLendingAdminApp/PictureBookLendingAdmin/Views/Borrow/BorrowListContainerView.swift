@@ -148,7 +148,7 @@ struct BorrowListContainerView: View {
                     BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
                 }
                 if showsSettings {
-                    ToolbarSpacer(.fixed)
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("設定", systemImage: "gearshape") {
                             isSettingsPresented = true
