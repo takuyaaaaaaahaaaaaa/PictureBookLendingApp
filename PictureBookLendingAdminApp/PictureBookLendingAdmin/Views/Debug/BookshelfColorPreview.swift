@@ -6,7 +6,6 @@
     /// 本体のAccentColorを使う見本。実データ・表紙画像・保存処理を持たない。
     struct BookshelfColorPreview: View {
         @State private var searchText = ""
-        @State private var selectedKanaFilter: KanaGroup?
         @State private var selectedSortType: BookSortType = .title
         @State private var displayMode: BookDisplayMode = .shelf
         @State private var displayScale: BookDisplayScale = .standard
@@ -44,9 +43,6 @@
         
         private var sections: [BookSection] {
             sampleSections.compactMap { section -> BookSection? in
-                guard selectedKanaFilter == nil || section.kanaGroup == selectedKanaFilter else {
-                    return nil
-                }
                 let books = section.books.filter {
                     searchText.isEmpty || $0.title.localizedStandardContains(searchText)
                 }.sorted {
@@ -62,7 +58,7 @@
             BookListView(
                 sections: sections,
                 searchText: $searchText,
-                selectedKanaFilter: $selectedKanaFilter,
+                selectedKanaFilter: .constant(nil),
                 showsControls: false,
                 selectedSortType: $selectedSortType,
                 displayMode: $displayMode,

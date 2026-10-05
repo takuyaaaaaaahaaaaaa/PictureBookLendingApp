@@ -93,7 +93,7 @@ private enum Layout {
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-/// 必要な画面では五十音チップによる絞り込みとセクション表示に対応し、
+/// `showsControls`が`true`の画面では五十音チップによる絞り込みに対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
@@ -104,6 +104,8 @@ public struct BookListView<RowAction: View>: View {
     @ScaledMetric(relativeTo: .title3) private var largeCellWidth = BookDisplayScale.large
         .minCellWidth
     @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
+    /// 棚札の文字拡大に合わせ、札と次の絵本が重ならない余白を確保する。
+    @ScaledMetric(relativeTo: .title3) private var shelfSectionSpacing = ShelfLayout.sectionSpacing
     
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
     @State private var viewportWidth: CGFloat = 0
@@ -327,7 +329,7 @@ public struct BookListView<RowAction: View>: View {
     private var bookShelfSection: some View {
         let visibleSections = sections.filter { !$0.books.isEmpty }
         return ScrollView {
-            LazyVStack(alignment: .leading, spacing: ShelfLayout.sectionSpacing) {
+            LazyVStack(alignment: .leading, spacing: shelfSectionSpacing) {
                 // 最上段の横木。最初のかなグループのラベルをここからぶら下げる
                 if let firstSection = visibleSections.first {
                     ShelfBoardView(hangingLabelText: firstSection.title)

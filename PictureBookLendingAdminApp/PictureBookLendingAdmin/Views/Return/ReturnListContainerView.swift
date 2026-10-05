@@ -51,8 +51,6 @@ struct ReturnListContainerView: View {
             .navigationTitle("返却")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
-            #endif
-            #if os(iOS)
                 .searchable(
                     text: $searchText,
                     placement: .navigationBarDrawer(displayMode: .always),
