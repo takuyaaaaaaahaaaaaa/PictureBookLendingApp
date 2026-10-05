@@ -330,14 +330,14 @@ public struct BookListView<RowAction: View>: View {
         let visibleSections = sections.filter { !$0.books.isEmpty }
         return ScrollView {
             LazyVStack(alignment: .leading, spacing: shelfSectionSpacing) {
-                // 最上段の横木。最初のかなグループのラベルをここからぶら下げる
+                // 最上段の横木。最初のかなグループのラベルをここに付ける
                 if let firstSection = visibleSections.first {
-                    ShelfBoardView(hangingLabelText: firstSection.title)
+                    ShelfBoardView(labelText: firstSection.title)
                 }
                 ForEach(Array(visibleSections.enumerated()), id: \.element.id) { index, section in
                     let nextTitle =
                         index + 1 < visibleSections.count ? visibleSections[index + 1].title : nil
-                    shelfSection(for: section, hangingNextLabelText: nextTitle)
+                    shelfSection(for: section, nextLabelText: nextTitle)
                 }
             }
             .padding(.vertical, ShelfLayout.contentVerticalPadding)
@@ -369,18 +369,17 @@ public struct BookListView<RowAction: View>: View {
     
     /// かなグループ1つ分の棚のまとまり（折り返しの棚段の集まり）
     ///
-    /// かなラベルは独立した棚札としては置かず、1つ上の棚板の下にぶら下げる。
+    /// かなラベルは独立した棚札としては置かず、1つ上の棚板に付ける。
     /// このグループ自身のラベルは直前のグループの最後の棚板（先頭グループは最上段の横木）が
-    /// 持つため、ここでは最後の棚板に「次のグループのラベル」をぶら下げる
+    /// 持つため、ここでは最後の棚板に「次のグループのラベル」を付ける
     @ViewBuilder
-    private func shelfSection(for section: BookSection, hangingNextLabelText: String?) -> some View
-    {
+    private func shelfSection(for section: BookSection, nextLabelText: String?) -> some View {
         let rows = Self.chunked(section.books, into: shelfColumnCount)
         VStack(alignment: .leading, spacing: ShelfLayout.rowSpacing) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 shelfRow(
                     of: row,
-                    hangingLabelText: index == rows.count - 1 ? hangingNextLabelText : nil)
+                    labelText: index == rows.count - 1 ? nextLabelText : nil)
             }
         }
     }
@@ -389,7 +388,7 @@ public struct BookListView<RowAction: View>: View {
     ///
     /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
     @ViewBuilder
-    private func shelfRow(of books: [Book], hangingLabelText: String?) -> some View {
+    private func shelfRow(of books: [Book], labelText: String?) -> some View {
         VStack(alignment: .leading, spacing: shelfBoardSpacing) {
             HStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
                 ForEach(books) { book in
@@ -401,7 +400,7 @@ public struct BookListView<RowAction: View>: View {
             .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            ShelfBoardView(hangingLabelText: hangingLabelText)
+            ShelfBoardView(labelText: labelText)
         }
     }
     
