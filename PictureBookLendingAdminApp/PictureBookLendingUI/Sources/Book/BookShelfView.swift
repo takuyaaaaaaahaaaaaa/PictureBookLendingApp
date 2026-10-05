@@ -141,6 +141,8 @@ struct ShelfBoardView: View {
                     }
             }
         }
+        // 木目画像の描画範囲が棚板をはみ出しても、絵本やボタンの操作を遮らない。
+        .allowsHitTesting(false)
     }
 }
 
