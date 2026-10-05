@@ -105,9 +105,10 @@ public struct FamilyLoanSlotsView: View {
             HStack(spacing: Layout.headerSpacing) {
                 Text(slot.roleLabel)
                     .font(.headline)
+                    .foregroundStyle(AppColor.libraryTitle)
                 Text(slot.memberName)
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.librarySecondaryText)
             }
             
             if let loan = slot.loan {
@@ -141,6 +142,7 @@ public struct FamilyLoanSlotsView: View {
                 Text(loan.bookTitle)
                     .font(.title3.bold())
                     .multilineTextAlignment(.leading)
+                    .foregroundStyle(AppColor.libraryTitle)
                 
                 HStack(spacing: Layout.headerSpacing) {
                     Text("返却期限：\(loan.dueDateText)")
@@ -164,16 +166,17 @@ public struct FamilyLoanSlotsView: View {
                     onReturn(slot)
                 }
                 .font(.title3)
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
+                .tint(AppColor.libraryAction)
+                .foregroundStyle(AppColor.onEmphasis)
                 .controlSize(.large)
             }
         }
         .padding(Layout.cardPadding)
         .frame(maxWidth: .infinity, minHeight: Layout.cardMinHeight, alignment: .leading)
-        .background(
-            AppColor.cardSurface,
-            in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
-        )
+        .background {
+            ReturnLoanCardBackground(cornerRadius: Layout.cardCornerRadius)
+        }
     }
     
     /// 貸出中の枠（貸出文脈のコンパクト表示）：表紙なしの1行＋「返却」ボタン
@@ -205,12 +208,14 @@ public struct FamilyLoanSlotsView: View {
                     .foregroundStyle(AppColor.onEmphasis)
             }
             
-            // 返却タブの家庭の画面と同じ大きさ・フォントで揃える
+            // 文字とタップ領域は揃え、借り直すための補助操作として控えめに示す
             Button("返却") {
                 onReturn(slot)
             }
             .font(.title3)
             .buttonStyle(.bordered)
+            .tint(AppColor.libraryAction)
+            .foregroundStyle(AppColor.libraryAction)
             .controlSize(.large)
         }
         .padding(Layout.cardPadding)
@@ -236,7 +241,8 @@ public struct FamilyLoanSlotsView: View {
                 }
                 .font(.title3)
                 .buttonStyle(.borderedProminent)
-                .foregroundStyle(AppColor.onEmphasis)
+                .tint(AppColor.borrowAction)
+                .foregroundStyle(AppColor.borrowActionForeground)
                 .controlSize(.large)
             }
         }
