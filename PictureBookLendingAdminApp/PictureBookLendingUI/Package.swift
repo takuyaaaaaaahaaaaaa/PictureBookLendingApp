@@ -33,7 +33,10 @@ let package = Package(
         ),
         .testTarget(
             name: "PictureBookLendingUITests",
-            dependencies: ["PictureBookLendingUI"],
+            dependencies: [
+                "PictureBookLendingUI",
+                .product(name: "Kingfisher", package: "Kingfisher"),
+            ],
             path: "Tests"
         ),
     ]

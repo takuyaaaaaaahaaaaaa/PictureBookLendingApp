@@ -305,6 +305,7 @@ struct BookBulkAddContainerView: View {
                         description: book.description,
                         smallThumbnail: book.smallThumbnail,
                         thumbnail: book.thumbnail,
+                        rakutenItemURL: book.rakutenItemURL,
                         targetAge: book.targetAge,
                         pageCount: book.pageCount,
                         categories: book.categories,

@@ -131,6 +131,10 @@ struct ReturnListContainerView: View {
             )
             .padding()
         }
+        .background {
+            LibrarySurfaceBackgroundView()
+                .ignoresSafeArea()
+        }
         .kioskIdleTimeout(ticket: idleTicket, onTimeout: popToListAndScrollTop)
         .navigationTitle(borrowerName(for: userId))
         #if os(iOS)

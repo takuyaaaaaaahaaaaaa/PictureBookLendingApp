@@ -72,11 +72,16 @@
             ) { book in
                 if book.managementNumber == "あ002" {
                     RowActionButton(
-                        title: "貸出中", systemImage: "book.closed", tint: AppColor.lentSurface,
-                        foreground: AppColor.lentForeground, onTap: {}
+                        title: "貸出中", systemImage: "book.closed", tint: AppColor.chipSurface,
+                        foreground: AppColor.libraryTitle, border: AppColor.returnCardBorder,
+                        onTap: {}
                     )
                 } else {
-                    RowActionButton(title: "借りる", onTap: {})
+                    RowActionButton(
+                        title: "借りる", tint: AppColor.borrowAction,
+                        foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,
+                        onTap: {}
+                    )
                 }
             }
             .safeAreaInset(edge: .bottom, alignment: .trailing) {

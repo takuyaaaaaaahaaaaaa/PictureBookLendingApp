@@ -97,18 +97,21 @@ struct BorrowListContainerView: View {
                 }
             ) { book in
                 // 押せることが見た目でわかるように、行の右端は状態バッジではなく
-                // 同じ形のボタンで揃える：借りられる本＝暖色の「借りる」（主役の操作）、
-                // 貸出中＝藍色の「貸出中」（押すと返却予定日の案内シートが開く）。
+                // 同じ形のボタンで揃える：借りられる本＝緑の「借りる」（主役の操作）、
+                // 貸出中＝紙になじむ中立色の「貸出中」（押すと返却予定日の案内シートが開く）。
                 // 行全体もタップ可能なので、ボタンの外を押しても同じ動きになる
                 if loanModel.isBookLent(bookId: book.id) {
                     RowActionButton(
-                        title: "貸出中", systemImage: "book.closed", tint: AppColor.lentSurface,
-                        foreground: AppColor.lentForeground
+                        title: "貸出中", systemImage: "book.closed", tint: AppColor.chipSurface,
+                        foreground: AppColor.libraryTitle, border: AppColor.returnCardBorder
                     ) {
                         openBorrowSheet(for: book)
                     }
                 } else {
-                    RowActionButton(title: "借りる") {
+                    RowActionButton(
+                        title: "借りる", tint: AppColor.borrowAction,
+                        foreground: AppColor.borrowActionForeground, hasSubtleDepth: true
+                    ) {
                         openBorrowSheet(for: book)
                     }
                 }
@@ -286,7 +289,7 @@ struct BorrowListContainerView: View {
             hasBook: !bookModel.books.isEmpty
         )
     }
-
+    
     /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var searchTextBinding: Binding<String> {
         Binding(
@@ -414,7 +417,7 @@ struct BorrowListContainerView: View {
             isInitialConsentPresented = true
         }
     }
-
+    
     private func finishConsent(allowed: Bool) {
         privacy.completeInitialConsent(allowed: allowed)
         if !privacy.needsInitialConsent {
@@ -422,7 +425,7 @@ struct BorrowListContainerView: View {
             isInitialConsentPresented = false
         }
     }
-
+    
     private func refreshData() {
         bookModel.refreshBooks()
         loanModel.refreshLoans()

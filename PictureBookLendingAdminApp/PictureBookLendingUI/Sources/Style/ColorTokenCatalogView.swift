@@ -18,6 +18,24 @@ public struct ColorTokenCatalogView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title).font(.headline)
             token("accent：操作", symbol: "hand.tap", color: AppColor.accent)
+            token("libraryTitle：見出し", symbol: "textformat", color: AppColor.libraryTitle)
+            token(
+                "librarySecondaryText：補足", symbol: "text.alignleft",
+                color: AppColor.librarySecondaryText)
+            token("libraryAction：表示切替・返却", symbol: "arrow.up.right", color: AppColor.libraryAction)
+            token(
+                "borrowAction：借りる", symbol: "plus.circle", color: AppColor.borrowAction,
+                foreground: AppColor.borrowActionForeground)
+            Label("borrowActionForeground：借りるの文字", systemImage: "plus.circle")
+                .foregroundStyle(AppColor.borrowActionForeground)
+                .padding(8)
+                .background(AppColor.borrowAction, in: RoundedRectangle(cornerRadius: 8))
+            Label("returnCardBorder：カードの縁", systemImage: "rectangle")
+                .foregroundStyle(AppColor.returnCardBorder)
+            Label("borrowerCardSurface：利用者・完了通知の面", systemImage: "person.text.rectangle")
+                .foregroundStyle(AppColor.libraryTitle)
+                .padding(8)
+                .background(AppColor.borrowerCardSurface, in: RoundedRectangle(cornerRadius: 8))
             Label("lentForeground：貸出中の文字", systemImage: "book.closed")
                 .foregroundStyle(AppColor.lentForeground)
             Label("lentSurface：貸出中の面", systemImage: "book.closed")
@@ -34,20 +52,25 @@ public struct ColorTokenCatalogView: View {
             Label("chipSurface：補助ラベル背景", systemImage: "capsule")
                 .padding(8)
                 .background(AppColor.chipSurface, in: Capsule())
-            Text("貸出中は専用の面＋文字。他の塗り面はonEmphasis。")
+            Text("状態バッジは専用の面＋文字。貸出中の案内は中立色。")
                 .font(.caption)
                 .foregroundStyle(.secondary)
             VStack(spacing: 12) {
-                RowActionButton(title: "借りる", onTap: {})
+                BookDisplayScaleToggleButton(scale: .constant(.standard))
                 RowActionButton(
-                    title: "貸出中", systemImage: "book.closed", tint: AppColor.lentSurface,
-                    foreground: AppColor.lentForeground, onTap: {})
+                    title: "借りる", tint: AppColor.borrowAction,
+                    foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,
+                    onTap: {}
+                )
+                RowActionButton(
+                    title: "貸出中", systemImage: "book.closed", tint: AppColor.chipSurface,
+                    foreground: AppColor.libraryTitle, border: AppColor.returnCardBorder, onTap: {})
                 BookStatusView(isCurrentlyLent: false)
                 BookStatusView(isCurrentlyLent: true)
             }
             .frame(maxWidth: .infinity)
             .padding(16)
-            .background { ShelfWoodBackgroundView() }
+            .background { LibrarySurfaceBackgroundView() }
         }
         .padding(16)
         .frame(width: 340, alignment: .leading)
@@ -55,12 +78,14 @@ public struct ColorTokenCatalogView: View {
         .environment(\.colorScheme, scheme)
     }
     
-    private func token(_ title: String, symbol: String, color: Color) -> some View {
+    private func token(
+        _ title: String, symbol: String, color: Color, foreground: Color = AppColor.onEmphasis
+    ) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Label(title, systemImage: symbol)
                 .foregroundStyle(color)
             Label("文字＋アイコン", systemImage: symbol)
-                .foregroundStyle(AppColor.onEmphasis)
+                .foregroundStyle(foreground)
                 .padding(8)
                 .background(color, in: RoundedRectangle(cornerRadius: 8))
         }

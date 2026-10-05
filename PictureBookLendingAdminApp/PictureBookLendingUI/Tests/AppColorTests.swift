@@ -10,7 +10,10 @@
         func testPackagedColorsResolveForBothAppearances() throws {
             let names = [
                 "Lent", "LentSurface", "Available", "Overdue", "Returned", "Destructive",
-                "CardSurface", "ChipSurface", "OnEmphasis",
+                "CardSurface", "ChipSurface", "OnEmphasis", "BorrowAction",
+                "BorrowActionForeground",
+                "LibraryTitle", "LibrarySecondaryText", "LibraryAction", "ReturnCardBorder",
+                "BorrowerCardSurface",
             ]
             for name in names {
                 let light = try color(name, style: .light)
@@ -37,6 +40,25 @@
                 let background = try color("LentSurface", style: style)
                 let values = [luminance(foreground), luminance(background)].sorted()
                 XCTAssertGreaterThanOrEqual((values[1] + 0.05) / (values[0] + 0.05), 4.5)
+            }
+        }
+        
+        func testLibraryActionTextContrast() throws {
+            let pairs = [
+                ("BorrowActionForeground", "BorrowAction"),
+                ("OnEmphasis", "LibraryAction"),
+                ("LibraryTitle", "ChipSurface"),
+            ]
+            for style in [UIUserInterfaceStyle.light, .dark] {
+                for (foregroundName, backgroundName) in pairs {
+                    let foreground = try color(foregroundName, style: style)
+                    let background = try color(backgroundName, style: style)
+                    let values = [luminance(foreground), luminance(background)].sorted()
+                    XCTAssertGreaterThanOrEqual(
+                        (values[1] + 0.05) / (values[0] + 0.05), 4.5,
+                        "\(foregroundName) / \(backgroundName), \(style)"
+                    )
+                }
             }
         }
         

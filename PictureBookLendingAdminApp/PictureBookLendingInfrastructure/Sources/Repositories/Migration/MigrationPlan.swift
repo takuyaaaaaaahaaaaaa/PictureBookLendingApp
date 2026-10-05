@@ -15,11 +15,12 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
         [
             PictureBookLendingSchemaV1.self, PictureBookLendingSchemaV1_1.self,
             PictureBookLendingSchemaV1_2.self,
+            PictureBookLendingSchemaV1_3.self,
         ]
     }
     
     static var stages: [MigrationStage] {
-        [migrateV1ToV1_1, migrateV1_1ToV1_2]
+        [migrateV1ToV1_1, migrateV1_1ToV1_2, migrateV1_2ToV1_3]
     }
     
     static let migrateV1ToV1_1: MigrationStage = MigrationStage.custom(
@@ -58,5 +59,10 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
             
             try context.save()
         }
+    )
+
+    static let migrateV1_2ToV1_3: MigrationStage = MigrationStage.lightweight(
+        fromVersion: PictureBookLendingSchemaV1_2.self,
+        toVersion: PictureBookLendingSchemaV1_3.self
     )
 }

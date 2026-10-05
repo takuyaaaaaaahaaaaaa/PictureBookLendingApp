@@ -40,6 +40,15 @@
                     catalogSection("カラー：操作と状態（ライト／ダーク）") {
                         ColorTokenCatalogView()
                     }
+                    catalogSection("貸出・返却の完了通知（保存なし）") {
+                        VStack(spacing: 24) {
+                            SuccessFeedbackView(message: "いとう さくらさんに貸出しました")
+                            UndoFeedbackView(message: "『ぐりとぐら』を返却しました", onUndo: {})
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(24)
+                        .background { LibrarySurfaceBackgroundView() }
+                    }
                     catalogSection("節目のお祝い：紙吹雪＋カード（タップでスキップ・3.5秒で自動終了）") {
                         celebrationDemo
                     }
@@ -147,7 +156,8 @@
                                 id: UUID(),
                                 name: "みほん \(groupIndex)-\(rowIndex)",
                                 isGuardian: rowIndex == 6,
-                                isOverdue: rowIndex == 3)
+                                isOverdue: rowIndex == 3,
+                                hasNoOpenSlot: rowIndex == 3 || rowIndex == 4)
                         })
                 },
                 onSelect: { _ in }

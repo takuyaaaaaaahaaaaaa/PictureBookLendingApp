@@ -1,4 +1,3 @@
-import Kingfisher
 import SwiftUI
 
 /// 絵本画像表示用のビュー
@@ -16,7 +15,7 @@ public struct BookImageView<PlaceholderContent: View>: View {
     }
     
     public var body: some View {
-        KFImage(URL(string: imageURL ?? ""))
+        ExternalBookCoverCache.image(for: URL(string: imageURL ?? ""))
             .placeholder {
                 placeholder
             }
