@@ -140,7 +140,6 @@ struct BorrowListContainerView: View {
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "図書のタイトルまたは著者で検索"
                 )
-                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: searchTextBinding, prompt: "図書のタイトルまたは著者で検索")
             #endif

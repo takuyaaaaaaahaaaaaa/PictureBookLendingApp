@@ -95,7 +95,6 @@
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "図書のタイトルまたは著者で検索"
                 )
-                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
             #endif

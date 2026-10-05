@@ -58,7 +58,6 @@ struct ReturnListContainerView: View {
                     placement: .navigationBarDrawer(displayMode: .always),
                     prompt: "名前 または 図書のタイトルで検索"
                 )
-                .searchDictationBehavior(.inline(activation: .onSelect))
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif
