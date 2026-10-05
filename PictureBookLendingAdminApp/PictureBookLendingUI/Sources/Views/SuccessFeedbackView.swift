@@ -67,10 +67,12 @@ public struct SuccessFeedbackView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(Layout.padding)
-        .background(
-            .regularMaterial,
-            in: RoundedRectangle(cornerRadius: Layout.cornerRadius)
-        )
+        .background {
+            ReturnLoanCardBackground(
+                cornerRadius: Layout.cornerRadius,
+                surface: AppColor.borrowerCardSurface,
+                borderWidth: 1.5)
+        }
         .allowsHitTesting(false)
     }
 }
@@ -138,4 +140,11 @@ extension View {
         }
     }
     .successFeedback($feedback)
+}
+
+#Preview("貸出完了カード") {
+    ZStack {
+        LibrarySurfaceBackgroundView()
+        SuccessFeedbackView(message: "貸出しました")
+    }
 }

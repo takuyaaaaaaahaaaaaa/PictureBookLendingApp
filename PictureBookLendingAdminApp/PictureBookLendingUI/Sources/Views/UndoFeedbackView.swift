@@ -85,10 +85,12 @@ public struct UndoFeedbackView: View {
                 .controlSize(.large)
         }
         .padding(Layout.padding)
-        .background(
-            .regularMaterial,
-            in: RoundedRectangle(cornerRadius: Layout.cornerRadius)
-        )
+        .background {
+            ReturnLoanCardBackground(
+                cornerRadius: Layout.cornerRadius,
+                surface: AppColor.borrowerCardSurface,
+                borderWidth: 1.5)
+        }
     }
 }
 
@@ -158,5 +160,12 @@ extension View {
     }
     .undoFeedback($feedback) {
         print("元に戻す: \(String(describing: feedback.targetId))")
+    }
+}
+
+#Preview("返却完了カード") {
+    ZStack {
+        LibrarySurfaceBackgroundView()
+        UndoFeedbackView(message: "『おすしがふくをかいにきた』を返却しました", onUndo: {})
     }
 }

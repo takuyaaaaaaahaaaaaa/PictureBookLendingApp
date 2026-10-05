@@ -194,6 +194,12 @@ public struct BookListView<RowAction: View>: View {
                     }
                 }
             }
+            .background {
+                if displayMode == .shelf {
+                    LibrarySurfaceBackgroundView()
+                        .ignoresSafeArea()
+                }
+            }
             .onChange(of: viewportWidth) { _, _ in
                 guard displayMode != .list, let bookID = visibleBookID else { return }
                 // Geometryで得た幅から列を再構成した後、同じ本を復元する。
@@ -304,14 +310,14 @@ public struct BookListView<RowAction: View>: View {
         }
     }
     
-    /// 棚表示（木の本棚デザイン）のセクション
+    /// 棚表示（壁紙／革の背景と細い木の棚板）のセクション
     ///
     /// 五十音セクション＝棚のまとまりとして、棚札＋折り返しの絵本の並びで構成する。
     /// 絵本はグリッド表示と同等の大きさのセルを画面幅に応じて折り返し、
     /// 折り返してできた各行の下に棚板を敷く（本が多いかなグループは棚が複数段になる）。
     /// 横スクロールは使わず、縦スクロールだけで全冊を見られるようにする。
     /// アプリの枠（ナビゲーション・検索・チップ等）はそのままに、
-    /// 一覧コンテンツエリアだけを木の世界にする（docs/SCREEN_DESIGN.md「棚表示」参照）
+    /// 棚表示の背景だけに質感を加える（docs/SCREEN_DESIGN.md「棚表示」参照）
     private var bookShelfSection: some View {
         let visibleSections = sections.filter { !$0.books.isEmpty }
         return ScrollView {
@@ -333,10 +339,6 @@ public struct BookListView<RowAction: View>: View {
             proxy.size.width
         } action: { width in
             viewportWidth = width
-        }
-        .background {
-            ShelfWoodBackgroundView()
-                .ignoresSafeArea(edges: .bottom)
         }
     }
     
@@ -522,10 +524,11 @@ public struct BookRowView<RowAction: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(scale.rowTitleFont)
+                    .foregroundStyle(AppColor.libraryTitle)
                 
                 Text(book.author ?? "")
                     .font(scale.rowAuthorFont)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.librarySecondaryText)
                 
                 if let managementNumber = book.managementNumber {
                     ManagementNumberBadge(text: managementNumber)
@@ -584,7 +587,7 @@ private struct BookGridCoverView: View {
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.primary)
+                .foregroundStyle(AppColor.libraryTitle)
                 .frame(minHeight: scaledTitleHeight, alignment: .top)
         }
         .contentShape(Rectangle())
@@ -628,7 +631,9 @@ private struct BookGridCoverView: View {
                 book.displaySmallImageSource
             }
         ) { book in
-            RowActionButton(onTap: {})
+            RowActionButton(
+                title: "借りる", tint: AppColor.borrowAction,
+                foreground: AppColor.borrowActionForeground, hasSubtleDepth: true, onTap: {})
         }
         .navigationTitle("図書一覧")
     }
@@ -676,7 +681,9 @@ private struct BookGridCoverView: View {
                 book.displaySmallImageSource
             }
         ) { book in
-            RowActionButton(onTap: {})
+            RowActionButton(
+                title: "借りる", tint: AppColor.borrowAction,
+                foreground: AppColor.borrowActionForeground, hasSubtleDepth: true, onTap: {})
         }
         .navigationTitle("図書一覧")
     }
@@ -750,7 +757,9 @@ private struct BookGridCoverView: View {
                 book.displaySmallImageSource
             }
         ) { book in
-            RowActionButton(onTap: {})
+            RowActionButton(
+                title: "借りる", tint: AppColor.borrowAction,
+                foreground: AppColor.borrowActionForeground, hasSubtleDepth: true, onTap: {})
         }
         .navigationTitle("図書一覧")
     }

@@ -54,6 +54,7 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// 組チップの動作はホストする文脈に合わせて `SectionChipBehavior` で切り替えます
 /// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
 public struct BorrowerListView: View {
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     /// 組チップの動作モード
     ///
     /// - 返却一覧＝インデックス：探している名前がどこにいるか分からない画面では、
@@ -80,7 +81,7 @@ public struct BorrowerListView: View {
     
     private enum Layout {
         static let chipSpacing: CGFloat = 8
-        static let rowVerticalPadding: CGFloat = 12
+        static let rowVerticalPadding: CGFloat = 16
         static let badgePaddingH: CGFloat = 8
         static let badgePaddingV: CGFloat = 3
         /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
@@ -143,6 +144,10 @@ public struct BorrowerListView: View {
                 } else {
                     borrowerListSection
                 }
+            }
+            .background {
+                LibrarySurfaceBackgroundView()
+                    .ignoresSafeArea()
             }
             .onChange(of: scrollToTopTrigger) { _, _ in
                 // 返却完了後の「次の利用者への引き継ぎ」：一覧を先頭へ戻す
@@ -225,63 +230,137 @@ public struct BorrowerListView: View {
     private var borrowerListSection: some View {
         List {
             ForEach(displayedSections) { section in
-                Section(header: Text(section.title)) {
+                Section(
+                    header: Text(section.title)
+                        .font(.headline)
+                        .foregroundStyle(AppColor.libraryTitle)
+                ) {
                     ForEach(section.rows) { row in
                         Button {
                             onSelect(row)
                         } label: {
                             borrowerRow(row)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(BorrowerCardButtonStyle())
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 8, trailing: 20))
                     }
                 }
             }
         }
+        .scrollContentBackground(.hidden)
     }
     
     /// 借用者1行：名前＋（保護者ラベル）＋（延滞マーク）
     private func borrowerRow(_ row: BorrowerRowDisplay) -> some View {
-        HStack(spacing: Layout.chipSpacing) {
-            Text(row.name)
-                .font(.title3)
+        HStack(alignment: .top, spacing: 16) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(AppColor.libraryAction)
+                .frame(width: 4, height: 40)
+                .accessibilityHidden(true)
             
-            if row.isGuardian {
-                Text("保護者")
-                    .font(.caption)
-                    .padding(.horizontal, Layout.badgePaddingH)
-                    .padding(.vertical, Layout.badgePaddingV)
-                    .background(AppColor.chipSurface, in: Capsule())
-                    .foregroundStyle(.secondary)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Layout.chipSpacing) {
+                    borrowerName(row)
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 8)
+                    borrowerBadges(row)
+                    borrowerChevron
+                }
+                
+                VStack(alignment: .leading, spacing: Layout.chipSpacing) {
+                    HStack(spacing: Layout.chipSpacing) {
+                        borrowerName(row)
+                        Spacer(minLength: 8)
+                        borrowerChevron
+                    }
+                    if row.isGuardian || row.hasNoOpenSlot || row.isOverdue {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: Layout.chipSpacing) { borrowerBadges(row) }
+                            VStack(alignment: .leading, spacing: Layout.chipSpacing) {
+                                borrowerBadges(row)
+                            }
+                        }
+                    }
+                }
             }
-            
-            Spacer()
-            
-            if row.hasNoOpenSlot {
-                // 藍色＝貸出中の色（図書一覧の貸出中ボタンと同じ言葉遣い）。
-                // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる
-                Label("空き枠なし", systemImage: "book.closed")
-                    .font(.caption.bold())
-                    .padding(.horizontal, Layout.badgePaddingH)
-                    .padding(.vertical, Layout.badgePaddingV)
-                    .background(AppColor.lentSurface, in: Capsule())
-                    .foregroundStyle(AppColor.lentForeground)
-            }
-            
-            if row.isOverdue {
-                Label("延滞", systemImage: "exclamationmark.triangle.fill")
-                    .font(.caption.bold())
-                    .padding(.horizontal, Layout.badgePaddingH)
-                    .padding(.vertical, Layout.badgePaddingV)
-                    .background(AppColor.overdue, in: Capsule())
-                    .foregroundStyle(AppColor.onEmphasis)
-            }
-            
-            Image(systemName: "chevron.right")
-                .font(.caption)
-                .foregroundStyle(.tertiary)
         }
         .padding(.vertical, Layout.rowVerticalPadding)
+        .padding(.horizontal, 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(AppColor.borrowerCardSurface, in: RoundedRectangle(cornerRadius: 14))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .strokeBorder(
+                    AppColor.returnCardBorder,
+                    lineWidth: colorSchemeContrast == .increased ? 2 : 1
+                )
+        }
+        .shadow(color: .black.opacity(0.10), radius: 5, y: 2)
         .contentShape(Rectangle())
+    }
+    
+    private func borrowerName(_ row: BorrowerRowDisplay) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text("利用者")
+                .font(.caption2)
+                .foregroundStyle(AppColor.librarySecondaryText)
+                .accessibilityHidden(true)
+            Text(row.name)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AppColor.libraryTitle)
+        }
+    }
+    
+    private var borrowerChevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(AppColor.libraryAction)
+            .accessibilityHidden(true)
+    }
+    
+    @ViewBuilder
+    private func borrowerBadges(_ row: BorrowerRowDisplay) -> some View {
+        if row.isOverdue {
+            Label("延滞", systemImage: "exclamationmark.triangle.fill")
+                .labelStyle(.titleAndIcon)
+                .font(.caption.bold())
+                .padding(.horizontal, Layout.badgePaddingH)
+                .padding(.vertical, Layout.badgePaddingV)
+                .background(AppColor.overdue, in: Capsule())
+                .foregroundStyle(AppColor.onEmphasis)
+                .fixedSize()
+        }
+        
+        if row.hasNoOpenSlot {
+            // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる。
+            Label("空き枠なし", systemImage: "book.closed")
+                .labelStyle(.titleAndIcon)
+                .font(.caption.bold())
+                .padding(.horizontal, Layout.badgePaddingH)
+                .padding(.vertical, Layout.badgePaddingV)
+                .background(AppColor.lentSurface, in: Capsule())
+                .foregroundStyle(AppColor.lentForeground)
+                .fixedSize()
+        }
+        
+        if row.isGuardian {
+            Text("保護者")
+                .font(.caption)
+                .padding(.horizontal, Layout.badgePaddingH)
+                .padding(.vertical, Layout.badgePaddingV)
+                .background(AppColor.chipSurface, in: Capsule())
+                .foregroundStyle(AppColor.librarySecondaryText)
+                .fixedSize()
+        }
+    }
+}
+
+private struct BorrowerCardButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .opacity(configuration.isPressed ? 0.72 : 1)
     }
 }
 
@@ -298,9 +377,15 @@ public struct BorrowerListView: View {
                     id: momo.id, title: "もも組",
                     rows: [
                         BorrowerRowDisplay(
+                            id: UUID(), name: "やまもと さくらこ", isGuardian: true, isOverdue: true,
+                            hasNoOpenSlot: true),
+                        BorrowerRowDisplay(
                             id: UUID(), name: "あおき はると", isGuardian: false, isOverdue: false),
                         BorrowerRowDisplay(
                             id: UUID(), name: "いとう さくら", isGuardian: false, isOverdue: false),
+                        BorrowerRowDisplay(
+                            id: UUID(), name: "かとう みなと", isGuardian: false, isOverdue: false,
+                            hasNoOpenSlot: true),
                         BorrowerRowDisplay(
                             id: UUID(), name: "伊藤 由美子", isGuardian: true, isOverdue: false),
                     ]),

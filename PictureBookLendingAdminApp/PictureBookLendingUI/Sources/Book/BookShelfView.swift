@@ -1,10 +1,10 @@
 import SwiftUI
 
-/// 棚表示（木の本棚デザイン）の木質パーツ群
+/// 棚表示の棚板と棚札
 ///
 /// 保育園の絵本コーナーの本棚をメタファーにした表示形式で使う、
-/// 背景・棚板・棚札のピュアUIコンポーネント。
-/// 木目はテクスチャ画像を使わずGradientとCanvasで軽量に描画する
+/// 細い棚板・棚札のピュアUIコンポーネント。
+/// 棚板はGradientと明暗それぞれの木目素材で描画する
 /// （設計方針は docs/SCREEN_DESIGN.md「棚表示」を参照）。
 
 /// 棚表示のレイアウト定数
@@ -12,12 +12,10 @@ import SwiftUI
 /// 間隔は4ptグリッドに乗せ、「かなグループ間(56) > 棚段間(32) > 段内の要素間(24)」の
 /// 3階層で差をつける。同じ階層の間隔は同じ値にそろえ、位置関係のリズムを保つ
 enum ShelfLayout {
-    /// 背景の板1枚分の幅（継ぎ目線の間隔）
-    static let plankWidth: CGFloat = 96
     /// 棚板の上面（絵本が乗る面）の高さ
-    static let boardTopHeight: CGFloat = 8
+    static let boardTopHeight: CGFloat = 4
     /// 棚板の前板の高さ
-    static let boardFrontHeight: CGFloat = 16
+    static let boardFrontHeight: CGFloat = 11
     /// 棚1段内の絵本同士の間隔（グリッド表示のセル間隔と同値にそろえる）
     static let bookSpacing: CGFloat = 16
     /// 絵本の並び（セル下端の貸出ボタン等）と棚板の間隔（段内の要素間）
@@ -35,17 +33,10 @@ enum ShelfLayout {
     static let contentVerticalPadding: CGFloat = 24
 }
 
-/// 棚表示の配色
+/// 細い棚板と棚札の配色
 ///
-/// ライトモードは明るいクリーム〜薄茶の木地（保育園の家具にある明るい木のイメージ）、
-/// ダークモードは焦げ茶の木地。文字は木地とのコントラストを確保した濃茶／クリームを使う
+/// ライトモードは明るい木、ダークモードは焦げ茶の木を使う
 struct ShelfWoodColors {
-    /// 背景木地のグラデーション（上端）
-    let backgroundTop: Color
-    /// 背景木地のグラデーション（下端）
-    let backgroundBottom: Color
-    /// 背景の板の継ぎ目線
-    let plankLine: Color
     /// 棚板上面のグラデーション（上端）
     let boardTopLight: Color
     /// 棚板上面のグラデーション（下端）
@@ -61,66 +52,31 @@ struct ShelfWoodColors {
     /// 棚板が落とす影
     let boardShadow: Color
     
-    /// ライトモード配色（明るいクリーム〜薄茶の木地×濃茶のパーツ）
+    /// ライトモード配色（白い壁紙×明るい木）
     static let light = ShelfWoodColors(
-        backgroundTop: Color(red: 0.886, green: 0.780, blue: 0.612),
-        backgroundBottom: Color(red: 0.835, green: 0.710, blue: 0.514),
-        plankLine: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.13),
-        boardTopLight: Color(red: 0.902, green: 0.753, blue: 0.541),
-        boardTopDark: Color(red: 0.824, green: 0.655, blue: 0.424),
-        boardFrontLight: Color(red: 0.745, green: 0.561, blue: 0.345),
-        boardFrontDark: Color(red: 0.659, green: 0.486, blue: 0.275),
+        boardTopLight: Color(red: 0.914, green: 0.839, blue: 0.706),
+        boardTopDark: Color(red: 0.847, green: 0.725, blue: 0.553),
+        boardFrontLight: Color(red: 0.831, green: 0.678, blue: 0.471),
+        boardFrontDark: Color(red: 0.745, green: 0.561, blue: 0.345),
         plateBackground: Color(red: 0.992, green: 0.973, blue: 0.929),
         plateText: Color(red: 0.302, green: 0.196, blue: 0.094),
-        boardShadow: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.35)
+        boardShadow: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.25)
     )
     
-    /// ダークモード配色（焦げ茶の木地×クリームの文字）
+    /// ダークモード配色（黒革×焦げ茶の棚板）
     static let dark = ShelfWoodColors(
-        backgroundTop: Color(red: 0.333, green: 0.224, blue: 0.118),
-        backgroundBottom: Color(red: 0.275, green: 0.188, blue: 0.102),
-        plankLine: Color.black.opacity(0.25),
-        boardTopLight: Color(red: 0.478, green: 0.333, blue: 0.188),
-        boardTopDark: Color(red: 0.420, green: 0.282, blue: 0.149),
-        boardFrontLight: Color(red: 0.369, green: 0.247, blue: 0.122),
-        boardFrontDark: Color(red: 0.306, green: 0.204, blue: 0.094),
+        boardTopLight: Color(red: 0.541, green: 0.384, blue: 0.251),
+        boardTopDark: Color(red: 0.459, green: 0.314, blue: 0.184),
+        boardFrontLight: Color(red: 0.404, green: 0.263, blue: 0.153),
+        boardFrontDark: Color(red: 0.314, green: 0.204, blue: 0.114),
         plateBackground: Color(red: 0.929, green: 0.882, blue: 0.796),
         plateText: Color(red: 0.216, green: 0.137, blue: 0.063),
-        boardShadow: Color.black.opacity(0.45)
+        boardShadow: Color.black.opacity(0.48)
     )
     
     /// カラースキームに応じた配色を返す
     static func colors(for colorScheme: ColorScheme) -> ShelfWoodColors {
         colorScheme == .dark ? .dark : .light
-    }
-}
-
-/// 棚表示の背景（木地＋板の継ぎ目線）
-///
-/// 継ぎ目線は静的な描画のためCanvasで軽量に引く
-struct ShelfWoodBackgroundView: View {
-    @Environment(\.colorScheme) private var colorScheme
-    
-    var body: some View {
-        let colors = ShelfWoodColors.colors(for: colorScheme)
-        
-        LinearGradient(
-            colors: [colors.backgroundTop, colors.backgroundBottom],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .overlay {
-            Canvas { context, size in
-                var x = ShelfLayout.plankWidth
-                while x < size.width {
-                    context.fill(
-                        Path(CGRect(x: x, y: 0, width: 1, height: size.height)),
-                        with: .color(colors.plankLine)
-                    )
-                    x += ShelfLayout.plankWidth
-                }
-            }
-        }
     }
 }
 
@@ -135,6 +91,7 @@ struct ShelfBoardView: View {
     var hangingLabelText: String? = nil
     
     var body: some View {
+        let isDark = colorScheme == .dark
         let colors = ShelfWoodColors.colors(for: colorScheme)
         
         VStack(spacing: 0) {
@@ -144,6 +101,10 @@ struct ShelfBoardView: View {
                 endPoint: .bottom
             )
             .frame(height: ShelfLayout.boardTopHeight)
+            .overlay(alignment: .top) {
+                Color.white.opacity(isDark ? 0.24 : 0.42)
+                    .frame(height: 1)
+            }
             
             LinearGradient(
                 colors: [colors.boardFrontLight, colors.boardFrontDark],
@@ -151,9 +112,24 @@ struct ShelfBoardView: View {
                 endPoint: .bottom
             )
             .frame(height: ShelfLayout.boardFrontHeight)
+            .overlay {
+                GeometryReader { geometry in
+                    Image(isDark ? "DarkWalnut" : "LightOak", bundle: .module)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .opacity(isDark ? 0.55 : 0.48)
+                        .clipped()
+                }
+            }
+            .overlay(alignment: .bottom) {
+                Color.black.opacity(isDark ? 0.42 : 0.16)
+                    .frame(height: 1)
+            }
+            .clipped()
         }
         .compositingGroup()
-        .shadow(color: colors.boardShadow, radius: 6, y: 5)
+        .shadow(color: colors.boardShadow, radius: 5, y: 4)
         .overlay(alignment: .bottomLeading) {
             if let hangingLabelText {
                 KanaShelfPlateView(text: hangingLabelText)
@@ -197,5 +173,5 @@ struct KanaShelfPlateView: View {
         ShelfBoardView()
     }
     .padding(.vertical, 60)
-    .background { ShelfWoodBackgroundView() }
+    .background { LibrarySurfaceBackgroundView() }
 }
