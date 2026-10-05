@@ -13,9 +13,9 @@ public enum AppColor: Hashable {
     public static let libraryAction = Color("LibraryAction", bundle: .module)
     /// 返却カードの輪郭に使う控えめな金茶。
     public static let returnCardBorder = Color("ReturnCardBorder", bundle: .module)
-    /// 貸出可能な本の「借りる」操作。状態色の緑とは別にコントラストを確保する。
+    /// 「借りる」操作と貸出・返却の成功表示。状態色の緑とは別にコントラストを確保する。
     public static let borrowAction = Color("BorrowAction", bundle: .module)
-    /// 借りる操作の文字。ライトは白、ダークは深緑に合わせた淡い真鍮色。
+    /// 借りる操作の文字と成功表示のチェック。ライトは白、ダークは深緑に合わせた淡い真鍮色。
     public static let borrowActionForeground = Color("BorrowActionForeground", bundle: .module)
     /// 貸出中の文字・アイコン。淡い状態面との組で使う。
     public static let lentForeground = Color("Lent", bundle: .module)

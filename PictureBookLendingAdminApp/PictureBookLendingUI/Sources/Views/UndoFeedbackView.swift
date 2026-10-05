@@ -72,7 +72,8 @@ public struct UndoFeedbackView: View {
         VStack(spacing: Layout.spacing) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: iconSize))
-                .foregroundStyle(.green)
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(AppColor.borrowActionForeground, AppColor.borrowAction)
             
             Text(message)
                 .font(.title3.bold())
