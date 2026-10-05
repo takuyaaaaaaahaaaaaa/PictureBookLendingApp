@@ -9,6 +9,21 @@ import TipKit
 
 /// 自動入力機能の案内用Tip
 struct AutoFillTip: Tip {
+    // TipKitの保存領域はconfigure後にリセットできないため、再表示時はIDを更新する。
+    static let replayGenerationKey = "autoFillTipReplayGeneration"
+
+    private let replayGeneration = UserDefaults.standard.integer(forKey: replayGenerationKey)
+
+    var id: String {
+        let originalID = String(describing: Self.self)
+        // 既存ユーザーの表示履歴を引き継ぐため、初回はTipKitの既定IDを使う。
+        return replayGeneration == 0 ? originalID : "\(originalID).replay.\(replayGeneration)"
+    }
+
+    var options: [any Option] {
+        MaxDisplayCount(1)
+    }
+
     var title: Text {
         Text("タイトルと著者名から自動入力")
     }
@@ -19,6 +34,14 @@ struct AutoFillTip: Tip {
     
     var image: Image? {
         Image(systemName: "wand.and.stars")
+    }
+}
+
+public enum BookFormTipDebug {
+    public static func replayAutoFillTip() {
+        let defaults = UserDefaults.standard
+        let nextGeneration = defaults.integer(forKey: AutoFillTip.replayGenerationKey) + 1
+        defaults.set(nextGeneration, forKey: AutoFillTip.replayGenerationKey)
     }
 }
 

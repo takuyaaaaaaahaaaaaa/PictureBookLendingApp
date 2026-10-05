@@ -30,6 +30,8 @@ struct PictureBookLendingAdminApp: App {
     @State private var privacy: TelemetryPrivacyController
     
     init() {
+        try? Tips.configure()
+
         #if DEBUG
             let privacy = TelemetryPrivacyController(
                 analyticsDestination: ConsoleAnalyticsService())
@@ -88,13 +90,6 @@ struct PictureBookLendingAdminApp: App {
                 .environment(backupModel)
                 .environment(privacy)
                 .environment(\.analytics, privacy.analytics)
-                .task {
-                    // TipKitを初期化
-                    try? Tips.configure([
-                        .displayFrequency(.immediate),
-                        .datastoreLocation(.applicationDefault),
-                    ])
-                }
         }
         .modelContainer(SwiftDataRepositoryFactory.shared.modelContainer)
     }
