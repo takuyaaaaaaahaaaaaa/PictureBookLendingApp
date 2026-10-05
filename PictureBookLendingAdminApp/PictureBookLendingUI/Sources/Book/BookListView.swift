@@ -512,11 +512,12 @@ public struct BookRowView<RowAction: View>: View {
         HStack {
             // サムネイル画像
             BookImageView(imageURL: imageURL) {
-                Image(systemName: "book.closed")
-                    .foregroundStyle(.secondary)
-                    .font(.title2)
+                BookCoverPlaceholder(font: .title2, cornerRadius: 6)
             }
-            .aspectRatio(contentMode: .fit)
+            .aspectRatio(
+                imageURL == nil ? scale.rowThumbnailWidth / scale.rowThumbnailHeight : nil,
+                contentMode: .fit
+            )
             .frame(width: scale.rowThumbnailWidth, height: scale.rowThumbnailHeight)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -571,11 +572,10 @@ private struct BookGridCoverView: View {
             // 同じ行の他のセルとタイトル・rowActionの縦位置がズレてしまうため）
             GeometryReader { geometry in
                 BookImageView(imageURL: imageURL) {
-                    Image(systemName: "book.closed")
-                        .foregroundStyle(.secondary)
-                        .font(.largeTitle)
+                    BookCoverPlaceholder(font: .largeTitle, cornerRadius: 8)
                 }
-                .aspectRatio(contentMode: .fit)
+                // 未設定の表紙は枠の比率に合わせ、画像がある場合は元の比率を使う。
+                .aspectRatio(imageURL == nil ? 1 : nil, contentMode: .fit)
                 .frame(width: geometry.size.width, height: geometry.size.width)
             }
             .aspectRatio(1, contentMode: .fit)
