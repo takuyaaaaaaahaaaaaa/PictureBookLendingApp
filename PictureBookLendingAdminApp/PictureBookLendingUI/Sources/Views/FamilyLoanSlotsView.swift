@@ -236,14 +236,13 @@ public struct FamilyLoanSlotsView: View {
             Spacer(minLength: Layout.contentSpacing)
             
             if mode == .borrowing {
-                Button("この枠で借りる") {
+                RowActionButton(
+                    title: "この枠で借りる", tint: AppColor.borrowAction,
+                    foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,
+                    font: .title3
+                ) {
                     onBorrow(slot)
                 }
-                .font(.title3)
-                .buttonStyle(.borderedProminent)
-                .tint(AppColor.borrowAction)
-                .foregroundStyle(AppColor.borrowActionForeground)
-                .controlSize(.large)
             }
         }
         .padding(Layout.cardPadding)
