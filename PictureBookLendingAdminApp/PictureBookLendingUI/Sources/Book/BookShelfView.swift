@@ -56,7 +56,8 @@ struct ShelfWoodColors {
         boardTopDark: Color(red: 0.847, green: 0.725, blue: 0.553),
         boardFrontLight: Color(red: 0.831, green: 0.678, blue: 0.471),
         boardFrontDark: Color(red: 0.745, green: 0.561, blue: 0.345),
-        plateBackground: Color(red: 0.302, green: 0.196, blue: 0.094),
+        // 主操作のlibraryActionより明るい茶色にして、棚見出しの強調を抑える。
+        plateBackground: Color(red: 0.525, green: 0.400, blue: 0.302),
         plateText: Color(red: 0.992, green: 0.973, blue: 0.929),
         boardShadow: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.25)
     )
@@ -141,7 +142,7 @@ struct ShelfBoardView: View {
 
 /// 棚札（かなグループ名を表示する札）
 ///
-/// 棚板の前面に貼って使う。壁紙には濃茶の札と明るい文字、
+/// 棚板の前面に貼って使う。壁紙には落ち着いた茶色の札と明るい文字、
 /// 黒革にはクリーム色の札と濃茶の文字を合わせ、背景から区別する。
 struct KanaShelfPlateView: View {
     @Environment(\.colorScheme) private var colorScheme
