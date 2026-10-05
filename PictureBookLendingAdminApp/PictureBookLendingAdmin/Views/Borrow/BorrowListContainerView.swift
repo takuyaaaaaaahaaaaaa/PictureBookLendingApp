@@ -160,12 +160,14 @@ struct BorrowListContainerView: View {
                 }
             }
             #if os(macOS)
-                .sheet(isPresented: $isSettingsPresented, onDismiss: presentConsentIfNeeded) {
+                .sheet(
+                    isPresented: $isSettingsPresented, onDismiss: presentWelcomeOrConsentIfNeeded
+                ) {
                     SettingsContainerView()
                 }
             #else
                 .fullScreenCover(
-                    isPresented: $isSettingsPresented, onDismiss: presentConsentIfNeeded
+                    isPresented: $isSettingsPresented, onDismiss: presentWelcomeOrConsentIfNeeded
                 ) {
                     SettingsContainerView()
                 }
@@ -387,7 +389,11 @@ struct BorrowListContainerView: View {
         scrollToTopTrigger += 1
     }
     
-    private func presentConsentIfNeeded() {
+    private func presentWelcomeOrConsentIfNeeded() {
+        if !welcomeSeen {
+            isWelcomePresented = true
+            return
+        }
         if setupStarted && setupProgress.isComplete && privacy.needsInitialConsent {
             isInitialConsentPresented = true
         }

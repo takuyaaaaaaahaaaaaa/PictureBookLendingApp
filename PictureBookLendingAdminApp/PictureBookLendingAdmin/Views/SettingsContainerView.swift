@@ -42,6 +42,9 @@ struct SettingsContainerView: View {
     @State private var shouldCloseAfterConsent = false
     @AppStorage("setupGuideStarted") private var setupStarted = false
     @AppStorage("setupGuideCompleted") private var setupCompleted = false
+    @AppStorage("setupGuideWelcomeSeen") private var welcomeSeen = false
+    @AppStorage("consentPendingAfterWelcomeSkip") private var consentPendingAfterWelcomeSkip =
+        false
     
     var body: some View {
         NavigationStack(path: $navigationPath) {
@@ -100,6 +103,19 @@ struct SettingsContainerView: View {
                     }
                 )
             }
+            .safeAreaInset(edge: .bottom) {
+                Text(
+                    "バージョン \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "-")"
+                )
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 6)
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 2) {
+                    navigationPath.append(SettingsDestination.debug)
+                }
+            }
             .navigationTitle("設定")
             .toolbar {
                 if !setupStarted && setupProgress.completedCount < 3 {
@@ -133,6 +149,14 @@ struct SettingsContainerView: View {
                     PrivacySettingsContainerView()
                 case .licenses:
                     ThirdPartyLicensesView()
+                case .debug:
+                    DebugSettingsView {
+                        setupStarted = false
+                        setupCompleted = false
+                        welcomeSeen = false
+                        consentPendingAfterWelcomeSkip = false
+                        dismiss()
+                    }
                 }
             }
             .sheet(isPresented: $isLoanSettingsSheetPresented) {
@@ -573,6 +597,35 @@ struct SettingsContainerView: View {
         case book
         case privacy
         case licenses
+        case debug
+    }
+}
+
+private struct DebugSettingsView: View {
+    let onReplayWelcome: () -> Void
+    @State private var isAutoFillTipReplayed = false
+
+    var body: some View {
+        Form {
+            Section {
+                Button("自動入力のTipを再表示") {
+                    BookFormTipDebug.replayAutoFillTip()
+                    isAutoFillTipReplayed = true
+                }
+                Button("初回の準備案内を再表示", action: onReplayWelcome)
+            } header: {
+                Text("案内の再表示")
+            } footer: {
+                Text("準備案内は設定を閉じた後に表示されます。登録済みの図書・利用者は削除しません。")
+            }
+
+            if isAutoFillTipReplayed {
+                Section {
+                    Text("図書の登録画面を開くと自動入力のTipが再表示されます。")
+                }
+            }
+        }
+        .navigationTitle("デバッグ")
     }
 }
 
