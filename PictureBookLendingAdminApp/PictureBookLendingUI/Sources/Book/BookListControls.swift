@@ -11,7 +11,6 @@ struct BookListControls: View {
     private enum Layout {
         static let groupSpacing: CGFloat = 24
         static let menuSpacing: CGFloat = 12
-        static let minimumControlSize: CGFloat = 44
     }
     
     var body: some View {
@@ -30,38 +29,16 @@ struct BookListControls: View {
             
             VStack(alignment: .leading, spacing: Layout.groupSpacing) {
                 kanaMenu
-                displayMenus.frame(maxWidth: .infinity, alignment: .trailing)
+                displayMenus
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         }
         .buttonStyle(.bordered)
         .padding(.horizontal)
     }
-    
+
     private var displayMenus: some View {
-        HStack(spacing: Layout.menuSpacing) {
-            Menu {
-                sortPicker
-            } label: {
-                Image(systemName: sort.iconName)
-                    .frame(
-                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("並び順")
-            .accessibilityValue(sort.displayName)
-            .accessibilityIdentifier("book.sort.menu")
-            
-            Menu {
-                modePicker
-            } label: {
-                Image(systemName: mode.iconName)
-                    .frame(
-                        minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("表示形式")
-            .accessibilityValue(mode.displayName)
-            .accessibilityIdentifier("book.mode.menu")
-        }
-        .fixedSize()
+        BookDisplayMenus(sort: $sort, mode: $mode, spacing: Layout.menuSpacing)
     }
     
     private var kanaChips: some View {
@@ -105,6 +82,49 @@ struct BookListControls: View {
         .accessibilityLabel("五十音の絞り込み")
         .accessibilityValue(selectedKana?.displayName ?? "すべて")
         .accessibilityIdentifier("book.kana.menu")
+    }
+}
+
+/// 現在の一覧だけに作用する並び順・表示形式の操作
+public struct BookDisplayMenus: View {
+    @Binding private var sort: BookSortType
+    @Binding private var mode: BookDisplayMode
+    private let spacing: CGFloat
+
+    private enum Layout {
+        static let minimumControlSize: CGFloat = 44
+    }
+
+    public init(sort: Binding<BookSortType>, mode: Binding<BookDisplayMode>, spacing: CGFloat = 0) {
+        self._sort = sort
+        self._mode = mode
+        self.spacing = spacing
+    }
+
+    public var body: some View {
+        // ツールバーでは追加余白をなくし、本文内では指定した間隔を使う。
+        HStack(spacing: spacing) {
+            Menu {
+                sortPicker
+            } label: {
+                Image(systemName: sort.iconName)
+                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("並び順")
+            .accessibilityValue(sort.displayName)
+            .accessibilityIdentifier("book.sort.menu")
+
+            Menu {
+                modePicker
+            } label: {
+                Image(systemName: mode.iconName)
+                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("表示形式")
+            .accessibilityValue(mode.displayName)
+            .accessibilityIdentifier("book.mode.menu")
+        }
+        .fixedSize()
     }
     
     private var sortPicker: some View {

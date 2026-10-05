@@ -93,7 +93,7 @@ private enum Layout {
 ///
 /// 純粋なUI表示のみを担当し、NavigationStack、alert、sheet等の
 /// 画面制御はContainer Viewに委譲します。
-/// 五十音チップによる絞り込みとセクション表示に対応し、
+/// `showsControls`が`true`の画面では五十音チップによる絞り込みに対応し、
 /// `scrollToTopTrigger`のインクリメントで一覧を先頭へ戻せます。
 public struct BookListView<RowAction: View>: View {
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
@@ -104,6 +104,8 @@ public struct BookListView<RowAction: View>: View {
     @ScaledMetric(relativeTo: .title3) private var largeCellWidth = BookDisplayScale.large
         .minCellWidth
     @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
+    /// 棚札の文字拡大に合わせ、札と次の絵本が重ならない余白を確保する。
+    @ScaledMetric(relativeTo: .title3) private var shelfSectionSpacing = ShelfLayout.sectionSpacing
     
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
     @State private var viewportWidth: CGFloat = 0
@@ -118,6 +120,8 @@ public struct BookListView<RowAction: View>: View {
     @Binding public var selectedKanaFilter: KanaGroup?
     /// 五十音フィルタの選択肢
     public let kanaFilterOptions: [KanaGroup]
+    /// 五十音チップと表示メニューを一覧の上に表示するか
+    public let showsControls: Bool
     /// 一覧を先頭へ戻すトリガ。値がインクリメントされると先頭行までスクロールする。
     /// 五十音チップの挙動とは独立しており、貸出完了後のリセット等から使う
     public let scrollToTopTrigger: Int
@@ -147,6 +151,7 @@ public struct BookListView<RowAction: View>: View {
         searchText: Binding<String>,
         selectedKanaFilter: Binding<KanaGroup?>,
         kanaFilterOptions: [KanaGroup] = KanaGroup.allCases,
+        showsControls: Bool = true,
         scrollToTopTrigger: Int = 0,
         selectedSortType: Binding<BookSortType>,
         displayMode: Binding<BookDisplayMode>,
@@ -162,6 +167,7 @@ public struct BookListView<RowAction: View>: View {
         self._searchText = searchText
         self._selectedKanaFilter = selectedKanaFilter
         self.kanaFilterOptions = kanaFilterOptions
+        self.showsControls = showsControls
         self.scrollToTopTrigger = scrollToTopTrigger
         self._selectedSortType = selectedSortType
         self._displayMode = displayMode
@@ -177,9 +183,11 @@ public struct BookListView<RowAction: View>: View {
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: 5) {
-                BookListControls(
-                    selectedKana: $selectedKanaFilter, sort: $selectedSortType,
-                    mode: $displayMode, kanaOptions: kanaFilterOptions)
+                if showsControls {
+                    BookListControls(
+                        selectedKana: $selectedKanaFilter, sort: $selectedSortType,
+                        mode: $displayMode, kanaOptions: kanaFilterOptions)
+                }
                 
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView
@@ -321,15 +329,15 @@ public struct BookListView<RowAction: View>: View {
     private var bookShelfSection: some View {
         let visibleSections = sections.filter { !$0.books.isEmpty }
         return ScrollView {
-            LazyVStack(alignment: .leading, spacing: ShelfLayout.sectionSpacing) {
-                // 最上段の横木。最初のかなグループのラベルをここからぶら下げる
+            LazyVStack(alignment: .leading, spacing: shelfSectionSpacing) {
+                // 最上段の横木。最初のかなグループのラベルをここに付ける
                 if let firstSection = visibleSections.first {
-                    ShelfBoardView(hangingLabelText: firstSection.title)
+                    ShelfBoardView(labelText: firstSection.title)
                 }
                 ForEach(Array(visibleSections.enumerated()), id: \.element.id) { index, section in
                     let nextTitle =
                         index + 1 < visibleSections.count ? visibleSections[index + 1].title : nil
-                    shelfSection(for: section, hangingNextLabelText: nextTitle)
+                    shelfSection(for: section, nextLabelText: nextTitle)
                 }
             }
             .padding(.vertical, ShelfLayout.contentVerticalPadding)
@@ -361,18 +369,17 @@ public struct BookListView<RowAction: View>: View {
     
     /// かなグループ1つ分の棚のまとまり（折り返しの棚段の集まり）
     ///
-    /// かなラベルは独立した棚札としては置かず、1つ上の棚板の下にぶら下げる。
+    /// かなラベルは独立した棚札としては置かず、1つ上の棚板に付ける。
     /// このグループ自身のラベルは直前のグループの最後の棚板（先頭グループは最上段の横木）が
-    /// 持つため、ここでは最後の棚板に「次のグループのラベル」をぶら下げる
+    /// 持つため、ここでは最後の棚板に「次のグループのラベル」を付ける
     @ViewBuilder
-    private func shelfSection(for section: BookSection, hangingNextLabelText: String?) -> some View
-    {
+    private func shelfSection(for section: BookSection, nextLabelText: String?) -> some View {
         let rows = Self.chunked(section.books, into: shelfColumnCount)
         VStack(alignment: .leading, spacing: ShelfLayout.rowSpacing) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 shelfRow(
                     of: row,
-                    hangingLabelText: index == rows.count - 1 ? hangingNextLabelText : nil)
+                    labelText: index == rows.count - 1 ? nextLabelText : nil)
             }
         }
     }
@@ -381,7 +388,7 @@ public struct BookListView<RowAction: View>: View {
     ///
     /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
     @ViewBuilder
-    private func shelfRow(of books: [Book], hangingLabelText: String?) -> some View {
+    private func shelfRow(of books: [Book], labelText: String?) -> some View {
         VStack(alignment: .leading, spacing: shelfBoardSpacing) {
             HStack(alignment: .bottom, spacing: ShelfLayout.bookSpacing) {
                 ForEach(books) { book in
@@ -393,7 +400,7 @@ public struct BookListView<RowAction: View>: View {
             .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
             
-            ShelfBoardView(hangingLabelText: hangingLabelText)
+            ShelfBoardView(labelText: labelText)
         }
     }
     

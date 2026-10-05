@@ -42,7 +42,7 @@ SwiftDataに既に全部ある**ので、イベントログでは取らない（
 | Q1 | 貸出・返却は目標どおり速く完了しているか | DESIGN_PRINCIPLES の数値目標（貸出3タップ・返却2タップ・取り消し1タップ） |
 | Q2 | フローの途中で諦めた人はどこで消えたか | 離脱はDBに痕跡が残らない。ログでしか見えない |
 | Q3 | 図書は見つけられているか（検索の質） | 0件ヒット・あいまい検索の発動は登録漏れ・表記ゆれの発見器 |
-| Q4 | 作った機能は使われているか | 棚表示・五十音・延滞のみフィルタ・保護者枠の答え合わせ |
+| Q4 | 作った機能は使われているか | 棚表示・延滞のみフィルタ・保護者枠の答え合わせ |
 | Q5 | 間違えやすいUIはないか | Undo・貸出ブロックの頻度はUI改善のサイン |
 | Q6 | アプリは落ちていないか | 現場でのクラッシュは報告が来ない。少ユーザーほど1クラッシュが致命的 |
 
@@ -60,13 +60,15 @@ Q6はイベントログではなく**クラッシュレポート（Crashlytics �
 
 | イベント | 発火タイミング | プロパティ |
 |---|---|---|
-| `borrow_flow_started` | 図書一覧で図書をタップし貸出シートが開いた（貸出中の案内シートは除く） | `find_method`: search / kana_index / shelf / scroll |
+| `borrow_flow_started` | 図書一覧で図書をタップし貸出シートが開いた（貸出中の案内シートは除く） | `find_method`: search / shelf / scroll |
 | `borrow_user_selected` | 名前一覧で名前をタップした | `elapsed_ms`（シート表示からの経過） |
 | `borrow_completed` | 枠タップで貸出が確定した | `total_ms`（シート表示から完了まで）, `slot_type`: child / guardian, `guardian_fallback`: Bool（園児の名前で入ったのに保護者の枠で借りたか） |
 | `borrow_abandoned` | 貸出シートが完了せず閉じた | `last_step`: user_selection / slot_selection, `reason`: user_closed / idle_timeout, `elapsed_ms` |
 | `borrow_blocked_no_slot` | 家庭の画面に到達したが空き枠がなかった | なし |
 
-- `borrow_flow_started.find_method` の `scroll` は「検索も五十音チップも使っておらず、
+- 貸出画面の五十音絞り込みを廃止したため、`kana_index`は新たに記録しない。
+  過去のデータとの互換性のため、イベントの列挙値は保持する。
+- `borrow_flow_started.find_method` の `scroll` は「検索を使っておらず、
   一覧が棚表示でもなかった」を意味する（積極的にスクロールしたことの検知ではない）
 - `borrow_completed.guardian_fallback` は「園児の名前で入って保護者の枠で借りた」の
   近似であり、**園児枠が満杯だったかは判定していない**（園児枠が空いていても
@@ -124,7 +126,7 @@ v1の`find_method`は `group_index` / `scroll` を `browse`（検索せず一覧
 | 返却所要時間 | `return_completed.elapsed_ms` の中央値とp90 | 返却2タップ目標の実測値 |
 | 0件ヒット率 | `zero_hit=true ÷ book_search_performed` | 高い→登録漏れ or 表記ゆれ。**改善アクションに最直結** |
 | あいまい検索発動率 | `fuzzy_triggered=true ÷ book_search_performed` | 高い→タイプミスが多い＝67歳基準の入力UIを疑う |
-| 図書の見つけ方の内訳 | `borrow_flow_started.find_method` の構成比 | 棚表示 vs 検索 vs 五十音。次に磨く機能の判断材料 |
+| 図書の見つけ方の内訳 | `borrow_flow_started.find_method` の構成比 | 棚表示・検索・その他の一覧閲覧。次に磨く機能の判断材料 |
 | 保護者枠フォールバック率 | `guardian_fallback=true ÷ borrow_completed` | 発見6「2枠が知られていない」の改善確認 |
 | Undo率 | `undo_performed ÷ (borrow_completed + return_completed)` | 高い→間違えやすいUI。`flow`別に見る（下記の注意） |
 
