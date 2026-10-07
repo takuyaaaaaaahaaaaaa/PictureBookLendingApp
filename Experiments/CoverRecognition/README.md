@@ -20,7 +20,19 @@
 
 Apple の [更新可能な線画分類器例](https://apple.github.io/coremltools/docs-guides/source/updatable-tiny-drawing-classifier-pipeline-model.html) は 28×28 グレースケール、128 次元の MIT 記載モデルと更新可能 kNN のパイプライン。表紙写真向けの精度根拠にならない。比較のため、隔離した `/tmp/cover-coreml-venv` に `coremltools 9.0` を導入し、`generate_knn_fixture.py` で**画像入力なし**・3 次元 Float32 ベクトル入力・`bookID` 文字列出力の更新可能 kNN を生成。生成物は `Tests/.../Resources` のテスト専用 fixture として保存した。`MLUpdateTask` による `.mlmodelc` の更新・保存・再読込・予測が Mac と iOS 26.1 iPad Simulator の両方で通過した。これは更新 API の動作確認であり、表紙画像の精度検証ではない。Python 3.14 用 `coremltools` はネイティブ Python バインディングが無く、仕様生成のみ可能だったためモデルコンパイルは Xcode の `coremlc` で実行した。
 
-Core AI は Xcode 27.1 の **iPhoneOS 27.1 SDK** に `CoreAI.framework` があり、公開 API は iOS/iPadOS 27 以降。一方、同 Xcode の iPhoneSimulator SDK の公開 Frameworks には `CoreAI.framework` が見つからず、このシミュレータでの Core AI 実行比較はできない。アプリの最低 iOS は 26.0 のまま。Core AI の推論とローカル索引は候補構成だが、端末内モデル更新 API があるとは確認していない。Core ML `MLUpdateTask` と同一視しない。
+### Core AI の追加確認
+
+Core ML は `.mlpackage` / `.mlmodelc` を `MLModel` で読み、`MLFeatureValue(pixelBuffer:)` から推論する。この PoC では FastViT の 768 次元出力を索引へ登録できた。Core AI は [Apple の統合ガイド](https://developer.apple.com/documentation/coreai/integrating-on-device-ai-models-in-your-app-with-core-ai)によると **`.aimodel` → `AIModel(contentsOf:)` → `loadFunction(named:)` → `InferenceFunction.run(inputs:)`** の経路を取る。`CoreAIProbe.swift` はそのロード、`NDArray` 推論、256×256 画像入力と 768 次元出力の署名検査を記した型検査用コード。FastViT の Core AI モデルや実推論の実装ではない。
+
+| 検証 | 結果 |
+| --- | --- |
+| macOS 27.2 / Xcode 27.1 SDK | `CoreAIProbe.swift` の型検査に成功。`CoreAIFormatProbe.swift` をコンパイルして実行。FastViT `.mlpackage` の `AIModel` ロードは **特殊化段階**で `Missing hash file` により失敗。kNN `.mlmodelc` も `corruptedMetadata` で失敗。 |
+| iPhoneOS 27.1 SDK | `CoreAIProbe.swift` の型検査に成功。実機でのロード・推論は未実施。 |
+| iOS 27 Simulator SDK | `CoreAIProbe.swift` の型検査が `no such module 'CoreAI'` で失敗。シミュレータ実行には進めず。 |
+
+Core AI は [公式ドキュメント](https://developer.apple.com/documentation/coreai)上、iOS/iPadOS/macOS 27 以降で、推論用 `.aimodel` を [Core AI PyTorch Extensions](https://apple.github.io/coreai-torch/) により PyTorch モデルから変換する。既存の Core ML `.mlpackage` を渡すだけでは使えなかった。**同一 FastViT 重みで実行エンジンだけを比べる実験は未達**であり、スコアや速度の比較はしていない。Apple の [Core AI Models](https://github.com/apple/coreai-models) のモデル一覧に FastViT の変換レシピは見つからなかった。追加実験には元の PyTorch 重み、`coreai-torch` などの変換ソフト、Xcode ガイドが求める Metal Toolchain が必要。この Mac に `coreai-build` と Metal Toolchain は見つからず、追加導入は行っていない。モデルのライセンスと同一前処理・重みの再確認も必要。
+
+Core AI のモデル特殊化は**実行端末向けの最適化**であり、蔵書を覚える追加学習ではない。Core AI で固定画像埋め込みを推論できた場合も、蔵書追加はアプリ側のローカル索引へのベクトル登録となる。Core AI の端末内重み更新 API は未確認で、Core ML の `MLUpdateTask` と同一視しない。アプリの最低 iOS 26.0 は変更していない。
 
 ## 次の実機検証
 
