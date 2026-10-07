@@ -33,6 +33,7 @@ import Testing
     #expect(throws: CoverIndexError.invalidVector) { try index.add([1, 0, 0], for: UUID()) }
 }
 
+#if os(macOS)
 @Test func visionProcessesSeparateImageInputs() throws {
     // Deliberately synthetic shapes: verifies the image pipeline, not real-cover accuracy.
     let encoder = VisionCoverEncoder()
@@ -49,8 +50,9 @@ import Testing
     #expect(result.candidates.first?.bookID == target)
     #expect(try index.search(other, minimumSimilarity: 1.1).needsManualSearch)
 }
+#endif
 
-private func makeImage(red: Bool, shifted: Bool) -> CGImage {
+func makeImage(red: Bool, shifted: Bool) -> CGImage {
     let width = 256, height = 256
     let context = CGContext(
         data: nil, width: width, height: height, bitsPerComponent: 8,
