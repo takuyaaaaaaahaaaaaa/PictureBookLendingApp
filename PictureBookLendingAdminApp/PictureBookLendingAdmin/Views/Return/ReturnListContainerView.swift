@@ -19,6 +19,7 @@ struct ReturnListContainerView: View {
     
     @State private var navigationPath = NavigationPath()
     @State private var searchText = ""
+    @State private var isSearchFocused = false
     @State private var isOverdueOnly = false
     /// 一覧をトップへ戻すトリガ（返却完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
@@ -51,11 +52,13 @@ struct ReturnListContainerView: View {
             .navigationTitle("返却")
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
-                .searchable(
-                    text: $searchText,
-                    placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "名前 または 図書のタイトルで検索"
-                )
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    LendingSearchBar(
+                        searchText: $searchText,
+                        isSearchFocused: $isSearchFocused,
+                        prompt: "名前 または 図書のタイトルで検索"
+                    )
+                }
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif

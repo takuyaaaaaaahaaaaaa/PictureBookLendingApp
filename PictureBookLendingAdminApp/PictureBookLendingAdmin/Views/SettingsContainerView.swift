@@ -63,7 +63,7 @@ struct SettingsContainerView: View {
                     coverPendingCount: coverRecognition.pendingCount,
                     isCoverPreparationRunning: coverRecognition.isPreparing,
                     onRetryCoverPreparation: {
-                        Task { await coverRecognition.prepare(books: bookModel.books) }
+                        Task { await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
                     },
                     onSelectUser: {
                         navigationPath.append(SettingsDestination.user)
@@ -439,7 +439,7 @@ struct SettingsContainerView: View {
             alertState = .error("データ削除に失敗しました", message: "\(error.localizedDescription)")
         }
         if options.deleteBooks {
-            await coverRecognition.prepare(books: bookModel.books)
+            await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
         }
     }
     
@@ -588,7 +588,7 @@ struct SettingsContainerView: View {
             classGroupModel.refreshClassGroups()
             userModel.refreshUsers()
             bookModel.refreshBooks()
-            Task { await coverRecognition.prepare(books: bookModel.books) }
+            Task { await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
             loanModel.reloadAllLoans()
             loanSettingsModel.reload()
             

@@ -58,6 +58,8 @@ public struct BookFormView<AutoFillButton: View>: View {
     let onCancel: () -> Void
     let onReset: (() -> Void)
     let onCameraTap: (() -> Void)?
+    let onAdjustPhotoTap: (() -> Void)?
+    let showsNavigationActions: Bool
     
     private let autoFillTip = AutoFillTip()
     
@@ -69,7 +71,9 @@ public struct BookFormView<AutoFillButton: View>: View {
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         onReset: @escaping () -> Void,
-        onCameraTap: (() -> Void)? = nil
+        onCameraTap: (() -> Void)? = nil,
+        onAdjustPhotoTap: (() -> Void)? = nil,
+        showsNavigationActions: Bool = true
     ) {
         self._book = book
         self.imageURL = imageURL
@@ -79,6 +83,8 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.onCancel = onCancel
         self.onReset = onReset
         self.onCameraTap = onCameraTap
+        self.onAdjustPhotoTap = onAdjustPhotoTap
+        self.showsNavigationActions = showsNavigationActions
     }
     
     public init(
@@ -88,7 +94,9 @@ public struct BookFormView<AutoFillButton: View>: View {
         onSave: @escaping () -> Void,
         onCancel: @escaping () -> Void,
         onReset: @escaping () -> Void,
-        onCameraTap: (() -> Void)? = nil
+        onCameraTap: (() -> Void)? = nil,
+        onAdjustPhotoTap: (() -> Void)? = nil,
+        showsNavigationActions: Bool = true
     ) where AutoFillButton == EmptyView {
         self._book = book
         self.imageURL = imageURL
@@ -98,6 +106,8 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.onCancel = onCancel
         self.onReset = onReset
         self.onCameraTap = onCameraTap
+        self.onAdjustPhotoTap = onAdjustPhotoTap
+        self.showsNavigationActions = showsNavigationActions
     }
     
     public var body: some View {
@@ -235,17 +245,9 @@ public struct BookFormView<AutoFillButton: View>: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("キャンセル") {
-                    onCancel()
-                }
-            }
-            
-            ToolbarItem(placement: .confirmationAction) {
-                Button(isEditMode ? "保存" : "追加") {
-                    onSave()
-                }
-                .disabled(!isValidInput)
+            if showsNavigationActions {
+                BookFormActions(isEditMode: isEditMode, canSave: isValidInput,
+                                onSave: onSave, onCancel: onCancel)
             }
         }
     }
@@ -289,23 +291,36 @@ public struct BookFormView<AutoFillButton: View>: View {
                 Spacer()
             }
             
-            // カメラボタン
-            #if canImport(UIKit)
-                if let onCameraTap = onCameraTap, CameraUtility.isCameraAvailable {
-                    Button(action: onCameraTap) {
-                        HStack {
-                            Image(systemName: "camera")
-                            Text("写真を撮影")
+            VStack(spacing: 24) {
+                #if canImport(UIKit)
+                    if let onCameraTap, CameraUtility.isCameraAvailable {
+                        Button(action: onCameraTap) {
+                            HStack {
+                                Image(systemName: "camera")
+                                Text("写真を撮影")
+                            }
+                                .frame(maxWidth: .infinity, minHeight: 52)
+                                .foregroundStyle(.white)
+                                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 10))
+                                .contentShape(Rectangle())
                         }
-                        .foregroundStyle(AppColor.onEmphasis)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 8)
-                        .background(Color.accentColor)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .buttonStyle(.plain)
+                    }
+                #endif
+                if let onAdjustPhotoTap {
+                    Button(action: onAdjustPhotoTap) {
+                        Label("写真を調整", systemImage: "crop")
+                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .foregroundStyle(Color.accentColor)
+                            .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.accentColor.opacity(0.4)))
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
-            #endif
+            }
+            .frame(maxWidth: 360)
+            .padding(.top, 8)
         }
     }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import PictureBookLendingDomain
 import Testing
 
@@ -23,11 +24,23 @@ struct RakutenBookSearchGatewayLiveTests {
     
     /// 有効なISBNで書籍情報が取得できることをテスト
     @Test func fetchBookWithValidISBN() async throws {
-        // はらぺこあおむしのISBN-13
+        // 公開書籍「ぐりとぐら」のISBN-13
         let book = try await gateway.searchBook(by: "9784834000825")
         
         #expect(!book.title.isEmpty)
         #expect(book.thumbnail != nil)
+        let imageURLs = Set([book.thumbnail, book.smallThumbnail].compactMap { $0 })
+        #expect(!imageURLs.isEmpty)
+        for source in imageURLs {
+            let url = try #require(URL(string: source))
+            let (data, response) = try await URLSession.shared.data(from: url)
+            #expect((response as? HTTPURLResponse)?.statusCode == 200)
+            let imageSource = try #require(CGImageSourceCreateWithData(data as CFData, nil))
+            let image = try #require(CGImageSourceCreateImageAtIndex(imageSource, 0, nil))
+            #expect(image.width > 1 && image.height > 1)
+            print("書影取得・画像デコード成功: \(image.width)×\(image.height), \(data.count) bytes")
+        }
+
         
         print("取得した書籍情報:")
         print("タイトル: \(book.title)")

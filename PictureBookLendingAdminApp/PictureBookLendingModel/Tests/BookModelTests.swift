@@ -15,6 +15,22 @@ import Testing
 /// などの機能をテストします。
 @Suite("BookModel Tests")
 struct BookModelTests {
+    @Test("読み込み失敗と空の蔵書を区別し、復旧後に状態を更新する")
+    @MainActor
+    func catalogLoadState() {
+        let repository = FailingReadBookRepository()
+        let model = BookModel(repository: repository)
+        #expect(model.books.isEmpty)
+        #expect(!model.hasLoadedBooks)
+        repository.failReads = false
+        model.refreshBooks()
+        #expect(model.books.isEmpty)
+        #expect(model.hasLoadedBooks)
+        repository.failReads = true
+        model.refreshBooks()
+        #expect(!model.hasLoadedBooks)
+    }
+
     
     @MainActor
     private func createBookModel() -> (BookModel, MockBookRepository) {
@@ -144,5 +160,13 @@ struct BookModelTests {
         #expect(throws: BookModelError.bookNotFound) {
             try bookModel.deleteBook(nonExistingId)
         }
+    }
+}
+
+private final class FailingReadBookRepository: MockBookRepository, @unchecked Sendable {
+    var failReads = true
+    override func fetchAll() throws -> [Book] {
+        if failReads { throw RepositoryError.saveFailed }
+        return try super.fetchAll()
     }
 }

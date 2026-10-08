@@ -53,10 +53,11 @@ public struct BookSearchResultsView: View {
                 .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(id: "bookSearchResults.cancel", placement: .topBarLeading) {
                     Button("キャンセル") {
                         onCancel()
                     }
+                    .accessibilityIdentifier("bookSearchResults.cancel")
                 }
             }
         }
