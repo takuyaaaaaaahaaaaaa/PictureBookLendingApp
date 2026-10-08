@@ -12,6 +12,10 @@ public struct SettingsView: View {
     let highlightBookManagement: Bool
     let loanPeriodDays: Int
     let maxBooksPerUser: Int
+    let coverPreparedCount: Int
+    let coverPendingCount: Int
+    let isCoverPreparationRunning: Bool
+    let onRetryCoverPreparation: () -> Void
     let onSelectUser: () -> Void
     let onSelectBook: () -> Void
     let onSelectBookBulkRegistration: () -> Void
@@ -34,6 +38,10 @@ public struct SettingsView: View {
         highlightBookManagement: Bool = false,
         loanPeriodDays: Int,
         maxBooksPerUser: Int,
+        coverPreparedCount: Int = 0,
+        coverPendingCount: Int = 0,
+        isCoverPreparationRunning: Bool = false,
+        onRetryCoverPreparation: @escaping () -> Void = {},
         onSelectUser: @escaping () -> Void,
         onSelectBook: @escaping () -> Void,
         onSelectBookBulkRegistration: @escaping () -> Void,
@@ -55,6 +63,10 @@ public struct SettingsView: View {
         self.highlightBookManagement = highlightBookManagement
         self.loanPeriodDays = loanPeriodDays
         self.maxBooksPerUser = maxBooksPerUser
+        self.coverPreparedCount = coverPreparedCount
+        self.coverPendingCount = coverPendingCount
+        self.isCoverPreparationRunning = isCoverPreparationRunning
+        self.onRetryCoverPreparation = onRetryCoverPreparation
         self.onSelectUser = onSelectUser
         self.onSelectBook = onSelectBook
         self.onSelectBookBulkRegistration = onSelectBookBulkRegistration
@@ -118,6 +130,24 @@ public struct SettingsView: View {
                     action: onSelectLoanSettings,
                     showChevron: false
                 )
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("表紙検索の準備")
+                        .font(.headline)
+                    Text("準備済み \(coverPreparedCount)冊・未処理 \(coverPendingCount)冊")
+                        .font(.subheadline)
+                    if isCoverPreparationRunning {
+                        ProgressView("登録済みの表紙を処理中")
+                    } else if coverPendingCount > 0 {
+                        Button("未処理を再試行", action: onRetryCoverPreparation)
+                    }
+                    Text("表紙の特徴を端末内に保存します。外部画像しかない本は画像の再取得が必要です。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(AppColor.cardSurface, in: RoundedRectangle(cornerRadius: 12))
                 
                 Divider()
                     .padding(.vertical, 8)
@@ -182,8 +212,8 @@ public struct SettingsView: View {
 
                     SettingsMenuItem(
                         iconName: "doc.text",
-                        title: "オープンソースライセンス",
-                        subtitle: "使用ライブラリのライセンスを確認",
+                        title: "ライセンス情報",
+                        subtitle: "使用ライブラリと表紙検索モデルのライセンスを確認",
                         action: onSelectLicenses
                     )
 

@@ -15,18 +15,32 @@ import SwiftUI
         public let onImagePicked: (UIImage) -> Void
         /// キャンセル時のコールバック
         public let onCancel: () -> Void
+        /// Whether to show the system image editor after capture.
+        public let allowsEditing: Bool
+        /// Requested camera, used when available on the device.
+        public let cameraDevice: UIImagePickerController.CameraDevice
         
-        public init(onImagePicked: @escaping (UIImage) -> Void, onCancel: @escaping () -> Void) {
+        public init(
+            onImagePicked: @escaping (UIImage) -> Void,
+            onCancel: @escaping () -> Void,
+            cameraDevice: UIImagePickerController.CameraDevice = .rear,
+            allowsEditing: Bool = true
+        ) {
             self.onImagePicked = onImagePicked
             self.onCancel = onCancel
+            self.cameraDevice = cameraDevice
+            self.allowsEditing = allowsEditing
         }
         
         public func makeUIViewController(context: Context) -> UIImagePickerController {
             let picker = UIImagePickerController()
             picker.delegate = context.coordinator
             picker.sourceType = .camera
+            if UIImagePickerController.isCameraDeviceAvailable(cameraDevice) {
+                picker.cameraDevice = cameraDevice
+            }
             picker.mediaTypes = ["public.image"]
-            picker.allowsEditing = true
+            picker.allowsEditing = allowsEditing
             return picker
         }
         

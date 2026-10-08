@@ -19,6 +19,7 @@ struct SettingsContainerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
+    @State private var coverRecognition = CoverRecognitionService.shared
     
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
@@ -58,6 +59,12 @@ struct SettingsContainerView: View {
                         && !setupProgress.hasBook,
                     loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
                     maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
+                    coverPreparedCount: coverRecognition.preparedCount,
+                    coverPendingCount: coverRecognition.pendingCount,
+                    isCoverPreparationRunning: coverRecognition.isPreparing,
+                    onRetryCoverPreparation: {
+                        Task { await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
+                    },
                     onSelectUser: {
                         navigationPath.append(SettingsDestination.user)
                     },
@@ -431,6 +438,9 @@ struct SettingsContainerView: View {
         } catch {
             alertState = .error("データ削除に失敗しました", message: "\(error.localizedDescription)")
         }
+        if options.deleteBooks {
+            await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+        }
     }
     
     /// 進級対応
@@ -578,6 +588,7 @@ struct SettingsContainerView: View {
             classGroupModel.refreshClassGroups()
             userModel.refreshUsers()
             bookModel.refreshBooks()
+            Task { await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
             loanModel.reloadAllLoans()
             loanSettingsModel.reload()
             

@@ -51,6 +51,9 @@ struct ContentView: View {
                 refreshAllModels()
             }
         }
+        .task(id: CoverPreparationSnapshot(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)) {
+            await CoverRecognitionService.shared.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+        }
     }
     
     private func refreshAllModels() {
@@ -79,4 +82,9 @@ struct ContentView: View {
         .environment(userModel)
         .environment(loanModel)
         .environment(classGroupModel)
+}
+
+private struct CoverPreparationSnapshot: Hashable {
+    let books: [Book]
+    let isComplete: Bool
 }

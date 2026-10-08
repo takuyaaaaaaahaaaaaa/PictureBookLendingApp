@@ -25,6 +25,11 @@ struct BookFormContainerView: View {
     @State private var isDuplicateConfirmationPresented = false
     @State private var duplicatedBook: Book?
     @State private var isCameraPresented = false
+    @State private var capturedPhoto: UIImage?
+    @State private var adjustingExistingPhoto = false
+    @State private var draftImageFiles: Set<String> = []
+    @State private var isSaving = false
+    @State private var savedBookAwaitingClose: Book?
     
     init(mode: BookFormMode, onSave: ((Book) -> Void)? = nil) {
         self.mode = mode
@@ -45,6 +50,8 @@ struct BookFormContainerView: View {
         self._book = State(initialValue: initialBook)
     }
     
+    private var isSaveLocked: Bool { isSaving || savedBookAwaitingClose != nil }
+
     var body: some View {
         NavigationStack {
             BookFormView(
@@ -60,15 +67,30 @@ struct BookFormContainerView: View {
                 onSave: handleSave,
                 onCancel: handleCancel,
                 onReset: handleReset,
-                onCameraTap: handleCameraTap
+                onCameraTap: handleCameraTap,
+                onAdjustPhotoTap: book.localImageFileName == nil ? nil : handleAdjustPhotoTap,
+                showsNavigationActions: false
             )
+            .disabled(isSaveLocked)
             .navigationTitle(isEditMode ? "図書を編集" : "図書を追加")
+            // Keep form navigation actions owned by this screen, outside the Form's
+            // autofill sheet and its independently updated row content.
+            .toolbar {
+                BookFormActions(
+                    isEditMode: isEditMode,
+                    canSave: !book.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                    isEnabled: !isSaveLocked,
+                    onSave: handleSave, onCancel: handleCancel
+                )
+            }
             .interactiveDismissDisabled()
             .onChange(of: book.title) { _, newTitle in
                 updateKanaGroup(for: newTitle)
             }
             .alert(alertState.title, isPresented: $alertState.isPresented) {
-                Button("OK", role: .cancel) {}
+                Button("OK", role: .cancel) {
+                    if let saved = savedBookAwaitingClose { finishSave(saved) }
+                }
             } message: {
                 Text(alertState.message)
             }
@@ -95,13 +117,12 @@ struct BookFormContainerView: View {
                 }
             }
             #if canImport(UIKit)
-                .sheet(isPresented: $isCameraPresented) {
-                    CameraImagePickerView(
-                        onImagePicked: handleImagePicked,
-                        onCancel: {
-                            isCameraPresented = false
-                        }
-                    )
+                .fullScreenCover(isPresented: $isCameraPresented, onDismiss: { capturedPhoto = nil }) {
+                    BookPhotoSheet(
+                        photo: $capturedPhoto,
+                        adjustingExistingPhoto: $adjustingExistingPhoto,
+                        onConfirm: confirmPhoto,
+                        onCancel: { isCameraPresented = false })
                 }
             #endif
         }
@@ -151,6 +172,7 @@ struct BookFormContainerView: View {
     }
     
     private func proceedWithSave() {
+        guard !isSaveLocked else { return }
         do {
             let savedBook: Book
             switch mode {
@@ -160,14 +182,38 @@ struct BookFormContainerView: View {
                 savedBook = try bookModel.updateBook(book)
             }
             
-            onSave?(savedBook)
-            dismiss()
+            let approvedPhoto = savedBook.localImageFileName.map { draftImageFiles.contains($0) } ?? false
+            isSaving = true
+            Task { @MainActor in
+                do {
+                    if approvedPhoto { try await CoverRecognitionService.shared.approveRegisteredPhoto(savedBook) }
+                    isSaving = false
+                    finishSave(savedBook)
+                } catch {
+                    isSaving = false
+                    savedBookAwaitingClose = savedBook
+                    alertState = .error("図書は保存しました", message: "表紙検索の準備に失敗しました。設定から検索準備を再実行してください。")
+                }
+            }
         } catch {
             alertState = .error("図書の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
     
+    private func finishSave(_ savedBook: Book) {
+        cleanDraftImages(keeping: savedBook.localImageFileName)
+        onSave?(savedBook)
+        Task { await CoverRecognitionService.shared.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
+        dismiss()
+    }
+    private func cleanDraftImages(keeping fileName: String? = nil) {
+        for image in draftImageFiles where image != fileName {
+            _ = ImageStorageUtility.deleteImage(at: image)
+        }
+        draftImageFiles = []
+    }
     private func handleCancel() {
+        cleanDraftImages()
         dismiss()
     }
     
@@ -186,11 +232,25 @@ struct BookFormContainerView: View {
     
     /// カメラボタンタップ時の処理
     private func handleCameraTap() {
+        adjustingExistingPhoto = false
+        capturedPhoto = nil
         isCameraPresented = true
     }
     
+    private func handleAdjustPhotoTap() {
+        guard let fileName = book.localImageFileName,
+              let image = ImageStorageUtility.loadImage(from: fileName) else {
+            alertState = .error("写真を開けませんでした", message: "写真を撮り直してください。")
+            return
+        }
+        adjustingExistingPhoto = true
+        capturedPhoto = image
+        isCameraPresented = true
+    }
+
     /// フォームリセット処理
     private func handleReset() {
+        cleanDraftImages()
         print("🔄 リセット処理開始")
         // IDを保持したまま他のフィールドをリセット
         let currentId = book.id
@@ -206,7 +266,7 @@ struct BookFormContainerView: View {
     
     /// 撮影画像の処理
     #if canImport(UIKit)
-        private func handleImagePicked(_ image: UIImage) {
+        private func confirmPhoto(_ image: UIImage) {
             isCameraPresented = false
             
             do {
@@ -215,12 +275,37 @@ struct BookFormContainerView: View {
                 
                 // BookのlocalImageFileNameフィールドにファイル名を設定
                 book.localImageFileName = fileName
+                draftImageFiles.insert(fileName)
                 
             } catch {
                 alertState = .error("画像の保存に失敗しました", message: "\(error.localizedDescription)")
             }
         }
     #endif
+}
+
+/// Binding-backed content reads the current photo when the sheet first appears.
+private struct BookPhotoSheet: View {
+    @Binding var photo: UIImage?
+    @Binding var adjustingExistingPhoto: Bool
+    let onConfirm: (UIImage) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        if let photo {
+            CoverPhotoReviewView(image: photo,
+                onConfirm: onConfirm,
+                onRetake: { self.photo = nil },
+                onCancel: onCancel,
+                adjustingExistingPhoto: adjustingExistingPhoto)
+        } else {
+            CameraImagePickerView(
+                onImagePicked: { photo = $0 },
+                onCancel: onCancel,
+                cameraDevice: .rear,
+                allowsEditing: false)
+        }
+    }
 }
 
 #Preview {

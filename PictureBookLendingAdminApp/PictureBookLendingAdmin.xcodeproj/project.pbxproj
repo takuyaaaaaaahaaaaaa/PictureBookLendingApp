@@ -702,7 +702,7 @@
 				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "えほん台帳";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSCameraUsageDescription = "絵本のサムネイル写真を撮影するためにカメラを使用しま";
+				INFOPLIST_KEY_NSCameraUsageDescription = "絵本の表紙を撮影・検索するためにカメラを使用します。";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -752,7 +752,7 @@
 				INFOPLIST_FILE = PictureBookLendingAdmin/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "えほん台帳";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSCameraUsageDescription = "絵本のサムネイル写真を撮影するためにカメラを使用しま";
+				INFOPLIST_KEY_NSCameraUsageDescription = "絵本の表紙を撮影・検索するためにカメラを使用します。";
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;

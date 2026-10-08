@@ -32,8 +32,11 @@ struct BorrowListContainerView: View {
     /// その瞬間に値が反転し、シートの土台（フォームシート/ページシートの分岐、
     /// 案内画面/名前一覧の分岐）ごと作り直されて✓カードが一瞬で消えてしまうため
     @State private var borrowSheetContext: BorrowSheetContext?
+    @State private var isCoverSearchPresented = false
+    @State private var selectedCoverBook: Book?
     /// 図書一覧の検索テキスト
     @State private var searchText = ""
+    @State private var isSearchFocused = false
     /// 図書一覧をトップへ戻すトリガ（貸出完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
     @State private var selectedSortType: BookSortType = .title
@@ -129,23 +132,17 @@ struct BorrowListContainerView: View {
                 .navigationBarTitleDisplayMode(.inline)
             #endif
             .safeAreaInset(edge: .top) {
-                if showsSettings && setupStarted && !setupCompleted
-                    && !setupProgress.isComplete
-                {
-                    SetupProgressView(progress: setupProgress) {
-                        isSettingsPresented = true
+                VStack(spacing: 0) {
+                    if showsSettings && setupStarted && !setupCompleted
+                        && !setupProgress.isComplete
+                    {
+                        SetupProgressView(progress: setupProgress) {
+                            isSettingsPresented = true
+                        }
                     }
+                    coverSearchBar
                 }
             }
-            #if os(iOS)
-                .searchable(
-                    text: $searchText,
-                    placement: .navigationBarDrawer(displayMode: .always),
-                    prompt: "図書のタイトルまたは著者で検索"
-                )
-            #else
-                .searchable(text: $searchText, prompt: "図書のタイトルまたは著者で検索")
-            #endif
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
@@ -193,6 +190,23 @@ struct BorrowListContainerView: View {
                 borrowSheet(for: context)
                     .presentationSizing(.page)
             }
+        }
+        .fullScreenCover(
+            isPresented: $isCoverSearchPresented,
+            onDismiss: {
+                if let book = selectedCoverBook {
+                    selectedCoverBook = nil
+                    openBorrowSheet(for: book)
+                }
+            }
+        ) {
+            CoverSearchSheet(
+                books: bookModel.books,
+                onSelect: { book in
+                    selectedCoverBook = book
+                    isCoverSearchPresented = false
+                }
+            )
         }
         .sheet(
             isPresented: $isWelcomePresented,
@@ -263,6 +277,13 @@ struct BorrowListContainerView: View {
         }
     }
     
+    private var coverSearchBar: some View {
+        LendingSearchBar(searchText: $searchText, isSearchFocused: $isSearchFocused) {
+            isSearchFocused = false
+            isCoverSearchPresented = true
+        }
+    }
+
     /// 貸出シート（子Container）。シート内フローの状態はすべて子の@Stateが持つ。
     ///
     /// シート表示ごとに子が生成・破棄されるため、遷移パスや組の絞り込みは

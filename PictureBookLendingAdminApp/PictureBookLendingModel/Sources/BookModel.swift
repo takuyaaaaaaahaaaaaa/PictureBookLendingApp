@@ -45,6 +45,8 @@ public class BookModel {
     
     /// キャッシュ用の絵本リスト
     public private(set) var books: [Book] = []
+    /// Whether the latest full-catalog read succeeded; an empty failed read must not prune derivatives.
+    public private(set) var hasLoadedBooks = false
     
     /// イニシャライザ
     ///
@@ -55,6 +57,7 @@ public class BookModel {
         // 初期データのロード
         do {
             self.books = try repository.fetchAll()
+            hasLoadedBooks = true
         } catch {
             print("初期データのロードに失敗しました: \(error)")
             self.books = []
@@ -97,7 +100,9 @@ public class BookModel {
     public func refreshBooks() {
         do {
             books = try repository.fetchAll()
+            hasLoadedBooks = true
         } catch {
+            hasLoadedBooks = false
             print("絵本リストの更新に失敗しました: \(error)")
         }
     }

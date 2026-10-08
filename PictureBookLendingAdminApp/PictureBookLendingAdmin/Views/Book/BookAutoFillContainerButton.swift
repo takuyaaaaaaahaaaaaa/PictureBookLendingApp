@@ -13,6 +13,8 @@ struct BookAutoFillContainerButton: View {
     
     @State private var registerViewModel: BookRegisterViewModel
     @State private var isResultSheetPresented = false
+    @State private var selectedBook: Book?
+    @State private var isCoverReplacementPresented = false
     
     init(targetBook: Binding<Book>, onAutoFillComplete: @escaping (Book) -> Void) {
         self._targetBook = targetBook
@@ -39,9 +41,18 @@ struct BookAutoFillContainerButton: View {
             searchError: registerViewModel.searchError,
             onSearch: handleSearch
         )
-        .sheet(isPresented: $isResultSheetPresented) {
+        .sheet(isPresented: $isResultSheetPresented, onDismiss: finishSelection) {
             searchResultsSheet
                 .interactiveDismissDisabled()  // スワイプで閉じないように
+        }
+        .alert("表紙画像を置き換えますか？", isPresented: $isCoverReplacementPresented) {
+            Button("撮影した写真を使う", role: .cancel) {}
+            Button("自動入力の表紙に置き換える") {
+                targetBook.localImageFileName = nil
+                onAutoFillComplete(targetBook)
+            }
+        } message: {
+            Text("撮影した写真が設定されています。書名などの情報は自動入力しました。表紙にも自動入力の画像を使いますか？")
         }
         .onChange(of: registerViewModel.searchResults) { _, newResults in
             if !newResults.isEmpty {
@@ -58,7 +69,6 @@ struct BookAutoFillContainerButton: View {
             onBookSelect: selectBook,
             onCancel: {
                 isResultSheetPresented = false
-                registerViewModel.clearSearchResults()
             }
         )
     }
@@ -78,6 +88,19 @@ struct BookAutoFillContainerButton: View {
     }
     
     private func selectBook(_ book: Book) {
+        selectedBook = book
+        isResultSheetPresented = false
+    }
+
+    // Update the form after its navigation bar has returned from the results sheet.
+    private func finishSelection() {
+        registerViewModel.clearSearchResults()
+        guard let selectedBook else { return }
+        self.selectedBook = nil
+        applySelectedBook(selectedBook)
+    }
+
+    private func applySelectedBook(_ book: Book) {
         // targetBookの既存値を保持しつつ、検索結果の情報で更新
         let updatedBook = Book(
             id: targetBook.id,  // 既存のIDを保持
@@ -90,6 +113,7 @@ struct BookAutoFillContainerButton: View {
             smallThumbnail: book.smallThumbnail ?? targetBook.smallThumbnail,
             thumbnail: book.thumbnail ?? targetBook.thumbnail,
             rakutenItemURL: book.rakutenItemURL,
+            localImageFileName: targetBook.localImageFileName,
             targetAge: book.targetAge ?? targetBook.targetAge,
             pageCount: book.pageCount ?? targetBook.pageCount,
             categories: book.categories.isEmpty ? targetBook.categories : book.categories,
@@ -99,9 +123,10 @@ struct BookAutoFillContainerButton: View {
         targetBook = updatedBook
         onAutoFillComplete(updatedBook)
         
-        // UI状態をリセット
-        isResultSheetPresented = false
-        registerViewModel.clearSearchResults()
+        if updatedBook.localImageFileName != nil,
+           book.thumbnail != nil || book.smallThumbnail != nil {
+            isCoverReplacementPresented = true
+        }
     }
 }
 

@@ -4,8 +4,22 @@ import SwiftUI
 struct ThirdPartyLicensesView: View {
     private static let licenses: [ThirdPartyLicense]? = {
         guard let url = Bundle.main.url(forResource: "ThirdPartyLicenses", withExtension: "json"),
-              let data = try? Data(contentsOf: url) else { return nil }
-        return try? JSONDecoder().decode([ThirdPartyLicense].self, from: data)
+            let data = try? Data(contentsOf: url)
+        else { return nil }
+        guard var items = try? JSONDecoder().decode([ThirdPartyLicense].self, from: data) else {
+            return nil
+        }
+        if let licenseURL = Bundle.main.url(forResource: "FastViT-LICENSE", withExtension: "txt"),
+            let licenseText = try? String(contentsOf: licenseURL, encoding: .utf8),
+            let sourceURL = URL(string: "https://github.com/apple/ml-fastvit")
+        {
+            items.append(ThirdPartyLicense(
+                id: "apple-fastvit-model", name: "Apple FastViT 表紙検索モデル",
+                version: "T8 F16 Headless", licenseName: "Apple Software License",
+                sourceURL: sourceURL, licenseText: licenseText, noticesText: nil
+            ))
+        }
+        return items
     }()
 
     var body: some View {
@@ -30,7 +44,7 @@ struct ThirdPartyLicensesView: View {
                 )
             }
         }
-        .navigationTitle("オープンソースライセンス")
+        .navigationTitle("ライセンス情報")
     }
 }
 
