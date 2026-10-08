@@ -1,5 +1,7 @@
 # 表紙照合 PoC（Issue #270）
 
+採用判断の要点は [Core ML と Core AI の比較メモ](CORE_AI_VS_CORE_ML.md) を参照。
+
 本番アプリには未接続の独立 Swift Package。`CoreMLCoverEncoder` は Apple 公式の FastViT-T8 headless モデルに `CGImage` を入力し、768 次元 Float32 特徴ベクトルを返す。比較用の `VisionCoverEncoder` も含む。`CoverIndex` は書籍 UUID と複数の特徴ベクトルを JSON に原子的に保存し、コサイン類似度順に最大 3 件返す。画像、特徴量、蔵書データを送信する処理はない。OCR も使わない。
 
 登録画像を追加すると索引のサンプルが増える。これは固定モデルの**特徴ベクトル登録**であり、ネットワーク重みの再学習ではない。書籍削除時は `remove(bookID:)` を呼ぶ。`encoderVersion` が違う索引は読み込めず、元画像から全件再構築する必要がある。書影の取得は既存 `Book.localImageFileName` と `LocalImageStorageRepository` を使う想定。外部書影の Kingfisher キャッシュは 30 日期限なので、そこだけを永続索引の正本にはできない。
