@@ -183,6 +183,9 @@ struct SettingsBookListContainerView: View {
         booksToDelete = []
         deleteConfirmationState = AlertState()
         guard !targetBooks.isEmpty else { return }
+        defer {
+            Task { await CoverRecognitionService.shared.prepare(books: bookModel.books) }
+        }
         
         // 途中で失敗しても、すでに返却済みにした冊数は利用者に伝える必要がある
         var returnedCount = 0

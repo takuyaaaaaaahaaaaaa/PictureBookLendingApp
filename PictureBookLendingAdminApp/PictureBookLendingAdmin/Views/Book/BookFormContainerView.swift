@@ -161,6 +161,9 @@ struct BookFormContainerView: View {
             }
             
             onSave?(savedBook)
+            Task {
+                await CoverRecognitionService.shared.prepare(books: bookModel.books)
+            }
             dismiss()
         } catch {
             alertState = .error("図書の保存に失敗しました", message: "\(error.localizedDescription)")

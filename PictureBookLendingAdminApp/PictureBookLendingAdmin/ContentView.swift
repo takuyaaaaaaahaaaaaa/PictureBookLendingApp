@@ -51,6 +51,9 @@ struct ContentView: View {
                 refreshAllModels()
             }
         }
+        .task(id: bookModel.books) {
+            await CoverRecognitionService.shared.prepare(books: bookModel.books)
+        }
     }
     
     private func refreshAllModels() {
