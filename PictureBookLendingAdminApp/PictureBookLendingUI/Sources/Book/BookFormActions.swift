@@ -21,18 +21,15 @@ public struct BookFormActions: ToolbarContent {
 
     public var body: some ToolbarContent {
         ToolbarItem(id: "bookForm.cancel", placement: .cancellationAction) {
-            Button("キャンセル", role: .cancel, action: onCancel)
+            Button("キャンセル", systemImage: "xmark", role: .cancel, action: onCancel)
                 .accessibilityIdentifier("bookForm.cancel")
                 .disabled(!isEnabled)
         }
         ToolbarItem(id: "bookForm.save", placement: .confirmationAction) {
-            Group {
-                if #available(iOS 26, macOS 26, *) {
-                    Button(role: .confirm, action: onSave)
-                } else {
-                    Button(isEditMode ? "保存" : "追加", action: onSave)
-                }
-            }
+            Button(
+                isEditMode ? "保存" : "追加", systemImage: "checkmark",
+                role: .confirmIfAvailable, action: onSave
+            )
             .accessibilityIdentifier("bookForm.save")
             .disabled(!isEnabled || !canSave)
         }
