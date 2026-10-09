@@ -26,6 +26,9 @@ public enum AppColor: Hashable {
     public static let returned = Color("Returned", bundle: .module)
     public static let destructive = Color("Destructive", bundle: .module)
     public static let cardSurface = Color("CardSurface", bundle: .module)
+    /// 設定画面の項目面を区別する、暖色の背景と輪郭。
+    public static let settingsBackground = Color("SettingsBackground", bundle: .module)
+    public static let settingsCardBorder = Color("SettingsCardBorder", bundle: .module)
     /// 貸出・返却の利用者選択で、壁紙／革から独立して見える図書カードの紙面。
     public static let borrowerCardSurface = Color("BorrowerCardSurface", bundle: .module)
     public static let chipSurface = Color("ChipSurface", bundle: .module)
