@@ -103,10 +103,25 @@ public struct BookDisplayMenus: View {
 
     public var body: some View {
         HStack(spacing: spacing) {
-            BookSortMenu(sort: $sort)
-                .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            BookDisplayModeMenu(mode: $mode)
-                .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            Menu {
+                BookSortPicker(sort: $sort)
+            } label: {
+                Image(systemName: sort.iconName)
+                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("並び順")
+            .accessibilityValue(sort.displayName)
+            .accessibilityIdentifier("book.sort.menu")
+
+            Menu {
+                BookDisplayModePicker(mode: $mode)
+            } label: {
+                Image(systemName: mode.iconName)
+                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            }
+            .accessibilityLabel("表示形式")
+            .accessibilityValue(mode.displayName)
+            .accessibilityIdentifier("book.mode.menu")
         }
         .fixedSize()
     }
@@ -124,52 +139,51 @@ public struct BookDisplayToolbar: ToolbarContent {
 
     public var body: some ToolbarContent {
         ToolbarItemGroup(placement: .topBarTrailing) {
-            BookSortMenu(sort: $sort)
-            BookDisplayModeMenu(mode: $mode)
+            Menu {
+                BookSortPicker(sort: $sort)
+            } label: {
+                Label("並び順", systemImage: sort.iconName)
+            }
+            .accessibilityLabel("並び順")
+            .accessibilityValue(sort.displayName)
+            .accessibilityIdentifier("book.sort.menu")
+
+            Menu {
+                BookDisplayModePicker(mode: $mode)
+            } label: {
+                Label("表示形式", systemImage: mode.iconName)
+            }
+            .accessibilityLabel("表示形式")
+            .accessibilityValue(mode.displayName)
+            .accessibilityIdentifier("book.mode.menu")
         }
     }
 }
 
-private struct BookSortMenu: View {
+private struct BookSortPicker: View {
     @Binding var sort: BookSortType
 
     var body: some View {
-        Menu {
-            Picker("並び順", selection: $sort) {
-                ForEach(BookSortType.allCases) { value in
-                    Text(value.displayName).tag(value)
-                }
+        Picker("並び順", selection: $sort) {
+            ForEach(BookSortType.allCases) { value in
+                Text(value.displayName).tag(value)
             }
-            .accessibilityIdentifier("book.sort.picker")
-        } label: {
-            Label("並び順", systemImage: sort.iconName)
         }
-        .labelStyle(.iconOnly)
-        .accessibilityLabel("並び順")
-        .accessibilityValue(sort.displayName)
-        .accessibilityIdentifier("book.sort.menu")
+        .accessibilityIdentifier("book.sort.picker")
     }
 }
 
-private struct BookDisplayModeMenu: View {
+private struct BookDisplayModePicker: View {
     @Binding var mode: BookDisplayMode
 
     var body: some View {
-        Menu {
-            Picker("表示形式", selection: $mode) {
-                ForEach(BookDisplayMode.allCases) { value in
-                    Label(value.displayName, systemImage: value.iconName).tag(value)
-                }
+        Picker("表示形式", selection: $mode) {
+            ForEach(BookDisplayMode.allCases) { value in
+                Label(value.displayName, systemImage: value.iconName).tag(value)
             }
-            .labelStyle(.iconOnly)
-            .accessibilityIdentifier("book.mode.picker")
-        } label: {
-            Label("表示形式", systemImage: mode.iconName)
         }
         .labelStyle(.iconOnly)
-        .accessibilityLabel("表示形式")
-        .accessibilityValue(mode.displayName)
-        .accessibilityIdentifier("book.mode.menu")
+        .accessibilityIdentifier("book.mode.picker")
     }
 }
 
