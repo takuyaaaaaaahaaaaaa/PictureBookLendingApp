@@ -9,6 +9,8 @@ import SwiftUI
         var prompt = "タイトル・著者で検索"
         var onCoverSearch: (() -> Void)? = nil
         @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+        @ScaledMetric(relativeTo: .body) private var searchBarHeight: CGFloat = 60
+        @ScaledMetric(relativeTo: .body) private var coverIconSize: CGFloat = 26
 
         public init(
             searchText: Binding<String>, isSearchFocused: Binding<Bool>,
@@ -33,24 +35,38 @@ import SwiftUI
                                 Text("表紙で検索").font(.headline)
                             } icon: {
                                 Image(systemName: "camera.viewfinder").font(
-                                    .system(size: 26, weight: .semibold))
+                                    .system(size: coverIconSize, weight: .semibold))
                             }
                             .labelStyle(
                                 AdaptiveCoverLabelStyle(
                                     showsTitle: geometry.size.width >= 600
                                         && !dynamicTypeSize.isAccessibilitySize)
                             )
-                            .frame(minWidth: 44, minHeight: 44)
                         }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(CoverSearchButtonStyle())
                         .accessibilityLabel("表紙で検索")
                     }
                 }
             }
-            .frame(height: 60)
+            .frame(height: searchBarHeight)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
             .background(Color(uiColor: .systemBackground))
+        }
+    }
+
+    /// 標準文字サイズでは検索欄と同じ44pt。ラベルが大きいときは自然に伸ばす。
+    private struct CoverSearchButtonStyle: ButtonStyle {
+        @Environment(\.isEnabled) private var isEnabled
+
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .padding(.horizontal, 12)
+                .frame(minWidth: 44, minHeight: 44)
+                .foregroundStyle(.white)
+                .background(.tint, in: .capsule)
+                .contentShape(.capsule)
+                .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.5)
         }
     }
 
