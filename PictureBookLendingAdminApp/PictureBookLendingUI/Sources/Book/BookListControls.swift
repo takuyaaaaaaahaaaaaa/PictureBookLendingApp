@@ -85,7 +85,7 @@ struct BookListControls: View {
     }
 }
 
-/// 現在の一覧だけに作用する並び順・表示形式の操作
+/// 一覧の本文内で使う並び順・表示形式の操作。
 public struct BookDisplayMenus: View {
     @Binding private var sort: BookSortType
     @Binding private var mode: BookDisplayMode
@@ -102,48 +102,74 @@ public struct BookDisplayMenus: View {
     }
 
     public var body: some View {
-        // ツールバーでは追加余白をなくし、本文内では指定した間隔を使う。
         HStack(spacing: spacing) {
-            Menu {
-                sortPicker
-            } label: {
-                Image(systemName: sort.iconName)
-                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("並び順")
-            .accessibilityValue(sort.displayName)
-            .accessibilityIdentifier("book.sort.menu")
-
-            Menu {
-                modePicker
-            } label: {
-                Image(systemName: mode.iconName)
-                    .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
-            }
-            .accessibilityLabel("表示形式")
-            .accessibilityValue(mode.displayName)
-            .accessibilityIdentifier("book.mode.menu")
+            BookSortMenu(sort: $sort)
+                .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
+            BookDisplayModeMenu(mode: $mode)
+                .frame(minWidth: Layout.minimumControlSize, minHeight: Layout.minimumControlSize)
         }
         .fixedSize()
     }
-    
-    private var sortPicker: some View {
-        Picker("並び順", selection: $sort) {
-            ForEach(BookSortType.allCases) { value in
-                Text(value.displayName).tag(value)
-            }
-        }
-        .accessibilityIdentifier("book.sort.picker")
+}
+
+/// 各メニューを独立した項目にし、システムが横・縦のバーへ配置できるようにする。
+public struct BookDisplayToolbar: ToolbarContent {
+    @Binding private var sort: BookSortType
+    @Binding private var mode: BookDisplayMode
+
+    public init(sort: Binding<BookSortType>, mode: Binding<BookDisplayMode>) {
+        self._sort = sort
+        self._mode = mode
     }
-    
-    private var modePicker: some View {
-        Picker("表示形式", selection: $mode) {
-            ForEach(BookDisplayMode.allCases) { value in
-                Label(value.displayName, systemImage: value.iconName).tag(value)
+
+    public var body: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            BookSortMenu(sort: $sort)
+            BookDisplayModeMenu(mode: $mode)
+        }
+    }
+}
+
+private struct BookSortMenu: View {
+    @Binding var sort: BookSortType
+
+    var body: some View {
+        Menu {
+            Picker("並び順", selection: $sort) {
+                ForEach(BookSortType.allCases) { value in
+                    Text(value.displayName).tag(value)
+                }
             }
+            .accessibilityIdentifier("book.sort.picker")
+        } label: {
+            Label("並び順", systemImage: sort.iconName)
         }
         .labelStyle(.iconOnly)
-        .accessibilityIdentifier("book.mode.picker")
+        .accessibilityLabel("並び順")
+        .accessibilityValue(sort.displayName)
+        .accessibilityIdentifier("book.sort.menu")
+    }
+}
+
+private struct BookDisplayModeMenu: View {
+    @Binding var mode: BookDisplayMode
+
+    var body: some View {
+        Menu {
+            Picker("表示形式", selection: $mode) {
+                ForEach(BookDisplayMode.allCases) { value in
+                    Label(value.displayName, systemImage: value.iconName).tag(value)
+                }
+            }
+            .labelStyle(.iconOnly)
+            .accessibilityIdentifier("book.mode.picker")
+        } label: {
+            Label("表示形式", systemImage: mode.iconName)
+        }
+        .labelStyle(.iconOnly)
+        .accessibilityLabel("表示形式")
+        .accessibilityValue(mode.displayName)
+        .accessibilityIdentifier("book.mode.menu")
     }
 }
 
