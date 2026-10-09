@@ -313,12 +313,10 @@ struct BorrowSheetContainerView: View {
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("閉じる", systemImage: "xmark", role: isBorrowInProgress ? .cancel : .closeIfAvailable) {
-                            handleClose(reason: .userClosed)
-                        }
-                        .labelStyle(.iconOnly)
+                    Button(role: .close) {
+                        handleClose(reason: .userClosed)
                     }
+                    .accessibilityIdentifier("borrow.close")
                 }
             #endif
     }
