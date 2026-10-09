@@ -181,6 +181,41 @@ struct RakutenBookSearchGatewayTests {
         
         _ = try await gateway.searchBooks(title: "ぐりとぐら", author: "なかがわりえこ", maxResults: 20)
     }
+
+    /// 著者だけの検索では空のtitleパラメータを送らない。
+    @Test func searchBooksByAuthorOmitsEmptyTitle() async throws {
+        let session = MockURLProtocol.makeSession { request in
+            let queryItems = URLComponents(
+                url: try #require(request.url), resolvingAgainstBaseURL: false)?.queryItems
+            #expect(queryItems?.first(where: { $0.name == "title" }) == nil)
+            #expect(queryItems?.first(where: { $0.name == "author" })?.value == "なかがわりえこ")
+            #expect(queryItems?.first(where: { $0.name == "hits" })?.value == "20")
+            return (200, self.sampleResponseJSON())
+        }
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
+
+        let books = try await gateway.searchBooks(
+            title: "  ", author: " なかがわりえこ ", maxResults: 20)
+        #expect(books.count == 1)
+    }
+
+    /// タイトルだけの検索では空のauthorパラメータを送らない。
+    @Test func searchBooksByTitleOmitsEmptyAuthor() async throws {
+        let session = MockURLProtocol.makeSession { request in
+            let queryItems = URLComponents(
+                url: try #require(request.url), resolvingAgainstBaseURL: false)?.queryItems
+            #expect(queryItems?.first(where: { $0.name == "title" })?.value == "ぐりとぐら")
+            #expect(queryItems?.first(where: { $0.name == "author" }) == nil)
+            return (200, self.sampleResponseJSON())
+        }
+        let gateway = RakutenBookSearchGateway(
+            applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
+
+        let books = try await gateway.searchBooks(
+            title: " ぐりとぐら ", author: "  ", maxResults: 20)
+        #expect(books.count == 1)
+    }
     
     // MARK: - accessKey / Origin ヘッダー
     

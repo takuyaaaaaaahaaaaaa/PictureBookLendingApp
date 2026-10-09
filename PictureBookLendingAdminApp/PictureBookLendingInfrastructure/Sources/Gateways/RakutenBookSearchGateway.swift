@@ -77,12 +77,16 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     {
         let hits = max(1, min(maxResults, Self.maxHits))
         
-        var queryItems = [
-            URLQueryItem(name: "title", value: title),
-            URLQueryItem(name: "hits", value: String(hits)),
-        ]
-        if let author, !author.isEmpty {
-            queryItems.append(URLQueryItem(name: "author", value: author))
+        var queryItems = [URLQueryItem(name: "hits", value: String(hits))]
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedTitle.isEmpty {
+            queryItems.append(URLQueryItem(name: "title", value: trimmedTitle))
+        }
+        if let author {
+            let trimmedAuthor = author.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmedAuthor.isEmpty {
+                queryItems.append(URLQueryItem(name: "author", value: trimmedAuthor))
+            }
         }
         
         guard let url = buildURL(queryItems: queryItems) else {
