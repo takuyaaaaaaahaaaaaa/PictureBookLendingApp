@@ -78,11 +78,31 @@ struct LiveCoverCameraView: UIViewRepresentable {
         private var lastFrameTime: CFTimeInterval = 0
         private var processing = false
         private var stopped = false
+        private let notificationCenter: NotificationCenter
+        private var sessionObservers: [NSObjectProtocol] = []
 
         init(onFrame: @escaping @MainActor (Data) async -> Bool,
-             onFailure: @escaping (String) -> Void) {
+             onFailure: @escaping (String) -> Void,
+             notificationCenter: NotificationCenter = .default) {
             self.onFrame = onFrame
             self.onFailure = onFailure
+            self.notificationCenter = notificationCenter
+            super.init()
+            // Session-specific observers also cover errors emitted by startRunning().
+            // Retry creates a fresh coordinator; this session never restarts itself.
+            sessionObservers = [
+                notificationCenter.addObserver(forName: AVCaptureSession.runtimeErrorNotification,
+                    object: session, queue: nil) { [weak self] _ in
+                    self?.fail("カメラが停止しました。「もう一度探す」で再開してください。")
+                },
+                notificationCenter.addObserver(forName: AVCaptureSession.wasInterruptedNotification,
+                    object: session, queue: nil) { [weak self] _ in
+                    self?.fail("カメラの使用が中断されました。再び利用できる状態で「もう一度探す」を押してください。")
+                },
+            ]
+        }
+        deinit {
+            for observer in sessionObservers { notificationCenter.removeObserver(observer) }
         }
         func setOrientation(_ orientation: AVCaptureVideoOrientation) {
             queue.async {
@@ -109,6 +129,8 @@ struct LiveCoverCameraView: UIViewRepresentable {
         /// Must run on `queue`.
         private func halt() {
             stopped = true
+            for observer in sessionObservers { notificationCenter.removeObserver(observer) }
+            sessionObservers.removeAll()
             if session.isRunning { session.stopRunning() }
         }
         private func configureAndStart() {
@@ -161,7 +183,11 @@ struct LiveCoverCameraView: UIViewRepresentable {
             }
         }
         private func fail(_ message: String) {
-            DispatchQueue.main.async { self.onFailure(message) }
+            queue.async {
+                guard !self.stopped else { return }
+                self.halt()
+                DispatchQueue.main.async { self.onFailure(message) }
+            }
         }
     }
 }

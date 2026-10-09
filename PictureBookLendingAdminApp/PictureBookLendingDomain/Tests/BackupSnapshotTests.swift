@@ -21,7 +21,8 @@ final class BackupSnapshotTests: XCTestCase {
             books: [book],
             loans: [loan],
             loanSettings: .default,
-            bookImages: ["a.jpg": Data([0x01, 0x02, 0x03])]
+            bookImages: ["a.jpg": Data([0x01, 0x02, 0x03])],
+            coverSearchPreparation: Data([0x04, 0x05])
         )
         
         let data = try JSONEncoder().encode(snapshot)
@@ -34,6 +35,15 @@ final class BackupSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.loans.first?.id, loan.id)
         XCTAssertEqual(decoded.loanSettings, LoanSettings.default)
         XCTAssertEqual(decoded.bookImages["a.jpg"], Data([0x01, 0x02, 0x03]))
+        XCTAssertEqual(decoded.coverSearchPreparation, Data([0x04, 0x05]))
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        legacy.removeValue(forKey: "coverSearchPreparation")
+        legacy["schemaVersion"] = 1
+        let oldSnapshot = try JSONDecoder().decode(BackupSnapshot.self,
+            from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertEqual(oldSnapshot.schemaVersion, 1)
+        XCTAssertNil(oldSnapshot.coverSearchPreparation)
+        XCTAssertEqual(oldSnapshot.bookImages, decoded.bookImages)
     }
     
     func testDefaultSchemaVersion() {
@@ -47,7 +57,7 @@ final class BackupSnapshotTests: XCTestCase {
             bookImages: [:]
         )
         
-        XCTAssertEqual(snapshot.schemaVersion, 1)
+        XCTAssertEqual(snapshot.schemaVersion, BackupSnapshot.currentSchemaVersion)
     }
 
     func testOldBookWithoutPurchaseURLDecodes() throws {

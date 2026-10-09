@@ -6,7 +6,7 @@ import Foundation
 /// 端末変更やApple ID切替に伴うデータ引き継ぎ（エクスポート/インポート）に使用します。
 public struct BackupSnapshot: Codable {
     /// このスナップショット形式の現在のバージョン
-    public static let currentSchemaVersion = 1
+    public static let currentSchemaVersion = 2
     
     /// スキーマバージョン（将来の互換性チェック用）
     public var schemaVersion: Int
@@ -24,6 +24,9 @@ public struct BackupSnapshot: Codable {
     public var loanSettings: LoanSettings
     /// 図書のローカル画像データ（ファイル名 → 画像データ）
     public var bookImages: [String: Data]
+    /// Optional, versioned cover preparation archive. Derived feature vectors are not backed up.
+    /// Nil in older backups; the app layer owns its image/rect encoding.
+    public var coverSearchPreparation: Data?
     
     /// イニシャライザ
     /// - Parameters:
@@ -43,7 +46,8 @@ public struct BackupSnapshot: Codable {
         books: [Book],
         loans: [Loan],
         loanSettings: LoanSettings,
-        bookImages: [String: Data]
+        bookImages: [String: Data],
+        coverSearchPreparation: Data? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.createdAt = createdAt
@@ -53,5 +57,6 @@ public struct BackupSnapshot: Codable {
         self.loans = loans
         self.loanSettings = loanSettings
         self.bookImages = bookImages
+        self.coverSearchPreparation = coverSearchPreparation
     }
 }

@@ -67,7 +67,7 @@ struct ContentView: View {
 #Preview {
     // デモ用のモックモデル
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,

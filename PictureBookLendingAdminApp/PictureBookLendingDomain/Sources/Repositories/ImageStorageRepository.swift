@@ -15,4 +15,9 @@ public protocol ImageStorageRepositoryProtocol: Sendable {
     ///   - fileName: 保存先のファイル名
     /// - Throws: 保存に失敗した場合はエラーを投げる
     func saveImageData(_ data: Data, fileName: String) throws
+    /// Delete one stored image; a missing file is already deleted.
+    func deleteImage(fileName: String) throws
+
+    /// Delete all stored images, including obsolete unreferenced files.
+    func deleteAllImages() throws
 }

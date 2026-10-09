@@ -442,5 +442,5 @@ struct BookBulkAddContainerView: View {
     let mockFactory = MockRepositoryFactory()
     
     BookBulkAddContainerView()
-        .environment(BookModel(repository: mockFactory.bookRepository))
+        .environment(BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository))
 }

@@ -1,8 +1,8 @@
-# 表紙照合 PoC（Issue #270）
+# 表紙照合の独立実験（Issue #270）
 
 採用判断の要点は [Core ML と Core AI の比較メモ](CORE_AI_VS_CORE_ML.md) を参照。
 
-独立 Swift Package の PoC に加え、本番アプリのローカルブランチへ Core ML の表紙検索を統合した。PoC の `CoreMLCoverEncoder` は Apple 公式の FastViT-T8 headless モデルに `CGImage` を入力し、768 次元 Float32 特徴ベクトルを返す。比較用の `VisionCoverEncoder` も含む。PoC の `CoverIndex` は書籍 UUID と複数の特徴ベクトルを JSON に原子的に保存し、コサイン類似度順に最大 3 件返す。撮影画像や特徴量を外部送信する処理はない。OCR も使わない。
+このディレクトリは、モデル・索引方式を比較する独立Swift Packageと実験記録です。製品アプリに統合したCore ML表紙検索の仕様は [表紙検索の設計](../../docs/cover-recognition-design.md) を参照してください。PoC の `CoreMLCoverEncoder` は Apple 公式の FastViT-T8 headless モデルに `CGImage` を入力し、768 次元 Float32 特徴ベクトルを返す。比較用の `VisionCoverEncoder` も含む。PoC の `CoverIndex` は書籍 UUID と複数の特徴ベクトルを JSON に原子的に保存し、コサイン類似度順に最大 3 件返す。撮影画像や特徴量を外部送信する処理はない。OCR も使わない。
 
 登録画像を追加すると索引のサンプルが増える。これは固定モデルの**特徴ベクトル登録**であり、ネットワーク重みの再学習ではない。書籍削除時は `remove(bookID:)` を呼ぶ。`encoderVersion` が違う索引は読み込めず、元画像から全件再構築する必要がある。書影の取得は既存 `Book.localImageFileName` と `LocalImageStorageRepository` を使う想定。外部書影の Kingfisher キャッシュは 30 日期限なので、そこだけを永続索引の正本にはできない。
 
@@ -34,7 +34,7 @@
 
 ## Core ML / Core AI との比較
 
-本命の製品構成は、固定の**画像埋め込み Core ML モデル** + 書籍 ID 付きローカル索引。モデル変更・前処理変更の際には画像から索引を再生成する。画像経路の成立には [Apple Core ML Models の FastViTT8F16Headless](https://developer.apple.com/machine-learning/models/) を使用。公式 ZIP の SHA-256 は `cd669710c737dab9749a7eecdd0567abd0fef5f4f37f3dccd30c718b5bc0bb87`。モデルは **256×256 RGB 入力、768 要素 Float32 出力**、ImageNet-1k 学習の分類バックボーンで、表紙照合専用には学習されていない。中心正方形を切り抜いて 256×256 に縮小する前処理を PoC で実装した。モデルメタデータは [Apple のカスタムライセンス](https://github.com/apple/ml-fastvit/blob/main/LICENSE)を指しており、ライセンス本文をテストリソースに同梱した。本番採用は実表紙評価とライセンス確認の後に判断する。
+本命の製品構成は、固定の**画像埋め込み Core ML モデル** + 書籍 ID 付きローカル索引。モデル変更・前処理変更の際には画像から索引を再生成する。画像経路の成立には [Apple Core ML Models の FastViTT8F16Headless](https://developer.apple.com/machine-learning/models/) を使用。公式 ZIP の SHA-256 は `cd669710c737dab9749a7eecdd0567abd0fef5f4f37f3dccd30c718b5bc0bb87`。モデルは **256×256 RGB 入力、768 要素 Float32 出力**、ImageNet-1k 学習の分類バックボーンで、表紙照合専用には学習されていない。中心正方形を切り抜いて 256×256 に縮小する前処理を PoC で実装した。モデルメタデータは [Apple のカスタムライセンス](https://github.com/apple/ml-fastvit/blob/main/LICENSE)を指しており、ライセンス本文をテストリソースに同梱した。製品アプリへの統合は実施済みです。実表紙の定量評価、楽天由来特徴量の利用条件、FastViT関連ACKNOWLEDGEMENTSの適用確認は配布前の残件です。
 
 Apple の [更新可能な線画分類器例](https://apple.github.io/coremltools/docs-guides/source/updatable-tiny-drawing-classifier-pipeline-model.html) は 28×28 グレースケール、128 次元の MIT 記載モデルと更新可能 kNN のパイプライン。表紙写真向けの精度根拠にならない。比較のため、隔離した `/tmp/cover-coreml-venv` に `coremltools 9.0` を導入し、`generate_knn_fixture.py` で**画像入力なし**・3 次元 Float32 ベクトル入力・`bookID` 文字列出力の更新可能 kNN を生成。生成物は `Tests/.../Resources` のテスト専用 fixture として保存した。`MLUpdateTask` による `.mlmodelc` の更新・保存・再読込・予測が Mac と iOS 26.1 iPad Simulator の両方で通過した。これは更新 API の動作確認であり、表紙画像の精度検証ではない。Python 3.14 用 `coremltools` はネイティブ Python バインディングが無く、仕様生成のみ可能だったためモデルコンパイルは Xcode の `coremlc` で実行した。
 

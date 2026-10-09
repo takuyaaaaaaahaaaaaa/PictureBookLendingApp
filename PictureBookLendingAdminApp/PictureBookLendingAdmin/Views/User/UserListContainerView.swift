@@ -197,7 +197,7 @@ struct UserListContainerView: View {
     _ = try? mockFactory.userRepository.save(user2)
     
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     // 削除時の自動返却で参照するため、貸出まわりのModelもプレビューに必要
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,

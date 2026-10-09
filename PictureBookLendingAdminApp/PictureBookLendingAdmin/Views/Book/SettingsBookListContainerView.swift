@@ -17,6 +17,7 @@ struct SettingsBookListContainerView: View {
     @State private var didRegisterBook = false
     @State private var editingBook: Book?
     @State private var isEditMode = false
+    @State private var isDeleting = false
     @State private var alertState = AlertState()
     @State private var deleteConfirmationState = AlertState()
     /// 削除の確認待ちの図書
@@ -50,6 +51,7 @@ struct SettingsBookListContainerView: View {
         ) { book in
             BookStatusView(isCurrentlyLent: loanModel.isBookLent(bookId: book.id))
         }
+        .disabled(isDeleting)
         .navigationTitle("図書管理")
         #if os(iOS)
             .searchable(
@@ -174,40 +176,46 @@ struct SettingsBookListContainerView: View {
                         userName: $0.loan.user.name
                     )
                 }
-            )
+            ) + "\n他の図書で使われていない登録写真と、この図書の表紙検索データも削除します。"
         )
     }
     
     private func executeDelete() {
+        guard !isDeleting else { return }
         let targetBooks = booksToDelete
         booksToDelete = []
         deleteConfirmationState = AlertState()
         guard !targetBooks.isEmpty else { return }
-        defer {
-            Task { await CoverRecognitionService.shared.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks) }
-        }
-        
-        // 途中で失敗しても、すでに返却済みにした冊数は利用者に伝える必要がある
-        var returnedCount = 0
-        do {
-            // 貸出中の図書は先に返却する
-            // （先に図書を削除すると、返却操作ができない貸出だけが残ってしまう）
-            for entry in autoReturningLoans(of: targetBooks) {
-                _ = try loanModel.returnBook(loanId: entry.loan.id)
-                returnedCount += 1
+        isDeleting = true
+        Task { @MainActor in
+            defer { isDeleting = false }
+            var returnedCount = 0
+            var failures: [String] = []
+            do {
+                for entry in autoReturningLoans(of: targetBooks) {
+                    _ = try loanModel.returnBook(loanId: entry.loan.id)
+                    returnedCount += 1
+                }
+                for book in targetBooks { _ = try bookModel.deleteBook(book.id) }
+            } catch { failures.append(error.localizedDescription) }
+            let remaining = targetBooks.filter { target in bookModel.books.contains { $0.id == target.id } }
+            if !remaining.isEmpty {
+                failures.append("削除されていない図書: " + remaining.map(\.title).joined(separator: "、"))
             }
-            
-            for book in targetBooks {
-                _ = try bookModel.deleteBook(book.id)
+            // Database deletion may have succeeded even if photo cleanup failed.
+            do {
+                try await CoverRecognitionService.shared.removeDeletedBooks(
+                    books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+            } catch {
+                failures.append(error.localizedDescription)
             }
-        } catch {
-            let returnedNote =
-                returnedCount > 0 ? "\n貸出中だった図書\(returnedCount)冊は返却済みになっています。" : ""
-            alertState = .error(
-                "図書の削除に失敗しました", message: "\(error.localizedDescription)\(returnedNote)")
+            if !failures.isEmpty {
+                let returnedNote = returnedCount > 0 ? "\n貸出中だった図書\(returnedCount)冊は返却済みになっています。" : ""
+                alertState = .error("削除が完了していません", message: failures.joined(separator: "\n") + returnedNote)
+            }
         }
     }
-    
+
     /// 削除に伴って自動返却される貸出（図書とその貸出の組）
     ///
     /// 運用上は1冊につき1件だが、取りこぼすと返却する手段のない貸出が残るため全件を対象にする
@@ -227,7 +235,7 @@ struct SettingsBookListContainerView: View {
     _ = try? mockFactory.bookRepository.save(book1)
     _ = try? mockFactory.bookRepository.save(book2)
     
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
