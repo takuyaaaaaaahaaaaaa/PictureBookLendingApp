@@ -26,15 +26,15 @@ public struct BookFormActions: ToolbarContent {
                 .disabled(!isEnabled)
         }
         ToolbarItem(id: "bookForm.save", placement: .confirmationAction) {
-            if #available(iOS 26, macOS 26, *) {
-                Button(isEditMode ? "保存" : "追加", role: .confirm, action: onSave)
-                    .accessibilityIdentifier("bookForm.save")
-                    .disabled(!isEnabled || !canSave)
-            } else {
-                Button(isEditMode ? "保存" : "追加", action: onSave)
-                    .accessibilityIdentifier("bookForm.save")
-                    .disabled(!isEnabled || !canSave)
+            Group {
+                if #available(iOS 26, macOS 26, *) {
+                    Button(role: .confirm, action: onSave)
+                } else {
+                    Button(isEditMode ? "保存" : "追加", action: onSave)
+                }
             }
+            .accessibilityIdentifier("bookForm.save")
+            .disabled(!isEnabled || !canSave)
         }
     }
 }

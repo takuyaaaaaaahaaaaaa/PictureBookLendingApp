@@ -34,13 +34,13 @@ public struct DeviceResetDialog: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
+                    Button("キャンセル", role: .cancel) {
                         isPresented = false
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("削除実行") {
+                    Button("削除実行", role: .destructive) {
                         onConfirm(selectedOptions)
                         isPresented = false
                     }

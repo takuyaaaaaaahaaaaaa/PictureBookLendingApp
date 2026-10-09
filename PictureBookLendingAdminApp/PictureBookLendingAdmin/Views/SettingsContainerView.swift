@@ -136,7 +136,7 @@ struct SettingsContainerView: View {
                     }
                 }
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる") {
+                    Button("閉じる", role: .closeIfAvailable) {
                         dismiss()
                     }
                     .disabled(isDataOperationRunning)
@@ -212,7 +212,7 @@ struct SettingsContainerView: View {
                         #endif
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("閉じる") {
+                                Button("閉じる", role: .closeIfAvailable) {
                                     isParentFeedbackQRCodeSheetPresented = false
                                 }
                             }

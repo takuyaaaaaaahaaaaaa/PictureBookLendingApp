@@ -36,8 +36,8 @@ struct CoverSearchSheet: View {
             .navigationTitle("絵本の表紙をうつしてください")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("閉じる") { dismiss() }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("閉じる", role: .closeIfAvailable) { dismiss() }
                 }
             }
             .onDisappear {

@@ -61,13 +61,13 @@ public struct BookBulkAddView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル") {
+                    Button("キャンセル", role: .cancel) {
                         onCancel()
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button("保存", role: .confirmIfAvailable) {
                         onSave()
                     }
                     .disabled(processedBooks.isEmpty || isProcessing)
