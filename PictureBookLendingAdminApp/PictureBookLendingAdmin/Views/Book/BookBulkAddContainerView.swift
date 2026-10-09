@@ -372,7 +372,7 @@ struct BookBulkAddContainerView: View {
                     
                     // タイムアウト
                     if !isCompleted {
-                        print("Search timeout for: \(entry.inputTitle)")
+                        print("Bulk book search timed out")
                         completion(nil)
                         isCompleted = true
                         continuation.resume()
@@ -395,7 +395,7 @@ struct BookBulkAddContainerView: View {
             }
             
         } catch {
-            print("Search error for \(entry.inputTitle): \(error)")
+            print("Bulk book search failed")
             completion(nil)
         }
     }
