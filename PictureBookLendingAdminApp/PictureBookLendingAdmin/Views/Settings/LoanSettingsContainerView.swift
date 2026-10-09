@@ -24,13 +24,13 @@ struct LoanSettingsContainerView: View {
         )
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("キャンセル", role: .cancel) {
+                Button("キャンセル", systemImage: "xmark", role: .cancel) {
                     dismiss()
                 }
             }
             
             ToolbarItem(placement: .confirmationAction) {
-                Button("保存", role: .confirmIfAvailable) {
+                Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                     handleSave()
                 }
             }

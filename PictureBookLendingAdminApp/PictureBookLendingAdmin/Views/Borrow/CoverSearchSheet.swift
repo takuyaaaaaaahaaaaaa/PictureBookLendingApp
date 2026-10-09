@@ -37,7 +37,7 @@ struct CoverSearchSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる", role: .closeIfAvailable) { dismiss() }
+                    Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
                 }
             }
             .onDisappear {

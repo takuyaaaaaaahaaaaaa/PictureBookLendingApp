@@ -34,7 +34,7 @@ public struct DeviceResetDialog: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", role: .cancel) {
+                    Button("キャンセル", systemImage: "xmark", role: .cancel) {
                         isPresented = false
                     }
                 }

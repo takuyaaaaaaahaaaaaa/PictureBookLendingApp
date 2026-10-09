@@ -58,13 +58,13 @@ struct UserFormContainerView: View {
             .navigationTitle("利用者を登録")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", role: .cancel) {
+                    Button("キャンセル", systemImage: "xmark", role: .cancel) {
                         handleCancel()
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("登録", role: .confirmIfAvailable) {
+                    Button("登録", systemImage: "checkmark", role: .confirmIfAvailable) {
                         handleSave()
                     }
                     .disabled(!isValidInput)

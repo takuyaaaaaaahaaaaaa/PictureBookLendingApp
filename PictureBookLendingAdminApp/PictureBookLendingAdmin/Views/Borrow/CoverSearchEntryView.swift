@@ -31,7 +31,7 @@ struct CoverSearchEntryView: View {
                     CoverPreparationContainerView(onSearch: { isSearching = true })
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("閉じる", role: .closeIfAvailable) { dismiss() }
+                                Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
                             }
                         }
                 }

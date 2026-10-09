@@ -27,7 +27,7 @@ struct CoverRegistrationInspectionView: View {
             .navigationTitle("登録画像の検証")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる", role: .closeIfAvailable) { dismiss() }
+                    Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
                 }
             }
         }
@@ -218,7 +218,7 @@ private struct ManualCoverCropEditor: View {
             }
             .navigationTitle("表紙の範囲を修正")
             .toolbar { ToolbarItem(placement: .cancellationAction) {
-                Button("キャンセル", role: .cancel) { dismiss() }.disabled(saving)
+                Button("キャンセル", systemImage: "xmark", role: .cancel) { dismiss() }.disabled(saving)
             } }
             .interactiveDismissDisabled(saving)
         }
