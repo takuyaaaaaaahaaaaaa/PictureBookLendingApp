@@ -314,17 +314,20 @@ struct BorrowSheetContainerView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button {
+                        Button("閉じる", systemImage: "xmark", role: isBorrowInProgress ? .cancel : .closeIfAvailable) {
                             handleClose(reason: .userClosed)
-                        } label: {
-                            Image(systemName: "xmark")
                         }
+                        .labelStyle(.iconOnly)
                     }
                 }
             #endif
     }
     
     // MARK: - Computed Properties
+
+    private var isBorrowInProgress: Bool {
+        !context.isAlreadyLent && sheetOutcome == .inProgress
+    }
     
     /// 利用者選択画面の組セクション（組は組一覧の並び順、組内は利用者名順）
     ///
@@ -413,7 +416,7 @@ struct BorrowSheetContainerView: View {
     /// 貸出が完了した後の閉じるは離脱ではないため記録しない。
     /// 複数の無操作タイマーが同時に発火しても記録は1件に抑える（`sheetOutcome`）
     private func handleClose(reason: AnalyticsEvent.AbandonReason) {
-        if !context.isAlreadyLent && sheetOutcome == .inProgress {
+        if isBorrowInProgress {
             analytics.track(
                 .borrowAbandoned(
                     lastStep: sheetPath.isEmpty ? .userSelection : .slotSelection,

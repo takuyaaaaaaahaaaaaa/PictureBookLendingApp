@@ -79,7 +79,7 @@ struct BookBulkAddContainerView: View {
                     .navigationBarTitleDisplayMode(.inline)
                 #endif
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
+                    ToolbarItem(placement: .topBarLeading) {
                         Button("スキップ") {
                             handleSkipCurrentBook()
                         }

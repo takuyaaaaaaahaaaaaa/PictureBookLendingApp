@@ -6,7 +6,7 @@ import SwiftUI
 
 /// 返却モードのContainer View（返却タブのルート）
 ///
-/// 現在貸出中の利用者を名前のみで一覧表示し、名前タップで家庭の画面へ遷移します。
+/// 現在貸出中の利用者を名前のみで一覧表示し、名前タップで家庭の返却Sheetを表示します。
 /// 「延滞のみ」フィルタにより先生の月末俯瞰を兼ねます（SCREEN_DESIGN_PHASE2 §3）。
 /// 検索は名前でも図書タイトルでもヒットします（本を手に持って来る人向け）。
 struct ReturnListContainerView: View {
@@ -17,21 +17,22 @@ struct ReturnListContainerView: View {
     @Environment(\.analytics) private var analytics
     @Environment(\.scenePhase) private var scenePhase
     
-    @State private var navigationPath = NavigationPath()
+    @State private var selectedBorrower: BorrowerRowDisplay?
     @State private var searchText = ""
     @State private var isSearchFocused = false
     @State private var isOverdueOnly = false
     /// 一覧をトップへ戻すトリガ（返却完了ごとにインクリメント）
     @State private var scrollToTopTrigger = 0
     /// 返却後、Undoカードの表示が終わったら一覧へ戻るための予約フラグ
-    @State private var isPopPendingAfterReturn = false
+    @State private var isDismissPendingAfterReturn = false
     /// 家庭の画面の無操作タイマーのトークン（操作のたびに更新して待ち時間を延長する）
     @State private var idleTicket = 0
     @State private var alertState = AlertState()
     @State private var undoFeedback = UndoFeedback()
+    @State private var undoBorrowerId: UUID?
     /// 設定画面表示状態
     @State private var isSettingsPresented = false
-    /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す・popでは戻さない）
+    /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す）
     @State private var familyStopwatch: FlowStopwatch?
     
     /// 見本ホストでは実データを扱う設定への入口を表示しない。
@@ -42,11 +43,12 @@ struct ReturnListContainerView: View {
     }
     
     var body: some View {
-        NavigationStack(path: $navigationPath) {
+        NavigationStack {
             BorrowerListView(
                 sections: filteredSections,
                 chipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
                 isOverdueOnly: $isOverdueOnly,
+                showsDisclosureIndicator: false,
                 onSelect: handleSelect(_:)
             )
             .navigationTitle("返却")
@@ -62,9 +64,6 @@ struct ReturnListContainerView: View {
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif
-            .navigationDestination(for: UUID.self) { userId in
-                familyScreen(for: userId)
-            }
             .toolbar {
                 if showsSettings {
                     ToolbarItem(placement: .topBarTrailing) {
@@ -84,7 +83,34 @@ struct ReturnListContainerView: View {
                 }
             #endif
         }
-        .alert(alertState.title, isPresented: $alertState.isPresented) {
+        .sheet(item: $selectedBorrower) { borrower in
+            NavigationStack {
+                familyScreen(for: borrower)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button(role: .close, action: dismissFamily)
+                                .accessibilityIdentifier("return.close")
+                        }
+                    }
+            }
+            // タイマーは一覧側のundoFeedbackに任せ、Sheetにはカードだけを表示する。
+            // 手動で閉じても同じ取り消し状態が一覧に残る。
+            .undoFeedbackCard(undoFeedback, isVisible: undoBorrowerId == borrower.id) {
+                undoFeedback.dismiss()
+                handleUndoReturn()
+            }
+            .alert(alertState.title, isPresented: $alertState.isPresented) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(alertState.message)
+            }
+            .presentationSizing(.page)
+        }
+        // Sheet表示中のエラーはSheet側で提示する。
+        .alert(alertState.title, isPresented: Binding(
+            get: { alertState.isPresented && selectedBorrower == nil },
+            set: { alertState.isPresented = $0 }
+        )) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
@@ -93,9 +119,13 @@ struct ReturnListContainerView: View {
         .onChange(of: undoFeedback.isPresented) { wasPresented, isPresented in
             // カードがタイムアウトで消えたら一覧へ戻る（Undoで消えた場合は
             // handleUndoReturnが先に予約を取り消しているため、その場に留まる）
-            if wasPresented && !isPresented && isPopPendingAfterReturn {
-                isPopPendingAfterReturn = false
-                popToListAndScrollTop()
+            if wasPresented && !isPresented && isDismissPendingAfterReturn && selectedBorrower != nil {
+                dismissFamilyAndScrollTop()
+            }
+        }
+        .onChange(of: selectedBorrower) { _, borrower in
+            if borrower == nil {
+                isDismissPendingAfterReturn = false
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -121,12 +151,12 @@ struct ReturnListContainerView: View {
     
     // MARK: - Private Views
     
-    /// 家庭の画面（名前タップのプッシュ先）
-    private func familyScreen(for userId: UUID) -> some View {
+    /// 一家庭分の返却を行うSheet
+    private func familyScreen(for borrower: BorrowerRowDisplay) -> some View {
         ScrollView {
             FamilyLoanSlotsContainerView(
                 undoFeedback: $undoFeedback,
-                userId: userId,
+                userId: borrower.id,
                 context: .returning(
                     onReturnCompleted: handleReturnCompleted(hasRemainingLoans:wasOverdue:))
             )
@@ -136,23 +166,11 @@ struct ReturnListContainerView: View {
             LibrarySurfaceBackgroundView()
                 .ignoresSafeArea()
         }
-        .kioskIdleTimeout(ticket: idleTicket, onTimeout: popToListAndScrollTop)
-        .navigationTitle(borrowerName(for: userId))
+        .kioskIdleTimeout(ticket: idleTicket, onTimeout: dismissFamilyAndScrollTop)
+        .navigationTitle(Text("\(borrower.name)さんの返却"))
         #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
         #endif
-    }
-    
-    /// 家庭の画面のタイトルに使う借用者名
-    ///
-    /// 利用者が削除済みの場合は貸出記録のスナップショットから名前を補う
-    /// （一覧には貸出時の名前で並ぶため、開いた先が無題になるのを防ぐ）
-    private func borrowerName(for userId: UUID) -> String {
-        // bodyから何度も評価されるため、キャッシュ済みの一覧だけを見る
-        // （findUserByIdは見つからないとリポジトリまで問い合わせに行く）
-        userModel.getAllUsers().first { $0.id == userId }?.name
-            ?? loanModel.activeLoanBorrower(userId: userId)?.name
-            ?? ""
     }
     
     // MARK: - Computed Properties
@@ -285,7 +303,7 @@ struct ReturnListContainerView: View {
             )
         )
         familyStopwatch = FlowStopwatch()
-        navigationPath.append(row.id)
+        selectedBorrower = row
     }
     
     /// 返却完了時：すぐには戻らず、Undoカードの表示中は家庭の画面に留まる
@@ -296,15 +314,19 @@ struct ReturnListContainerView: View {
         analytics.track(
             .returnCompleted(elapsedMs: familyStopwatch?.elapsedMs(), wasOverdue: wasOverdue)
         )
-        isPopPendingAfterReturn = !hasRemainingLoans
+        undoBorrowerId = selectedBorrower?.id
+        isDismissPendingAfterReturn = !hasRemainingLoans
         idleTicket += 1
     }
     
+    private func dismissFamily() {
+        isDismissPendingAfterReturn = false
+        selectedBorrower = nil
+    }
+
     /// 一覧のトップへ戻る（次の親子への画面の引き継ぎ）
-    private func popToListAndScrollTop() {
-        if !navigationPath.isEmpty {
-            navigationPath.removeLast()
-        }
+    private func dismissFamilyAndScrollTop() {
+        dismissFamily()
         scrollToTopTrigger += 1
     }
     
@@ -312,7 +334,7 @@ struct ReturnListContainerView: View {
     ///
     /// 取り消したらその場（家庭の画面）に留まり、枠に本が戻るのを見せる
     private func handleUndoReturn() {
-        isPopPendingAfterReturn = false
+        isDismissPendingAfterReturn = false
         idleTicket += 1
         guard let loanId = undoFeedback.targetId else { return }
         do {

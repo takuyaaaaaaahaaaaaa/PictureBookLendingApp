@@ -1,3 +1,4 @@
+import PictureBookLendingUI
 import PictureBookLendingDomain
 import PictureBookLendingModel
 import SwiftUI
@@ -30,7 +31,7 @@ struct CoverSearchEntryView: View {
                     CoverPreparationContainerView(onSearch: { isSearching = true })
                         .toolbar {
                             ToolbarItem(placement: .cancellationAction) {
-                                Button("閉じる") { dismiss() }
+                                Button("閉じる", role: .closeIfAvailable) { dismiss() }
                             }
                         }
                 }

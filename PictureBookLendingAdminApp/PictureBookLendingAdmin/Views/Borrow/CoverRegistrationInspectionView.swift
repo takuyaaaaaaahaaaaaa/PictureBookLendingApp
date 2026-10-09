@@ -1,3 +1,4 @@
+import PictureBookLendingUI
 #if DEBUG
 import PictureBookLendingDomain
 import SwiftUI
@@ -25,8 +26,8 @@ struct CoverRegistrationInspectionView: View {
             }
             .navigationTitle("登録画像の検証")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("閉じる") { dismiss() }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("閉じる", role: .closeIfAvailable) { dismiss() }
                 }
             }
         }
@@ -217,7 +218,7 @@ private struct ManualCoverCropEditor: View {
             }
             .navigationTitle("表紙の範囲を修正")
             .toolbar { ToolbarItem(placement: .cancellationAction) {
-                Button("キャンセル") { dismiss() }.disabled(saving)
+                Button("キャンセル", role: .cancel) { dismiss() }.disabled(saving)
             } }
             .interactiveDismissDisabled(saving)
         }

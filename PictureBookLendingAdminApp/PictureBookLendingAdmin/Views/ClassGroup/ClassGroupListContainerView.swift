@@ -48,7 +48,7 @@ struct ClassGroupListContainerView: View {
             
             ToolbarSpacer(.fixed)
             
-            ToolbarItem(id: "add") {
+            ToolbarItem(id: "add", placement: .primaryAction) {
                 Button {
                     handleAdd()
                 } label: {

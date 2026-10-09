@@ -95,43 +95,47 @@ public struct UndoFeedbackView: View {
     }
 }
 
-/// 取り消し可能フィードバックを画面中央にオーバーレイ表示するModifier
-///
-/// 表示後は自動で消滅し、表示時に成功ハプティクスを発生させます。
-/// 「元に戻す」タップ時は `onUndo` を呼び、フィードバックを閉じます。
-private struct UndoFeedbackModifier: ViewModifier {
-    @Binding var feedback: UndoFeedback
+private enum UndoFeedbackConstants {
+    static let displayDuration: Duration = .seconds(3)
+    static let transitionDuration: TimeInterval = 0.3
+    static let initialScale: CGFloat = 0.8
+}
+
+/// カードの描画だけを担当する。Sheetへ再表示してもタイマーは増やさない。
+private struct UndoFeedbackCardModifier: ViewModifier {
+    let feedback: UndoFeedback
+    let isVisible: Bool
     let onUndo: () -> Void
-    
-    private enum Constants {
-        /// 自動消滅までの表示時間（DESIGN_PRINCIPLES.md「フィードバック設計」準拠）
-        static let displayDuration: Duration = .seconds(3)
-        /// 出現・消滅アニメーションの時間
-        static let transitionDuration: TimeInterval = 0.3
-        /// 出現時の初期スケール
-        static let initialScale: CGFloat = 0.8
-    }
-    
+
     func body(content: Content) -> some View {
         content
             .overlay {
-                if feedback.isPresented {
-                    UndoFeedbackView(message: feedback.message, onUndo: handleUndoTap)
-                        .transition(
-                            .scale(scale: Constants.initialScale).combined(with: .opacity))
+                if isVisible && feedback.isPresented {
+                    UndoFeedbackView(message: feedback.message, onUndo: onUndo)
+                        .transition(.scale(scale: UndoFeedbackConstants.initialScale).combined(with: .opacity))
                 }
             }
-            .animation(
-                .spring(duration: Constants.transitionDuration), value: feedback.isPresented
-            )
+            .animation(.spring(duration: UndoFeedbackConstants.transitionDuration), value: feedback.isPresented)
+    }
+}
+
+/// 表示時間と成功ハプティクスを管理するModifier
+private struct UndoFeedbackModifier: ViewModifier {
+    @Binding var feedback: UndoFeedback
+    let onUndo: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .undoFeedbackCard(feedback, onUndo: handleUndoTap)
             .sensoryFeedback(.success, trigger: feedback.occurrenceCount)
             .task(id: feedback.occurrenceCount) {
                 guard feedback.isPresented else { return }
-                try? await Task.sleep(for: Constants.displayDuration)
+                try? await Task.sleep(for: UndoFeedbackConstants.displayDuration)
+                guard !Task.isCancelled else { return }
                 feedback.dismiss()
             }
     }
-    
+
     private func handleUndoTap() {
         feedback.dismiss()
         onUndo()
@@ -139,6 +143,13 @@ private struct UndoFeedbackModifier: ViewModifier {
 }
 
 extension View {
+    /// タイマー・ハプティクスを追加せず、別の表示先へ同じ取り消しカードを描画する。
+    public func undoFeedbackCard(
+        _ feedback: UndoFeedback, isVisible: Bool = true, onUndo: @escaping () -> Void
+    ) -> some View {
+        modifier(UndoFeedbackCardModifier(feedback: feedback, isVisible: isVisible, onUndo: onUndo))
+    }
+
     /// 「元に戻す」付きフィードバックカード（中央表示・自動消滅・ハプティクス付き）をオーバーレイ表示する
     ///
     /// - Parameters:
