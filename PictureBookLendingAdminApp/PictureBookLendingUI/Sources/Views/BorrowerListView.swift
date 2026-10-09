@@ -1,6 +1,10 @@
 import PictureBookLendingDomain
 import SwiftUI
 
+#if os(iOS)
+    import UIKit
+#endif
+
 /// 借用者一覧の1行分の表示データ
 ///
 /// プライバシー配慮のため、一覧に出すのは名前・保護者ラベル・延滞マークまで。
@@ -55,6 +59,13 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
 public struct BorrowerListView: View {
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    private var isPhone: Bool {
+        #if os(iOS)
+            UIDevice.current.userInterfaceIdiom == .phone
+        #else
+            false
+        #endif
+    }
     /// 組チップの動作モード
     ///
     /// - 返却一覧＝インデックス：探している名前がどこにいるか分からない画面では、
@@ -186,6 +197,7 @@ public struct BorrowerListView: View {
                     .padding(.trailing)
             }
         }
+        .padding(.top, isPhone && isOverdueOnly != nil ? Layout.chipSpacing : 0)
     }
     
     /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
