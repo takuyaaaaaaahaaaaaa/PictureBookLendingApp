@@ -9,16 +9,23 @@ struct ThirdPartyLicensesView: View {
         guard var items = try? JSONDecoder().decode([ThirdPartyLicense].self, from: data) else {
             return nil
         }
-        if let licenseURL = Bundle.main.url(forResource: "FastViT-LICENSE", withExtension: "txt"),
+        guard
+            let licenseURL = Bundle.main.url(forResource: "FastViT-LICENSE", withExtension: "txt"),
             let licenseText = try? String(contentsOf: licenseURL, encoding: .utf8),
-            let sourceURL = URL(string: "https://github.com/apple/ml-fastvit")
-        {
-            items.append(ThirdPartyLicense(
+            let noticesURL = Bundle.main.url(
+                forResource: "FastViT-ACKNOWLEDGEMENTS", withExtension: "txt"),
+            let noticesText = try? String(contentsOf: noticesURL, encoding: .utf8),
+            let sourceURL = URL(
+                string:
+                    "https://github.com/apple/ml-fastvit/tree/8af5928238cab99c45f64fc3e4e7b1516b8224ba"
+            )
+        else { return nil }
+        items.append(
+            ThirdPartyLicense(
                 id: "apple-fastvit-model", name: "Apple FastViT 表紙検索モデル",
                 version: "T8 F16 Headless", licenseName: "Apple Software License",
-                sourceURL: sourceURL, licenseText: licenseText, noticesText: nil
+                sourceURL: sourceURL, licenseText: licenseText, noticesText: noticesText
             ))
-        }
         return items
     }()
 
