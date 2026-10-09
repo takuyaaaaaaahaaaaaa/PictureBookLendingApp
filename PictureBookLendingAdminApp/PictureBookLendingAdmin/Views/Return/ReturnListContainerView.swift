@@ -87,10 +87,8 @@ struct ReturnListContainerView: View {
             NavigationStack {
                 familyScreen(for: borrower)
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button(role: .close, action: dismissFamily)
-                                .accessibilityIdentifier("return.close")
-                        }
+                        Button(role: .close, action: dismissFamily)
+                            .accessibilityIdentifier("return.close")
                     }
             }
             // タイマーは一覧側のundoFeedbackに任せ、Sheetにはカードだけを表示する。
