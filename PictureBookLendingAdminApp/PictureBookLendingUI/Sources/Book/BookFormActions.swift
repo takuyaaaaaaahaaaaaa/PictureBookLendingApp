@@ -8,8 +8,10 @@ public struct BookFormActions: ToolbarContent {
     let onSave: () -> Void
     let onCancel: () -> Void
 
-    public init(isEditMode: Bool, canSave: Bool, isEnabled: Bool = true,
-                onSave: @escaping () -> Void, onCancel: @escaping () -> Void) {
+    public init(
+        isEditMode: Bool, canSave: Bool, isEnabled: Bool = true,
+        onSave: @escaping () -> Void, onCancel: @escaping () -> Void
+    ) {
         self.isEditMode = isEditMode
         self.canSave = canSave
         self.isEnabled = isEnabled
@@ -18,15 +20,21 @@ public struct BookFormActions: ToolbarContent {
     }
 
     public var body: some ToolbarContent {
-        ToolbarItem(id: "bookForm.cancel", placement: .topBarLeading) {
-            Button("キャンセル", action: onCancel)
+        ToolbarItem(id: "bookForm.cancel", placement: .cancellationAction) {
+            Button("キャンセル", role: .cancel, action: onCancel)
                 .accessibilityIdentifier("bookForm.cancel")
                 .disabled(!isEnabled)
         }
-        ToolbarItem(id: "bookForm.save", placement: .topBarTrailing) {
-            Button(isEditMode ? "保存" : "追加", action: onSave)
-                .accessibilityIdentifier("bookForm.save")
-                .disabled(!isEnabled || !canSave)
+        ToolbarItem(id: "bookForm.save", placement: .confirmationAction) {
+            if #available(iOS 26, macOS 26, *) {
+                Button(isEditMode ? "保存" : "追加", role: .confirm, action: onSave)
+                    .accessibilityIdentifier("bookForm.save")
+                    .disabled(!isEnabled || !canSave)
+            } else {
+                Button(isEditMode ? "保存" : "追加", action: onSave)
+                    .accessibilityIdentifier("bookForm.save")
+                    .disabled(!isEnabled || !canSave)
+            }
         }
     }
 }
