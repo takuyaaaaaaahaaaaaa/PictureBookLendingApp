@@ -200,8 +200,9 @@ struct BorrowListContainerView: View {
                 }
             }
         ) {
-            CoverSearchSheet(
-                books: bookModel.books,
+            CoverSearchEntryView(
+                isInitiallyReady: CoverRecognitionService.shared.hasPreparedBook(
+                    in: bookModel.books, isComplete: bookModel.hasLoadedBooks),
                 onSelect: { book in
                     selectedCoverBook = book
                     isCoverSearchPresented = false
