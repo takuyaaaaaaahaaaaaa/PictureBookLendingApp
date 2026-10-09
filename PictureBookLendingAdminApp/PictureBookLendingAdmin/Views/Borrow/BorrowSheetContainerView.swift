@@ -470,7 +470,8 @@ struct BorrowSheetContainerView: View {
                     totalMs: stopwatch.elapsedMs(),
                     slotType: usedSlotType,
                     isGuardianFallback: usedSlotType == .guardian
-                        && slotType(of: route.userId) == .child
+                        && slotType(of: route.userId) == .child,
+                    findMethod: context.findMethod
                 )
             )
             sheetOutcome = .completed

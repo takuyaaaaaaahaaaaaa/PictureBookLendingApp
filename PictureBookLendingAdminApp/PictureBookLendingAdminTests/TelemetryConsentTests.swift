@@ -8,6 +8,29 @@ import os
 @Suite("Telemetry consent", .serialized)
 @MainActor
 struct TelemetryConsentTests {
+    @Test("表紙イベントも未同意・診断のみ・撤回後には転送しない")
+    func coverEventsRespectAnalyticsConsent() {
+        let recorder = AnalyticsRecorder()
+        let controller = TelemetryPrivacyController(
+            store: MemoryConsentStore(), runtime: TelemetryRuntimeSpy(), analyticsDestination: recorder)
+        controller.start()
+        let events: [AnalyticsEvent] = [.coverSearchOpened, .coverSearchRouted(route: .preparation),
+            .coverPreparationFinished(result: .unavailable), .coverSearchFailed(reason: .permission),
+            .coverCandidatesShown(count: 2),
+            .coverSearchFinished(outcome: .abandoned, hadCandidates: false, noCandidates: true)]
+        func emit() { for event in events { controller.analytics.track(name: event.name, params: event.params) } }
+        emit()
+        controller.setDiagnosticsConsent(true)
+        emit()
+        #expect(recorder.names.withLock { $0 }.isEmpty)
+        controller.setAnalyticsConsent(true)
+        emit()
+        #expect(recorder.names.withLock { $0 } == events.map(\.name))
+        controller.setAnalyticsConsent(false)
+        emit()
+        #expect(recorder.names.withLock { $0 } == events.map(\.name))
+    }
+
     private func makeStore() -> MemoryConsentStore { MemoryConsentStore() }
     
     @Test("新規・既存インストールに同意を補完しない")

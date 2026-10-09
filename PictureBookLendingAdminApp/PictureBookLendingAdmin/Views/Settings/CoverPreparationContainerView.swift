@@ -3,6 +3,7 @@ import PictureBookLendingUI
 import SwiftUI
 
 struct CoverPreparationContainerView: View {
+    @Environment(\.analytics) private var analytics
     @Environment(BookModel.self) private var bookModel
     @State private var service = CoverRecognitionService.shared
     @State private var isRetryRequested = false
@@ -50,6 +51,7 @@ struct CoverPreparationContainerView: View {
                 Task {
                     await service.prepare(
                         books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+                    analytics.track(.coverPreparationFinished(result: canSearch ? .ready : .unavailable))
                     isRetryRequested = false
                 }
             },

@@ -246,3 +246,63 @@ App層             AnalyticsEvent enum（画面語彙の型安全な定義）
 - [ ] dSYMアップロードの動作確認（ローカルビルド・Xcode Cloud両方）：
   Crashlytics導入時に実機確認済みのため対象外
 - [ ] 導入園向けの説明文面（何を集めて何を集めないか）を用意
+
+## 表紙検索の追加計測（Q7）
+
+**問い：表紙から探す入口は使われ、準備・カメラ・候補確認のどこで止まり、貸出に進めているか。**
+UI、認識のしきい値・フレーム処理・再試行動作は変更しない。
+
+| イベント | タイミング・上限 | パラメータ |
+|---|---|---|
+| `cover_search_opened` | 表紙から探す入口のタップごと | なし |
+| `cover_search_routed` | 入口画面の初回分岐、表示につき1回 | `route`: ready / preparation |
+| `cover_preparation_finished` | 準備画面の手動再試行が戻った時（設定画面からも含む） | `result`: ready / unavailable |
+| `cover_search_failed` | カメラ画面につき各理由を最大1回、再試行でも重複しない | `reason`: permission / camera / recognition |
+| `cover_candidates_shown` | 確定した候補の初回表示のみ、再試行でも最大1回 | `candidate_count`: 初回の候補件数 |
+| `cover_search_finished` | 候補選択、または未選択の画面終了、表示につき最大1回 | `outcome`: selected / abandoned、`had_candidates`: Bool、`no_candidates`: Bool |
+
+- `preparation`は準備確認待ちの表示も含む。`ready`は入口で検索可能な場合。
+  `cover_preparation_finished`は自動準備の全ジョブ計測ではなく、明示的な再試行の結果。
+  `unavailable`には登録なし・未準備・通信等の失敗をまとめる。自由文字のエラーは送らない。
+- カメラフレーム、個々の空候補、リトライタップではイベントを送らない。
+  `no_candidates=true`は検索の正常な応答が1回以上あり、確定候補の表示が一度もなく、
+  権限・カメラ・認識エラーのないまま終了した場合のみ。途中の空応答は失敗と見なさない。
+  準備画面だけで終了、カメラ開始前の終了、エラー終了はfalse。
+- `selected`を記録したあとのonDisappearは二重計上しない。離脱には閉じる操作や外部からの画面除去を含む。
+  OSによる強制終了は終了イベントを保証できない。background移行だけでは終了扱いしない。
+- 既存の`borrow_flow_started`と`borrow_completed`へ`find_method=cover`を引き継ぐ。
+  通常の一覧選択も開始時のsearch / shelf / scrollを完了まで固定して引き継ぐ。
+  貸出中の候補選択は貸出フロー開始ではないため、従来どおり開始イベントを送らない。
+  候補選択数と貸出開始数は必ずしも一致しない。
+- 個別フローID・利用者ID等を追加しない。共用端末のFirebase sessionから個人の行動を推測しない。
+  導線別の開始数・完了数は集計比較用であり、一対一の照合や厳密な完了率ではない。
+- 追加イベントもすべてEnvironmentのAnalyticsから既存ConsentGatedAnalyticsServiceを通る。
+  未同意、診断だけ同意、撤回後は送信しない。保留イベントの再送機構は追加しない。
+
+### プライバシー・申告との整合
+
+[公開ポリシー](privacy-policy.md) §2の「操作の種類・所要時間・件数」の範囲で追加する。
+名前・書名・ISBN・画像・特徴量・管理番号・検索語・業務ID・利用者ID・自由文字エラーは追加しない。
+カメラ画像と認識処理は従来どおり端末内で扱い、解析送信と画像取得通信は別。
+Crashlyticsの同意やカスタムログには変更なし。
+ASCでは既存の利用状況（製品の操作）の分析目的との整合をオーナーが公開前に確認する。
+SDK既定の識別子に関する既存申告も含め、ASCの実設定を今回確認・変更済みとはしない。
+新しい画像・ユーザーコンテンツの収集申告が必要になる実装は追加していない。
+
+### ローカル確認方法
+
+- `CoverSearchTelemetryTests`: 1000フレーム相当、リトライ時の候補/理由重複、選択後の終了、
+  未検索と候補なし、エラーと候補なしの区別、既存貸出イベントのcover帰属を確認。
+- `TelemetryConsentTests.coverEventsRespectAnalyticsConsent`: Spy宛てに新イベントを渡し、
+  未同意・診断だけ・Analytics許可・撤回の順で転送件数を確認。
+- 画面確認は専用テスト環境でNoop/Spyを注入し、入口→準備→再試行→カメラ→候補選択→貸出、
+  権限拒否、未認識終了、候補後終了、リトライを確認する。既存データや実機は使わない。
+- Firebase本番送信、Console設定変更、Cloudビルド、新しいキーや設定ファイルのコピーは行わない。
+  実SDK送信とASC確認の残作業は[同意設計](TELEMETRY_CONSENT.md)参照。
+
+今回の検証（2026-10-10、base `49afbff`）：
+`python3 scripts/test_cover_analytics_local.py` で実ソースを一時Swift Packageへコピーし、
+Firebase境界のみstub化。AnalyticsEvent 16件・CoverSearchTelemetry 4件・TelemetryConsent 21件が成功。
+追加・変更した5画面の`swiftc -frontend -parse`も成功。
+Xcodeの全体build / build-for-testingは、未配置の`Secrets.xcconfig`により停止した。
+設定ファイルを作成・コピーしての回避は行っていない。全体の型検査・Simulatorでの画面確認・実SDK通信は未検証。

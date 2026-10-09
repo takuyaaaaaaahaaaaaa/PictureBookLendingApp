@@ -1,6 +1,6 @@
 import PictureBookLendingInfrastructure
 
-/// 利用ログのイベント語彙（docs/ANALYTICS_DESIGN.md §3 のv1・10イベント）
+/// 利用ログのイベント語彙（docs/ANALYTICS_DESIGN.md §3 と表紙検索の追加計測）
 ///
 /// `find_method: shelf` のような語彙は画面の関心事でありドメイン概念ではないため、
 /// Domain層ではなくApp層のPresentation配下に置く（`+Formatter`と同じ役回り）。
@@ -17,6 +17,7 @@ enum AnalyticsEvent {
         case shelf
         /// 一覧をスクロールして見つけた
         case scroll
+        case cover
     }
     
     /// 貸出フローで最後に居た画面（離脱地点の特定用）
@@ -61,12 +62,23 @@ enum AnalyticsEvent {
         case returning = "return"
     }
     
+    enum CoverRoute: String { case ready, preparation }
+    enum CoverPreparationResult: String { case ready, unavailable }
+    enum CoverFailure: String { case permission, camera, recognition }
+    enum CoverOutcome: String { case selected, abandoned }
+    case coverSearchOpened
+    case coverSearchRouted(route: CoverRoute)
+    case coverPreparationFinished(result: CoverPreparationResult)
+    case coverSearchFailed(reason: CoverFailure)
+    case coverCandidatesShown(count: Int)
+    case coverSearchFinished(outcome: CoverOutcome, hadCandidates: Bool, noCandidates: Bool)
+
     /// 図書一覧で図書をタップし貸出シートが開いた
     case borrowFlowStarted(findMethod: BookFindMethod)
     /// 名前一覧で名前をタップした
     case borrowUserSelected(elapsedMs: Int?)
     /// 枠タップで貸出が確定した
-    case borrowCompleted(totalMs: Int?, slotType: SlotType, isGuardianFallback: Bool)
+    case borrowCompleted(totalMs: Int?, slotType: SlotType, isGuardianFallback: Bool, findMethod: BookFindMethod? = nil)
     /// 貸出シートが完了せず閉じた
     case borrowAbandoned(lastStep: BorrowLastStep, reason: AbandonReason, elapsedMs: Int?)
     /// 家庭の画面に到達したが空き枠がなかった
@@ -86,6 +98,12 @@ enum AnalyticsEvent {
     /// イベント名（GA4流のsnake_case）
     var name: String {
         switch self {
+        case .coverSearchOpened: "cover_search_opened"
+        case .coverSearchRouted: "cover_search_routed"
+        case .coverPreparationFinished: "cover_preparation_finished"
+        case .coverSearchFailed: "cover_search_failed"
+        case .coverCandidatesShown: "cover_candidates_shown"
+        case .coverSearchFinished: "cover_search_finished"
         case .borrowFlowStarted: "borrow_flow_started"
         case .borrowUserSelected: "borrow_user_selected"
         case .borrowCompleted: "borrow_completed"
@@ -105,15 +123,24 @@ enum AnalyticsEvent {
     /// その場合はキーごと落とす。0や-1のような番兵を送って集計を汚さない。
     var params: [String: AnalyticsParamValue] {
         switch self {
+        case .coverSearchOpened: [:]
+        case .coverSearchRouted(let route): ["route": .string(route.rawValue)]
+        case .coverPreparationFinished(let result): ["result": .string(result.rawValue)]
+        case .coverSearchFailed(let reason): ["reason": .string(reason.rawValue)]
+        case .coverCandidatesShown(let count): ["candidate_count": .int(count)]
+        case .coverSearchFinished(let outcome, let hadCandidates, let noCandidates):
+            ["outcome": .string(outcome.rawValue), "had_candidates": .bool(hadCandidates),
+             "no_candidates": .bool(noCandidates)]
         case .borrowFlowStarted(let findMethod):
             ["find_method": .string(findMethod.rawValue)]
         case .borrowUserSelected(let elapsedMs):
             Self.duration("elapsed_ms", elapsedMs)
-        case .borrowCompleted(let totalMs, let slotType, let isGuardianFallback):
+        case .borrowCompleted(let totalMs, let slotType, let isGuardianFallback, let findMethod):
             [
                 "slot_type": .string(slotType.rawValue),
                 "guardian_fallback": .bool(isGuardianFallback),
             ].merging(Self.duration("total_ms", totalMs)) { current, _ in current }
+                .merging(findMethod.map { ["find_method": .string($0.rawValue)] } ?? [:]) { current, _ in current }
         case .borrowAbandoned(let lastStep, let reason, let elapsedMs):
             [
                 "last_step": .string(lastStep.rawValue),
