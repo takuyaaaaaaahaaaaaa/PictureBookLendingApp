@@ -47,6 +47,10 @@ struct CoverSearchSheet: View {
         }
     }
 
+    private enum CandidateLayout {
+        static let coverSize: CGFloat = 64
+    }
+
     private var cameraPanel: some View {
         ZStack {
             Color.black
@@ -105,7 +109,8 @@ struct CoverSearchSheet: View {
                                     BookImageView(imageURL: book.resolvedSmallImageSource) {
                                         Image(systemName: "book.closed").font(.title)
                                     }
-                                    .frame(width: 56, height: 76)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: CandidateLayout.coverSize, height: CandidateLayout.coverSize)
                                     VStack(alignment: .leading, spacing: 6) {
                                         Text(book.title).font(.headline)
                                         if let number = book.managementNumber {
