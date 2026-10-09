@@ -88,6 +88,8 @@ public struct BorrowerListView: View {
     public let emptyStateDescription: String
     /// 「延滞のみ」フィルタのbinding（nilなら非表示。貸出フローの利用者選択では不要のため隠す）
     public let isOverdueOnly: Binding<Bool>?
+    /// 階層へ進む場合だけ開示インジケータを表示する（Sheetを開く返却一覧では非表示）。
+    public let showsDisclosureIndicator: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
     
     private enum Layout {
@@ -106,6 +108,7 @@ public struct BorrowerListView: View {
         emptyStateTitle: String = "現在、貸出中の利用者はいません",
         emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
         isOverdueOnly: Binding<Bool>? = nil,
+        showsDisclosureIndicator: Bool = true,
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
@@ -113,6 +116,7 @@ public struct BorrowerListView: View {
         self.emptyStateTitle = emptyStateTitle
         self.emptyStateDescription = emptyStateDescription
         self.isOverdueOnly = isOverdueOnly
+        self.showsDisclosureIndicator = showsDisclosureIndicator
         self.onSelect = onSelect
     }
     
@@ -278,14 +282,14 @@ public struct BorrowerListView: View {
                         .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 8)
                     borrowerBadges(row)
-                    borrowerChevron
+                    borrowerDisclosureIndicator
                 }
                 
                 VStack(alignment: .leading, spacing: Layout.chipSpacing) {
                     HStack(spacing: Layout.chipSpacing) {
                         borrowerName(row)
                         Spacer(minLength: 8)
-                        borrowerChevron
+                        borrowerDisclosureIndicator
                     }
                     if row.isGuardian || row.hasNoOpenSlot || row.isOverdue {
                         ViewThatFits(in: .horizontal) {
@@ -325,11 +329,14 @@ public struct BorrowerListView: View {
         }
     }
     
-    private var borrowerChevron: some View {
-        Image(systemName: "chevron.right")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(AppColor.libraryAction)
-            .accessibilityHidden(true)
+    @ViewBuilder
+    private var borrowerDisclosureIndicator: some View {
+        if showsDisclosureIndicator {
+            Image(systemName: "chevron.right")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColor.libraryAction)
+                .accessibilityHidden(true)
+        }
     }
     
     @ViewBuilder

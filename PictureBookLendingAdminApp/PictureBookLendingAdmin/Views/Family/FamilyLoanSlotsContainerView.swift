@@ -31,7 +31,7 @@ struct FamilyLoanSlotsContainerView: View {
     /// 文脈enumに含めない：返却タブの返却Undoだけでなく、貸出フロー内の
     /// 「枠の入れ替え（先に返し忘れた本をその場で返却して空けるUndo）」でも
     /// 使われる、両モード共通の状態のため（`handleReturn`参照）。
-    /// alertStateと違い@Binding：返却完了で子ごとpopされた後もUndoカードは
+    /// alertStateと違い@Binding：家庭の画面を閉じた後もUndoカードは
     /// 親レベルで生き残る必要があり、子より長寿命の状態は親所有が正しいため
     @Binding var undoFeedback: UndoFeedback
     
