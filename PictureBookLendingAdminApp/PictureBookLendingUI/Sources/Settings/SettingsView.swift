@@ -249,7 +249,7 @@ public struct SettingsView: View {
             }
             .padding()
         }
-        .background(.regularMaterial)
+        .background(AppColor.settingsBackground)
     }
 }
 
@@ -306,7 +306,7 @@ private struct SettingsMenuItem: View {
                         .foregroundStyle(style.titleColor)
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary.opacity(0.7))
                 }
                 Spacer()
                 if showChevron {
@@ -316,8 +316,12 @@ private struct SettingsMenuItem: View {
                 }
             }
             .padding()
-            .background(AppColor.cardSurface)
-            .cornerRadius(12)
+            .background(AppColor.cardSurface, in: RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(AppColor.settingsCardBorder, lineWidth: 1)
+                    .allowsHitTesting(false)
+            }
         }
         .buttonStyle(.plain)
     }
