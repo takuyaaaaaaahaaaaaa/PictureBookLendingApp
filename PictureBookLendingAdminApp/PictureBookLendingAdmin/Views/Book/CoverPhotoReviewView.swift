@@ -102,7 +102,7 @@ struct CoverPhotoReviewView: View {
             .navigationTitle(editing ? "切り抜き範囲を調整" : "表紙の切り抜きを確認")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", role: .cancel, action: onCancel)
+                    Button("キャンセル", systemImage: "xmark", role: .cancel, action: onCancel)
                 }
             }
             .interactiveDismissDisabled(busy)

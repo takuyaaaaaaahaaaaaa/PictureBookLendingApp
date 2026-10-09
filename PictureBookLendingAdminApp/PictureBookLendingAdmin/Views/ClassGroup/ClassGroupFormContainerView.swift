@@ -42,13 +42,13 @@ struct ClassGroupFormContainerView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", role: .cancel) {
+                    Button("キャンセル", systemImage: "xmark", role: .cancel) {
                         handleCancel()
                     }
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存", role: .confirmIfAvailable) {
+                    Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                         handleSave()
                     }
                     .disabled(!isValidInput)

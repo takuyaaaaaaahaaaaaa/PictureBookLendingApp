@@ -47,7 +47,7 @@ struct UserDetailContainerView: View {
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("保存", role: .confirmIfAvailable) {
+                Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                     saveUserChanges(user)
                 }
             }

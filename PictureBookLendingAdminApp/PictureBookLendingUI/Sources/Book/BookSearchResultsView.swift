@@ -54,7 +54,7 @@ public struct BookSearchResultsView: View {
             #endif
             .toolbar {
                 ToolbarItem(id: "bookSearchResults.cancel", placement: .cancellationAction) {
-                    Button("キャンセル", role: .cancel) {
+                    Button("キャンセル", systemImage: "xmark", role: .cancel) {
                         onCancel()
                     }
                     .accessibilityIdentifier("bookSearchResults.cancel")
