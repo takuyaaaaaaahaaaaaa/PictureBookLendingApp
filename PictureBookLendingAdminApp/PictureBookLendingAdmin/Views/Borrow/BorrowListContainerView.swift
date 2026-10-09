@@ -144,9 +144,7 @@ struct BorrowListContainerView: View {
                 }
             }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
-                }
+                BookDisplayToolbar(sort: $selectedSortType, mode: $displayMode)
                 if showsSettings {
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                     ToolbarItem(placement: .topBarTrailing) {

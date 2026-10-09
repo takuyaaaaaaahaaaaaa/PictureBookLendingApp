@@ -85,9 +85,7 @@
             }
             .navigationTitle("貸出")
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    BookDisplayMenus(sort: $selectedSortType, mode: $displayMode)
-                }
+                BookDisplayToolbar(sort: $selectedSortType, mode: $displayMode)
             }
             #if os(iOS)
                 .navigationBarTitleDisplayMode(.inline)
