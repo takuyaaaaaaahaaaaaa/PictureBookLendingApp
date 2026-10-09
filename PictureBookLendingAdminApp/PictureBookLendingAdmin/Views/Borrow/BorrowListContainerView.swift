@@ -96,7 +96,7 @@ struct BorrowListContainerView: View {
                 onDelete: { _ in },
                 onSelect: openBorrowSheet(for:),
                 imageURLProvider: { book in
-                    book.resolvedSmallImageSource
+                    book.resolvedImageSource
                 }
             ) { book in
                 // 押せることが見た目でわかるように、行の右端は状態バッジではなく

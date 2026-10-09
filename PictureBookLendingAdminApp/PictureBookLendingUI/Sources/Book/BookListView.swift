@@ -375,7 +375,7 @@ public struct BookListView<RowAction: View>: View {
     @ViewBuilder
     private func shelfSection(for section: BookSection, nextLabelText: String?) -> some View {
         let rows = Self.chunked(section.books, into: shelfColumnCount)
-        VStack(alignment: .leading, spacing: ShelfLayout.rowSpacing) {
+        LazyVStack(alignment: .leading, spacing: ShelfLayout.rowSpacing) {
             ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
                 shelfRow(
                     of: row,
@@ -777,20 +777,31 @@ private struct BookGridCoverView: View {
 private struct BookScrollPosition: ViewModifier {
     @Binding var bookID: Book.ID?
     @State private var isUserScrolling = false
+    @State private var scrollingBookID: Book.ID?
     
     func body(content: Content) -> some View {
         if #available(iOS 18, macOS 15, *) {
             content
                 .scrollPosition(
                     id: Binding(
-                        get: { bookID },
+                        get: { scrollingBookID },
                         set: { value in
-                            if isUserScrolling || bookID == nil { bookID = value }
+                            if isUserScrolling || scrollingBookID == nil {
+                                scrollingBookID = value
+                                if bookID == nil { bookID = value }
+                            }
                         }), anchor: .top
                 )
+                .onAppear { scrollingBookID = bookID }
+                .onChange(of: bookID) { _, value in
+                    if scrollingBookID != value { scrollingBookID = value }
+                }
                 .onScrollPhaseChange { _, phase in
                     isUserScrolling =
                         phase == .tracking || phase == .interacting || phase == .decelerating
+                    if !isUserScrolling, let scrollingBookID, bookID != scrollingBookID {
+                        bookID = scrollingBookID
+                    }
                 }
         } else {
             content.scrollPosition(id: $bookID, anchor: .top)
