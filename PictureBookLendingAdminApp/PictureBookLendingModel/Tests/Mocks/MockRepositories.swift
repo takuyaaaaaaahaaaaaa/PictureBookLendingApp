@@ -176,6 +176,8 @@ class MockImageStorageRepository: ImageStorageRepositoryProtocol, @unchecked Sen
     func saveImageData(_ data: Data, fileName: String) throws {
         images[fileName] = data
     }
+    func deleteImage(fileName: String) throws { images.removeValue(forKey: fileName) }
+    func deleteAllImages() throws { images.removeAll() }
 }
 
 /// テスト用のモックリポジトリファクトリ

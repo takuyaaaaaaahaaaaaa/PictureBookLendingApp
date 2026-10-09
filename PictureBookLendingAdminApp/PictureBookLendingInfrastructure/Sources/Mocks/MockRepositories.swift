@@ -193,6 +193,8 @@ public final class MockImageStorageRepository: ImageStorageRepositoryProtocol, @
     public func saveImageData(_ data: Data, fileName: String) throws {
         images[fileName] = data
     }
+    public func deleteImage(fileName: String) throws { images.removeValue(forKey: fileName) }
+    public func deleteAllImages() throws { images.removeAll() }
 }
 
 /// テスト用のモックリポジトリファクトリ

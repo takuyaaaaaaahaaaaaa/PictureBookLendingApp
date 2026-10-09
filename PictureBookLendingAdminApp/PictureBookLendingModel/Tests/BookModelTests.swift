@@ -19,7 +19,7 @@ struct BookModelTests {
     @MainActor
     func catalogLoadState() {
         let repository = FailingReadBookRepository()
-        let model = BookModel(repository: repository)
+        let model = BookModel(repository: repository, imageStorageRepository: MockImageStorageRepository())
         #expect(model.books.isEmpty)
         #expect(!model.hasLoadedBooks)
         repository.failReads = false
@@ -35,7 +35,7 @@ struct BookModelTests {
     @MainActor
     private func createBookModel() -> (BookModel, MockBookRepository) {
         let mockRepository = MockBookRepository()
-        let bookModel = BookModel(repository: mockRepository)
+        let bookModel = BookModel(repository: mockRepository, imageStorageRepository: MockImageStorageRepository())
         return (bookModel, mockRepository)
     }
     

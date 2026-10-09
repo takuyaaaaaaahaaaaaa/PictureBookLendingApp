@@ -115,7 +115,7 @@ struct UserDetailContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,

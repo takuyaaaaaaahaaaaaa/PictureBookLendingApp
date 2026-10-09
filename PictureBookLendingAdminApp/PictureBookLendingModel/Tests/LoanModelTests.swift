@@ -18,7 +18,7 @@ struct LoanModelTests {
         // テスト用に各モデルを初期化
         let mockRepositoryFactory = MockRepositoryFactory()
         
-        let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository)
+        let bookModel = BookModel(repository: mockRepositoryFactory.bookRepository, imageStorageRepository: mockRepositoryFactory.imageStorageRepository)
         let userModel = UserModel(repository: mockRepositoryFactory.userRepository)
         let loanModel = LoanModel(
             repository: mockRepositoryFactory.loanRepository,

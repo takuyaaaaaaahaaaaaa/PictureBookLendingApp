@@ -310,7 +310,7 @@ private struct BookPhotoSheet: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     
     return BookFormContainerView(mode: .add)
         .environment(bookModel)

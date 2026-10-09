@@ -55,6 +55,7 @@ struct CoverSearchSheet: View {
                 LiveCoverCameraView(
                     onFrame: { data in await searchLive(data, attempt: currentAttempt) },
                     onFailure: { message in
+                        guard isCurrent(currentAttempt) else { return }
                         isLiveScanning = false
                         errorMessage = message
                     }

@@ -113,7 +113,7 @@
                 Loan(
                     bookId: sampleBooks[0].id, user: sampleUsers[0], loanDate: .now,
                     dueDate: .now.addingTimeInterval(7 * 24 * 60 * 60)))
-            books = BookModel(repository: factory.bookRepository)
+            books = BookModel(repository: factory.bookRepository, imageStorageRepository: factory.imageStorageRepository)
             users = UserModel(repository: factory.userRepository)
             groups = ClassGroupModel(repository: factory.classGroupRepository)
             loans = LoanModel(

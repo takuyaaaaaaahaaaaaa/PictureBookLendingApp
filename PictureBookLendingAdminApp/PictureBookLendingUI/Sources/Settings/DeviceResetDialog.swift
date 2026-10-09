@@ -85,7 +85,7 @@ public struct DeviceResetDialog: View {
             CheckboxRow(
                 isSelected: $selectedOptions.deleteBooks,
                 title: "図書データ",
-                subtitle: "全ての図書情報を削除"
+                subtitle: "全ての図書情報・登録写真（古い写真を含む）・表紙検索データを削除"
             )
             
             CheckboxRow(

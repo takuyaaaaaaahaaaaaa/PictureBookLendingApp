@@ -448,7 +448,7 @@ struct BorrowSheetContext: Identifiable {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository)
+    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     let loanModel = LoanModel(

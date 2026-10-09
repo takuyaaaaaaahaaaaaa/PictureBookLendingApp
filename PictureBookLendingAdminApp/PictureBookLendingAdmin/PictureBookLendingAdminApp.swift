@@ -54,7 +54,7 @@ struct PictureBookLendingAdminApp: App {
         let imageStorageRepository = repositoryFactory.makeImageStorageRepository()
         
         // @StateのwrappedValueを使用して初期化
-        _bookModel = State(wrappedValue: BookModel(repository: bookRepository))
+        _bookModel = State(wrappedValue: BookModel(repository: bookRepository, imageStorageRepository: imageStorageRepository))
         _userModel = State(wrappedValue: UserModel(repository: userRepository))
         _loanModel = State(
             wrappedValue: LoanModel(
