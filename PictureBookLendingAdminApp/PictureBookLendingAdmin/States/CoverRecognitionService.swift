@@ -157,6 +157,18 @@ actor CoverRecognitionEngine {
         try removeBooks(notIn: retained)
     }
     func indexedCount() -> Int { loadIfNeeded(); return index.entries.count }
+    /// Read persisted readiness before processing new books, without downloading images.
+    func preparedBookIDs(in books: [Book]) -> Set<UUID> {
+        loadIfNeeded()
+        guard !unreadableCrops else { return [] }
+        return Set(books.compactMap { book in
+            guard let entry = index.entries[book.id], let source = imageSource(for: book),
+                entry.source == source else { return nil }
+            let manual = crops[book.id].flatMap { $0.source == source ? $0 : nil }
+            return entry.cropID == manual?.id ? book.id : nil
+        })
+    }
+
     /// Returns false when the book has no usable image. A failed download remains retryable.
     func indexIfNeeded(_ book: Book) async throws -> Bool {
         loadIfNeeded()
@@ -534,8 +546,14 @@ final class CoverRecognitionService {
     @ObservationIgnored private var queuedBooks: [Book]?
     @ObservationIgnored private var preparationGeneration = 0
     @ObservationIgnored private var requestRevision = 0
-    private(set) var preparedCount = 0
-    private(set) var pendingCount = 0
+    private(set) var preparedBookIDs: Set<UUID> = []
+    private(set) var hasCheckedPreparation = false
+    var preparedCount: Int { preparedBookIDs.intersection(catalogBookIDs).count }
+    private var catalogBookIDs: Set<UUID> = []
+    var pendingCount: Int { catalogBookIDs.subtracting(preparedBookIDs).count }
+    func hasPreparedBook(in books: [Book], isComplete: Bool) -> Bool {
+        isComplete && !preparedBookIDs.isDisjoint(with: books.map(\.id))
+    }
     private(set) var isPreparing = false
     private(set) var preparationError: String?
     /// Safe to invoke again after app restart, restore, image replacement, or a failed download.
@@ -547,6 +565,7 @@ final class CoverRecognitionService {
             return
         }
         isPreparing = true
+        catalogBookIDs = Set(books.map(\.id))
         let generation = preparationGeneration
         defer {
             finishPreparation(generation: generation)
@@ -554,20 +573,27 @@ final class CoverRecognitionService {
         preparationError = nil
         do { try await engine.removeBooks(notIn: Set(books.map(\.id))) }
         catch {
+            await refreshReadiness(books: books, generation: generation)
             guard generation == preparationGeneration else { return }
             preparationError = ((error as? CoverRecognitionError) ?? .cleanupFailed).localizedDescription
             return
         }
+        await refreshReadiness(books: books, generation: generation)
         guard generation == preparationGeneration else { return }
-        preparedCount = 0
-        pendingCount = 0
         for book in books {
             if Task.isCancelled { break }
             let indexed = (try? await engine.indexIfNeeded(book)) ?? false
             guard generation == preparationGeneration else { return }
-            if indexed { preparedCount += 1 } else { pendingCount += 1 }
+            if indexed { preparedBookIDs.insert(book.id) } else { preparedBookIDs.remove(book.id) }
         }
     }
+    private func refreshReadiness(books: [Book], generation: Int) async {
+        let ready = await engine.preparedBookIDs(in: books)
+        guard generation == preparationGeneration else { return }
+        preparedBookIDs = ready
+        hasCheckedPreparation = true
+    }
+
     private func finishPreparation(generation: Int) {
         guard generation == preparationGeneration else { return }
         isPreparing = false
@@ -586,21 +612,22 @@ final class CoverRecognitionService {
         preparationGeneration += 1
         requestRevision += 1
         let generation = preparationGeneration
+        catalogBookIDs = Set(books.map(\.id))
         queuedBooks = nil
         isPreparing = true
         defer { finishPreparation(generation: generation) }
         do {
             try await engine.removeBooks(notIn: Set(books.map(\.id)))
             guard generation == preparationGeneration else { return }
-            let count = await engine.indexedCount()
+            await refreshReadiness(books: books, generation: generation)
             guard generation == preparationGeneration else { return }
-            preparedCount = count
             preparationError = nil
             // Resume remaining books whose preparation was interrupted by deletion.
             if queuedBooks == nil { queuedBooks = books }
         } catch {
             let failure = (error as? CoverRecognitionError) ?? .cleanupFailed
-            preparationError = failure.localizedDescription
+            await refreshReadiness(books: books, generation: generation)
+            if generation == preparationGeneration { preparationError = failure.localizedDescription }
             throw failure
         }
     }
@@ -615,10 +642,19 @@ final class CoverRecognitionService {
         preparationGeneration += 1
         requestRevision += 1
         let generation = preparationGeneration
+        catalogBookIDs = Set(books.map(\.id))
         queuedBooks = nil
         isPreparing = true
         defer { finishPreparation(generation: generation) }
-        try await engine.restorePreparation(data, books: books)
+        preparedBookIDs = []
+        hasCheckedPreparation = false
+        do {
+            try await engine.restorePreparation(data, books: books)
+        } catch {
+            await refreshReadiness(books: books, generation: generation)
+            if generation == preparationGeneration { preparationError = error.localizedDescription }
+            throw error
+        }
         guard generation == preparationGeneration else { return }
         if queuedBooks == nil { queuedBooks = books }
     }
@@ -629,12 +665,16 @@ final class CoverRecognitionService {
             imageData: imageData, validBookIDs: Set(books.map(\.id)), detectCover: detectCover)
     }
     func approveRegisteredPhoto(_ book: Book) async throws {
+        let generation = preparationGeneration
         try await engine.approveRegisteredPhoto(book)
-        preparedCount = await engine.indexedCount()
+        guard generation == preparationGeneration else { return }
+        preparedBookIDs.insert(book.id)
     }
     func saveManualCrop(_ book: Book, imageData: Data, source: String, rect: CGRect) async throws {
+        let generation = preparationGeneration
         try await engine.saveManualCrop(book, imageData: imageData, source: source, rect: rect)
-        preparedCount = await engine.indexedCount()
+        guard generation == preparationGeneration else { return }
+        preparedBookIDs.insert(book.id)
     }
     #if DEBUG
         func inspectRegistration(_ book: Book) async throws -> CoverRegistrationInspection {

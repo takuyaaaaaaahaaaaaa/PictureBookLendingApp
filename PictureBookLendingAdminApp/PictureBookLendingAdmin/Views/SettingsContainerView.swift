@@ -61,16 +61,9 @@ struct SettingsContainerView: View {
                         && !setupProgress.hasBook,
                     loanPeriodDays: loanSettingsModel.settings.defaultLoanPeriodDays,
                     maxBooksPerUser: loanSettingsModel.settings.maxBooksPerUser,
-                    coverPreparedCount: coverRecognition.preparedCount,
-                    coverPendingCount: coverRecognition.pendingCount,
-                    isCoverPreparationRunning: coverRecognition.isPreparing,
-                    onRetryCoverPreparation: {
-                        Task {
-                            await coverRecognition.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
-                            if let message = coverRecognition.preparationError {
-                                alertState = .error("検索準備を完了できませんでした", message: message)
-                            }
-                        }
+                    coverPreparationStatus: coverPreparationStatus,
+                    onSelectCoverPreparation: {
+                        navigationPath.append(SettingsDestination.coverPreparation)
                     },
                     onSelectUser: {
                         navigationPath.append(SettingsDestination.user)
@@ -167,6 +160,8 @@ struct SettingsContainerView: View {
                     }
                 case .privacy:
                     PrivacySettingsContainerView()
+                case .coverPreparation:
+                    CoverPreparationContainerView()
                 case .licenses:
                     ThirdPartyLicensesView()
                 case .debug:
@@ -640,7 +635,17 @@ struct SettingsContainerView: View {
         }
     }
     
+    private var coverPreparationStatus: String {
+        if coverRecognition.preparationError != nil { return "準備に問題があります・内容を確認" }
+        guard bookModel.hasLoadedBooks, coverRecognition.hasCheckedPreparation else {
+            return "準備状況を確認中"
+        }
+        if coverRecognition.isPreparing { return "表紙を準備中・準備済み \(coverRecognition.preparedCount)冊" }
+        return "準備済み \(coverRecognition.preparedCount)冊・未処理 \(coverRecognition.pendingCount)冊"
+    }
+
     private enum SettingsDestination: Hashable {
+        case coverPreparation
         case user
         case userList(UUID)
         case book
