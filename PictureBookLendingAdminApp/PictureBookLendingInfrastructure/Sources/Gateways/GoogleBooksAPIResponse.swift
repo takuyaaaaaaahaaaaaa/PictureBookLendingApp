@@ -32,31 +32,31 @@ struct Volume: Decodable {
 struct VolumeInfo: Decodable {
     /// 書籍タイトル
     let title: String?
-    
+
     /// 著者名の配列
     let authors: [String]?
-    
+
     /// 出版社名
     let publisher: String?
-    
+
     /// 出版日（YYYY-MM-DD形式の文字列）
     let publishedDate: String?
-    
+
     /// 書籍の説明・概要
     let description: String?
-    
+
     /// ページ数
     let pageCount: Int?
-    
+
     /// カテゴリ・ジャンルの配列
     let categories: [String]?
-    
+
     /// 書籍の画像リンク情報
     let imageLinks: ImageLinks?
-    
+
     /// ISBN等の業界識別子の配列
     let industryIdentifiers: [IndustryIdentifier]?
-    
+
     /// Google Books上の書籍詳細ページURL
     let infoLink: URL?
 }
@@ -68,7 +68,7 @@ struct VolumeInfo: Decodable {
 struct ImageLinks: Decodable {
     /// 小さなサムネイル画像のURL
     let smallThumbnail: String?
-    
+
     /// 通常サイズのサムネイル画像のURL
     let thumbnail: String?
 }
@@ -80,7 +80,7 @@ struct ImageLinks: Decodable {
 struct IndustryIdentifier: Decodable {
     /// 識別子の種類（"ISBN_10"、"ISBN_13"等）
     let type: String
-    
+
     /// 識別子の値
     let identifier: String
 }

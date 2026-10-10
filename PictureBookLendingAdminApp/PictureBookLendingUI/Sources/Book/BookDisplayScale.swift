@@ -8,14 +8,14 @@ import SwiftUI
 public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
     case standard
     case large
-    
+
     public var id: String { rawValue }
-    
+
     /// トグル操作で切り替わった先の値
     public var toggled: BookDisplayScale {
         self == .standard ? .large : .standard
     }
-    
+
     /// グリッド・棚表示のセル最小幅（適応的グリッドの折り返し基準）
     var minCellWidth: CGFloat {
         switch self {
@@ -23,7 +23,7 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
         case .large: 210
         }
     }
-    
+
     /// グリッドセルのタイトルフォント
     var gridTitleFont: Font {
         switch self {
@@ -31,7 +31,7 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
         case .large: .title3
         }
     }
-    
+
     /// リスト行のサムネイル幅
     var rowThumbnailWidth: CGFloat {
         switch self {
@@ -39,7 +39,7 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
         case .large: 80
         }
     }
-    
+
     /// リスト行のサムネイル高さ
     var rowThumbnailHeight: CGFloat {
         switch self {
@@ -47,7 +47,7 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
         case .large: 104
         }
     }
-    
+
     /// リスト行のタイトルフォント
     var rowTitleFont: Font {
         switch self {
@@ -55,7 +55,7 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
         case .large: .title2
         }
     }
-    
+
     /// リスト行の著者名フォント
     var rowAuthorFont: Font {
         switch self {
@@ -72,11 +72,11 @@ public enum BookDisplayScale: String, CaseIterable, Identifiable, Sendable {
 /// 大きい表示のままでも他の利用者の操作を妨げない
 public struct BookDisplayScaleToggleButton: View {
     @Binding var scale: BookDisplayScale
-    
+
     public init(scale: Binding<BookDisplayScale>) {
         self._scale = scale
     }
-    
+
     public var body: some View {
         Button {
             withAnimation {
@@ -98,7 +98,7 @@ public struct BookDisplayScaleToggleButton: View {
         .buttonBorderShape(.capsule)
         .accessibilityLabel(scale == .standard ? "一覧を大きく表示" : "一覧をふつうの大きさで表示")
     }
-    
+
     private enum Layout {
         /// ラベルの内側余白（遠目にも見つけやすい大きめの押下面にする）
         static let labelHorizontalPadding: CGFloat = 8
@@ -108,7 +108,7 @@ public struct BookDisplayScaleToggleButton: View {
 
 #Preview {
     @Previewable @State var scale: BookDisplayScale = .standard
-    
+
     VStack(spacing: 24) {
         Text("現在: \(scale.rawValue)")
         BookDisplayScaleToggleButton(scale: $scale)

@@ -9,21 +9,21 @@ struct LoanConfirmationContainerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(LoanModel.self) private var loanModel
     @Environment(ClassGroupModel.self) private var classGroupModel
-    
+
     let book: Book
     let user: User
     let onComplete: () -> Void
-    
+
     @State private var alertState = AlertState()
-    
+
     private var classGroup: ClassGroup? {
         classGroupModel.findClassGroupById(user.classGroupId)
     }
-    
+
     private var dueDate: Date {
         Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     }
-    
+
     var body: some View {
         Group {
             if let classGroup = classGroup {
@@ -49,7 +49,7 @@ struct LoanConfirmationContainerView: View {
             Text(alertState.message)
         }
     }
-    
+
     private func confirmLoan() {
         do {
             let _ = try loanModel.lendBook(
@@ -62,7 +62,7 @@ struct LoanConfirmationContainerView: View {
             alertState = .error("貸出処理に失敗しました", message: error.localizedDescription)
         }
     }
-    
+
     private func cancelLoan() {
         dismiss()
     }

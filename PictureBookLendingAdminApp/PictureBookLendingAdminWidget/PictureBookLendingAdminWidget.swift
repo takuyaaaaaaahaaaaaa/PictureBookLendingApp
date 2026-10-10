@@ -11,7 +11,7 @@ import WidgetKit
 /// 絵本管理アプリのWidget
 struct PictureBookLendingAdminWidget: Widget {
     let kind: String = "絵本管理アプリ表示ボタン"
-    
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             PictureBookLendingAdminWidgetEntryView(entry: entry)
@@ -35,17 +35,17 @@ struct StatusEntry: TimelineEntry {
 
 struct Provider: TimelineProvider {
     typealias Entry = StatusEntry
-    
+
     /// 貸出数
     var loanCount: Int?
-    
+
     /// ウィジットギャラリーでの表示
     func getSnapshot(in context: Context, completion: @escaping (Entry) -> Void) {
         let date = Date()
         let entry = StatusEntry(date: date)
         completion(entry)
     }
-    
+
     /// 更新タイミング
     func getTimeline(
         in context: Context, completion: @escaping @Sendable (Timeline<StatusEntry>) -> Void
@@ -57,7 +57,7 @@ struct Provider: TimelineProvider {
         let timeline = Timeline(entries: [entry], policy: .after(nextUpdateDate))
         return completion(timeline)
     }
-    
+
     /// プレースホルダー
     func placeholder(in context: Context) -> StatusEntry {
         StatusEntry(date: Date())
@@ -70,7 +70,7 @@ struct PictureBookLendingAdminWidgetEntryView: View {
     @Environment(\.widgetFamily) var family: WidgetFamily
     /// 表示情報
     var entry: Provider.Entry
-    
+
     var body: some View {
         Group {
             switch family {
@@ -85,38 +85,38 @@ struct PictureBookLendingAdminWidgetEntryView: View {
         .foregroundStyle(.white)
         .containerBackground(.orange, for: .widget)
     }
-    
+
     /// アプリ名を取得
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
             ?? "絵本管理アプリ"
     }
-    
+
     private var accessoryCircularView: some View {
         Image(systemName: "book.fill")
             .font(.system(size: 40, weight: .medium))
             .foregroundStyle(.blue)
             .containerBackground(.orange, for: .widget)
     }
-    
+
     private var accessoryRectangularView: some View {
         VStack {
             Text(appName)
                 .font(.headline)
                 .fontWeight(.semibold)
-            
+
             Text("をタップして開く")
                 .font(.caption)
                 .foregroundStyle(.primary)
         }
     }
-    
+
     private var systemDefaultView: some View {
         VStack {
             Image(systemName: "book.fill")
                 .font(.system(size: 40, weight: .medium))
-            
+
             Text(appName)
                 .font(.headline)
                 .fontWeight(.semibold)
@@ -125,7 +125,7 @@ struct PictureBookLendingAdminWidgetEntryView: View {
                 .foregroundStyle(.primary)
         }
     }
-    
+
 }
 
 #Preview(as: .systemMedium) {

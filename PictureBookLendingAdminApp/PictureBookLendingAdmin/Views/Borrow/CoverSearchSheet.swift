@@ -1,8 +1,9 @@
+import AVFoundation
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingUI
 import SwiftUI
 import UIKit
-import AVFoundation
 
 /// Suggestions only; selecting a candidate continues into the existing loan flow.
 struct CoverSearchSheet: View {
@@ -22,13 +23,21 @@ struct CoverSearchSheet: View {
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
-                let wide = geometry.size.width >= 760 && geometry.size.width > geometry.size.height
+                let wide =
+                    geometry.size.width >= 760 && geometry.size.width > geometry.size.height
                     && !dynamicTypeSize.isAccessibilitySize
-                let layout = wide ? AnyLayout(HStackLayout(spacing: 20)) : AnyLayout(VStackLayout(spacing: 16))
+                let layout =
+                    wide
+                    ? AnyLayout(HStackLayout(spacing: 20)) : AnyLayout(VStackLayout(spacing: 16))
                 layout {
                     cameraPanel
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .frame(height: wide ? nil : max(120, (geometry.size.height - 32) * (matches.isEmpty ? 0.65 : 0.48)))
+                        .frame(
+                            height: wide
+                                ? nil
+                                : max(
+                                    120,
+                                    (geometry.size.height - 32) * (matches.isEmpty ? 0.65 : 0.48)))
                     resultsPanel
                         .frame(width: wide ? min(380, geometry.size.width * 0.34) : nil)
                         .frame(maxWidth: wide ? nil : .infinity, maxHeight: .infinity)
@@ -70,7 +79,8 @@ struct CoverSearchSheet: View {
                         isLiveScanning = false
                         errorMessage = message
                         let status = AVCaptureDevice.authorizationStatus(for: .video)
-                        recordFailure(status == .denied || status == .restricted ? .permission : .camera)
+                        recordFailure(
+                            status == .denied || status == .restricted ? .permission : .camera)
                     }
                 )
                 .id(scanAttempt)
@@ -114,7 +124,9 @@ struct CoverSearchSheet: View {
                     ForEach(matches) { match in
                         if let book = books.first(where: { $0.id == match.id }) {
                             Button {
-                                if let event = telemetry.finish(selected: true) { analytics.track(event) }
+                                if let event = telemetry.finish(selected: true) {
+                                    analytics.track(event)
+                                }
                                 onSelect(book)
                             } label: {
                                 HStack(spacing: 12) {
@@ -122,7 +134,9 @@ struct CoverSearchSheet: View {
                                         Image(systemName: "book.closed").font(.title)
                                     }
                                     .aspectRatio(contentMode: .fit)
-                                    .frame(width: CandidateLayout.coverSize, height: CandidateLayout.coverSize)
+                                    .frame(
+                                        width: CandidateLayout.coverSize,
+                                        height: CandidateLayout.coverSize)
                                     VStack(alignment: .leading, spacing: 6) {
                                         Text(book.title).font(.headline)
                                         if let number = book.managementNumber {
@@ -134,7 +148,10 @@ struct CoverSearchSheet: View {
                                 }
                                 .padding(14)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 14))
+                                .background(
+                                    Color(uiColor: .secondarySystemGroupedBackground),
+                                    in: RoundedRectangle(cornerRadius: 14)
+                                )
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
@@ -173,7 +190,9 @@ struct CoverSearchSheet: View {
             telemetry.didSearch()
             if confirmation.accept(candidates.first?.id) {
                 matches = candidates
-                if let event = telemetry.showCandidates(count: candidates.count) { analytics.track(event) }
+                if let event = telemetry.showCandidates(count: candidates.count) {
+                    analytics.track(event)
+                }
                 errorMessage = nil
                 isLiveScanning = false
                 capturedPreview = UIImage(data: data)

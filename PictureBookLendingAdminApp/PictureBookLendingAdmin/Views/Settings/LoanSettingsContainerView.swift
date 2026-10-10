@@ -11,11 +11,11 @@ import SwiftUI
 struct LoanSettingsContainerView: View {
     @Environment(LoanSettingsModel.self) private var loanSettingsModel
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var loanPeriodDays: Int = 14
     @State private var maxBooksPerUser: Int = 1
     @State private var alertState = AlertState()
-    
+
     var body: some View {
         LoanSettingsView(
             loanPeriodDays: $loanPeriodDays,
@@ -28,7 +28,7 @@ struct LoanSettingsContainerView: View {
                     dismiss()
                 }
             }
-            
+
             ToolbarItem(placement: .confirmationAction) {
                 Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                     handleSave()
@@ -44,35 +44,35 @@ struct LoanSettingsContainerView: View {
             loadCurrentSettings()
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleSave() {
         let newSettings = LoanSettings(
             defaultLoanPeriodDays: loanPeriodDays, maxBooksPerUser: maxBooksPerUser)
-        
+
         guard newSettings.isValid() else {
             alertState = .error(
                 "設定の保存に失敗しました", message: "設定値が無効です。貸出期間は1日〜365日、貸出可能数は1冊以上で設定してください。")
             return
         }
-        
+
         do {
             try loanSettingsModel.updateSettings(newSettings)
-            
+
             // 成功時は即座に画面を閉じる
             dismiss()
         } catch {
             alertState = .error("設定の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     private func handleReset() {
         loanPeriodDays = LoanSettings.default.defaultLoanPeriodDays
         maxBooksPerUser = LoanSettings.default.maxBooksPerUser
         alertState = .success("デフォルト設定（\(loanPeriodDays)日・\(maxBooksPerUser)冊）にリセットしました")
     }
-    
+
     private func loadCurrentSettings() {
         loanPeriodDays = loanSettingsModel.settings.defaultLoanPeriodDays
         maxBooksPerUser = loanSettingsModel.settings.maxBooksPerUser
@@ -82,7 +82,7 @@ struct LoanSettingsContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let loanSettingsModel = LoanSettingsModel(repository: mockFactory.loanSettingsRepository)
-    
+
     NavigationStack {
         LoanSettingsContainerView()
             .environment(loanSettingsModel)

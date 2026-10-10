@@ -6,7 +6,7 @@ import Foundation
 /// レスポンスを返すことで、実際のネットワーク通信なしにゲートウェイの
 /// パース・マッピングロジックを検証できるようにします。
 final class MockURLProtocol: URLProtocol, @unchecked Sendable {
-    
+
     /// リクエストに対して返すレスポンスを決定するハンドラ
     /// - Returns: (HTTPステータスコード, ボディデータ)
     nonisolated(unsafe) static var responseHandler:
@@ -15,18 +15,18 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
     override class func canInit(with request: URLRequest) -> Bool {
         true
     }
-    
+
     override class func canonicalRequest(for request: URLRequest) -> URLRequest {
         request
     }
-    
+
     override func startLoading() {
         guard let handler = Self.responseHandler else {
             client?.urlProtocol(
                 self, didFailWithError: URLError(.badServerResponse))
             return
         }
-        
+
         do {
             let (statusCode, data) = try handler(request)
             let response = HTTPURLResponse(
@@ -42,9 +42,9 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
             client?.urlProtocol(self, didFailWithError: error)
         }
     }
-    
+
     override func stopLoading() {}
-    
+
     /// モックを設定したURLSessionを生成する
     /// - Parameter handler: リクエストに対するレスポンスを返すハンドラ
     /// - Returns: モック済みのURLSession

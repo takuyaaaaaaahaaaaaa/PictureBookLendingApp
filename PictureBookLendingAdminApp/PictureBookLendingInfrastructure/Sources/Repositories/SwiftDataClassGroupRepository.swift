@@ -8,14 +8,14 @@ import SwiftData
 public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendable
 {
     private let modelContext: ModelContext
-    
+
     /// イニシャライザ
     ///
     /// - Parameter modelContext: SwiftData用のモデルコンテキスト
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
-    
+
     /// すべてのクラスを取得する
     ///
     /// - Returns: すべてのクラスの配列
@@ -24,7 +24,7 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
         do {
             let descriptor = FetchDescriptor<SwiftDataClassGroup>()
             let swiftDataClassGroups = try modelContext.fetch(descriptor)
-            
+
             // SwiftDataモデルからドメインモデルに変換
             return swiftDataClassGroups.compactMap { swiftDataClassGroup in
                 guard let ageGroup = AgeGroup(rawValue: swiftDataClassGroup.ageGroup) else {
@@ -41,7 +41,7 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             throw RepositoryError.fetchFailed
         }
     }
-    
+
     /// 指定されたIDのクラスを取得する
     ///
     /// - Parameter id: 検索するクラスのID
@@ -51,16 +51,16 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
         do {
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
-            
+
             let swiftDataClassGroups = try modelContext.fetch(descriptor)
             guard let swiftDataClassGroup = swiftDataClassGroups.first else {
                 return nil
             }
-            
+
             guard let ageGroup = AgeGroup(rawValue: swiftDataClassGroup.ageGroup) else {
                 return nil
             }
-            
+
             return ClassGroup(
                 id: swiftDataClassGroup.id,
                 name: swiftDataClassGroup.name,
@@ -71,7 +71,7 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             throw RepositoryError.fetchFailed
         }
     }
-    
+
     /// クラスを保存する（新規作成または更新）
     ///
     /// - Parameter classGroup: 保存するクラス
@@ -82,7 +82,7 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == classGroup.id }
             let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
             let existingClassGroups = try modelContext.fetch(descriptor)
-            
+
             if let existingClassGroup = existingClassGroups.first {
                 // 更新
                 existingClassGroup.name = classGroup.name
@@ -98,13 +98,13 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
                 )
                 modelContext.insert(swiftDataClassGroup)
             }
-            
+
             try modelContext.save()
         } catch {
             throw RepositoryError.saveFailed
         }
     }
-    
+
     /// 指定されたIDのクラスを削除する
     ///
     /// - Parameter id: 削除するクラスのID
@@ -113,12 +113,12 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
         do {
             let predicate = #Predicate<SwiftDataClassGroup> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataClassGroup>(predicate: predicate)
-            
+
             let swiftDataClassGroups = try modelContext.fetch(descriptor)
             guard let swiftDataClassGroup = swiftDataClassGroups.first else {
                 throw RepositoryError.notFound
             }
-            
+
             modelContext.delete(swiftDataClassGroup)
             try modelContext.save()
         } catch RepositoryError.notFound {
@@ -127,5 +127,5 @@ public final class SwiftDataClassGroupRepository: ClassGroupRepositoryProtocol, 
             throw RepositoryError.deleteFailed
         }
     }
-    
+
 }

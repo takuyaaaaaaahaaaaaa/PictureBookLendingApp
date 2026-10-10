@@ -18,7 +18,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             SwiftDataClassGroup.self,
         ]
     }
-    
+
     @Model
     final public class SwiftDataLoan {
         @Attribute(.unique) public var id: UUID
@@ -27,7 +27,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
         public var loanDate: Date
         public var dueDate: Date
         public var returnedDate: Date?
-        
+
         public init(
             id: UUID,
             bookId: UUID,
@@ -44,7 +44,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             self.returnedDate = returnedDate
         }
     }
-    
+
     @Model
     final public class SwiftDataBook {
         @Attribute(.unique) public var id: UUID
@@ -62,7 +62,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
         public var pageCount: Int?
         public var categories: [String]
         public var kanaGroup: KanaGroup?
-        
+
         public init(
             id: UUID,
             title: String,
@@ -97,7 +97,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             self.kanaGroup = kanaGroup
         }
     }
-    
+
     @Model
     final public class SwiftDataUser {
         @Attribute(.unique) public var id: UUID
@@ -105,7 +105,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
         public var classGroupId: UUID
         public var userTypeRawValue: String = "child"
         public var relatedChildId: UUID?
-        
+
         public init(
             id: UUID,
             name: String,
@@ -115,7 +115,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             self.id = id
             self.name = name
             self.classGroupId = classGroupId
-            
+
             switch userType {
             case .child:
                 self.userTypeRawValue = "child"
@@ -126,14 +126,14 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             }
         }
     }
-    
+
     @Model
     final public class SwiftDataClassGroup {
         @Attribute(.unique) public var id: UUID
         public var name: String
         public var ageGroup: String
         public var year: Int
-        
+
         public init(id: UUID, name: String, ageGroup: String, year: Int) {
             self.id = id
             self.name = name
@@ -141,7 +141,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             self.year = year
         }
     }
-    
+
     public enum KanaGroup: String, CaseIterable, Sendable, Codable {
         case a = "あ"
         case ka = "か"
@@ -155,13 +155,13 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
         case wa = "わ"
         case other = "他"
     }
-    
+
     public struct User: Identifiable, Codable, Hashable {
         public var id: UUID
         public var name: String
         public var classGroupId: UUID
         public var userType: UserType
-        
+
         public init(
             id: UUID = UUID(),
             name: String,
@@ -174,7 +174,7 @@ struct PictureBookLendingSchemaV1_2: VersionedSchema {
             self.userType = userType
         }
     }
-    
+
     public enum UserType: Codable, Hashable {
         case child
         case guardian(relatedChildId: UUID)

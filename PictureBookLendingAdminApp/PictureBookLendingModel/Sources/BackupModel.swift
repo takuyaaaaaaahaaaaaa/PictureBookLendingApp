@@ -8,7 +8,7 @@ public enum BackupModelError: Error, Equatable, LocalizedError {
     case incompatibleSchemaVersion(Int)
     /// 復元処理に失敗した場合のエラー
     case restoreFailed
-    
+
     public var errorDescription: String? {
         switch self {
         case .incompatibleSchemaVersion(let version):
@@ -34,14 +34,14 @@ public struct RestoreSummary: Equatable, Sendable {
 @Observable
 @MainActor
 public class BackupModel {
-    
+
     private let bookRepository: BookRepositoryProtocol
     private let userRepository: UserRepositoryProtocol
     private let classGroupRepository: ClassGroupRepositoryProtocol
     private let loanRepository: LoanRepositoryProtocol
     private let loanSettingsRepository: LoanSettingsRepositoryProtocol
     private let imageStorageRepository: ImageStorageRepositoryProtocol
-    
+
     /// イニシャライザ
     /// - Parameters:
     ///   - bookRepository: 図書リポジトリ
@@ -65,13 +65,13 @@ public class BackupModel {
         self.loanSettingsRepository = loanSettingsRepository
         self.imageStorageRepository = imageStorageRepository
     }
-    
+
     /// 現在のデータからバックアップスナップショットを作成する
     /// - Returns: 作成されたバックアップスナップショット
     /// - Throws: データ取得に失敗した場合はエラーを投げる
     public func createSnapshot() throws -> BackupSnapshot {
         let books = try bookRepository.fetchAll()
-        
+
         var bookImages: [String: Data] = [:]
         for book in books {
             guard let fileName = book.localImageFileName else { continue }
@@ -79,7 +79,7 @@ public class BackupModel {
                 bookImages[fileName] = data
             }
         }
-        
+
         return BackupSnapshot(
             createdAt: Date(),
             classGroups: try classGroupRepository.fetchAll(),
@@ -90,7 +90,7 @@ public class BackupModel {
             bookImages: bookImages
         )
     }
-    
+
     /// バックアップスナップショットから復元する
     ///
     /// 復元前に既存の図書・利用者・組・貸出記録を全て削除し、
@@ -104,14 +104,14 @@ public class BackupModel {
         guard snapshot.schemaVersion <= BackupSnapshot.currentSchemaVersion else {
             throw BackupModelError.incompatibleSchemaVersion(snapshot.schemaVersion)
         }
-        
+
         // 復元が途中で失敗した場合に元の状態へ戻せるよう、事前にバックアップしておく
         let previousSnapshot = try? createSnapshot()
-        
+
         do {
             try deleteAllExistingData()
             try applySnapshotData(snapshot)
-            
+
             return RestoreSummary(
                 classGroupCount: snapshot.classGroups.count,
                 userCount: snapshot.users.count,
@@ -126,7 +126,7 @@ public class BackupModel {
             throw BackupModelError.restoreFailed
         }
     }
-    
+
     /// スナップショットの内容をリポジトリへ投入する
     private func applySnapshotData(_ snapshot: BackupSnapshot) throws {
         for (fileName, data) in snapshot.bookImages {
@@ -146,7 +146,7 @@ public class BackupModel {
         }
         try loanSettingsRepository.save(snapshot.loanSettings)
     }
-    
+
     /// 復元前に既存の図書・利用者・組・貸出記録を全て削除する
     private func deleteAllExistingData() throws {
         for loan in try loanRepository.fetchAll() {

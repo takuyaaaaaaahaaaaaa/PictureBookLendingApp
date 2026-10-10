@@ -12,13 +12,13 @@ import Testing
 /// MockURLProtocolが静的なハンドラを共有するため、テストは直列実行する。
 @Suite(.serialized)
 struct RakutenBookSearchGatewayTests {
-    
+
     /// テスト用のアプリID（モック環境では値は問われない）
     private let dummyAppId = "test-application-id"
-    
+
     /// テスト用のアクセスキー（モック環境では値は問われない）
     private let dummyAccessKey = "test-access-key"
-    
+
     /// はらぺこあおむしを模したレスポンスJSON
     private func sampleResponseJSON(isbn: String = "9784834000825") -> Data {
         let json = """
@@ -46,9 +46,9 @@ struct RakutenBookSearchGatewayTests {
             """
         return Data(json.utf8)
     }
-    
+
     // MARK: - searchBook(by:)
-    
+
     /// 有効なISBNで書籍情報が正しくマッピングされることをテスト
     @Test func searchBookMapsFieldsCorrectly() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -56,9 +56,9 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         let book = try await gateway.searchBook(by: "978-4-834-00082-5")
-        
+
         #expect(book.title == "はらぺこあおむし")
         #expect(book.author == "エリック・カール")
         #expect(book.isbn13 == "9784834000825")
@@ -71,7 +71,7 @@ struct RakutenBookSearchGatewayTests {
         #expect(book.categories == ["絵本"])
         #expect(book.pageCount == nil)
     }
-    
+
     /// 無効なISBN形式ではネットワークを呼ばずに.invalidISBNを投げることをテスト
     @Test func searchBookWithInvalidISBNThrows() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -80,12 +80,12 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         await #expect(throws: BookMetadataGatewayError.invalidISBN) {
             try await gateway.searchBook(by: "invalid-isbn")
         }
     }
-    
+
     /// 検索結果が空の場合に.bookNotFoundを投げることをテスト
     @Test func searchBookWithEmptyResultThrowsBookNotFound() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -93,12 +93,12 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
             try await gateway.searchBook(by: "9789999999991")
         }
     }
-    
+
     /// 404レスポンスを.bookNotFoundとして扱うことをテスト
     @Test func searchBookWith404ThrowsBookNotFound() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -106,12 +106,12 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         await #expect(throws: BookMetadataGatewayError.bookNotFound) {
             try await gateway.searchBook(by: "9784834000825")
         }
     }
-    
+
     /// 400レスポンスを.httpErrorとして扱うことをテスト
     @Test func searchBookWith400ThrowsHTTPError() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -119,12 +119,12 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         await #expect(throws: BookMetadataGatewayError.httpError(statusCode: 400)) {
             try await gateway.searchBook(by: "9784834000825")
         }
     }
-    
+
     /// ISBN-13でない場合はisbn13にnilが入ることをテスト
     @Test func searchBookWithNonISBN13ResponseStoresNilISBN() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -133,14 +133,14 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         let book = try await gateway.searchBook(by: "9784834000825")
-        
+
         #expect(book.isbn13 == nil)
     }
-    
+
     // MARK: - searchBooks(title:author:)
-    
+
     /// タイトル検索で書籍リストが取得できることをテスト
     @Test func searchBooksByTitleReturnsList() async throws {
         let session = MockURLProtocol.makeSession { _ in
@@ -148,13 +148,13 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         let books = try await gateway.searchBooks(title: "はらぺこあおむし", author: nil, maxResults: 20)
-        
+
         #expect(books.count == 1)
         #expect(books.first?.title == "はらぺこあおむし")
     }
-    
+
     /// maxResultsが30を超える場合にhitsが30にクランプされることをテスト
     @Test func searchBooksClampsHitsTo30() async throws {
         let session = MockURLProtocol.makeSession { request in
@@ -165,10 +165,10 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         _ = try await gateway.searchBooks(title: "絵本", author: nil, maxResults: 100)
     }
-    
+
     /// 著者を指定した場合にauthorクエリが付与されることをテスト
     @Test func searchBooksIncludesAuthorQuery() async throws {
         let session = MockURLProtocol.makeSession { request in
@@ -178,7 +178,7 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         _ = try await gateway.searchBooks(title: "ぐりとぐら", author: "なかがわりえこ", maxResults: 20)
     }
 
@@ -216,9 +216,9 @@ struct RakutenBookSearchGatewayTests {
             title: " ぐりとぐら ", author: "  ", maxResults: 20)
         #expect(books.count == 1)
     }
-    
+
     // MARK: - accessKey / Origin ヘッダー
-    
+
     /// リクエストにaccessKeyヘッダーとOriginヘッダーが付与されることをテスト
     ///
     /// 楽天ウェブサービスの新API（2026年改定版）はapplicationIdに加えて
@@ -232,7 +232,7 @@ struct RakutenBookSearchGatewayTests {
         }
         let gateway = RakutenBookSearchGateway(
             applicationId: dummyAppId, accessKey: dummyAccessKey, urlSession: session)
-        
+
         _ = try await gateway.searchBook(by: "9784834000825")
     }
 }

@@ -42,7 +42,7 @@ struct PictureBookLendingSchemaV1: VersionedSchema {
             self.returnedDate = returnedDate
         }
     }
-    
+
     @Model
     final public class SwiftDataUser {
         @Attribute(.unique) public var id: UUID
@@ -54,7 +54,7 @@ struct PictureBookLendingSchemaV1: VersionedSchema {
             self.classGroupId = classGroupId
         }
     }
-    
+
     @Model
     final public class SwiftDataBook {
         @Attribute(.unique) public var id: UUID
@@ -103,7 +103,7 @@ struct PictureBookLendingSchemaV1: VersionedSchema {
             self.kanaGroup = kanaGroup
         }
     }
-    
+
     public enum KanaGroup: String, CaseIterable, Sendable, Codable {
         case a = "あ"
         case ka = "か"
@@ -117,7 +117,7 @@ struct PictureBookLendingSchemaV1: VersionedSchema {
         case wa = "わ"
         case other = "他"
     }
-    
+
     @Model
     final public class SwiftDataClassGroup {
         @Attribute(.unique) public var id: UUID
@@ -131,7 +131,7 @@ struct PictureBookLendingSchemaV1: VersionedSchema {
             self.year = year
         }
     }
-    
+
     public struct User: Identifiable, Codable, Hashable {
         public var id: UUID
         public var name: String

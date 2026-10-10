@@ -16,12 +16,12 @@ public enum TargetAudience: String, CaseIterable, Codable, Sendable {
     case juniorHighSchool = "中高生"
     /// 大人
     case adult = "大人"
-    
+
     /// 表示用のテキスト
     public var displayText: String {
         return self.rawValue
     }
-    
+
     /// 順序付きの全ケース
     public static var sortedCases: [TargetAudience] {
         return allCases

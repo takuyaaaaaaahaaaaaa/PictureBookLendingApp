@@ -10,17 +10,17 @@ import PictureBookLendingDomain
 public class LoanSettingsModel {
     /// 現在の貸出設定
     public private(set) var settings: LoanSettings
-    
+
     /// 貸出設定リポジトリ
     private let repository: LoanSettingsRepositoryProtocol
-    
+
     /// イニシャライザ
     /// - Parameter repository: 貸出設定リポジトリ
     public init(repository: LoanSettingsRepositoryProtocol) {
         self.repository = repository
         self.settings = repository.fetch()
     }
-    
+
     /// 貸出設定を更新する
     /// - Parameter newSettings: 新しい貸出設定
     /// - Throws: 保存に失敗した場合にエラーを投げる
@@ -28,17 +28,17 @@ public class LoanSettingsModel {
         guard newSettings.isValid() else {
             throw LoanSettingsError.invalidSettings
         }
-        
+
         try repository.save(newSettings)
         settings = newSettings
     }
-    
+
     /// 設定を初期値にリセットする
     /// - Throws: 保存に失敗した場合にエラーを投げる
     public func resetToDefault() throws {
         try updateSettings(.default)
     }
-    
+
     /// リポジトリから最新の設定を再読み込みする
     ///
     /// バックアップ復元など、キャッシュを経由せずリポジトリの内容が変更された直後の同期に使用します。
@@ -51,7 +51,7 @@ public class LoanSettingsModel {
 public enum LoanSettingsError: Error, Equatable, LocalizedError {
     /// 無効な設定値
     case invalidSettings
-    
+
     public var errorDescription: String? {
         switch self {
         case .invalidSettings:

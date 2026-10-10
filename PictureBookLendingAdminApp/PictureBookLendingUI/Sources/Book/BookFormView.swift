@@ -27,11 +27,11 @@ struct AutoFillTip: Tip {
     var title: Text {
         Text("タイトルと著者名から自動入力")
     }
-    
+
     var message: Text? {
         Text("タイトルと著者名を入力すると、書籍情報を自動検索して入力できます")
     }
-    
+
     var image: Image? {
         Image(systemName: "wand.and.stars")
     }
@@ -60,9 +60,9 @@ public struct BookFormView<AutoFillButton: View>: View {
     let onCameraTap: (() -> Void)?
     let onAdjustPhotoTap: (() -> Void)?
     let showsNavigationActions: Bool
-    
+
     private let autoFillTip = AutoFillTip()
-    
+
     public init(
         book: Binding<Book>,
         imageURL: String? = nil,
@@ -86,7 +86,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.onAdjustPhotoTap = onAdjustPhotoTap
         self.showsNavigationActions = showsNavigationActions
     }
-    
+
     public init(
         book: Binding<Book>,
         imageURL: String? = nil,
@@ -109,14 +109,14 @@ public struct BookFormView<AutoFillButton: View>: View {
         self.onAdjustPhotoTap = onAdjustPhotoTap
         self.showsNavigationActions = showsNavigationActions
     }
-    
+
     public var body: some View {
         Form {
             // サムネイル表示セクション
             Section(header: Text("プレビュー")) {
                 thumbnailSection
             }
-            
+
             Section(header: Text("基本情報（*は必須）")) {
                 TextField("タイトル *", text: $book.title)
                 TextField(
@@ -126,7 +126,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                         set: { book.author = $0.isEmpty ? nil : $0 }
                     )
                 )
-                
+
                 // 自動入力ボタン（タイトル・著者名の下に配置）
                 if let autoFillButton = autoFillButton {
                     HStack {
@@ -141,7 +141,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                     .padding(.vertical, 4)
                     .popoverTip(autoFillTip)
                 }
-                
+
                 TextField(
                     "管理番号（例: あ13）",
                     text: Binding(
@@ -149,7 +149,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                         set: { book.managementNumber = $0.isEmpty ? nil : $0 }
                     ))
             }
-            
+
             Section(header: Text("詳細情報（任意）")) {
                 TextField(
                     "ISBN-13",
@@ -170,7 +170,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                         set: { book.publishedDate = $0.isEmpty ? nil : $0 }
                     ))
             }
-            
+
             Section(header: Text("その他（任意）")) {
                 Picker("対象読者", selection: $book.targetAge) {
                     Text("未選択").tag(nil as TargetAudience?)
@@ -179,7 +179,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                     }
                 }
                 .pickerStyle(.menu)
-                
+
                 TextField(
                     "ページ数",
                     text: Binding(
@@ -196,7 +196,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                 #if os(iOS)
                     .keyboardType(.numberPad)
                 #endif
-                
+
                 Picker("ひらがなグループ", selection: $book.kanaGroup) {
                     Text("未選択").tag(nil as KanaGroup?)
                     ForEach(KanaGroup.allCases, id: \.self) { kana in
@@ -204,9 +204,9 @@ public struct BookFormView<AutoFillButton: View>: View {
                     }
                 }
                 .pickerStyle(.menu)
-                
+
             }
-            
+
             Section(header: Text("説明（任意）")) {
                 TextField(
                     "図書の説明・あらすじ",
@@ -217,7 +217,7 @@ public struct BookFormView<AutoFillButton: View>: View {
                 )
                 .lineLimit(3...6)
             }
-            
+
             // リセットボタン
             Section {
                 VStack(spacing: 12) {
@@ -235,42 +235,43 @@ public struct BookFormView<AutoFillButton: View>: View {
                         .controlSize(.small)
                         Spacer()
                     }
-                    
+
                     Text("フォームの内容をすべてクリアします")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 8)
-                
+
             }
         }
         .toolbar {
             if showsNavigationActions {
-                BookFormActions(isEditMode: isEditMode, canSave: isValidInput,
-                                onSave: onSave, onCancel: onCancel)
+                BookFormActions(
+                    isEditMode: isEditMode, canSave: isValidInput,
+                    onSave: onSave, onCancel: onCancel)
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var isEditMode: Bool {
         if case .edit = mode {
             return true
         }
         return false
     }
-    
+
     private var isValidInput: Bool {
         !book.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    
+
     @ViewBuilder
     private var thumbnailSection: some View {
         VStack(spacing: 12) {
             HStack {
                 Spacer()
-                
+
                 if let imageSource = imageURL {
                     BookImageView(imageURL: imageSource) {
                         Image(systemName: "book.closed")
@@ -287,10 +288,10 @@ public struct BookFormView<AutoFillButton: View>: View {
                         .foregroundStyle(.secondary)
                         .frame(height: 100)
                 }
-                
+
                 Spacer()
             }
-            
+
             VStack(spacing: 24) {
                 #if canImport(UIKit)
                     if let onCameraTap, CameraUtility.isCameraAvailable {
@@ -299,10 +300,10 @@ public struct BookFormView<AutoFillButton: View>: View {
                                 Image(systemName: "camera")
                                 Text("写真を撮影")
                             }
-                                .frame(maxWidth: .infinity, minHeight: 52)
-                                .foregroundStyle(.white)
-                                .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 10))
-                                .contentShape(Rectangle())
+                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .foregroundStyle(.white)
+                            .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 10))
+                            .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     }
@@ -312,8 +313,14 @@ public struct BookFormView<AutoFillButton: View>: View {
                         Label("写真を調整", systemImage: "crop")
                             .frame(maxWidth: .infinity, minHeight: 52)
                             .foregroundStyle(Color.accentColor)
-                            .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
-                            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Color.accentColor.opacity(0.4)))
+                            .background(
+                                Color.accentColor.opacity(0.08),
+                                in: RoundedRectangle(cornerRadius: 10)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10).strokeBorder(
+                                    Color.accentColor.opacity(0.4))
+                            )
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -338,7 +345,7 @@ public struct BookFormView<AutoFillButton: View>: View {
         categories: ["絵本"],
         managementNumber: "あ13"
     )
-    
+
     NavigationStack {
         BookFormView<EmptyView>(
             book: $sampleBook,

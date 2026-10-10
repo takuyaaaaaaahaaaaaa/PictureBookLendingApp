@@ -7,7 +7,7 @@ import Testing
 @Suite(.tags(.integrationTest), .liveAPITest)
 struct SearchAccuracyTests {
     private let apiClient = GoogleBookSearchGateway()
-    
+
     /// 「ぐりとぐら」の表記ゆれテスト
     @Test(.tags(.integrationTest)) func testGuriToGuraVariations() async throws {
         let variations: [(description: String, title: String, author: String?)] = [
@@ -21,7 +21,7 @@ struct SearchAccuracyTests {
         ]
 
         print("=== 「ぐりとぐら」表記ゆれテスト ===")
-        
+
         for variation in variations {
             do {
                 let books = try await apiClient.searchBooks(
@@ -29,15 +29,15 @@ struct SearchAccuracyTests {
                     author: variation.author,
                     maxResults: 10
                 )
-                
+
                 print("\n[\(variation.description)]")
                 print("検索: タイトル=「\(variation.title)」, 著者=「\(variation.author ?? "なし")」")
                 print("結果: \(books.count)件")
-                
+
                 if !books.isEmpty {
                     print("上位3件:")
                     for (index, book) in books.prefix(3).enumerated() {
-                        print("  \(index + 1). \(book.title) - \(book.author)")
+                        print("  \(index + 1). \(book.title) - \(book.author ?? "不明")")
                     }
                 }
             } catch {
@@ -45,7 +45,7 @@ struct SearchAccuracyTests {
             }
         }
     }
-    
+
     /// 「はらぺこあおむし」の表記ゆれテスト
     @Test(.tags(.integrationTest)) func testHungryBugVariations() async throws {
         let variations: [(description: String, title: String, author: String?)] = [
@@ -59,7 +59,7 @@ struct SearchAccuracyTests {
         ]
 
         print("\n=== 「はらぺこあおむし」表記ゆれテスト ===")
-        
+
         for variation in variations {
             do {
                 let books = try await apiClient.searchBooks(
@@ -67,15 +67,15 @@ struct SearchAccuracyTests {
                     author: variation.author,
                     maxResults: 10
                 )
-                
+
                 print("\n[\(variation.description)]")
                 print("検索: タイトル=「\(variation.title)」, 著者=「\(variation.author ?? "なし")」")
                 print("結果: \(books.count)件")
-                
+
                 if !books.isEmpty {
                     print("上位3件:")
                     for (index, book) in books.prefix(3).enumerated() {
-                        print("  \(index + 1). \(book.title) - \(book.author)")
+                        print("  \(index + 1). \(book.title) - \(book.author ?? "不明")")
                     }
                 }
             } catch {
@@ -83,7 +83,7 @@ struct SearchAccuracyTests {
             }
         }
     }
-    
+
     /// 記号・文字種の違いテスト
     @Test(.tags(.integrationTest)) func testSymbolVariations() async throws {
         let testCases: [(description: String, title: String, author: String)] = [
@@ -96,7 +96,7 @@ struct SearchAccuracyTests {
         ]
 
         print("\n=== 記号・文字種違いテスト ===")
-        
+
         for testCase in testCases {
             do {
                 let books = try await apiClient.searchBooks(
@@ -104,11 +104,11 @@ struct SearchAccuracyTests {
                     author: testCase.author,
                     maxResults: 10
                 )
-                
+
                 print("\n[\(testCase.description)]")
                 print("検索: 「\(testCase.title)」「\(testCase.author)」")
                 print("結果: \(books.count)件")
-                
+
                 if !books.isEmpty {
                     print("トップ結果: \(books.first?.title ?? "不明")")
                 }
@@ -117,7 +117,7 @@ struct SearchAccuracyTests {
             }
         }
     }
-    
+
     /// 著者名の役割語テスト
     @Test(.tags(.integrationTest)) func testAuthorRoleVariations() async throws {
         let variations: [(description: String, title: String, author: String)] = [
@@ -129,7 +129,7 @@ struct SearchAccuracyTests {
         ]
 
         print("\n=== 著者名役割語テスト ===")
-        
+
         for variation in variations {
             do {
                 let books = try await apiClient.searchBooks(
@@ -137,11 +137,11 @@ struct SearchAccuracyTests {
                     author: variation.author,
                     maxResults: 10
                 )
-                
+
                 print("\n[\(variation.description)]")
                 print("検索: 「\(variation.title)」「\(variation.author)」")
                 print("結果: \(books.count)件")
-                
+
                 if !books.isEmpty {
                     print("トップ結果: \(books.first?.title ?? "不明") - \(books.first?.author ?? "不明")")
                 }
@@ -150,7 +150,7 @@ struct SearchAccuracyTests {
             }
         }
     }
-    
+
     /// タイトルのみ vs タイトル+著者の比較
     @Test(.tags(.integrationTest)) func testTitleOnlyVsTitleAuthor() async throws {
         let testBooks = [
@@ -158,31 +158,31 @@ struct SearchAccuracyTests {
             ("はらぺこあおむし", "エリック・カール"),
             ("100万回生きたねこ", "佐野洋子"),
         ]
-        
+
         print("\n=== タイトルのみ vs タイトル+著者 比較 ===")
-        
+
         for (title, author) in testBooks {
             print("\n--- \(title) ---")
-            
+
             // タイトルのみ検索
             do {
                 let titleOnlyBooks = try await apiClient.searchBooks(
                     title: title, author: nil, maxResults: 10)
                 print("タイトルのみ: \(titleOnlyBooks.count)件")
                 if let first = titleOnlyBooks.first {
-                    print("  トップ: \(first.title) - \(first.author)")
+                    print("  トップ: \(first.title) - \(first.author ?? "不明")")
                 }
             } catch {
                 print("タイトルのみ - エラー: \(error)")
             }
-            
+
             // タイトル+著者検索
             do {
                 let titleAuthorBooks = try await apiClient.searchBooks(
                     title: title, author: author, maxResults: 10)
                 print("タイトル+著者: \(titleAuthorBooks.count)件")
                 if let first = titleAuthorBooks.first {
-                    print("  トップ: \(first.title) - \(first.author)")
+                    print("  トップ: \(first.title) - \(first.author ?? "不明")")
                 }
             } catch {
                 print("タイトル+著者 - エラー: \(error)")

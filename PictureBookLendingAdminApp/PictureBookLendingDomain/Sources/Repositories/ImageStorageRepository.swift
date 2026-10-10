@@ -8,7 +8,7 @@ public protocol ImageStorageRepositoryProtocol: Sendable {
     /// - Parameter fileName: 画像ファイル名
     /// - Returns: 画像データ（存在しない場合はnil）
     func loadImageData(fileName: String) -> Data?
-    
+
     /// 画像データを指定したファイル名で保存する
     /// - Parameters:
     ///   - data: 保存する画像データ

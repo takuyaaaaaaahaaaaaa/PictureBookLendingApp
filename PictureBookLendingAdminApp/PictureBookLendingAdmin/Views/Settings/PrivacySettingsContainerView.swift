@@ -3,11 +3,11 @@ import SwiftUI
 
 struct PrivacySettingsContainerView: View {
     @Environment(TelemetryPrivacyController.self) private var privacy
-    
+
     /// GitHub Pagesの設定と公開ページの200応答を2026-10-02に確認。
     static let policyURL = URL(
         string: "https://takuyaaaaaaahaaaaaa.github.io/PictureBookLendingApp/privacy-policy")!
-    
+
     var body: some View {
         PrivacySettingsView(
             analyticsEnabled: Binding(
@@ -30,9 +30,9 @@ struct PrivacySettingsContainerView: View {
         } message: {
             Text(privacy.persistenceError ?? "")
         }
-        
+
     }
-    
+
     private func status(_ consent: TelemetryConsent) -> String {
         switch consent {
         case .unspecified: "未選択（送信しない）"

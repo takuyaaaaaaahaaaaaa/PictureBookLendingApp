@@ -13,52 +13,52 @@ import SwiftData
 final public class SwiftDataBook {
     /// 絵本の一意識別子
     @Attribute(.unique) public var id: UUID
-    
+
     /// 絵本のタイトル
     public var title: String
-    
+
     /// 著者名
     public var author: String?
-    
+
     /// 独自の管理番号
     public var managementNumber: String?
-    
+
     /// ISBN-13コード
     public var isbn13: String?
-    
+
     /// 出版社名
     public var publisher: String?
-    
+
     /// 出版日（YYYY-MM-DD形式の文字列）
     public var publishedDate: String?
-    
+
     /// 絵本の説明・概要
     /// - Note: `description`は予約語のため`bookDescription`として定義
     public var bookDescription: String?
-    
+
     /// 小さなサムネイル画像のURL
     public var smallThumbnail: String?
-    
+
     /// 通常サイズのサムネイル画像のURL
     public var thumbnail: String?
     /// 楽天ブックスの商品ページURL
     public var rakutenItemURL: String?
-    
+
     /// ローカル保存された画像のファイル名
     public var localImageFileName: String?
-    
+
     /// 対象年齢（rawValue文字列として保存）
     public var targetAge: String?
-    
+
     /// ページ数
     public var pageCount: Int?
-    
+
     /// カテゴリ・ジャンルの配列
     public var categories: [String]
-    
+
     /// 五十音順グループ
     public var kanaGroup: KanaGroup?
-    
+
     /// イニシャライザ
     ///
     /// - Parameters:

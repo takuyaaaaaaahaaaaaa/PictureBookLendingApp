@@ -12,7 +12,7 @@ public enum UserModelError: Error, Equatable, LocalizedError {
     case updateFailed
     /// 利用者削除に失敗した場合のエラー
     case deletionFailed
-    
+
     public var errorDescription: String? {
         switch self {
         case .userNotFound:
@@ -39,19 +39,19 @@ public enum UserModelError: Error, Equatable, LocalizedError {
 @Observable
 @MainActor
 public class UserModel {
-    
+
     /// 利用者リポジトリ
     private let repository: UserRepositoryProtocol
-    
+
     /// キャッシュ用の利用者リスト
     public private(set) var users: [User] = []
-    
+
     /// イニシャライザ
     ///
     /// - Parameter repository: 利用者リポジトリ
     public init(repository: UserRepositoryProtocol) {
         self.repository = repository
-        
+
         // 初期データのロード
         do {
             self.users = try repository.fetchAll()
@@ -60,7 +60,7 @@ public class UserModel {
             self.users = []
         }
     }
-    
+
     /// 利用者を登録する
     ///
     /// 新しい利用者を管理リストに追加します。
@@ -72,16 +72,16 @@ public class UserModel {
         do {
             // リポジトリに保存
             let savedUser = try repository.save(user)
-            
+
             // キャッシュに追加
             users.append(savedUser)
-            
+
             return savedUser
         } catch {
             throw UserModelError.registrationFailed
         }
     }
-    
+
     /// 全ての利用者を取得する
     ///
     /// 管理中の全利用者リストを返します。
@@ -90,7 +90,7 @@ public class UserModel {
     public func getAllUsers() -> [User] {
         return users
     }
-    
+
     /// 利用者リストを最新の状態に更新する
     ///
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
@@ -101,7 +101,7 @@ public class UserModel {
             print("利用者リストの更新に失敗しました: \(error)")
         }
     }
-    
+
     /// 指定IDの利用者を検索する
     ///
     /// IDを指定して利用者を検索します。
@@ -113,7 +113,7 @@ public class UserModel {
         if let cachedUser = users.first(where: { $0.id == id }) {
             return cachedUser
         }
-        
+
         // リポジトリから検索
         do {
             return try repository.findById(id)
@@ -122,7 +122,7 @@ public class UserModel {
             return nil
         }
     }
-    
+
     /// 指定した利用者と同じ家庭の利用者一覧を取得する
     ///
     /// 園児と保護者は `UserType.guardian(relatedChildId:)` で紐づきます。
@@ -133,7 +133,7 @@ public class UserModel {
     /// - Returns: 家庭の利用者一覧（先頭は園児）。利用者が存在しない場合は空配列
     public func getFamilyMembers(of userId: UUID) -> [User] {
         guard let user = findUserById(userId) else { return [] }
-        
+
         let childId: UUID
         switch user.userType {
         case .child:
@@ -141,14 +141,14 @@ public class UserModel {
         case .guardian(let relatedChildId):
             childId = relatedChildId
         }
-        
+
         let allUsers = getAllUsers()
         guard let child = allUsers.first(where: { $0.id == childId }) else {
             // 正規操作では園児削除時に保護者もカスケード削除されるため到達しない。
             // データ不整合時のフォールバックとして本人のみ返す
             return [user]
         }
-        
+
         let guardians =
             allUsers
             .filter { member in
@@ -158,10 +158,10 @@ public class UserModel {
                 return false
             }
             .sorted { $0.name < $1.name }
-        
+
         return [child] + guardians
     }
-    
+
     /// 指定した利用者の家庭の代表を解決する
     ///
     /// 家庭の代表解決の単一の入口です。園児IDでも保護者IDでも、
@@ -172,7 +172,7 @@ public class UserModel {
     public func familyRepresentative(of userId: UUID) -> User? {
         getFamilyMembers(of: userId).first
     }
-    
+
     /// 一覧の入口として表示すべき利用者を取得する
     ///
     /// 保護者は紐づく園児が実在する場合のみ一覧から隠します
@@ -186,7 +186,7 @@ public class UserModel {
             familyRepresentative(of: user.id)?.id == user.id
         }
     }
-    
+
     /// 利用者情報を更新する
     ///
     /// 指定された利用者の情報を更新します。
@@ -198,7 +198,7 @@ public class UserModel {
         do {
             // リポジトリで更新
             let updatedUser = try repository.update(user)
-            
+
             // キャッシュも更新
             if let index = users.firstIndex(where: { $0.id == user.id }) {
                 users[index] = updatedUser
@@ -206,7 +206,7 @@ public class UserModel {
                 // キャッシュになければ追加
                 users.append(updatedUser)
             }
-            
+
             return updatedUser
         } catch RepositoryError.notFound {
             throw UserModelError.userNotFound
@@ -214,7 +214,7 @@ public class UserModel {
             throw UserModelError.updateFailed
         }
     }
-    
+
     /// 利用者を削除したときに、併せて削除される利用者を含めた一覧を取得する
     ///
     /// `deleteUser(_:)` のカスケード削除と同じ範囲を返します。
@@ -226,10 +226,10 @@ public class UserModel {
     /// - Returns: 削除対象となる利用者一覧（先頭は指定した利用者）。利用者が存在しない場合は空配列
     public func usersDeletedTogether(with id: UUID) -> [User] {
         guard let targetUser = users.first(where: { $0.id == id }) else { return [] }
-        
+
         // 保護者の削除は本人のみ（園児や他の保護者には波及しない）
         guard case .child = targetUser.userType else { return [targetUser] }
-        
+
         let relatedGuardians =
             users
             .filter { user in
@@ -239,10 +239,10 @@ public class UserModel {
                 return false
             }
             .sorted { $0.name < $1.name }
-        
+
         return [targetUser] + relatedGuardians
     }
-    
+
     /// 利用者を削除する
     ///
     /// 指定されたIDの利用者を削除します。
@@ -257,17 +257,17 @@ public class UserModel {
         guard let targetUser = targetUsers.first else {
             throw UserModelError.userNotFound
         }
-        
+
         let result = try deleteFromRepositoryAndCache(targetUser)
-        
+
         // 園児を削除する場合は、関連する保護者も削除
         for relatedGuardian in targetUsers.dropFirst() {
             _ = try deleteFromRepositoryAndCache(relatedGuardian)
         }
-        
+
         return result
     }
-    
+
     /// 利用者をリポジトリとキャッシュの両方から削除する
     ///
     /// - Parameter user: 削除する利用者
@@ -277,7 +277,7 @@ public class UserModel {
         users.removeAll(where: { $0.id == user.id })
         return deleted
     }
-    
+
     /// 全ての利用者を削除する
     ///
     /// 全利用者データを削除します。端末初期化時に使用されます。
@@ -287,21 +287,21 @@ public class UserModel {
     public func deleteAllUsers() throws -> Int {
         do {
             let currentUsers = users
-            
+
             // 全ての利用者を削除
             for user in currentUsers {
                 _ = try repository.delete(user.id)
             }
-            
+
             // キャッシュもクリア
             users.removeAll()
-            
+
             return currentUsers.count
         } catch {
             throw UserModelError.updateFailed
         }
     }
-    
+
     /// 指定されたクラスグループに属する利用者を全て削除する
     ///
     /// - Parameter classGroupId: 削除対象のクラスグループID
@@ -313,17 +313,17 @@ public class UserModel {
             let usersInClass = users.filter { user in
                 user.classGroupId == classGroupId
             }
-            
+
             // 各利用者を削除
             for user in usersInClass {
                 _ = try repository.delete(user.id)
             }
-            
+
             // キャッシュからも削除
             users.removeAll { user in
                 user.classGroupId == classGroupId
             }
-            
+
             return usersInClass.count
         } catch {
             throw UserModelError.deletionFailed

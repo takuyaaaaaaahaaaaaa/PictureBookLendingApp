@@ -9,14 +9,14 @@ import Testing
 struct DetailedNormalizationTests {
     private let gateway = GoogleBookSearchGateway()
     private let normalizer = JapaneseStringNormalizer()
-    
+
     /// スペース正規化の詳細テスト
     @Test(.tags(.integrationTest)) func testSpaceNormalizationDetail() async throws {
         print("=== スペース正規化の詳細テスト ===")
-        
+
         let _ = "ぐりとぐら"  // 基準となる絵本タイトル
         let author = "なかがわりえこ"
-        
+
         // さまざまなスペースパターン
         let spacePatterns = [
             ("正常", "ぐりとぐら"),
@@ -27,10 +27,10 @@ struct DetailedNormalizationTests {
             ("混在スペース", "ぐり 　と　 ぐら"),
             ("タブ文字", "ぐり\tと\tぐら"),
         ]
-        
+
         for (description, title) in spacePatterns {
             print("\n--- \(description): \"\(title)\" ---")
-            
+
             // 正規化前
             do {
                 let books = try await gateway.searchBooks(
@@ -49,11 +49,11 @@ struct DetailedNormalizationTests {
             } catch {
                 print("【正規化なし】エラー: \(error)")
             }
-            
+
             // 正規化後
             let normalizedTitle = normalizer.normalizeTitle(title)
             print("\n  正規化: \"\(title)\" → \"\(normalizedTitle)\"")
-            
+
             do {
                 let books = try await gateway.searchBooks(
                     title: normalizedTitle,
@@ -73,13 +73,13 @@ struct DetailedNormalizationTests {
             }
         }
     }
-    
+
     /// 記号正規化の詳細テスト
     @Test(.tags(.integrationTest)) func testSymbolNormalizationDetail() async throws {
         print("=== 記号正規化の詳細テスト ===")
-        
+
         let author = "エリック・カール"
-        
+
         // さまざまな記号パターン
         let symbolPatterns = [
             ("正常", "はらぺこあおむし"),
@@ -90,15 +90,15 @@ struct DetailedNormalizationTests {
             ("波ダッシュ", "はらぺこ〜あおむし"),
             ("読点", "はらぺこ、あおむし"),
         ]
-        
+
         for (description, title) in symbolPatterns {
             print("\n--- \(description): \"\(title)\" ---")
-            
+
             // 正規化前後の結果を取得
             let originalResult = await getSearchResult(title: title, author: author)
             let normalizedTitle = normalizer.normalizeTitle(title)
             let normalizedResult = await getSearchResult(title: normalizedTitle, author: author)
-            
+
             print("正規化: \"\(title)\" → \"\(normalizedTitle)\"")
             print(
                 "【正規化なし】結果: \(originalResult.count)件, 期待含む: \(originalResult.hasExpected ? "✅" : "❌")"
@@ -106,19 +106,19 @@ struct DetailedNormalizationTests {
             print(
                 "【正規化あり】結果: \(normalizedResult.count)件, 期待含む: \(normalizedResult.hasExpected ? "✅" : "❌")"
             )
-            
+
             if originalResult.count == 0 && normalizedResult.count > 0 {
                 print("🎉 正規化により検索可能になりました！")
             }
         }
     }
-    
+
     /// 著者名正規化の詳細テスト
     @Test(.tags(.integrationTest)) func testAuthorNormalizationDetail() async throws {
         print("=== 著者名正規化の詳細テスト ===")
-        
+
         let title = "ぐりとぐら"
-        
+
         // さまざまな著者名パターン
         let authorPatterns = [
             ("正常", "なかがわりえこ"),
@@ -129,54 +129,54 @@ struct DetailedNormalizationTests {
             ("括弧役割語", "なかがわりえこ（作）"),
             ("複合役割語", "なかがわりえこ 作・絵"),
         ]
-        
+
         for (description, author) in authorPatterns {
             print("\n--- \(description): \"\(author)\" ---")
-            
+
             let normalizedAuthor = normalizer.normalizeAuthor(author)
             print("正規化: \"\(author)\" → \"\(normalizedAuthor)\"")
-            
+
             // 正規化前
             let originalResult = await getSearchResult(title: title, author: author)
             // 正規化後
             let normalizedResult = await getSearchResult(title: title, author: normalizedAuthor)
-            
+
             print("【正規化なし】結果: \(originalResult.count)件")
             print("【正規化あり】結果: \(normalizedResult.count)件")
-            
+
             if originalResult.count < normalizedResult.count {
                 print("📈 正規化により \(normalizedResult.count - originalResult.count)件増加")
             }
         }
     }
-    
+
     /// 実際の絵本タイトルでの総合テスト
     @Test(.tags(.integrationTest)) func testRealBookTitlesComprehensive() async throws {
         print("=== 実際の絵本タイトルでの総合テスト ===")
-        
+
         let realBookTests = [
             ("スペース問題", "ぐり と ぐら", "なかがわりえこ", "ぐりとぐら"),
             ("役割語問題", "はらぺこあおむし", "エリック・カール作", "はらぺこあおむし"),
             ("記号問題", "スイミー・小さなかしこいさかなのはなし", "レオ・レオニ", "スイミー"),
             ("数字問題", "１００万回生きたねこ", "佐野洋子", "100万回生きたねこ"),
         ]
-        
+
         var totalImproved = 0
-        
+
         for (issue, title, author, expectedInTitle) in realBookTests {
             print("\n--- \(issue) ---")
             print("入力: タイトル=\"\(title)\", 著者=\"\(author)\"")
-            
+
             // 正規化
             let normalizedTitle = normalizer.normalizeTitle(title)
             let normalizedAuthor = normalizer.normalizeAuthor(author)
             print("正規化後: タイトル=\"\(normalizedTitle)\", 著者=\"\(normalizedAuthor)\"")
-            
+
             // 検索実行
             let originalResult = await getSearchResult(title: title, author: author)
             let normalizedResult = await getSearchResult(
                 title: normalizedTitle, author: normalizedAuthor)
-            
+
             // 期待する結果が含まれているか確認
             let originalHasExpected = originalResult.books.contains {
                 $0.title.contains(expectedInTitle)
@@ -184,25 +184,25 @@ struct DetailedNormalizationTests {
             let normalizedHasExpected = normalizedResult.books.contains {
                 $0.title.contains(expectedInTitle)
             }
-            
+
             print("\n結果:")
             print("  正規化なし: \(originalResult.count)件、期待結果: \(originalHasExpected ? "✅" : "❌")")
             print("  正規化あり: \(normalizedResult.count)件、期待結果: \(normalizedHasExpected ? "✅" : "❌")")
-            
+
             if !originalHasExpected && normalizedHasExpected {
                 print("  🎉 正規化により期待する結果が得られました！")
                 totalImproved += 1
             }
         }
-        
+
         print("\n=== 総合結果 ===")
         print("改善されたケース: \(totalImproved)/\(realBookTests.count)件")
         let improvementRate = Double(totalImproved) / Double(realBookTests.count) * 100
         print("改善率: \(String(format: "%.0f", improvementRate))%")
     }
-    
+
     // MARK: - Helper
-    
+
     private func getSearchResult(title: String, author: String?) async -> (
         count: Int, hasExpected: Bool, books: [Book]
     ) {

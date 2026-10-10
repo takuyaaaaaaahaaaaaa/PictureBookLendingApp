@@ -14,11 +14,12 @@ public enum BookModelError: Error, Equatable, LocalizedError {
     case updateFailed
     /// 管理番号が重複している場合のエラー
     case managementNumberDuplicated(String)
-    
+
     public var errorDescription: String? {
         switch self {
         case .imageDeletionFailed:
-            return "図書データは削除しましたが、登録写真の削除に失敗しました。画像が端末内に残っています。設定の端末初期化で図書データの削除を再試行できます（残っている図書も対象になります）。"
+            return
+                "図書データは削除しましたが、登録写真の削除に失敗しました。画像が端末内に残っています。設定の端末初期化で図書データの削除を再試行できます（残っている図書も対象になります）。"
         case .deletionFailed:
             return "図書の削除に失敗しました。一部が削除済みの場合があります。"
         case .bookNotFound:
@@ -45,23 +46,25 @@ public enum BookModelError: Error, Equatable, LocalizedError {
 @Observable
 @MainActor
 public class BookModel {
-    
+
     /// 絵本リポジトリ
     private let repository: BookRepositoryProtocol
     private let imageStorageRepository: ImageStorageRepositoryProtocol
-    
+
     /// キャッシュ用の絵本リスト
     public private(set) var books: [Book] = []
     /// Whether the latest full-catalog read succeeded; an empty failed read must not prune derivatives.
     public private(set) var hasLoadedBooks = false
-    
+
     /// イニシャライザ
     ///
     /// - Parameter repository: 絵本リポジトリ
-    public init(repository: BookRepositoryProtocol, imageStorageRepository: ImageStorageRepositoryProtocol) {
+    public init(
+        repository: BookRepositoryProtocol, imageStorageRepository: ImageStorageRepositoryProtocol
+    ) {
         self.repository = repository
         self.imageStorageRepository = imageStorageRepository
-        
+
         // 初期データのロード
         do {
             self.books = try repository.fetchAll()
@@ -71,7 +74,7 @@ public class BookModel {
             self.books = []
         }
     }
-    
+
     /// 絵本を登録する
     ///
     /// 新しい絵本を管理リストに追加します。
@@ -83,16 +86,16 @@ public class BookModel {
         do {
             // リポジトリに保存
             let savedBook = try repository.save(book)
-            
+
             // キャッシュに追加
             books.append(savedBook)
-            
+
             return savedBook
         } catch {
             throw BookModelError.registrationFailed
         }
     }
-    
+
     /// 全ての絵本を取得する
     ///
     /// 管理中の全絵本リストを返します。
@@ -101,7 +104,7 @@ public class BookModel {
     public func getAllBooks() -> [Book] {
         return books
     }
-    
+
     /// 絵本リストを最新の状態に更新する
     ///
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
@@ -114,7 +117,7 @@ public class BookModel {
             print("絵本リストの更新に失敗しました: \(error)")
         }
     }
-    
+
     /// 指定IDの絵本を検索する
     ///
     /// IDを指定して絵本を検索します。
@@ -126,7 +129,7 @@ public class BookModel {
         if let cachedBook = books.first(where: { $0.id == id }) {
             return cachedBook
         }
-        
+
         // リポジトリから検索
         do {
             return try repository.findById(id)
@@ -135,7 +138,7 @@ public class BookModel {
             return nil
         }
     }
-    
+
     /// 絵本情報を更新する
     ///
     /// 指定された絵本の情報を更新します。
@@ -147,7 +150,7 @@ public class BookModel {
         do {
             // リポジトリで更新
             let updatedBook = try repository.update(book)
-            
+
             // キャッシュも更新
             if let index = books.firstIndex(where: { $0.id == book.id }) {
                 books[index] = updatedBook
@@ -155,7 +158,7 @@ public class BookModel {
                 // キャッシュになければ追加
                 books.append(updatedBook)
             }
-            
+
             return updatedBook
         } catch RepositoryError.notFound {
             throw BookModelError.bookNotFound
@@ -163,7 +166,7 @@ public class BookModel {
             throw BookModelError.updateFailed
         }
     }
-    
+
     /// 絵本を削除する
     ///
     /// 指定されたIDの絵本を削除します。
@@ -173,22 +176,25 @@ public class BookModel {
     /// - Throws: 削除対象が見つからない場合は `BookModelError.bookNotFound` を投げます
     public func deleteBook(_ id: UUID) throws -> Bool {
         let catalog: [Book]
-        do { catalog = try repository.fetchAll() }
-        catch { throw BookModelError.deletionFailed }
-        guard let book = catalog.first(where: { $0.id == id }) else { throw BookModelError.bookNotFound }
+        do { catalog = try repository.fetchAll() } catch { throw BookModelError.deletionFailed }
+        guard let book = catalog.first(where: { $0.id == id }) else {
+            throw BookModelError.bookNotFound
+        }
         do {
             guard try repository.delete(id) else { throw BookModelError.deletionFailed }
         } catch { throw BookModelError.deletionFailed }
         books = catalog.filter { $0.id != id }
         hasLoadedBooks = true
         if let fileName = book.localImageFileName,
-           !catalog.contains(where: { $0.id != id && $0.localImageFileName == fileName }) {
-            do { try imageStorageRepository.deleteImage(fileName: fileName) }
-            catch { throw BookModelError.imageDeletionFailed }
+            !catalog.contains(where: { $0.id != id && $0.localImageFileName == fileName })
+        {
+            do { try imageStorageRepository.deleteImage(fileName: fileName) } catch {
+                throw BookModelError.imageDeletionFailed
+            }
         }
         return true
     }
-    
+
     /// 管理番号の重複をチェックする
     ///
     /// 指定された管理番号が既に他の絵本で使用されているかをチェックします。
@@ -205,14 +211,14 @@ public class BookModel {
             if let excludeId = excludeBookId, book.id == excludeId {
                 return false
             }
-            
+
             // 管理番号が一致するかチェック
             return book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines)
                 .lowercased()
                 == managementNumber.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         }
     }
-    
+
     /// 全ての絵本を削除する
     ///
     /// 全絵本データを削除します。端末初期化時に使用されます。
@@ -221,20 +227,21 @@ public class BookModel {
     /// - Throws: 削除に失敗した場合は `BookModelError` を投げます
     public func deleteAllBooks() throws -> Int {
         let catalog: [Book]
-        do { catalog = try repository.fetchAll() }
-        catch { throw BookModelError.deletionFailed }
+        do { catalog = try repository.fetchAll() } catch { throw BookModelError.deletionFailed }
         books = catalog
         hasLoadedBooks = true
         for book in catalog {
-            do { guard try repository.delete(book.id) else { throw BookModelError.deletionFailed } }
-            catch { throw BookModelError.deletionFailed }
+            do {
+                guard try repository.delete(book.id) else { throw BookModelError.deletionFailed }
+            } catch { throw BookModelError.deletionFailed }
             books.removeAll { $0.id == book.id }
         }
         books = []
         hasLoadedBooks = true
         // Only a fully deleted catalog permits deleting old and orphaned photos.
-        do { try imageStorageRepository.deleteAllImages() }
-        catch { throw BookModelError.imageDeletionFailed }
+        do { try imageStorageRepository.deleteAllImages() } catch {
+            throw BookModelError.imageDeletionFailed
+        }
         return catalog.count
     }
 }

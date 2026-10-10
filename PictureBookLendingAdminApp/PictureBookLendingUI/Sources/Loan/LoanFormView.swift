@@ -15,7 +15,7 @@ public struct LoanFormView: View {
     @Binding var selectedUser: User?
     @Binding var selectedUserTypeCategory: UserTypeCategory
     let isValidInput: Bool
-    
+
     public init(
         book: Book,
         classGroups: [ClassGroup],
@@ -35,7 +35,7 @@ public struct LoanFormView: View {
         self._selectedUserTypeCategory = selectedUserTypeCategory
         self.isValidInput = isValidInput
     }
-    
+
     public var body: some View {
         Form {
             Section(header: Text("図書")) {
@@ -43,14 +43,14 @@ public struct LoanFormView: View {
                     Text(book.title)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    
+
                     Text(book.author ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
             }
-            
+
             Section(header: Text("返却期限")) {
                 Text(
                     dueDate.formatted(
@@ -62,7 +62,7 @@ public struct LoanFormView: View {
                             .locale(Locale(identifier: "ja_JP")))
                 )
             }
-            
+
             Section(header: Text("組を選択")) {
                 Picker("組", selection: $selectedClassGroup) {
                     Text("組を選択してください").tag(nil as ClassGroup?)
@@ -71,9 +71,9 @@ public struct LoanFormView: View {
                     }
                 }
             }
-            
+
             if selectedClassGroup != nil {
-                
+
                 Section(header: Text("利用者を選択")) {
                     Picker("利用者種別", selection: $selectedUserTypeCategory) {
                         Text("園児").tag(UserTypeCategory.child)
@@ -113,21 +113,21 @@ public struct LoanFormView: View {
     @Previewable @State var selectedClassGroup: ClassGroup? = nil
     @Previewable @State var selectedUser: User? = nil
     @Previewable @State var selectedUserTypeCategory: UserTypeCategory = .child
-    
+
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
-    
+
     let sampleClassGroup = ClassGroup(
         id: UUID(), name: "きく組", ageGroup: AgeGroup.age(4), year: 2025)
     let sampleClassGroups = [
         sampleClassGroup,
         ClassGroup(id: UUID(), name: "ばら組", ageGroup: AgeGroup.age(5), year: 2025),
     ]
-    
+
     let sampleUsers = [
         User(name: "山田太郎", classGroupId: sampleClassGroup.id),
         User(name: "鈴木花子", classGroupId: sampleClassGroup.id),
     ]
-    
+
     Text("test")
         .sheet(isPresented: .constant(true)) {
             NavigationStack {

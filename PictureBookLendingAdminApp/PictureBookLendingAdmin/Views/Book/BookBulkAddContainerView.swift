@@ -16,27 +16,27 @@ struct FailedBookItem: Identifiable {
 struct BookBulkAddContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var inputText = ""
     @State private var processedBooks: [ParsedBookEntry] = []
     @State private var isProcessing = false
     @State private var alertState = AlertState()
-    
+
     // 連続登録用の状態
     @State private var failedBooks: [ParsedBookEntry] = []
     @State private var currentBookIndex = 0
     @State private var activeFailedBook: FailedBookItem?
-    
+
     // BookRegisterViewModelを使用して検索機能を利用
     @State private var registerViewModel: BookRegisterViewModel
-    
+
     init() {
         // BookRegisterViewModelを初期化
         let repositoryFactory = SwiftDataRepositoryFactory.shared
         let gateway = repositoryFactory.makeBookSearchGateway()
         let normalizer = GoogleBooksOptimizedNormalizer()
         let repository = repositoryFactory.makeBookRepository()
-        
+
         self._registerViewModel = State(
             initialValue: BookRegisterViewModel(
                 gateway: gateway,
@@ -45,7 +45,7 @@ struct BookBulkAddContainerView: View {
             )
         )
     }
-    
+
     var body: some View {
         BookBulkAddView(
             inputText: $inputText,
@@ -88,9 +88,9 @@ struct BookBulkAddContainerView: View {
             }
         }
     }
-    
+
     // MARK: - Action Handlers
-    
+
     private func handleTextChange(_ text: String) {
         inputText = text
         // テキストが変更されたら処理結果をクリア
@@ -98,23 +98,23 @@ struct BookBulkAddContainerView: View {
             processedBooks = []
         }
     }
-    
+
     private func handleStartProcessing() {
         Task {
             await processBookEntries()
         }
     }
-    
+
     private func handleSave() {
         Task {
             await saveBooksToModel()
         }
     }
-    
+
     private func handleCancel() {
         dismiss()
     }
-    
+
     private func handleRegisterFailed(_ entry: ParsedBookEntry) {
         // 失敗した本のみをリストアップして連続登録を開始
         failedBooks = processedBooks.filter { $0.foundBook == nil }
@@ -129,17 +129,17 @@ struct BookBulkAddContainerView: View {
             )
         }
     }
-    
+
     private func handleIndividualBookSaved(_ savedBook: Book) {
         // 保存された本に基づいてprocessedBooksを更新
         updateProcessedBooksStatus(savedBook: savedBook)
-        
+
         // 現在の本を次へ進める
         currentBookIndex += 1
-        
+
         // 残りの未登録本を再計算
         let remainingFailedBooks = processedBooks.filter { $0.foundBook == nil }
-        
+
         // まだ登録する本があるかチェック
         if currentBookIndex < failedBooks.count && !remainingFailedBooks.isEmpty {
             // 次の未登録本を探す
@@ -149,7 +149,7 @@ struct BookBulkAddContainerView: View {
                 }),
                 nextIndex >= currentBookIndex
             {
-                
+
                 // 次の本を設定
                 activeFailedBook = FailedBookItem(
                     entry: nextFailedEntry,
@@ -170,13 +170,13 @@ struct BookBulkAddContainerView: View {
             alertState = .info(successMessage)
         }
     }
-    
+
     private func handleSkipCurrentBook() {
         currentBookIndex += 1
-        
+
         // 残りの未登録本を再計算
         let remainingFailedBooks = processedBooks.filter { $0.foundBook == nil }
-        
+
         if currentBookIndex < failedBooks.count && !remainingFailedBooks.isEmpty {
             // 次の未登録本を探す
             if let nextFailedEntry = remainingFailedBooks.first(where: { entry in
@@ -191,7 +191,7 @@ struct BookBulkAddContainerView: View {
                             $0.managementNumber == entry.managementNumber
                         }) ?? 0 >= currentBookIndex
                     }.count + 1
-                
+
                 activeFailedBook = FailedBookItem(
                     entry: nextFailedEntry,
                     currentIndex: currentProgress,
@@ -206,7 +206,7 @@ struct BookBulkAddContainerView: View {
             activeFailedBook = nil
         }
     }
-    
+
     private func createBookFromFailedEntry(_ entry: ParsedBookEntry) -> Book {
         // 失敗したエントリから初期値として本を作成
         let kanaGroup = KanaGroup.from(text: entry.inputTitle)
@@ -217,7 +217,7 @@ struct BookBulkAddContainerView: View {
             kanaGroup: kanaGroup
         )
     }
-    
+
     private func updateProcessedBooksStatus(savedBook: Book) {
         // 保存された本の管理番号に対応するprocessedBooksのエントリを更新
         if let managementNumber = savedBook.managementNumber,
@@ -233,7 +233,7 @@ struct BookBulkAddContainerView: View {
             )
         }
     }
-    
+
     private func refreshProcessedBooks() {
         // 全ての処理済み本のステータスをデータベースから確認して更新
         for (index, entry) in processedBooks.enumerated() {
@@ -248,21 +248,21 @@ struct BookBulkAddContainerView: View {
             }
         }
     }
-    
+
     // MARK: - Business Logic
-    
+
     private func processBookEntries() async {
         isProcessing = true
         defer { isProcessing = false }
-        
+
         do {
             let parsedEntries = try parseInputText(inputText)
             var processedEntries: [ParsedBookEntry] = []
-            
+
             // 各エントリに対して検索を実行
             for entry in parsedEntries {
                 var updatedEntry = entry
-                
+
                 // タイトルで検索を実行
                 await performSingleSearch(for: entry) { foundBook in
                     if let book = foundBook {
@@ -273,24 +273,24 @@ struct BookBulkAddContainerView: View {
                         )
                     }
                 }
-                
+
                 processedEntries.append(updatedEntry)
             }
-            
+
             processedBooks = processedEntries
-            
+
             // 初期処理後に既存の登録状況をチェック
             refreshProcessedBooks()
-            
+
         } catch {
             alertState = .error("テキスト解析でエラーが発生しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     private func saveBooksToModel() async {
         do {
             var savedCount = 0
-            
+
             for entry in processedBooks {
                 if let book = entry.foundBook {
                     // 管理番号と五十音グループを設定
@@ -312,26 +312,26 @@ struct BookBulkAddContainerView: View {
                         managementNumber: entry.managementNumber,
                         kanaGroup: kanaGroup
                     )
-                    
+
                     _ = try bookModel.registerBook(bookWithManagementNumber)
                     savedCount += 1
                 }
             }
-            
+
             alertState = .info("\(savedCount)件の図書を追加しました")
-            
+
             // 成功したら画面を閉じる
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 dismiss()
             }
-            
+
         } catch {
             alertState = .error("図書の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     // MARK: - Search Logic
-    
+
     private func performSingleSearch(
         for entry: ParsedBookEntry, completion: @escaping (Book?) -> Void
     ) async {
@@ -339,19 +339,19 @@ struct BookBulkAddContainerView: View {
         registerViewModel.searchTitle = entry.inputTitle
         registerViewModel.searchAuthor = ""
         registerViewModel.clearSearchResults()
-        
+
         do {
             try registerViewModel.searchBooks()
-            
+
             // BookRegisterViewModelの状態変更を監視
             await withCheckedContinuation { continuation in
                 var isCompleted = false
-                
+
                 // 検索状態の変化を監視するTask
                 let monitorTask = Task {
                     let maxWaitTime = 10.0  // 最大待機時間を10秒に延長
                     let startTime = Date()
-                    
+
                     while !isCompleted && Date().timeIntervalSince(startTime) < maxWaitTime {
                         if !registerViewModel.isSearching {
                             // 検索完了
@@ -366,10 +366,10 @@ struct BookBulkAddContainerView: View {
                             continuation.resume()
                             return
                         }
-                        
+
                         try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1秒待機
                     }
-                    
+
                     // タイムアウト
                     if !isCompleted {
                         print("Bulk book search timed out")
@@ -378,7 +378,7 @@ struct BookBulkAddContainerView: View {
                         continuation.resume()
                     }
                 }
-                
+
                 // 初期状態で既に完了している場合の処理
                 if !registerViewModel.isSearching {
                     monitorTask.cancel()
@@ -393,30 +393,30 @@ struct BookBulkAddContainerView: View {
                     continuation.resume()
                 }
             }
-            
+
         } catch {
             print("Bulk book search failed")
             completion(nil)
         }
     }
-    
+
     // MARK: - Parsing Logic
-    
+
     private func parseInputText(_ text: String) throws -> [ParsedBookEntry] {
         let lines = text.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        
+
         var entries: [ParsedBookEntry] = []
-        
+
         for line in lines {
             let components = line.components(separatedBy: .whitespaces)
                 .filter { !$0.isEmpty }
-            
+
             if components.count >= 2 {
                 let managementNumber = components[0]
                 let title = components[1...].joined(separator: " ")
-                
+
                 entries.append(
                     ParsedBookEntry(
                         managementNumber: managementNumber,
@@ -425,10 +425,10 @@ struct BookBulkAddContainerView: View {
                 )
             }
         }
-        
+
         return entries
     }
-    
+
     private func findBestMatch(for inputTitle: String, in results: [ScoredBook]) -> ScoredBook? {
         // スコアが最も高い結果を返す（0.5以上のもののみ）
         return
@@ -440,7 +440,10 @@ struct BookBulkAddContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    
+
     BookBulkAddContainerView()
-        .environment(BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository))
+        .environment(
+            BookModel(
+                repository: mockFactory.bookRepository,
+                imageStorageRepository: mockFactory.imageStorageRepository))
 }

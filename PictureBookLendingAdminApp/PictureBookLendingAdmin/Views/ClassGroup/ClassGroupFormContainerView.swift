@@ -16,18 +16,18 @@ import SwiftUI
 struct ClassGroupFormContainerView: View {
     let mode: ClassGroupFormMode
     let onSave: (ClassGroup) -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var name = ""
     @State private var ageGroup = AgeGroup.age(0)
     @State private var year = Calendar.current.component(.year, from: Date())
-    
+
     init(mode: ClassGroupFormMode, onSave: @escaping (ClassGroup) -> Void) {
         self.mode = mode
         self.onSave = onSave
     }
-    
+
     var body: some View {
         NavigationStack {
             ClassGroupFormView(
@@ -46,7 +46,7 @@ struct ClassGroupFormContainerView: View {
                         handleCancel()
                     }
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                         handleSave()
@@ -59,15 +59,15 @@ struct ClassGroupFormContainerView: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var isValidInput: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleSave() {
         switch mode {
         case .add:
@@ -87,11 +87,11 @@ struct ClassGroupFormContainerView: View {
             onSave(updateClassGroup)
         }
     }
-    
+
     private func handleCancel() {
         dismiss()
     }
-    
+
     private func loadInitialData() {
         if case .edit(let classGroup) = mode {
             name = classGroup.name

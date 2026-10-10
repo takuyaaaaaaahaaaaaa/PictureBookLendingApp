@@ -2,21 +2,21 @@
     import PictureBookLendingDomain
     import PictureBookLendingUI
     import SwiftUI
-    
+
     /// 本体のAccentColorを使う見本。実データ・表紙画像・保存処理を持たない。
     struct BookshelfColorPreview: View {
         @State private var searchText = ""
         @State private var selectedSortType: BookSortType = .title
         @State private var displayMode: BookDisplayMode = .shelf
         @State private var displayScale: BookDisplayScale = .standard
-        
+
         @State private var sampleSections: [BookSection]
-        
+
         init(includesWrappedRow: Bool = false) {
             _sampleSections = State(
                 initialValue: Self.makeSections(includesWrappedRow: includesWrappedRow))
         }
-        
+
         private static func makeSections(includesWrappedRow: Bool) -> [BookSection] {
             let additionalBooks =
                 includesWrappedRow
@@ -40,7 +40,7 @@
                     ]),
             ]
         }
-        
+
         private var sections: [BookSection] {
             sampleSections.compactMap { section -> BookSection? in
                 let books = section.books.filter {
@@ -53,7 +53,7 @@
                 return books.isEmpty ? nil : BookSection(kanaGroup: section.kanaGroup, books: books)
             }
         }
-        
+
         var body: some View {
             BookListView(
                 sections: sections,
@@ -99,19 +99,19 @@
             #endif
         }
     }
-    
+
     #Preview("本棚・横幅1194・ライト", traits: .fixedLayout(width: 1194, height: 834)) {
         NavigationStack { BookshelfColorPreview() }.preferredColorScheme(.light)
     }
-    
+
     #Preview("本棚・横幅1194・ダーク", traits: .fixedLayout(width: 1194, height: 834)) {
         NavigationStack { BookshelfColorPreview() }.preferredColorScheme(.dark)
     }
-    
+
     #Preview("本棚・狭幅・大きい文字", traits: .fixedLayout(width: 390, height: 844)) {
         NavigationStack { BookshelfColorPreview() }.dynamicTypeSize(.accessibility1)
     }
-    
+
     #Preview("カラートークン・ライト／ダーク", traits: .fixedLayout(width: 760, height: 1100)) {
         ScrollView { ColorTokenCatalogView() }
     }

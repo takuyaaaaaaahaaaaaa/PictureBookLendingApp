@@ -11,7 +11,7 @@ public struct LendingView: View {
     let onReturn: (UUID) -> Void
     let getBookTitle: (UUID) -> String
     let getUserName: (UUID) -> String
-    
+
     public init(
         loans: [Loan],
         filterSelection: Binding<Int>,
@@ -25,7 +25,7 @@ public struct LendingView: View {
         self.getBookTitle = getBookTitle
         self.getUserName = getUserName
     }
-    
+
     public var body: some View {
         VStack {
             // フィルタセグメント
@@ -36,7 +36,7 @@ public struct LendingView: View {
             }
             .pickerStyle(.segmented)
             .padding(.horizontal)
-            
+
             if loans.isEmpty {
                 ContentUnavailableView(
                     "貸出情報がありません",
@@ -67,11 +67,11 @@ public struct LoanRowView: View {
     let bookTitle: String
     let userName: String
     let onReturn: (UUID) -> Void
-    
+
     @State private var isReturnConfirmationPresented = false
     @State private var isErrorAlertPresented = false
     @State private var errorMessage = ""
-    
+
     public init(
         loan: Loan,
         bookTitle: String,
@@ -83,20 +83,20 @@ public struct LoanRowView: View {
         self.userName = userName
         self.onReturn = onReturn
     }
-    
+
     public var body: some View {
         VStack(alignment: .leading) {
             HStack {
                 VStack(alignment: .leading) {
                     Text(bookTitle)
                         .font(.headline)
-                    
+
                     Text(userName)
                         .font(.subheadline)
                 }
-                
+
                 Spacer()
-                
+
                 if loan.isReturned {
                     // 返却済みの場合
                     Label("返却済", systemImage: "checkmark.circle.fill")
@@ -112,14 +112,14 @@ public struct LoanRowView: View {
                     .buttonStyle(.bordered)
                 }
             }
-            
+
             // 日付情報
             Group {
                 Text(
                     "貸出日: \(loan.loanDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
                 )
                 .font(.caption)
-                
+
                 if loan.isReturned, let returnedDate = loan.returnedDate {
                     Text(
                         "返却日: \(returnedDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
@@ -148,7 +148,7 @@ public struct LoanRowView: View {
             Text(errorMessage)
         }
     }
-    
+
     // 返却期限切れかどうかのチェック
     private var isOverdue: Bool {
         !loan.isReturned && Date() > loan.dueDate
@@ -164,7 +164,7 @@ public struct LoanRowView: View {
         dueDate: Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date(),
         returnedDate: nil
     )
-    
+
     NavigationStack {
         LendingView(
             loans: [loan1],

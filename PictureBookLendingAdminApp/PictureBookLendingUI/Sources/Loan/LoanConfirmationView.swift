@@ -9,7 +9,7 @@ public struct LoanConfirmationView: View {
     let dueDate: Date
     let onConfirm: () -> Void
     let onCancel: () -> Void
-    
+
     public init(
         book: Book,
         user: User,
@@ -25,7 +25,7 @@ public struct LoanConfirmationView: View {
         self.onConfirm = onConfirm
         self.onCancel = onCancel
     }
-    
+
     public var body: some View {
         NavigationView {
             VStack(spacing: 24) {
@@ -34,7 +34,7 @@ public struct LoanConfirmationView: View {
                     .font(.largeTitle)
                     .fontWeight(.bold)
                     .padding(.top)
-                
+
                 // 貸出情報カード
                 VStack(spacing: 16) {
                     // 図書情報
@@ -47,22 +47,22 @@ public struct LoanConfirmationView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    
+
                     Divider()
-                    
+
                     // 利用者情報
                     LoanInfoSection(title: "利用者") {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(user.name)
                                 .font(.headline)
-                            Text("\(classGroup.name) • \(classGroup.ageGroup)")
+                            Text("\(classGroup.name) • \(classGroup.ageGroup.displayText)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    
+
                     Divider()
-                    
+
                     // 返却期限
                     LoanInfoSection(title: "返却期限") {
                         Text(dueDate, style: .date)
@@ -73,9 +73,9 @@ public struct LoanConfirmationView: View {
                 .padding()
                 .background(AppColor.cardSurface)
                 .cornerRadius(12)
-                
+
                 Spacer()
-                
+
                 // 確認ボタン
                 VStack(spacing: 12) {
                     Button(action: onConfirm) {
@@ -87,7 +87,7 @@ public struct LoanConfirmationView: View {
                             .background(AppColor.accent)
                             .cornerRadius(12)
                     }
-                    
+
                     Button(action: onCancel) {
                         Text("キャンセル")
                             .font(.subheadline)
@@ -107,22 +107,22 @@ public struct LoanConfirmationView: View {
 private struct LoanInfoSection<Content: View>: View {
     let title: String
     let content: Content
-    
+
     init(title: String, @ViewBuilder content: () -> Content) {
         self.title = title
         self.content = content()
     }
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                
+
                 content
             }
-            
+
             Spacer()
         }
     }

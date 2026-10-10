@@ -4,11 +4,11 @@ import SwiftUI
 struct ReturnLoanCardBackground: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
-    
+
     let cornerRadius: CGFloat
     let surface: Color
     let borderWidth: CGFloat
-    
+
     /// 通知カードは背景との明度差を確保するため、明るい面色を指定する。
     init(
         cornerRadius: CGFloat,
@@ -19,11 +19,11 @@ struct ReturnLoanCardBackground: View {
         self.surface = surface
         self.borderWidth = borderWidth
     }
-    
+
     var body: some View {
         let isDark = colorScheme == .dark
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
-        
+
         shape
             .fill(surface)
             .overlay {

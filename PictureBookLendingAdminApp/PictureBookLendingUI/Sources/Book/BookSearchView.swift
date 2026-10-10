@@ -7,41 +7,41 @@ import SwiftUI
 /// タイトル・著者による絵本検索、検索結果表示、手動入力切り替えを提供します。
 /// 純粋なUI表示のみを担当し、状態管理はContainer Viewに委譲します。
 public struct BookSearchView: View {
-    
+
     // MARK: - Input Properties
-    
+
     @Binding var searchTitle: String
     @Binding var searchAuthor: String
     let canSearch: Bool
     let isSearching: Bool
     let searchError: String?
-    
+
     // MARK: - Search Results Properties
-    
+
     let searchResults: [ScoredBook]
     let selectedResult: ScoredBook?
     let onResultSelected: (ScoredBook) -> Void
-    
+
     // MARK: - Manual Entry Properties
-    
+
     let isManualEntryMode: Bool
     let manualBook: Book?
     let onManualBookChanged: (Book) -> Void
-    
+
     // MARK: - Actions
-    
+
     let onSearch: () -> Void
     let onClearResults: () -> Void
     let onSwitchToManualEntry: () -> Void
     let onSwitchToSearchResults: () -> Void
     let onRegister: () -> Void
-    
+
     // MARK: - State Properties
-    
+
     let canRegister: Bool
     let isRegistering: Bool
     let registrationError: String?
-    
+
     public init(
         searchTitle: Binding<String>,
         searchAuthor: Binding<String>,
@@ -83,31 +83,31 @@ public struct BookSearchView: View {
         self.isRegistering = isRegistering
         self.registrationError = registrationError
     }
-    
+
     public var body: some View {
         VStack(spacing: 0) {
             // 検索入力セクション
             searchInputSection
-            
+
             Divider()
-            
+
             // メインコンテンツ
             if isManualEntryMode {
                 manualEntrySection
             } else {
                 searchResultsSection
             }
-            
+
             Divider()
-            
+
             // 登録ボタンセクション
             registrationSection
         }
         .navigationTitle("図書を登録")
     }
-    
+
     // MARK: - View Components
-    
+
     @ViewBuilder
     private var searchInputSection: some View {
         VStack(spacing: 16) {
@@ -115,11 +115,11 @@ public struct BookSearchView: View {
             VStack(spacing: 12) {
                 TextField("図書のタイトルを入力", text: $searchTitle)
                     .textFieldStyle(.roundedBorder)
-                
+
                 TextField("著者名を入力（任意）", text: $searchAuthor)
                     .textFieldStyle(.roundedBorder)
             }
-            
+
             // 検索ボタンと切り替えボタン
             HStack(spacing: 12) {
                 Button("検索") {
@@ -127,14 +127,14 @@ public struct BookSearchView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!canSearch)
-                
+
                 if isSearching {
                     ProgressView()
                         .scaleEffect(0.8)
                 }
-                
+
                 Spacer()
-                
+
                 // モード切り替えボタン
                 Button(isManualEntryMode ? "検索結果から選択" : "手動で入力") {
                     if isManualEntryMode {
@@ -145,7 +145,7 @@ public struct BookSearchView: View {
                 }
                 .buttonStyle(.bordered)
             }
-            
+
             // エラー表示
             if let searchError = searchError {
                 Text(searchError)
@@ -157,7 +157,7 @@ public struct BookSearchView: View {
         .padding()
         .background(.regularMaterial)
     }
-    
+
     @ViewBuilder
     private var searchResultsSection: some View {
         if searchResults.isEmpty && !isSearching {
@@ -177,7 +177,7 @@ public struct BookSearchView: View {
             .listStyle(.plain)
         }
     }
-    
+
     @ViewBuilder
     private var manualEntrySection: some View {
         if let manualBook = manualBook {
@@ -213,7 +213,7 @@ public struct BookSearchView: View {
                         )
                         .multilineTextAlignment(.trailing)
                     }
-                    
+
                     HStack {
                         Text("著者")
                             .foregroundStyle(.secondary)
@@ -244,7 +244,7 @@ public struct BookSearchView: View {
                         )
                         .multilineTextAlignment(.trailing)
                     }
-                    
+
                     HStack {
                         Text("対象読者")
                             .foregroundStyle(.secondary)
@@ -291,7 +291,7 @@ public struct BookSearchView: View {
             )
         }
     }
-    
+
     @ViewBuilder
     private var registrationSection: some View {
         VStack(spacing: 8) {
@@ -301,7 +301,7 @@ public struct BookSearchView: View {
                     .font(.caption)
                     .multilineTextAlignment(.center)
             }
-            
+
             Button("図書を登録") {
                 onRegister()
             }
@@ -325,7 +325,7 @@ struct SearchResultRow: View {
     let scoredBook: ScoredBook
     let isSelected: Bool
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             HStack {
@@ -339,39 +339,39 @@ struct SearchResultRow: View {
                 .frame(width: 60, height: 80)
                 .background(.regularMaterial)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(scoredBook.book.title)
                         .font(.headline)
                         .foregroundStyle(.primary)
                         .multilineTextAlignment(.leading)
-                    
+
                     Text(scoredBook.book.author ?? "")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    
+
                     if let publisher = scoredBook.book.publisher {
                         Text(publisher)
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
                     // スコア表示
                     HStack {
                         Text("関連度:")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                        
+
                         Text("\(Int(scoredBook.score * 100))%")
                             .font(.caption)
                             .foregroundStyle(scoreColor)
                             .fontWeight(.medium)
                     }
-                    
+
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.blue)
@@ -384,7 +384,7 @@ struct SearchResultRow: View {
         .background(isSelected ? .blue.opacity(0.1) : .clear)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-    
+
     private var scoreColor: Color {
         switch scoredBook.score {
         case 0.8...:

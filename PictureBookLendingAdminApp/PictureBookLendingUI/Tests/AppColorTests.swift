@@ -1,9 +1,9 @@
 #if canImport(UIKit)
     import UIKit
     import XCTest
-    
+
     @testable import PictureBookLendingUI
-    
+
     /// Asset Catalogが実際にパッケージへ組み込まれ、明暗で解決できることを検証する。
     @MainActor
     final class AppColorTests: XCTestCase {
@@ -21,7 +21,7 @@
                 XCTAssertNotEqual(light, dark, "\(name) needs light and dark appearances")
             }
         }
-        
+
         func testStatusFillTextContrast() throws {
             for style in [UIUserInterfaceStyle.light, .dark] {
                 let foreground = try color("OnEmphasis", style: style)
@@ -33,7 +33,7 @@
                 }
             }
         }
-        
+
         func testLentSurfaceForegroundContrast() throws {
             for style in [UIUserInterfaceStyle.light, .dark] {
                 let foreground = try color("Lent", style: style)
@@ -42,7 +42,7 @@
                 XCTAssertGreaterThanOrEqual((values[1] + 0.05) / (values[0] + 0.05), 4.5)
             }
         }
-        
+
         func testLibraryActionTextContrast() throws {
             let pairs = [
                 ("BorrowActionForeground", "BorrowAction"),
@@ -61,13 +61,13 @@
                 }
             }
         }
-        
+
         private func color(_ name: String, style: UIUserInterfaceStyle) throws -> UIColor {
             let traits = UITraitCollection(userInterfaceStyle: style)
             return try XCTUnwrap(UIColor(named: name, in: .module, compatibleWith: traits))
                 .resolvedColor(with: traits)
         }
-        
+
         private func luminance(_ color: UIColor) -> CGFloat {
             var red: CGFloat = 0
             var green: CGFloat = 0

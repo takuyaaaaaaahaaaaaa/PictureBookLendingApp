@@ -3,9 +3,9 @@ import SwiftUI
 /// 貸出・返却の一覧に使う壁紙／革の背景。質感画像は一覧の背面に1枚だけ描画する。
 public struct LibrarySurfaceBackgroundView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+
     public init() {}
-    
+
     public var body: some View {
         let isDark = colorScheme == .dark
         GeometryReader { geometry in

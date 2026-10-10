@@ -8,21 +8,21 @@ import Foundation
 struct FlowStopwatch: Equatable {
     /// ミリ秒換算の係数
     private static let millisecondsPerSecond: Double = 1000
-    
+
     /// 計測開始時刻
     private let startedAt: Date
     /// 計測が有効かどうか（バックグラウンド滞在で失われる）
     private var isValid = true
-    
+
     init(startedAt: Date = Date()) {
         self.startedAt = startedAt
     }
-    
+
     /// 計測を無効化する（バックグラウンドへ行ったとき）
     mutating func invalidate() {
         isValid = false
     }
-    
+
     /// 開始からの経過ミリ秒（無効化済みならnil）
     func elapsedMs(at now: Date = Date()) -> Int? {
         guard isValid else { return nil }

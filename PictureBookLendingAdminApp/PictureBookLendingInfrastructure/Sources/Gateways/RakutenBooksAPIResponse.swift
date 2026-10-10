@@ -10,16 +10,16 @@ struct RakutenBooksResponse: Decodable {
     let items: [ItemContainer]?
     /// 検索結果の総件数
     let count: Int?
-    
+
     enum CodingKeys: String, CodingKey {
         case items = "Items"
         case count
     }
-    
+
     /// 各書籍が `Item` キーでラップされているための中間コンテナ
     struct ItemContainer: Decodable {
         let item: RakutenBookItem
-        
+
         enum CodingKeys: String, CodingKey {
             case item = "Item"
         }

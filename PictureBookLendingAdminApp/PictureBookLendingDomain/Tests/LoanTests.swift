@@ -3,7 +3,7 @@ import XCTest
 @testable import PictureBookLendingDomain
 
 final class LoanTests: XCTestCase {
-    
+
     private func makeLoan(dueDate: Date, returnedDate: Date? = nil) -> Loan {
         Loan(
             bookId: UUID(),
@@ -13,32 +13,32 @@ final class LoanTests: XCTestCase {
             returnedDate: returnedDate
         )
     }
-    
+
     func testIsOverdueBeforeDueDate() {
         let dueDate = Date()
         let loan = makeLoan(dueDate: dueDate)
-        
+
         XCTAssertFalse(loan.isOverdue(at: dueDate.addingTimeInterval(-60)))
     }
-    
+
     func testIsOverdueAtExactDueDate() {
         let dueDate = Date()
         let loan = makeLoan(dueDate: dueDate)
-        
+
         XCTAssertFalse(loan.isOverdue(at: dueDate), "期限ちょうどは延滞ではない")
     }
-    
+
     func testIsOverdueAfterDueDate() {
         let dueDate = Date()
         let loan = makeLoan(dueDate: dueDate)
-        
+
         XCTAssertTrue(loan.isOverdue(at: dueDate.addingTimeInterval(60)))
     }
-    
+
     func testReturnedLoanIsNeverOverdue() {
         let dueDate = Date()
         let loan = makeLoan(dueDate: dueDate, returnedDate: dueDate.addingTimeInterval(120))
-        
+
         XCTAssertFalse(loan.isOverdue(at: dueDate.addingTimeInterval(3600)), "返却済みの貸出は延滞ではない")
     }
 }

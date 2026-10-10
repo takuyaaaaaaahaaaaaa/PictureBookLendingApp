@@ -8,11 +8,11 @@ import SwiftUI
 struct ClassGroupSelectionContainerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(ClassGroupModel.self) private var classGroupModel
-    
+
     let onSelect: (ClassGroup) -> Void
-    
+
     @State private var alertState = AlertState()
-    
+
     var body: some View {
         ClassGroupSelectionView(
             classGroups: classGroupModel.classGroups,
@@ -24,7 +24,7 @@ struct ClassGroupSelectionContainerView: View {
             Text(alertState.message)
         }
     }
-    
+
     private func handleSelect(_ classGroup: ClassGroup) {
         onSelect(classGroup)
         dismiss()

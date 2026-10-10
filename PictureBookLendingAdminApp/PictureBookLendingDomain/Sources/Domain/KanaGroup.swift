@@ -14,12 +14,12 @@ public enum KanaGroup: String, CaseIterable, Sendable, Codable {
     case ra = "ら"
     case wa = "わ"
     case other = "他"
-    
+
     /// 表示用の名前
     public var displayName: String {
         rawValue
     }
-    
+
     /// 五十音グループの順序（並び替え用）
     public var sortOrder: Int {
         switch self {
@@ -36,7 +36,7 @@ public enum KanaGroup: String, CaseIterable, Sendable, Codable {
         case .other: return 10
         }
     }
-    
+
     /// 五十音グループの文字範囲を定義
     private static let groupRanges: [KanaGroup: [Character]] = [
         .a: ["あ", "い", "う", "え", "お"],
@@ -62,20 +62,20 @@ public enum KanaGroup: String, CaseIterable, Sendable, Codable {
         }
         return .other
     }
-    
+
     /// テキストから五十音グループを取得
     /// - Parameter text: 判定対象のテキスト（絵本タイトルなど）
     /// - Returns: 対応する五十音グループ、該当しない場合は.other
     public static func from(text: String) -> KanaGroup {
         // 空文字列の場合は.otherを返す
         guard !text.isEmpty else { return .other }
-        
+
         // テキストをひらがなに変換
         let hiraganaText = text.toHiragana()
-        
+
         // 最初の文字で判定
         guard let firstCharacter = hiraganaText.first else { return .other }
-        
+
         return from(character: firstCharacter)
     }
 }
@@ -88,20 +88,20 @@ extension String {
     public func toHiragana() -> String {
         // CFStringTransformを使用してひらがなに変換
         let mutableString = NSMutableString(string: self)
-        
+
         // ローマ字 → ひらがな
         CFStringTransform(mutableString, nil, kCFStringTransformLatinHiragana, false)
-        
+
         // カタカナ → ひらがな
         CFStringTransform(mutableString, nil, "Katakana-Hiragana" as CFString, false)
-        
+
         // 漢字 → ひらがな（読み）
         CFStringTransform(mutableString, nil, kCFStringTransformToLatin, false)
         CFStringTransform(mutableString, nil, kCFStringTransformLatinHiragana, false)
-        
+
         return mutableString as String
     }
-    
+
     /// 文字列から五十音グループを取得
     /// - Returns: 対応する五十音グループ
     public func kanaGroup() -> KanaGroup {

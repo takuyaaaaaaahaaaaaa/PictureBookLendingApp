@@ -19,7 +19,7 @@ final class FirebaseTelemetryRuntime: TelemetryRuntime {
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
         return true
     }
-    
+
     func setAnalyticsEnabled(_ enabled: Bool) {
         Analytics.setAnalyticsCollectionEnabled(enabled)
     }

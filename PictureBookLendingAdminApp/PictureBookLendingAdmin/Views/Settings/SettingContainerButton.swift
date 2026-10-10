@@ -10,7 +10,7 @@ import SwiftUI
 /// 設定Containerボタン
 public struct SettingContainerButton: View {
     @State var isSettingsPresented: Bool = false
-    
+
     public var body: some View {
         Button("設定", systemImage: "gearshape") {
             isSettingsPresented = true

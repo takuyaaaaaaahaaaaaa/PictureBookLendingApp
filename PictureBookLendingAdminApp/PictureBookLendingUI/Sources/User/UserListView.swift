@@ -12,7 +12,7 @@ public struct UserListView<RowContent: View>: View {
     let showGuardians: Binding<Bool>
     let onDelete: (IndexSet) -> Void
     let rowContent: (User) -> RowContent
-    
+
     public init(
         users: [User],
         searchText: Binding<String>,
@@ -28,7 +28,7 @@ public struct UserListView<RowContent: View>: View {
         self.onDelete = onDelete
         self.rowContent = rowContent
     }
-    
+
     public var body: some View {
         List {
             // リストの最初にフィルターセクションを追加
@@ -37,7 +37,7 @@ public struct UserListView<RowContent: View>: View {
             }
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
-            
+
             // ユーザーリスト
             if users.isEmpty {
                 Section {
@@ -67,17 +67,17 @@ public struct UserListView<RowContent: View>: View {
         #else
             .searchable(text: searchText, prompt: "名前またはグループで検索")
         #endif
-        
+
     }
-    
+
     var userFilterView: some View {
         HStack(spacing: 16) {
             Toggle("園児", isOn: showChildren)
                 .toggleStyle(.button)
-            
+
             Toggle("保護者", isOn: showGuardians)
                 .toggleStyle(.button)
-            
+
             Spacer()
         }
         .padding(.horizontal)
@@ -93,20 +93,20 @@ public struct UserListView<RowContent: View>: View {
 public struct UserRowView: View {
     let user: User
     let classGroupName: String
-    
+
     public init(user: User, classGroupName: String) {
         self.user = user
         self.classGroupName = classGroupName
     }
-    
+
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(user.name)
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text(user.userType.displayName)
                     .font(.caption)
                     .padding(.horizontal, 8)
@@ -115,14 +115,14 @@ public struct UserRowView: View {
                     .foregroundStyle(.white)
                     .clipShape(Capsule())
             }
-            
+
             Text(classGroupName)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }
-    
+
     private var userTypeBadgeColor: Color {
         switch user.userType {
         case .child:
@@ -136,7 +136,7 @@ public struct UserRowView: View {
 #Preview {
     let user1 = User(name: "山田太郎", classGroupId: UUID())
     let user2 = User(name: "鈴木花子", classGroupId: UUID())
-    
+
     NavigationStack {
         UserListView(
             users: [user1, user2],

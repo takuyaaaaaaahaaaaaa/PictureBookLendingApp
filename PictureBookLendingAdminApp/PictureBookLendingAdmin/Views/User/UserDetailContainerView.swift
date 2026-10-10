@@ -13,7 +13,7 @@ struct UserDetailContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
     @Environment(ClassGroupModel.self) private var classGroupModel
-    
+
     /// 利用者
     @State private var user: User
     /// 貸出数
@@ -22,11 +22,11 @@ struct UserDetailContainerView: View {
     @State private var loanHistory: [Loan] = []
     /// アラート状態管理
     @State private var alertState = AlertState()
-    
+
     init(user: User) {
         self._user = State(initialValue: user)
     }
-    
+
     var body: some View {
         UserDetailView(
             userName: $user.name,
@@ -61,9 +61,9 @@ struct UserDetailContainerView: View {
             loadUserData()
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func saveUserChanges(_ updatedUser: User) {
         do {
             _ = try userModel.updateUser(updatedUser)
@@ -72,7 +72,7 @@ struct UserDetailContainerView: View {
             alertState = .error("利用者情報の保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     /// 図書タイトル取得
     /// - Parameter bookId: 図書ID
     /// - Returns: 図書タイトル
@@ -82,7 +82,7 @@ struct UserDetailContainerView: View {
         }
         return book.title
     }
-    
+
     /// 組名取得
     /// - Parameter classGroupId: 組ID
     /// - Returns: 組名
@@ -92,7 +92,7 @@ struct UserDetailContainerView: View {
         }
         return classGroup.name
     }
-    
+
     /// 関連ユーザー名取得（保護者の場合の園児名）
     /// - Parameter userId: ユーザーID
     /// - Returns: ユーザー名
@@ -102,12 +102,12 @@ struct UserDetailContainerView: View {
         }
         return relatedUser.name
     }
-    
+
     /// 貸出情報取得
     private func loadUserData() {
         let activeLoans = loanModel.getActiveLoans()
         activeLoansCount = activeLoans.filter { $0.user.id == user.id }.count
-        
+
         loanHistory = loanModel.getLoansByUser(userId: user.id)
     }
 }
@@ -115,16 +115,18 @@ struct UserDetailContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     let sampleUser = User(name: "山田太郎", classGroupId: UUID(), userType: .child)
-    
+
     return NavigationStack {
         UserDetailContainerView(user: sampleUser)
             .environment(userModel)

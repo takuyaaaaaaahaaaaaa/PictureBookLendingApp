@@ -12,7 +12,7 @@ public enum ClassGroupModelError: Error, Equatable, LocalizedError {
     case updateFailed
     /// クラス削除に失敗した場合のエラー
     case deletionFailed
-    
+
     public var errorDescription: String? {
         switch self {
         case .classGroupNotFound:
@@ -40,19 +40,19 @@ public enum ClassGroupModelError: Error, Equatable, LocalizedError {
 @Observable
 @MainActor
 public class ClassGroupModel {
-    
+
     /// クラスリポジトリ
     private let repository: ClassGroupRepositoryProtocol
-    
+
     /// キャッシュ用のクラスリスト
     public private(set) var classGroups: [ClassGroup] = []
-    
+
     /// イニシャライザ
     ///
     /// - Parameter repository: クラスリポジトリ
     public init(repository: ClassGroupRepositoryProtocol) {
         self.repository = repository
-        
+
         // 初期データのロード
         do {
             self.classGroups = try repository.fetchAll().sorted(by: { $0.ageGroup < $1.ageGroup })
@@ -61,7 +61,7 @@ public class ClassGroupModel {
             self.classGroups = []
         }
     }
-    
+
     /// クラスを登録する
     ///
     /// 新しいクラスを管理リストに追加します。
@@ -71,7 +71,7 @@ public class ClassGroupModel {
     public func registerClassGroup(_ classGroup: ClassGroup) throws {
         do {
             try repository.save(classGroup)
-            
+
             // キャッシュに追加
             if !classGroups.contains(where: { $0.id == classGroup.id }) {
                 classGroups.append(classGroup)
@@ -80,7 +80,7 @@ public class ClassGroupModel {
             throw ClassGroupModelError.registrationFailed
         }
     }
-    
+
     /// すべてのクラスを取得する
     ///
     /// 管理中の全クラスリストを返します。
@@ -89,7 +89,7 @@ public class ClassGroupModel {
     public func getAllClassGroups() -> [ClassGroup] {
         return classGroups
     }
-    
+
     /// 指定IDのクラスを検索する
     ///
     /// IDを指定してクラスを検索します。
@@ -101,7 +101,7 @@ public class ClassGroupModel {
         if let cachedClassGroup = classGroups.first(where: { $0.id == id }) {
             return cachedClassGroup
         }
-        
+
         // リポジトリから検索
         do {
             return try repository.fetch(by: id)
@@ -110,7 +110,7 @@ public class ClassGroupModel {
             return nil
         }
     }
-    
+
     /// クラス情報を更新する
     ///
     /// 指定されたクラスの情報を更新します。
@@ -120,7 +120,7 @@ public class ClassGroupModel {
     public func updateClassGroup(_ classGroup: ClassGroup) throws {
         do {
             try repository.save(classGroup)
-            
+
             // キャッシュも更新
             if let index = classGroups.firstIndex(where: { $0.id == classGroup.id }) {
                 classGroups[index] = classGroup
@@ -132,7 +132,7 @@ public class ClassGroupModel {
             throw ClassGroupModelError.updateFailed
         }
     }
-    
+
     /// クラスを削除する
     ///
     /// 指定されたIDのクラスを削除します。
@@ -142,14 +142,14 @@ public class ClassGroupModel {
     public func deleteClassGroup(_ id: UUID) throws {
         do {
             try repository.delete(by: id)
-            
+
             // キャッシュからも削除
             classGroups.removeAll(where: { $0.id == id })
         } catch {
             throw ClassGroupModelError.deletionFailed
         }
     }
-    
+
     /// クラスリストを最新の状態に更新する
     ///
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
@@ -160,7 +160,7 @@ public class ClassGroupModel {
             print("クラスリストの更新に失敗しました: \(error)")
         }
     }
-    
+
     /// 全てのクラスグループを削除する
     ///
     /// 全クラスグループデータを削除します。端末初期化時に使用されます。
@@ -170,21 +170,21 @@ public class ClassGroupModel {
     public func deleteAllClassGroups() throws -> Int {
         do {
             let currentClassGroups = classGroups
-            
+
             // 全てのクラスグループを削除
             for classGroup in currentClassGroups {
                 try repository.delete(by: classGroup.id)
             }
-            
+
             // キャッシュもクリア
             classGroups.removeAll()
-            
+
             return currentClassGroups.count
         } catch {
             throw ClassGroupModelError.deletionFailed
         }
     }
-    
+
     /// 次のクラスグループを取得する
     ///
     /// 現在のクラスグループから進級先のクラスグループを作成します。
@@ -213,10 +213,10 @@ public class ClassGroupModel {
                 year: current.year + 1
             )
         }
-        
+
         return nil
     }
-    
+
     /// 進級処理で卒業（削除）となるクラスグループを取得する
     ///
     /// `promoteToNextYear()` を実行する前に、いなくなる組を確認するために使用します。
@@ -227,7 +227,7 @@ public class ClassGroupModel {
     public func graduatingClassGroups() -> [ClassGroup] {
         classGroups.filter { nextClassGroup(current: $0) == nil }
     }
-    
+
     /// 進級処理を実行する
     ///
     /// 全クラスの年齢区分を次の年齢に進級させ、年度を更新します。
@@ -240,7 +240,7 @@ public class ClassGroupModel {
             let currentClassGroups = classGroups
             var updatedClassGroups: [ClassGroup] = []
             var deletedClassGroups: [ClassGroup] = []
-            
+
             // 最小クラスを作成
             let firstClassGroup = currentClassGroups.filter { $0.ageGroup != .other }
                 .sorted { $0.ageGroup < $1.ageGroup }
@@ -253,7 +253,7 @@ public class ClassGroupModel {
                 try repository.save(updatedFirstClassGroup)
                 updatedClassGroups.append(updatedFirstClassGroup)
             }
-            
+
             // 各クラスグループを進級処理
             for classGroup in currentClassGroups {
                 if let nextClassGroupInstance = nextClassGroup(current: classGroup) {
@@ -268,10 +268,10 @@ public class ClassGroupModel {
             }
             // キャッシュを更新
             classGroups = updatedClassGroups.sorted(by: { $0.ageGroup < $1.ageGroup })
-            
+
             // 削除されたクラスグループを返却
             return deletedClassGroups
-            
+
         } catch {
             throw ClassGroupModelError.updateFailed
         }

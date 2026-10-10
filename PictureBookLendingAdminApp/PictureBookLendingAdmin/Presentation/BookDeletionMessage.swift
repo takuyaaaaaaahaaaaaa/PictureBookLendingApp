@@ -11,7 +11,7 @@ enum BookDeletionMessage {
         /// 借りている利用者の名前
         let userName: String
     }
-    
+
     /// 確認ダイアログの本文を組み立てる
     ///
     /// - Parameters:
@@ -23,17 +23,17 @@ enum BookDeletionMessage {
         autoReturningLoans: [AutoReturningLoan]
     ) -> String {
         var lines = ["\(titlesInBrackets(targetTitles))を削除しますか？"]
-        
+
         if !autoReturningLoans.isEmpty {
             lines.append("")
             lines.append("貸出中の図書が\(autoReturningLoans.count)冊あります。削除すると自動的に返却されます。")
             lines.append(
                 contentsOf: autoReturningLoans.map { "・『\($0.bookTitle)』（\($0.userName)さん）" })
         }
-        
+
         return lines.joined(separator: "\n")
     }
-    
+
     /// タイトルを二重かぎ括弧付きで読点区切りに整形する
     private static func titlesInBrackets(_ titles: [String]) -> String {
         titles.map { "『\($0)』" }.joined(separator: "、")

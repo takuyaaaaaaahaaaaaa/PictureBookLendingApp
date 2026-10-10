@@ -20,7 +20,7 @@ struct SettingsContainerView: View {
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
     @State private var coverRecognition = CoverRecognitionService.shared
-    
+
     @State private var navigationPath = NavigationPath()
     @State private var isLoanSettingsSheetPresented = false
     @State private var isBookBulkRegistrationSheetPresented = false
@@ -48,7 +48,7 @@ struct SettingsContainerView: View {
     @AppStorage("setupGuideWelcomeSeen") private var welcomeSeen = false
     @AppStorage("consentPendingAfterWelcomeSkip") private var consentPendingAfterWelcomeSkip =
         false
-    
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             guided {
@@ -112,7 +112,9 @@ struct SettingsContainerView: View {
             }
             .disabled(isDataOperationRunning)
             .overlay {
-                if isDataOperationRunning { ProgressView("データを処理しています").padding().background(.regularMaterial) }
+                if isDataOperationRunning {
+                    ProgressView("データを処理しています").padding().background(.regularMaterial)
+                }
             }
             .interactiveDismissDisabled(isDataOperationRunning)
             .safeAreaInset(edge: .bottom) {
@@ -179,11 +181,15 @@ struct SettingsContainerView: View {
                     LoanSettingsContainerView()
                 }
             }
-            .alert("調整情報なしでバックアップしますか？", isPresented: $isBackupWithoutPreparationConfirmationPresented) {
+            .alert(
+                "調整情報なしでバックアップしますか？", isPresented: $isBackupWithoutPreparationConfirmationPresented
+            ) {
                 Button("調整情報なしで保存") { isBackupExporterPresented = true }
                 Button("キャンセル", role: .cancel) { backupExportDocument = nil }
             } message: {
-                Text("表紙検索の調整情報を読み込めませんでした。図書・利用者・貸出記録と登録写真はバックアップしますが、調整情報は含まれません。復元後は表紙検索の再準備や写真の調整が必要です。")
+                Text(
+                    "表紙検索の調整情報を読み込めませんでした。図書・利用者・貸出記録と登録写真はバックアップしますが、調整情報は含まれません。復元後は表紙検索の再準備や写真の調整が必要です。"
+                )
             }
             #if os(macOS)
                 .sheet(isPresented: $isBookBulkRegistrationSheetPresented) {
@@ -290,7 +296,7 @@ struct SettingsContainerView: View {
             }
         }
     }
-    
+
     private func guided<Content: View>(
         showContinue: Bool = true,
         @ViewBuilder content: () -> Content
@@ -346,7 +352,7 @@ struct SettingsContainerView: View {
     }
 
     // MARK: - Action Handlers
-    
+
     private func handleDeviceReset(_ options: DeviceResetOptions) {
         guard !isDataOperationRunning else { return }
         isDataOperationRunning = true
@@ -355,19 +361,19 @@ struct SettingsContainerView: View {
             await performDeviceReset(options)
         }
     }
-    
+
     private func handleCreateGuardiansForAllChildren() {
         Task {
             await performCreateGuardiansForAllChildren()
         }
     }
-    
+
     private func handlePromoteToNextYear() {
         Task {
             await performPromoteToNextYear()
         }
     }
-    
+
     private func performCreateGuardiansForAllChildren() async {
         do {
             // 園児のみを取得
@@ -376,9 +382,9 @@ struct SettingsContainerView: View {
                 alertState = .error("保護者作成に失敗しました", message: "登録されている園児がいません")
                 return
             }
-            
+
             var createdGuardiansCount = 0
-            
+
             // 各園児に対して保護者を作成
             for child in children {
                 // 既に保護者がいるかチェック
@@ -388,7 +394,7 @@ struct SettingsContainerView: View {
                     }
                     return false
                 }
-                
+
                 // 保護者がいない場合のみ作成
                 if !hasExistingGuardian {
                     let guardian = User(
@@ -396,25 +402,25 @@ struct SettingsContainerView: View {
                         classGroupId: child.classGroupId,
                         userType: .guardian(relatedChildId: child.id)
                     )
-                    
+
                     _ = try userModel.registerUser(guardian)
                     createdGuardiansCount += 1
                 }
             }
-            
+
             let message =
                 if createdGuardiansCount > 0 {
                     "\(createdGuardiansCount)人の保護者を作成しました"
                 } else {
                     "すべての園児に既に保護者が登録されています"
                 }
-            
+
             alertState = .info(message)
         } catch {
             alertState = .error("保護者作成に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     private func performDeviceReset(_ options: DeviceResetOptions) async {
         var deletedDetails: [String] = []
         var failures: [String] = []
@@ -441,18 +447,25 @@ struct SettingsContainerView: View {
         // Prune once, even when record/photo deletion only partly succeeded.
         if options.deleteBooks {
             do {
-                try await coverRecognition.removeDeletedBooks(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+                try await coverRecognition.removeDeletedBooks(
+                    books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
                 deletedDetails.append("表紙検索データの整理")
             } catch { failures.append(error.localizedDescription) }
         }
         if failures.isEmpty {
-            let message = deletedDetails.isEmpty ? "削除するデータが選択されていません"
+            let message =
+                deletedDetails.isEmpty
+                ? "削除するデータが選択されていません"
                 : "以下のデータを削除しました:\n\(deletedDetails.joined(separator: "\n"))"
-            alertState = .info(Self.appendingAutoReturnNotice(to: message, count: returnedLoanCount))
+            alertState = .info(
+                Self.appendingAutoReturnNotice(to: message, count: returnedLoanCount))
         } else {
             var message = failures.joined(separator: "\n")
-            if !deletedDetails.isEmpty { message += "\n実施済み:\n" + deletedDetails.joined(separator: "\n") }
-            alertState = .error("データ削除が完了していません",
+            if !deletedDetails.isEmpty {
+                message += "\n実施済み:\n" + deletedDetails.joined(separator: "\n")
+            }
+            alertState = .error(
+                "データ削除が完了していません",
                 message: Self.appendingAutoReturnNotice(to: message, count: returnedLoanCount))
         }
     }
@@ -463,24 +476,24 @@ struct SettingsContainerView: View {
             // クラス進級処理を実行し、削除されたクラスを取得
             let deletedClassGroups = try classGroupModel.promoteToNextYear()
             var graduationTextArray: [String] = []
-            
+
             var returnedLoanCount = 0
-            
+
             // 削除されたクラスに所属していたユーザーも削除し、卒業メッセージを作成
             for deletedClassGroup in deletedClassGroups {
                 // 該当クラスのユーザーを取得（削除前に園児数をカウント）
                 let usersInClass = userModel.users.filter { user in
                     user.classGroupId == deletedClassGroup.id
                 }
-                
+
                 // 借りたままの図書を先に返却する
                 // （先に利用者を削除すると、返却する手段のない貸出だけが残ってしまう）
                 returnedLoanCount += try loanModel.returnLoans(
                     usersInClass.flatMap { loanModel.getUserActiveLoans(userId: $0.id) })
-                
+
                 // ユーザー削除
                 _ = try userModel.deleteUsersInClassGroup(deletedClassGroup.id)
-                
+
                 // 卒業メッセージを作成（園児がいる場合のみ）
                 let childrenCount = usersInClass.filter { $0.userType == .child }.count
                 if childrenCount > 0 {
@@ -496,15 +509,15 @@ struct SettingsContainerView: View {
             }()
             graduationMessage = Self.appendingAutoReturnNotice(
                 to: graduationMessage, count: returnedLoanCount)
-            
+
             shouldRequestReviewAfterPromotion = true
             alertState = .info("進級処理が完了しました。", message: graduationMessage)
-            
+
         } catch {
             alertState = .error("進級処理に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     /// 進級処理の確認文を組み立てる
     ///
     /// 卒業でいなくなる利用者が借りたままの図書は、進級と同時に自動返却される。
@@ -512,16 +525,16 @@ struct SettingsContainerView: View {
     /// 実行前に冊数を知らせて「先に返してもらってから進級する」判断ができるようにする
     private func makePromoteConfirmationMessage() -> String {
         var lines = ["すべてのクラスを次の年齢区分に進級させ、年度を更新します。5歳児クラスは削除されます。この操作は元に戻せません。"]
-        
+
         let graduatingLoanCount = graduatingActiveLoans().count
         if graduatingLoanCount > 0 {
             lines.append("")
             lines.append("卒業する利用者が借りたままの図書が\(graduatingLoanCount)冊あります。削除と同時に自動的に返却されます。")
         }
-        
+
         return lines.joined(separator: "\n")
     }
-    
+
     /// 卒業する組に所属する利用者が借りたままの貸出
     private func graduatingActiveLoans() -> [Loan] {
         let graduatingClassGroupIds = Set(classGroupModel.graduatingClassGroups().map(\.id))
@@ -530,7 +543,7 @@ struct SettingsContainerView: View {
             .filter { graduatingClassGroupIds.contains($0.classGroupId) }
             .flatMap { loanModel.getUserActiveLoans(userId: $0.id) }
     }
-    
+
     /// 完了メッセージに自動返却の結果を書き添える
     ///
     /// - Parameters:
@@ -539,11 +552,11 @@ struct SettingsContainerView: View {
     /// - Returns: 自動返却の案内を足したメッセージ
     private static func appendingAutoReturnNotice(to message: String, count: Int) -> String {
         guard count > 0 else { return message }
-        
+
         let separator = message.isEmpty ? "" : "\n\n"
         return message + "\(separator)借りたままだった図書\(count)冊は返却済みにしました。"
     }
-    
+
     private func handleBackupExport() {
         guard !isDataOperationRunning else { return }
         isDataOperationRunning = true
@@ -565,7 +578,7 @@ struct SettingsContainerView: View {
             }
         }
     }
-    
+
     private func handleBackupExportResult(_ result: Result<URL, Error>) {
         switch result {
         case .success:
@@ -575,7 +588,7 @@ struct SettingsContainerView: View {
         }
         backupExportDocument = nil
     }
-    
+
     private func handleBackupImportSelection(_ result: Result<URL, Error>) {
         switch result {
         case .success(let url):
@@ -591,17 +604,17 @@ struct SettingsContainerView: View {
             alertState = .error("バックアップファイルの選択に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     private func loadBackupSnapshot(from url: URL) throws -> BackupSnapshot {
         guard url.startAccessingSecurityScopedResource() else {
             throw CocoaError(.fileReadNoPermission)
         }
         defer { url.stopAccessingSecurityScopedResource() }
-        
+
         let data = try Data(contentsOf: url)
         return try BackupDocument.decoder.decode(BackupSnapshot.self, from: data)
     }
-    
+
     private func handleBackupImportConfirmed() {
         guard !isDataOperationRunning, let snapshot = pendingRestoreSnapshot else { return }
         pendingRestoreSnapshot = nil
@@ -618,23 +631,31 @@ struct SettingsContainerView: View {
                 loanModel.reloadAllLoans()
                 loanSettingsModel.reload()
                 do {
-                    try await coverRecognition.restorePreparation(snapshot.coverSearchPreparation,
+                    try await coverRecognition.restorePreparation(
+                        snapshot.coverSearchPreparation,
                         books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
                 } catch {
-                    alertState = .error("図書データは復元しました", message:
-                        "表紙の調整情報を復元できませんでした。\(error.localizedDescription)\nバックアップファイルを残して再試行してください。")
+                    alertState = .error(
+                        "図書データは復元しました",
+                        message:
+                            "表紙の調整情報を復元できませんでした。\(error.localizedDescription)\nバックアップファイルを残して再試行してください。"
+                    )
                     return
                 }
-                let legacyNotice = snapshot.coverSearchPreparation == nil
+                let legacyNotice =
+                    snapshot.coverSearchPreparation == nil
                     ? "\nこのバックアップには表紙の調整情報が含まれません。必要な本は写真を調整してください。" : ""
-                alertState = .info("復元が完了しました", message:
-                    "組: \(summary.classGroupCount)件 / 利用者: \(summary.userCount)人 / 図書: \(summary.bookCount)冊 / 貸出記録: \(summary.loanCount)件" + legacyNotice)
+                alertState = .info(
+                    "復元が完了しました",
+                    message:
+                        "組: \(summary.classGroupCount)件 / 利用者: \(summary.userCount)人 / 図書: \(summary.bookCount)冊 / 貸出記録: \(summary.loanCount)件"
+                        + legacyNotice)
             } catch {
                 alertState = .error("データの復元に失敗しました", message: "\(error.localizedDescription)")
             }
         }
     }
-    
+
     private var coverPreparationStatus: String {
         if coverRecognition.preparationError != nil { return "準備に問題があります・内容を確認" }
         guard bookModel.hasLoadedBooks, coverRecognition.hasCheckedPreparation else {
@@ -685,11 +706,15 @@ private struct DebugSettingsView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    
+
     SettingsContainerView()
         .environment(ClassGroupModel(repository: mockFactory.classGroupRepository))
         .environment(UserModel(repository: mockFactory.userRepository))
-        .environment(BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository))
+        .environment(
+            BookModel(
+                repository: mockFactory.bookRepository,
+                imageStorageRepository: mockFactory.imageStorageRepository)
+        )
         .environment(
             LoanModel(
                 repository: mockFactory.loanRepository,

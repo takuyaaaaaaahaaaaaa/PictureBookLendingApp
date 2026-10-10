@@ -49,7 +49,7 @@ struct ShelfWoodColors {
     let plateText: Color
     /// 棚板が落とす影
     let boardShadow: Color
-    
+
     /// ライトモード配色（白い壁紙×明るい木）
     static let light = ShelfWoodColors(
         boardTopLight: Color(red: 0.914, green: 0.839, blue: 0.706),
@@ -61,7 +61,7 @@ struct ShelfWoodColors {
         plateText: Color(red: 0.992, green: 0.973, blue: 0.929),
         boardShadow: Color(red: 0.470, green: 0.310, blue: 0.140).opacity(0.25)
     )
-    
+
     /// ダークモード配色（黒革×焦げ茶の棚板）
     static let dark = ShelfWoodColors(
         boardTopLight: Color(red: 0.541, green: 0.384, blue: 0.251),
@@ -72,7 +72,7 @@ struct ShelfWoodColors {
         plateText: Color(red: 0.216, green: 0.137, blue: 0.063),
         boardShadow: Color.black.opacity(0.48)
     )
-    
+
     /// カラースキームに応じた配色を返す
     static func colors(for colorScheme: ColorScheme) -> ShelfWoodColors {
         colorScheme == .dark ? .dark : .light
@@ -86,13 +86,13 @@ struct ShelfWoodColors {
 /// 一貫したルールで読めるようにする（最上段の横木にも同じルールを適用できる）
 struct ShelfBoardView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var labelText: String? = nil
-    
+
     var body: some View {
         let isDark = colorScheme == .dark
         let colors = ShelfWoodColors.colors(for: colorScheme)
-        
+
         VStack(spacing: 0) {
             LinearGradient(
                 colors: [colors.boardTopLight, colors.boardTopDark],
@@ -104,7 +104,7 @@ struct ShelfBoardView: View {
                 Color.white.opacity(isDark ? 0.24 : 0.42)
                     .frame(height: 1)
             }
-            
+
             LinearGradient(
                 colors: [colors.boardFrontLight, colors.boardFrontDark],
                 startPoint: .top,
@@ -146,12 +146,12 @@ struct ShelfBoardView: View {
 /// 黒革にはクリーム色の札と濃茶の文字を合わせ、背景から区別する。
 struct KanaShelfPlateView: View {
     @Environment(\.colorScheme) private var colorScheme
-    
+
     let text: String
-    
+
     var body: some View {
         let colors = ShelfWoodColors.colors(for: colorScheme)
-        
+
         Text(text)
             .font(.title3.bold())
             .foregroundStyle(colors.plateText)

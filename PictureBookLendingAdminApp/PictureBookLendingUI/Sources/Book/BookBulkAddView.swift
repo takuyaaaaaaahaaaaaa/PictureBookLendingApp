@@ -12,7 +12,7 @@ public struct BookBulkAddView: View {
     let onSave: () -> Void
     let onCancel: () -> Void
     let onRegisterFailed: ((ParsedBookEntry) -> Void)?
-    
+
     public init(
         inputText: Binding<String>,
         processedBooks: [ParsedBookEntry],
@@ -34,19 +34,19 @@ public struct BookBulkAddView: View {
         self.onCancel = onCancel
         self.onRegisterFailed = onRegisterFailed
     }
-    
+
     public var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
                     // 入力エリア
                     inputSection
-                    
+
                     // 処理結果エリア
                     if !processedBooks.isEmpty {
                         resultsSection
                     }
-                    
+
                     // データ提供元のクレジット表記
                     if let attribution {
                         SearchProviderAttributionView(attribution: attribution)
@@ -65,7 +65,7 @@ public struct BookBulkAddView: View {
                         onCancel()
                     }
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("保存", systemImage: "checkmark", role: .confirmIfAvailable) {
                         onSave()
@@ -75,16 +75,16 @@ public struct BookBulkAddView: View {
             }
         }
     }
-    
+
     private var inputSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("図書データ入力")
                 .font(.headline)
-            
+
             Text("管理番号とタイトルを以下の形式で入力してください：\n例: あ31 あいうえお")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            
+
             TextEditor(text: $inputText)
                 .frame(idealHeight: 300)
                 .padding(8)
@@ -93,7 +93,7 @@ public struct BookBulkAddView: View {
                 .onChange(of: inputText) { _, newValue in
                     onTextChange(newValue)
                 }
-            
+
             HStack {
                 Button("処理開始", systemImage: "play.fill") {
                     onStartProcessing()
@@ -101,7 +101,7 @@ public struct BookBulkAddView: View {
                 .disabled(
                     inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         || isProcessing)
-                
+
                 if isProcessing {
                     ProgressView()
                         .scaleEffect(0.8)
@@ -109,12 +109,12 @@ public struct BookBulkAddView: View {
             }
         }
     }
-    
+
     private var resultsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("処理結果 (\(processedBooks.count)件)")
                 .font(.headline)
-            
+
             LazyVStack(spacing: 8) {
                 ForEach(processedBooks, id: \.managementNumber) { entry in
                     BookBulkAddRowView(
@@ -131,24 +131,24 @@ public struct BookBulkAddView: View {
 struct BookBulkAddRowView: View {
     let entry: ParsedBookEntry
     let onRegisterFailed: ((ParsedBookEntry) -> Void)?
-    
+
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     ManagementNumberBadge(text: entry.managementNumber)
-                    
+
                     Text(entry.inputTitle)
                         .font(.subheadline)
                         .fontWeight(.medium)
                 }
-                
+
                 if let book = entry.foundBook {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("検索結果: \(book.title)")
                             .font(.caption)
                             .foregroundStyle(.green)
-                        
+
                         Text("著者: \(book.author ?? "不明")")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
@@ -159,9 +159,9 @@ struct BookBulkAddRowView: View {
                         .foregroundStyle(.red)
                 }
             }
-            
+
             Spacer()
-            
+
             // 失敗した場合は個別登録ボタンを表示
             if entry.foundBook == nil, let onRegisterFailed = onRegisterFailed {
                 Button("個別登録") {
@@ -170,14 +170,14 @@ struct BookBulkAddRowView: View {
                 .buttonStyle(.bordered)
                 .controlSize(.small)
             }
-            
+
             statusIcon
         }
         .padding(12)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-    
+
     private var statusIcon: some View {
         Image(
             systemName: entry.foundBook != nil
@@ -194,7 +194,7 @@ public struct ParsedBookEntry: Identifiable {
     public let managementNumber: String
     public let inputTitle: String
     public let foundBook: Book?
-    
+
     public init(managementNumber: String, inputTitle: String, foundBook: Book? = nil) {
         self.managementNumber = managementNumber
         self.inputTitle = inputTitle
@@ -208,7 +208,7 @@ public struct ParsedBookEntry: Identifiable {
         あ23 あいうえおうた
         あ20 あいうえおおさま
         """
-    
+
     let sampleBooks = [
         ParsedBookEntry(
             managementNumber: "あ31",
@@ -224,7 +224,7 @@ public struct ParsedBookEntry: Identifiable {
             foundBook: nil
         ),
     ]
-    
+
     BookBulkAddView(
         inputText: $inputText,
         processedBooks: sampleBooks,

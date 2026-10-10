@@ -10,19 +10,19 @@ import SwiftData
 final public class SwiftDataUser {
     /// 利用者の一意識別子
     @Attribute(.unique) public var id: UUID
-    
+
     /// 利用者の名前
     public var name: String
-    
+
     /// 所属するクラス（組）のID
     public var classGroupId: UUID
-    
+
     /// 利用者種別（本人・保護者）
     public var userTypeRawValue: String = "child"
-    
+
     /// 関連する本人のID（保護者の場合のみ設定）
     public var relatedChildId: UUID?
-    
+
     /// イニシャライザ
     ///
     /// - Parameters:
@@ -39,7 +39,7 @@ final public class SwiftDataUser {
         self.id = id
         self.name = name
         self.classGroupId = classGroupId
-        
+
         switch userType {
         case .child:
             self.userTypeRawValue = "child"

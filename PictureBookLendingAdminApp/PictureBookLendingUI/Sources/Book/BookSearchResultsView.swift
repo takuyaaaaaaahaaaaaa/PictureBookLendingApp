@@ -8,7 +8,7 @@ public struct BookSearchResultsView: View {
     let attribution: SearchProviderAttribution?
     let onBookSelect: (Book) -> Void
     let onCancel: () -> Void
-    
+
     public init(
         searchResults: [ScoredBook],
         attribution: SearchProviderAttribution? = nil,
@@ -20,7 +20,7 @@ public struct BookSearchResultsView: View {
         self.onBookSelect = onBookSelect
         self.onCancel = onCancel
     }
-    
+
     public var body: some View {
         NavigationStack {
             Group {
@@ -67,11 +67,11 @@ public struct BookSearchResultsView: View {
 /// 検索結果の個別行を表示するPresentation View
 public struct BookSearchResultRowView: View {
     let scoredBook: ScoredBook
-    
+
     public init(scoredBook: ScoredBook) {
         self.scoredBook = scoredBook
     }
-    
+
     public var body: some View {
         HStack {
             // サムネイル画像
@@ -84,33 +84,33 @@ public struct BookSearchResultRowView: View {
             .frame(width: 60, height: 80)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(scoredBook.book.title)
                     .font(.headline)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.leading)
-                
+
                 Text(scoredBook.book.author ?? "")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                
+
                 if let publisher = scoredBook.book.publisher {
                     Text(publisher)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
             }
-            
+
             Spacer()
-            
+
             VStack(alignment: .trailing, spacing: 4) {
                 // スコア表示
                 HStack {
                     Text("関連度:")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
-                    
+
                     Text("\(Int(scoredBook.score * 100))%")
                         .font(.caption)
                         .foregroundStyle(scoreColor)
@@ -120,7 +120,7 @@ public struct BookSearchResultRowView: View {
         }
         .padding(.vertical, 4)
     }
-    
+
     private var scoreColor: Color {
         switch scoredBook.score {
         case 0.8...:
@@ -157,7 +157,7 @@ public struct BookSearchResultRowView: View {
             score: 0.75
         ),
     ]
-    
+
     BookSearchResultsView(
         searchResults: sampleBooks,
         onBookSelect: { book in

@@ -11,12 +11,12 @@ public enum BookFormMode {
 public struct DetailRow: View {
     let label: String
     let value: String
-    
+
     public init(label: String, value: String) {
         self.label = label
         self.value = value
     }
-    
+
     public var body: some View {
         HStack {
             Text(label)
@@ -39,7 +39,7 @@ public struct EditableDetailRow: View {
         self.label = label
         self._value = value
     }
-    
+
     public var body: some View {
         HStack {
             Text(label)
@@ -65,9 +65,9 @@ public struct EditableDetailRowWithSelection<SelectionValue: Hashable>: View {
     let options: [SelectionValue]
     let displayText: (SelectionValue) -> String
     let onSelectionChanged: (SelectionValue) -> Void
-    
+
     @State private var isShowingSelection = false
-    
+
     public init(
         label: String,
         selectedValue: Binding<SelectionValue>,
@@ -81,13 +81,13 @@ public struct EditableDetailRowWithSelection<SelectionValue: Hashable>: View {
         self.displayText = displayText
         self.onSelectionChanged = onSelectionChanged
     }
-    
+
     public var body: some View {
         HStack {
             Text(label)
                 .foregroundStyle(.secondary)
             Spacer()
-            
+
             Button(action: { isShowingSelection = true }) {
                 HStack {
                     Text(displayText(selectedValue))

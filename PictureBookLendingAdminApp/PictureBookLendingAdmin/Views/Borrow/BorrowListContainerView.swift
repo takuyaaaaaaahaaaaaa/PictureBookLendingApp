@@ -21,7 +21,7 @@ struct BorrowListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.analytics) private var analytics
-    
+
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
     /// 「貸出中だったか」はitemに焼き込んだスナップショットで持つ。
@@ -59,24 +59,24 @@ struct BorrowListContainerView: View {
     /// 文字が見えづらい利用者は毎回見えづらいため、一時的なモードではなく
     /// アプリを再起動しても維持される永続設定にする
     @AppStorage("borrowListDisplayScale") private var displayScale: BookDisplayScale = .standard
-    
+
     /// 「大きく表示」フローティングボタンの画面端からの余白
     private static let displayScaleButtonPadding: CGFloat = 24
-    
+
     /// 検索イベントの記録設定
     private enum SearchTracking {
         /// 入力が止まった（検索が確定した）とみなすまでの待ち時間。
         /// 1文字打つたびに記録すると0件ヒット率が入力途中で水増しされるため置く
         static let debounce: Duration = .milliseconds(800)
     }
-    
+
     /// 見本ホストでは実データを扱う設定への入口を表示しない。
     let showsSettings: Bool
-    
+
     init(showsSettings: Bool = true) {
         self.showsSettings = showsSettings
     }
-    
+
     var body: some View {
         NavigationStack {
             BookListView(
@@ -275,7 +275,7 @@ struct BorrowListContainerView: View {
             }
         }
     }
-    
+
     private var coverSearchBar: some View {
         LendingSearchBar(searchText: $searchText, isSearchFocused: $isSearchFocused) {
             isSearchFocused = false
@@ -295,16 +295,16 @@ struct BorrowListContainerView: View {
             onLendCompleted: handleLendCompleted
         )
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// 五十音グループでセクション化された全図書データ（フィルタリング・ソート前のベース）
     ///
     /// `bookModel.books`から都度導出する。値型なので手動同期（onChange/onAppear）は不要。
     private var bookSections: BookSections {
         BookSections(books: bookModel.books)
     }
-    
+
     private var setupProgress: SetupProgress {
         SetupProgress(
             hasClassGroup: !classGroupModel.classGroups.isEmpty,
@@ -312,7 +312,7 @@ struct BorrowListContainerView: View {
             hasBook: !bookModel.books.isEmpty
         )
     }
-    
+
     /// いま図書をどうやって見つけたか（貸出フロー開始の記録用）
     ///
     /// 検索を使っていなければ、一覧の見た目（棚表示かどうか）で見分ける。
@@ -328,9 +328,9 @@ struct BorrowListContainerView: View {
             .scroll
         }
     }
-    
+
     // MARK: - Actions
-    
+
     /// 図書の貸出シートを開く（行タップ・「借りる」ボタンの共通入口）
     ///
     /// 一覧はプッシュ遷移させず、その図書の貸出シートを開く。
@@ -342,15 +342,16 @@ struct BorrowListContainerView: View {
 
     private func openBorrowSheet(for book: Book, findMethod: AnalyticsEvent.BookFindMethod) {
         flushPendingBookSearch()
-        
+
         let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
         // 貸出中の案内シートは貸出フローの開始ではないため記録しない
         if !isAlreadyLent {
             analytics.track(.borrowFlowStarted(findMethod: findMethod))
         }
-        borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent, findMethod: findMethod)
+        borrowSheetContext = BorrowSheetContext(
+            book: book, isAlreadyLent: isAlreadyLent, findMethod: findMethod)
     }
-    
+
     /// 図書タップ時にデバウンス待ちの検索をその場で確定させる
     ///
     /// デバウンスの待ち時間より早く次の操作をした場合、その検索は記録されないまま
@@ -361,7 +362,7 @@ struct BorrowListContainerView: View {
         guard !trimmedText.isEmpty else { return }
         trackBookSearchIfUnrecorded(trimmedText: trimmedText)
     }
-    
+
     /// 検索の確定（デバウンス後）を利用ログに記録する
     ///
     /// 待っている間に検索テキストが変われば`.task(id:)`ごとキャンセルされ、
@@ -373,13 +374,13 @@ struct BorrowListContainerView: View {
             lastTrackedSearchText = nil
             return
         }
-        
+
         try? await Task.sleep(for: SearchTracking.debounce)
         if Task.isCancelled { return }
-        
+
         trackBookSearchIfUnrecorded(trimmedText: trimmedText)
     }
-    
+
     /// まだ記録していない検索テキストであれば記録する
     ///
     /// 検索文字列そのものは載せず、文字数と結果の件数だけを残す
@@ -387,7 +388,7 @@ struct BorrowListContainerView: View {
     /// 同じテキストの二重記録を避けるため、記録済みのテキストを覚えておく
     private func trackBookSearchIfUnrecorded(trimmedText: String) {
         guard lastTrackedSearchText != trimmedText else { return }
-        
+
         let outcome = bookSections.filterOutcome(
             searchText: searchText,
             kanafilter: nil,
@@ -403,7 +404,7 @@ struct BorrowListContainerView: View {
         )
         lastTrackedSearchText = trimmedText
     }
-    
+
     /// 貸出完了（✓カードが消えた）ときの後始末。
     ///
     /// シートを閉じ、次の貸出のために絞り込みを解除して図書一覧を先頭へ戻す
@@ -413,7 +414,7 @@ struct BorrowListContainerView: View {
         searchText = ""
         scrollToTopTrigger += 1
     }
-    
+
     private func presentWelcomeOrConsentIfNeeded() {
         if !welcomeSeen {
             isWelcomePresented = true
@@ -423,7 +424,7 @@ struct BorrowListContainerView: View {
             isInitialConsentPresented = true
         }
     }
-    
+
     private func finishConsent(allowed: Bool) {
         privacy.completeInitialConsent(allowed: allowed)
         if !privacy.needsInitialConsent {
@@ -431,7 +432,7 @@ struct BorrowListContainerView: View {
             isInitialConsentPresented = false
         }
     }
-    
+
     private func refreshData() {
         bookModel.refreshBooks()
         loanModel.refreshLoans()
@@ -447,13 +448,15 @@ struct BorrowSheetContext: Identifiable {
     let book: Book
     let isAlreadyLent: Bool
     var findMethod: AnalyticsEvent.BookFindMethod? = nil
-    
+
     var id: UUID { book.id }
 }
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     let loanModel = LoanModel(
@@ -462,24 +465,24 @@ struct BorrowSheetContext: Identifiable {
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     // 組1つ・園児2人（うち1人に保護者を紐付け）・図書3冊（1冊は貸出中）をセットアップ
     let momo = ClassGroup(name: "もも組", ageGroup: AgeGroup.age(4), year: 2026)
     try! mockFactory.classGroupRepository.save(momo)
-    
+
     let sakura = try! userModel.registerUser(User(name: "いとう さくら", classGroupId: momo.id))
     _ = try! userModel.registerUser(
         User(
             name: "伊藤 由美子", classGroupId: momo.id,
             userType: .guardian(relatedChildId: sakura.id)))
     _ = try! userModel.registerUser(User(name: "あおき はると", classGroupId: momo.id))
-    
+
     let guriToGura = try! bookModel.registerBook(Book(title: "ぐりとぐら", author: "中川李枝子"))
     _ = try! bookModel.registerBook(Book(title: "だいくとおにろく", author: "松居直"))
     _ = try! bookModel.registerBook(Book(title: "はらぺこあおむし", author: "エリック・カール"))
-    
+
     _ = try! loanModel.lendBook(bookId: guriToGura.id, userId: sakura.id)
-    
+
     return BorrowListContainerView()
         .environment(bookModel)
         .environment(userModel)

@@ -14,10 +14,10 @@ struct ContentView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(LoanModel.self) private var loanModel
     @Environment(ClassGroupModel.self) private var classGroupModel
-    
+
     // 選択中のタブを管理（DEBUG/リリースとも貸出タブを初期表示）
     @State private var selectedTab = 0
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             // 貸出タブ（左＝旧アプリで図書一覧が左だった並びに合わせる・オーナー決定。
@@ -51,11 +51,15 @@ struct ContentView: View {
                 refreshAllModels()
             }
         }
-        .task(id: CoverPreparationSnapshot(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)) {
-            await CoverRecognitionService.shared.prepare(books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+        .task(
+            id: CoverPreparationSnapshot(
+                books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+        ) {
+            await CoverRecognitionService.shared.prepare(
+                books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
         }
     }
-    
+
     private func refreshAllModels() {
         bookModel.refreshBooks()
         userModel.refreshUsers()
@@ -67,7 +71,9 @@ struct ContentView: View {
 #Preview {
     // デモ用のモックモデル
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
@@ -76,7 +82,7 @@ struct ContentView: View {
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
-    
+
     ContentView()
         .environment(bookModel)
         .environment(userModel)

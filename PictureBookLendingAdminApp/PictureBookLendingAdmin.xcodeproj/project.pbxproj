@@ -413,14 +413,14 @@
 			);
 			inputPaths = (
 			);
-			name = " Run swift-format";
+			name = "Validate build configuration";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# Skip in CI/CD environments\nif [ \"$CI\" = \"true\" ] || [ \"$GITHUB_ACTIONS\" = \"true\" ] || [ \"$BUILD_FOR_TESTING\" = \"YES\" ]; then\n  echo \"Skipping Swift Format/Lint in CI/CD environment\"\n  exit 0\nfi\n\necho \"Running Swift Format and Lint...\"\n\n# Check if swift format is available\nif ! command -v swift >/dev/null 2>&1; then\n  echo \"Warning: Swift toolchain not found, skipping format\"\n  exit 0\nfi\n\n# Change to project directory\ncd \"$PROJECT_DIR\"\n\n# First run lint to check for style violations\necho \"Linting Swift files...\"\nswift format lint --configuration .swift-format --recursive . || echo \"Warning: Lint issues found\"\n\n# Then format Swift files in main app\necho \"Formatting PictureBookLendingAdmin...\"\nswift format --configuration .swift-format --in-place --recursive . 2>/dev/null || echo \"Warning: Could not format some files in .\"\n\necho \"Swift Format and Lint completed!\"\n";
+			shellScript = "python3 \"$PROJECT_DIR/../scripts/check_build_configuration.py\"\n";
 		};
 		FBC0000D2E90000100000004 /* Upload Crashlytics dSYM */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -504,7 +504,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PictureBookLendingAdminWidget/Info.plist;
@@ -535,7 +534,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PictureBookLendingAdminWidget/Info.plist;
@@ -564,6 +562,7 @@
 		EFF77F122DD66AAD009BD213 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CURRENT_PROJECT_VERSION = 2;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -628,6 +627,7 @@
 		EFF77F132DD66AAD009BD213 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CURRENT_PROJECT_VERSION = 2;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -690,7 +690,6 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PictureBookLendingAdmin/PictureBookLendingAdmin.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				ENABLE_APP_SANDBOX = YES;
@@ -740,7 +739,6 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = PictureBookLendingAdmin/PictureBookLendingAdmin.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				ENABLE_APP_SANDBOX = YES;
@@ -787,7 +785,6 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -814,7 +811,6 @@
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -838,7 +834,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -862,7 +857,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = J9ALTX5GVP;
 				GENERATE_INFOPLIST_FILE = YES;

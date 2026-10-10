@@ -17,7 +17,7 @@ public struct BookCoverZoomView: View {
     let title: String
     /// 閉じる要求（タップ・✕ボタン共通）
     let onClose: () -> Void
-    
+
     public init(
         imageURL: String?,
         placeholderImageURL: String? = nil,
@@ -29,14 +29,14 @@ public struct BookCoverZoomView: View {
         self.title = title
         self.onClose = onClose
     }
-    
+
     private enum Layout {
         /// 画像が無い図書のプレースホルダーアイコンのサイズ
         static let placeholderIconSize: CGFloat = 96
         /// 表紙と画面端の間隔（閉じるためのタップ余白を兼ねる）
         static let imagePadding: CGFloat = 24
     }
-    
+
     public var body: some View {
         // 表紙に集中できるよう背景は黒一色（写真アプリの拡大表示と同じ作法）
         Color.black
@@ -61,13 +61,13 @@ public struct BookCoverZoomView: View {
                 closeButton
             }
     }
-    
+
     private var placeholderIcon: some View {
         Image(systemName: "book.closed")
             .foregroundStyle(.secondary)
             .font(.system(size: Layout.placeholderIconSize))
     }
-    
+
     private var closeButton: some View {
         Button(action: onClose) {
             Image(systemName: "xmark.circle.fill")

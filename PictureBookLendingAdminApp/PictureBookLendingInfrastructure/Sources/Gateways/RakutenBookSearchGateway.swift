@@ -6,30 +6,30 @@ import PictureBookLendingDomain
 /// Rakuten Books Book Search API (version:2017-04-04) を使用して書籍の検索を行います。
 /// 利用には楽天ウェブサービスのアプリID（applicationId）が必要です。
 public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
-    
+
     /// APIのベースURL
     private static let baseURL =
         "https://openapi.rakuten.co.jp/services/api/BooksBook/Search/20170404"
-    
+
     /// hitsパラメータの最大値（APIの制約）
     private static let maxHits = 30
-    
+
     /// Originヘッダーに設定する値
     ///
     /// 楽天ウェブサービスのアプリ登録時に指定した「許可されたWebサイト」と
     /// 一致している必要がある。ネイティブアプリはブラウザと異なりOriginを
     /// 自由に設定できるため、登録済みドメインを固定値として送信する。
     private static let origin = "https://github.com"
-    
+
     /// URLSession（テスト時にモック可能）
     private let urlSession: URLSession
-    
+
     /// 楽天ウェブサービスのアプリID
     private let applicationId: String
-    
+
     /// 楽天ウェブサービスのアクセスキー
     private let accessKey: String
-    
+
     /// 初期化
     /// - Parameters:
     ///   - applicationId: 楽天ウェブサービスのアプリID
@@ -40,32 +40,32 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
         self.accessKey = accessKey
         self.urlSession = urlSession
     }
-    
+
     // MARK: - BookSearchGatewayProtocol Implementation
-    
+
     /// 楽天ウェブサービスのクレジット表記（規約により表示が義務付けられている）
     public var attribution: SearchProviderAttribution? { .rakuten }
-    
+
     /// 指定されたISBNで書籍を検索する
     /// - Parameter isbn: 検索する書籍のISBN-13またはISBN-10
     /// - Returns: ドメインモデルとしてのBook
     /// - Throws: BookMetadataGatewayError
     public func searchBook(by isbn: String) async throws -> Book {
         let normalizedISBN = ISBNValidator.normalize(isbn)
-        
+
         guard ISBNValidator.isValidISBN(normalizedISBN) else {
             throw BookMetadataGatewayError.invalidISBN
         }
-        
+
         guard let url = buildURL(queryItems: [URLQueryItem(name: "isbn", value: normalizedISBN)])
         else {
             throw BookMetadataGatewayError.unknown
         }
-        
+
         let items = try await fetchItems(from: url)
         return mapToBook(item: items[0])
     }
-    
+
     /// タイトルと著者名で書籍を検索する
     /// - Parameters:
     ///   - title: 書籍のタイトル
@@ -76,7 +76,7 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
     public func searchBooks(title: String, author: String?, maxResults: Int) async throws -> [Book]
     {
         let hits = max(1, min(maxResults, Self.maxHits))
-        
+
         var queryItems = [URLQueryItem(name: "hits", value: String(hits))]
         let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !trimmedTitle.isEmpty {
@@ -88,17 +88,17 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
                 queryItems.append(URLQueryItem(name: "author", value: trimmedAuthor))
             }
         }
-        
+
         guard let url = buildURL(queryItems: queryItems) else {
             throw BookMetadataGatewayError.unknown
         }
-        
+
         let items = try await fetchItems(from: url)
         return items.map(mapToBook(item:))
     }
-    
+
     // MARK: - Private Helpers
-    
+
     /// 共通クエリを付与してAPI URLを構築する
     /// - Parameter queryItems: 検索条件のクエリアイテム
     /// - Returns: 構築されたURL
@@ -112,7 +112,7 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
             ] + queryItems
         return components?.url
     }
-    
+
     /// APIを呼び出して書籍アイテムのリストを取得する
     /// - Parameter url: リクエストURL
     /// - Returns: 空でない書籍アイテムのリスト
@@ -121,41 +121,41 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
         var request = URLRequest(url: url)
         request.setValue(accessKey, forHTTPHeaderField: "accessKey")
         request.setValue(Self.origin, forHTTPHeaderField: "Origin")
-        
+
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await urlSession.data(for: request)
         } catch {
             throw BookMetadataGatewayError.networkError
         }
-        
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw BookMetadataGatewayError.unknown
         }
-        
+
         // 楽天APIは該当書籍が無い場合に404を返すため、bookNotFoundとして扱う
         if httpResponse.statusCode == 404 {
             throw BookMetadataGatewayError.bookNotFound
         }
-        
+
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw BookMetadataGatewayError.httpError(statusCode: httpResponse.statusCode)
         }
-        
+
         let booksResponse: RakutenBooksResponse
         do {
             booksResponse = try JSONDecoder().decode(RakutenBooksResponse.self, from: data)
         } catch {
             throw BookMetadataGatewayError.decodingError
         }
-        
+
         guard let items = booksResponse.items?.map(\.item), !items.isEmpty else {
             throw BookMetadataGatewayError.bookNotFound
         }
-        
+
         return items
     }
-    
+
     /// 楽天APIの書籍情報をBookドメインモデルにマッピングする
     /// - Parameter item: 楽天APIの書籍情報
     /// - Returns: Bookドメインモデル
@@ -170,10 +170,10 @@ public struct RakutenBookSearchGateway: BookSearchGatewayProtocol, Sendable {
         // 書影URL（大 → 中 を優先、小サムネイルは 小 → 中）
         let thumbnail = item.largeImageUrl?.nonEmpty ?? item.mediumImageUrl?.nonEmpty
         let smallThumbnail = item.smallImageUrl?.nonEmpty ?? item.mediumImageUrl?.nonEmpty
-        
+
         // 書籍サイズ（"絵本"等）をカテゴリとして扱う
         let categories = [item.size?.nonEmpty].compactMap { $0 }
-        
+
         return Book(
             title: item.title?.nonEmpty ?? "（タイトル未取得）",
             author: item.author?.nonEmpty,

@@ -16,7 +16,7 @@ struct ReturnListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.analytics) private var analytics
     @Environment(\.scenePhase) private var scenePhase
-    
+
     @State private var selectedBorrower: BorrowerRowDisplay?
     @State private var searchText = ""
     @State private var isSearchFocused = false
@@ -34,14 +34,14 @@ struct ReturnListContainerView: View {
     @State private var isSettingsPresented = false
     /// 家庭の画面を開いてからの所要時間の計測（開くたびに作り直す）
     @State private var familyStopwatch: FlowStopwatch?
-    
+
     /// 見本ホストでは実データを扱う設定への入口を表示しない。
     let showsSettings: Bool
-    
+
     init(showsSettings: Bool = true) {
         self.showsSettings = showsSettings
     }
-    
+
     var body: some View {
         NavigationStack {
             BorrowerListView(
@@ -105,10 +105,13 @@ struct ReturnListContainerView: View {
             .presentationSizing(.page)
         }
         // Sheet表示中のエラーはSheet側で提示する。
-        .alert(alertState.title, isPresented: Binding(
-            get: { alertState.isPresented && selectedBorrower == nil },
-            set: { alertState.isPresented = $0 }
-        )) {
+        .alert(
+            alertState.title,
+            isPresented: Binding(
+                get: { alertState.isPresented && selectedBorrower == nil },
+                set: { alertState.isPresented = $0 }
+            )
+        ) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertState.message)
@@ -117,7 +120,9 @@ struct ReturnListContainerView: View {
         .onChange(of: undoFeedback.isPresented) { wasPresented, isPresented in
             // カードがタイムアウトで消えたら一覧へ戻る（Undoで消えた場合は
             // handleUndoReturnが先に予約を取り消しているため、その場に留まる）
-            if wasPresented && !isPresented && isDismissPendingAfterReturn && selectedBorrower != nil {
+            if wasPresented && !isPresented && isDismissPendingAfterReturn
+                && selectedBorrower != nil
+            {
                 dismissFamilyAndScrollTop()
             }
         }
@@ -146,9 +151,9 @@ struct ReturnListContainerView: View {
             refreshData()
         }
     }
-    
+
     // MARK: - Private Views
-    
+
     /// 一家庭分の返却を行うSheet
     private func familyScreen(for borrower: BorrowerRowDisplay) -> some View {
         ScrollView {
@@ -170,16 +175,16 @@ struct ReturnListContainerView: View {
             .navigationBarTitleDisplayMode(.inline)
         #endif
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// 借用者1人分の内部データ（フィルタ用に非表示の図書タイトルも保持）
     private struct BorrowerEntry {
         let row: BorrowerRowDisplay
         let classGroupId: UUID
         let bookTitles: [String]
     }
-    
+
     /// 貸出がある家庭の一覧（家庭の代表＝園児の名前順・家庭で1行）
     ///
     /// 保護者名義の貸出は`userModel.familyRepresentative(of:)`で紐づく園児（家庭の代表）の
@@ -193,13 +198,13 @@ struct ReturnListContainerView: View {
         // body評価のたびに走るため、ループ内の線形検索を避けて
         // id→要素の辞書を先に1回だけ作る（200利用者・500冊規模への備え）
         let booksById = Dictionary(uniqueKeysWithValues: bookModel.books.map { ($0.id, $0) })
-        
+
         var familyLoans: [UUID: (representative: User, loans: [Loan])] = [:]
         for loan in activeLoans {
             let representative = userModel.familyRepresentative(of: loan.user.id) ?? loan.user
             familyLoans[representative.id, default: (representative, [])].loans.append(loan)
         }
-        
+
         return familyLoans.values
             .map { representative, loans in
                 BorrowerEntry(
@@ -215,7 +220,7 @@ struct ReturnListContainerView: View {
             }
             .sorted { $0.row.name < $1.row.name }
     }
-    
+
     /// 検索語（前後の空白を落としたもの）
     ///
     /// 表示の絞り込み（`filteredEntries`）と記録の判定（`resolveFindMethod`）で
@@ -224,7 +229,7 @@ struct ReturnListContainerView: View {
     private var trimmedSearchText: String {
         searchText.trimmingCharacters(in: .whitespaces)
     }
-    
+
     /// 検索・延滞フィルタを適用した借用者（組はフィルタせずインデックスでスクロール）
     private var filteredEntries: [BorrowerEntry] {
         // 200人規模でbody評価のたびに走るため、トリムは1回だけ行って閉じ込める
@@ -245,7 +250,7 @@ struct ReturnListContainerView: View {
                 return true
             }
     }
-    
+
     /// 組セクション単位の表示データ（既存の貸出管理・絵本一覧と同じ見た目の慣習）
     private var filteredSections: [BorrowerListSection] {
         let classGroupOrder = Dictionary(
@@ -253,7 +258,7 @@ struct ReturnListContainerView: View {
                 ($1.id, $0)
             }
         )
-        
+
         return Dictionary(grouping: filteredEntries) { $0.classGroupId }
             .map { classGroupId, entries in
                 BorrowerListSection(
@@ -271,7 +276,7 @@ struct ReturnListContainerView: View {
                 }
             }
     }
-    
+
     /// 家庭を見つけた方法（返却フロー開始の記録用）
     ///
     /// 検索中かどうかは`filteredEntries`と同じ判定で見分ける
@@ -290,9 +295,9 @@ struct ReturnListContainerView: View {
             .contains { $0.localizedStandardContains(query) } ?? false
         return matchesBookTitle ? .searchBookTitle : .browse
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleSelect(_ row: BorrowerRowDisplay) {
         analytics.track(
             .returnFamilyOpened(
@@ -303,7 +308,7 @@ struct ReturnListContainerView: View {
         familyStopwatch = FlowStopwatch()
         selectedBorrower = row
     }
-    
+
     /// 返却完了時：すぐには戻らず、Undoカードの表示中は家庭の画面に留まる
     /// （枠が「借りていません」に変わるのを見せて確認とする＝状態が画面に残る原則）。
     /// 家庭の本がすべて返ったときだけ、カードが消えた後に一覧へ自動で戻る。
@@ -316,7 +321,7 @@ struct ReturnListContainerView: View {
         isDismissPendingAfterReturn = !hasRemainingLoans
         idleTicket += 1
     }
-    
+
     private func dismissFamily() {
         isDismissPendingAfterReturn = false
         selectedBorrower = nil
@@ -327,7 +332,7 @@ struct ReturnListContainerView: View {
         dismissFamily()
         scrollToTopTrigger += 1
     }
-    
+
     /// 返却の取り消し（Undoカードの「元に戻す」）
     ///
     /// 取り消したらその場（家庭の画面）に留まり、枠に本が戻るのを見せる
@@ -343,7 +348,7 @@ struct ReturnListContainerView: View {
             alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
         }
     }
-    
+
     private func refreshData() {
         userModel.refreshUsers()
         loanModel.refreshLoans()
@@ -354,7 +359,9 @@ struct ReturnListContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     let loanModel = LoanModel(
@@ -363,26 +370,26 @@ struct ReturnListContainerView: View {
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     // 家庭2組と貸出をセットアップ
     let momo = ClassGroup(name: "もも組", ageGroup: AgeGroup.age(4), year: 2026)
     try! mockFactory.classGroupRepository.save(momo)
-    
+
     let sakura = try! userModel.registerUser(User(name: "いとう さくら", classGroupId: momo.id))
     let yumiko = try! userModel.registerUser(
         User(
             name: "伊藤 由美子", classGroupId: momo.id,
             userType: .guardian(relatedChildId: sakura.id)))
     let haruto = try! userModel.registerUser(User(name: "あおき はると", classGroupId: momo.id))
-    
+
     let guriToGura = try! bookModel.registerBook(Book(title: "ぐりとぐら", author: "中川李枝子"))
     let daiku = try! bookModel.registerBook(Book(title: "だいくとおにろく", author: "松居直"))
     let aomushi = try! bookModel.registerBook(Book(title: "はらぺこあおむし", author: "エリック・カール"))
-    
+
     _ = try! loanModel.lendBook(bookId: guriToGura.id, userId: sakura.id)
     _ = try! loanModel.lendBook(bookId: daiku.id, userId: yumiko.id)
     _ = try! loanModel.lendBook(bookId: aomushi.id, userId: haruto.id)
-    
+
     return ReturnListContainerView()
         .environment(userModel)
         .environment(loanModel)

@@ -10,18 +10,18 @@ import SwiftUI
 /// Presentation ViewにデータとアクションHookを提供します。
 struct UserRowContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
-    
+
     let user: User
-    
+
     var body: some View {
         UserRowView(
             user: user,
             classGroupName: getClassGroupName(for: user.classGroupId)
         )
     }
-    
+
     // MARK: - Helper Methods
-    
+
     /// 組名取得
     /// - Parameter classGroupId: 組ID
     /// - Returns: 組名
@@ -36,9 +36,9 @@ struct UserRowContainerView: View {
 #Preview {
     let mockFactory = MockRepositoryFactory()
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
-    
+
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())
-    
+
     UserRowContainerView(user: sampleUser)
         .environment(classGroupModel)
 }

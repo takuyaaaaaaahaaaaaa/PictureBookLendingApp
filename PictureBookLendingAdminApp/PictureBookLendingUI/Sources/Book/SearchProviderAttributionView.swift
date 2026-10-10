@@ -7,11 +7,11 @@ import SwiftUI
 /// データ源を使用する場合に、指定の文言とリンクを控えめに表示します。
 public struct SearchProviderAttributionView: View {
     let attribution: SearchProviderAttribution
-    
+
     public init(attribution: SearchProviderAttribution) {
         self.attribution = attribution
     }
-    
+
     public var body: some View {
         Group {
             if let url = attribution.url {

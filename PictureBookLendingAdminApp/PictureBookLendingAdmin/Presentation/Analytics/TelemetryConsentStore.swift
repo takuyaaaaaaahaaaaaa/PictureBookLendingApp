@@ -10,7 +10,7 @@ protocol TelemetryConsentStore {
 @MainActor
 struct FileTelemetryConsentStore: TelemetryConsentStore {
     let url: URL
-    
+
     init(url: URL? = nil) {
         self.url =
             url
@@ -18,12 +18,12 @@ struct FileTelemetryConsentStore: TelemetryConsentStore {
             .appendingPathComponent("TelemetryConsent", isDirectory: true)
             .appendingPathComponent("consent.json")
     }
-    
+
     func load() throws -> Data? {
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
         return try Data(contentsOf: url)
     }
-    
+
     func save(_ data: Data) throws {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(), withIntermediateDirectories: true)

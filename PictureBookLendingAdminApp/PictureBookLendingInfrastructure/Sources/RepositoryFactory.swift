@@ -10,22 +10,22 @@ public protocol RepositoryFactory {
     /// 絵本リポジトリを生成
     /// - Returns: BookRepositoryProtocolのインスタンス
     func makeBookRepository() -> BookRepositoryProtocol
-    
+
     /// 利用者リポジトリを生成
     func makeUserRepository() -> UserRepositoryProtocol
-    
+
     /// 貸出リポジトリを生成
     func makeLoanRepository() -> LoanRepositoryProtocol
-    
+
     /// クラス（組）リポジトリを生成
     func makeClassGroupRepository() -> ClassGroupRepositoryProtocol
-    
+
     /// 貸出設定リポジトリを生成
     func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol
-    
+
     /// 図書画像リポジトリを生成
     func makeImageStorageRepository() -> ImageStorageRepositoryProtocol
-    
+
     /// 書籍検索ゲートウェイを生成
     func makeBookSearchGateway() -> BookSearchGatewayProtocol
 }
@@ -38,10 +38,10 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
     /// シングルトンインスタンス
     @MainActor
     public static let shared = SwiftDataRepositoryFactory()
-    
+
     /// 共有ModelContainer
     public let modelContainer: ModelContainer
-    
+
     /// プライベートイニシャライザ（シングルトンのため）
     private init() {
         // SwiftDataモデルコンテナの設定
@@ -51,12 +51,12 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
             SwiftDataLoan.self,
             SwiftDataClassGroup.self,
         ])
-        
+
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: false
         )
-        
+
         do {
             self.modelContainer = try ModelContainer(
                 for: schema,
@@ -67,7 +67,7 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
             fatalError("ModelContainerの初期化に失敗しました")
         }
     }
-    
+
     /// テスト用のModelContainerを作成
     ///
     /// - Parameter isStoredInMemoryOnly: メモリ上のみにデータを保存するかどうか（デフォルト: true）
@@ -79,12 +79,12 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
             SwiftDataLoan.self,
             SwiftDataClassGroup.self,
         ])
-        
+
         let modelConfiguration = ModelConfiguration(
             schema: schema,
             isStoredInMemoryOnly: isStoredInMemoryOnly
         )
-        
+
         do {
             return try ModelContainer(
                 for: schema,
@@ -94,49 +94,49 @@ public final class SwiftDataRepositoryFactory: RepositoryFactory, @unchecked Sen
             fatalError("テスト用ModelContainerの初期化に失敗しました")
         }
     }
-    
+
     /// 絵本リポジトリのインスタンスを生成
     ///
     /// - Returns: BookRepositoryProtocolのインスタンス
     public func makeBookRepository() -> BookRepositoryProtocol {
         SwiftDataBookRepository(modelContext: modelContainer.mainContext)
     }
-    
+
     /// 利用者リポジトリのインスタンスを生成
     ///
     /// - Returns: UserRepositoryProtocolのインスタンス
     public func makeUserRepository() -> UserRepositoryProtocol {
         SwiftDataUserRepository(modelContext: modelContainer.mainContext)
     }
-    
+
     /// 貸出リポジトリのインスタンスを生成
     ///
     /// - Returns: LoanRepositoryProtocolのインスタンス
     public func makeLoanRepository() -> LoanRepositoryProtocol {
         SwiftDataLoanRepository(modelContext: modelContainer.mainContext)
     }
-    
+
     /// クラス（組）リポジトリのインスタンスを生成
     ///
     /// - Returns: ClassGroupRepositoryProtocolのインスタンス
     public func makeClassGroupRepository() -> ClassGroupRepositoryProtocol {
         SwiftDataClassGroupRepository(modelContext: modelContainer.mainContext)
     }
-    
+
     /// 貸出設定リポジトリのインスタンスを生成
     ///
     /// - Returns: LoanSettingsRepositoryProtocolのインスタンス
     public func makeLoanSettingsRepository() -> LoanSettingsRepositoryProtocol {
         UserDefaultsLoanSettingsRepository()
     }
-    
+
     /// 図書画像リポジトリのインスタンスを生成
     ///
     /// - Returns: ImageStorageRepositoryProtocolのインスタンス
     public func makeImageStorageRepository() -> ImageStorageRepositoryProtocol {
         LocalImageStorageRepository()
     }
-    
+
     /// 書籍検索ゲートウェイのインスタンスを生成
     ///
     /// Info.plistに埋め込まれた楽天ウェブサービスのアプリID・アクセスキー
@@ -156,7 +156,7 @@ extension Bundle {
     fileprivate var rakutenApplicationId: String {
         infoDictionary?["RakutenApplicationId"] as? String ?? ""
     }
-    
+
     /// Info.plistに埋め込まれた楽天ウェブサービスのアクセスキー
     fileprivate var rakutenAccessKey: String {
         infoDictionary?["RakutenAccessKey"] as? String ?? ""

@@ -19,7 +19,7 @@ enum AnalyticsEvent {
         case scroll
         case cover
     }
-    
+
     /// 貸出フローで最後に居た画面（離脱地点の特定用）
     enum BorrowLastStep: String {
         /// 「だれが借りますか？」（利用者選択）
@@ -27,7 +27,7 @@ enum AnalyticsEvent {
         /// 「どの枠で借りますか？」（家庭の枠確認）
         case slotSelection = "slot_selection"
     }
-    
+
     /// 貸出フローを離脱した理由
     enum AbandonReason: String {
         /// ✕ボタンで自分で閉じた
@@ -35,7 +35,7 @@ enum AnalyticsEvent {
         /// 無操作タイムアウトの置き去り復帰で閉じた
         case idleTimeout = "idle_timeout"
     }
-    
+
     /// 貸出に使った枠の種別
     enum SlotType: String {
         /// 園児の枠
@@ -43,7 +43,7 @@ enum AnalyticsEvent {
         /// 保護者の枠
         case guardian
     }
-    
+
     /// 返却フローで家庭を見つけた方法
     enum ReturnFindMethod: String {
         /// 名前の検索でヒットした
@@ -53,7 +53,7 @@ enum AnalyticsEvent {
         /// 検索せず一覧から選んだ（組チップ・スクロールを含む）
         case browse
     }
-    
+
     /// 取り消しが行われたフロー
     enum UndoFlow: String {
         /// 貸出フロー内での返却取り消し（枠の入れ替え）
@@ -61,7 +61,7 @@ enum AnalyticsEvent {
         /// 返却フローでの返却取り消し
         case returning = "return"
     }
-    
+
     enum CoverRoute: String { case ready, preparation }
     enum CoverPreparationResult: String { case ready, unavailable }
     enum CoverFailure: String { case permission, camera, recognition }
@@ -78,7 +78,9 @@ enum AnalyticsEvent {
     /// 名前一覧で名前をタップした
     case borrowUserSelected(elapsedMs: Int?)
     /// 枠タップで貸出が確定した
-    case borrowCompleted(totalMs: Int?, slotType: SlotType, isGuardianFallback: Bool, findMethod: BookFindMethod? = nil)
+    case borrowCompleted(
+        totalMs: Int?, slotType: SlotType, isGuardianFallback: Bool,
+        findMethod: BookFindMethod? = nil)
     /// 貸出シートが完了せず閉じた
     case borrowAbandoned(lastStep: BorrowLastStep, reason: AbandonReason, elapsedMs: Int?)
     /// 家庭の画面に到達したが空き枠がなかった
@@ -94,7 +96,7 @@ enum AnalyticsEvent {
     case undoPerformed(flow: UndoFlow)
     /// 返却タブ「延滞のみ」フィルタをONにした
     case overdueFilterToggled
-    
+
     /// イベント名（GA4流のsnake_case）
     var name: String {
         switch self {
@@ -116,7 +118,7 @@ enum AnalyticsEvent {
         case .overdueFilterToggled: "overdue_filter_toggled"
         }
     }
-    
+
     /// イベントのプロパティ
     ///
     /// 所要時間は計測が無効化されている（バックグラウンド滞在）ことがあり、
@@ -129,8 +131,10 @@ enum AnalyticsEvent {
         case .coverSearchFailed(let reason): ["reason": .string(reason.rawValue)]
         case .coverCandidatesShown(let count): ["candidate_count": .int(count)]
         case .coverSearchFinished(let outcome, let hadCandidates, let noCandidates):
-            ["outcome": .string(outcome.rawValue), "had_candidates": .bool(hadCandidates),
-             "no_candidates": .bool(noCandidates)]
+            [
+                "outcome": .string(outcome.rawValue), "had_candidates": .bool(hadCandidates),
+                "no_candidates": .bool(noCandidates),
+            ]
         case .borrowFlowStarted(let findMethod):
             ["find_method": .string(findMethod.rawValue)]
         case .borrowUserSelected(let elapsedMs):
@@ -140,7 +144,9 @@ enum AnalyticsEvent {
                 "slot_type": .string(slotType.rawValue),
                 "guardian_fallback": .bool(isGuardianFallback),
             ].merging(Self.duration("total_ms", totalMs)) { current, _ in current }
-                .merging(findMethod.map { ["find_method": .string($0.rawValue)] } ?? [:]) { current, _ in current }
+                .merging(findMethod.map { ["find_method": .string($0.rawValue)] } ?? [:]) {
+                    current, _ in current
+                }
         case .borrowAbandoned(let lastStep, let reason, let elapsedMs):
             [
                 "last_step": .string(lastStep.rawValue),
@@ -170,7 +176,7 @@ enum AnalyticsEvent {
             [:]
         }
     }
-    
+
     /// 所要時間のプロパティ（計測できていなければ空＝キーを含めない）
     private static func duration(_ key: String, _ milliseconds: Int?)
         -> [String: AnalyticsParamValue]

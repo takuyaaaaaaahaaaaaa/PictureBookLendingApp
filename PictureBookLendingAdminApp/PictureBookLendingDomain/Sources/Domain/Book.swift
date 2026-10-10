@@ -35,7 +35,7 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
     public var managementNumber: String?
     /// 五十音順グループ
     public var kanaGroup: KanaGroup?
-    
+
     /// 絵本モデルの初期化（完全版）
     /// - Parameters:
     ///   - id: 絵本の一意識別子（デフォルトでは新しいUUIDが生成されます）
@@ -88,14 +88,14 @@ public struct Book: Identifiable, Codable, Hashable, Sendable {
         self.categories = categories
         self.kanaGroup = kanaGroup
     }
-    
+
     /// 表示用の外部サムネイルURLを取得する
     /// ローカル保存画像を含めた解決はApp層の `resolvedImageSource` が担当する
     /// - Returns: 画像のURL（存在しない場合はnil）
     public var displayImageSource: String? {
         thumbnail ?? smallThumbnail
     }
-    
+
     /// 表示用の外部サムネイルURLを取得する（小さいサムネイル優先）
     /// ローカル保存画像を含めた解決はApp層の `resolvedSmallImageSource` が担当する
     /// - Returns: 画像のURL（存在しない場合はnil）

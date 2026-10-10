@@ -25,7 +25,7 @@ struct FamilyLoanSlotsContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
     @Environment(\.analytics) private var analytics
-    
+
     /// 返却のUndoフィードバック状態管理
     ///
     /// 文脈enumに含めない：返却タブの返却Undoだけでなく、貸出フロー内の
@@ -34,19 +34,19 @@ struct FamilyLoanSlotsContainerView: View {
     /// alertStateと違い@Binding：家庭の画面を閉じた後もUndoカードは
     /// 親レベルで生き残る必要があり、子より長寿命の状態は親所有が正しいため
     @Binding var undoFeedback: UndoFeedback
-    
+
     /// アラート状態管理（エラー表示用）
     ///
     /// エラーアラートは子の生存中にしか出ないため、子が自前で持ち自分で`.alert`を付ける
     @State private var alertState = AlertState()
     /// 空き枠なしを記録済みか（`.task`の再実行で同じ到達が二重に記録されるのを防ぐ）
     @State private var hasTrackedBlockedNoSlot = false
-    
+
     /// 家庭を特定する利用者ID（園児・保護者どちらでも可）
     let userId: UUID
     /// 文脈（返却／貸出）
     let context: FamilyLoanSlotsContext
-    
+
     var body: some View {
         FamilyLoanSlotsView(
             slots: slots,
@@ -63,9 +63,9 @@ struct FamilyLoanSlotsContainerView: View {
             trackBlockedIfNoOpenSlot()
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// `context`から導出する`FamilyLoanSlotsView`向けの文脈
     private var mode: FamilyLoanSlotsMode {
         switch context {
@@ -73,7 +73,7 @@ struct FamilyLoanSlotsContainerView: View {
         case .borrowing: .borrowing
         }
     }
-    
+
     /// 家庭の全員分の枠表示データ
     ///
     /// 現状は1人1枠（maxBooksPerUser=1の運用前提）。複数冊設定時の枠の積み方は
@@ -88,7 +88,7 @@ struct FamilyLoanSlotsContainerView: View {
             )
         }
     }
-    
+
     /// 枠を組み立てる家族
     ///
     /// 通常は利用者一覧から家庭を解決するが、利用者が削除済みで解決できない場合は
@@ -104,17 +104,17 @@ struct FamilyLoanSlotsContainerView: View {
             return userModel.getFamilyMembers(of: userId)
         }
         guard let borrower = loanModel.activeLoanBorrower(userId: userId) else { return [] }
-        
+
         return [borrower]
     }
-    
+
     private static func roleLabel(for member: User) -> String {
         switch member.userType.category {
         case .child: "園児の本"
         case .guardian: "保護者の本"
         }
     }
-    
+
     /// 枠に表示する貸出（借りていなければnil）
     ///
     /// 図書が削除済みで解決できない場合も、枠自体は貸出中として出す。
@@ -122,7 +122,7 @@ struct FamilyLoanSlotsContainerView: View {
     /// 貸出の文脈では空き枠として選べてしまい上限エラーになる
     private func loanDisplay(for member: User) -> FamilyLoanSlotLoan? {
         guard let loan = loanModel.getUserActiveLoans(userId: member.id).first else { return nil }
-        
+
         let book = bookModel.findBookById(loan.bookId)
         return FamilyLoanSlotLoan(
             bookTitle: book?.title ?? DisplayFallback.bookTitle,
@@ -131,9 +131,9 @@ struct FamilyLoanSlotsContainerView: View {
             isOverdue: loan.isOverdue(at: Date())
         )
     }
-    
+
     // MARK: - Actions
-    
+
     /// 空き枠がないまま家庭の画面に到達したことを記録する（貸出文脈のみ・画面表示ごとに1回）
     ///
     /// 「タップしたのに借りられない」体験がどれだけ起きているかを見るための記録
@@ -150,13 +150,13 @@ struct FamilyLoanSlotsContainerView: View {
         analytics.track(.borrowBlockedNoSlot)
         hasTrackedBlockedNoSlot = true
     }
-    
+
     /// 返却の実行（確認ダイアログなし・Undoカードでリカバリー）
     private func handleReturn(_ slot: FamilyLoanSlotDisplay) {
         guard let loan = loanModel.getUserActiveLoans(userId: slot.id).first else { return }
         // 延滞判定は返却前の貸出に対して行う（返却後は期限との比較の意味が変わるため）
         let wasOverdue = loan.isOverdue(at: Date())
-        
+
         do {
             let returnedLoan = try loanModel.returnBook(loanId: loan.id)
             let message =
@@ -177,7 +177,7 @@ struct FamilyLoanSlotsContainerView: View {
             alertState = .error("返却処理に失敗しました", message: error.localizedDescription)
         }
     }
-    
+
     /// 貸出文脈で空き枠が選ばれたときの動作（返却文脈では何もしない）
     private func handleBorrow(_ slot: FamilyLoanSlotDisplay) {
         if case .borrowing(let onSlotSelected) = context {
@@ -188,9 +188,11 @@ struct FamilyLoanSlotsContainerView: View {
 
 #Preview("返却文脈（実データ相当）") {
     @Previewable @State var undoFeedback = UndoFeedback()
-    
+
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
@@ -198,7 +200,7 @@ struct FamilyLoanSlotsContainerView: View {
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     // 家庭（園児＋保護者）と貸出中の本をセットアップ
     let child = try! userModel.registerUser(User(name: "いとう さくら", classGroupId: UUID()))
     let mother = try! userModel.registerUser(
@@ -207,7 +209,7 @@ struct FamilyLoanSlotsContainerView: View {
             userType: .guardian(relatedChildId: child.id)))
     let book = try! bookModel.registerBook(Book(title: "ぐりとぐら", author: "中川李枝子"))
     _ = try! loanModel.lendBook(bookId: book.id, userId: child.id)
-    
+
     return ScrollView {
         FamilyLoanSlotsContainerView(
             undoFeedback: $undoFeedback,

@@ -9,16 +9,16 @@ import SwiftData
 final public class SwiftDataClassGroup {
     /// クラスの一意識別子
     @Attribute(.unique) public var id: UUID
-    
+
     /// クラス名（例: "さくら組", "年長A組"）
     public var name: String
-    
+
     /// 年齢グループ（"0歳児", "1歳児", "大人"など）
     public var ageGroup: String
-    
+
     /// 年度（西暦）
     public var year: Int
-    
+
     /// イニシャライザ
     ///
     /// - Parameters:

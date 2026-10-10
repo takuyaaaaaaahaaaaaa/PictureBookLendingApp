@@ -14,7 +14,7 @@ public struct LoanListView<RowAction: View>: View {
     public let groupFilterOptions: [ClassGroup]
     /// 各行に表示するアクションビューを生成するクロージャ
     public let rowAction: (LoanDisplayData) -> RowAction
-    
+
     public init(
         groupedLoans: [String: [LoanDisplayData]],
         selectedGroupFilter: Binding<ClassGroup?>,
@@ -26,7 +26,7 @@ public struct LoanListView<RowAction: View>: View {
         self.groupFilterOptions = groupFilterOptions
         self.rowAction = rowAction
     }
-    
+
     public var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             filterSection
@@ -38,9 +38,9 @@ public struct LoanListView<RowAction: View>: View {
             }
         }
     }
-    
+
     // MARK: - Private Views
-    
+
     /// フィルター
     private var filterSection: some View {
         ScrollView(.horizontal) {
@@ -61,24 +61,24 @@ public struct LoanListView<RowAction: View>: View {
             .padding()
         }
     }
-    
+
     private var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "books.vertical")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            
+
             Text("貸出中の図書がありません")
                 .font(.headline)
                 .foregroundStyle(.secondary)
-            
+
             Text("図書を貸し出すと、ここに表示されます")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var loanListSection: some View {
         List {
             ForEach(sortedGroupNames, id: \.self) { groupName in
@@ -96,7 +96,7 @@ public struct LoanListView<RowAction: View>: View {
         }
         .listStyle(.sidebar)
     }
-    
+
     private var sortedGroupNames: [String] {
         groupedLoans.keys.sorted()
     }
@@ -124,7 +124,7 @@ public struct LoanDisplayData: Identifiable, Equatable {
     public let dueDate: Date
     /// 延滞中かどうか
     public let isOverdue: Bool
-    
+
     public init(
         id: UUID,
         bookId: UUID,
@@ -153,13 +153,13 @@ public struct LoanDisplayData: Identifiable, Equatable {
 /// 個別の貸出記録行View
 private struct LoanListRowView<Action: View>: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    
+
     private var rowLayout: AnyLayout {
         dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
             : AnyLayout(HStackLayout(spacing: 20))
     }
-    
+
     private var labelLayout: AnyLayout {
         dynamicTypeSize.isAccessibilitySize
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
@@ -169,7 +169,7 @@ private struct LoanListRowView<Action: View>: View {
     let loan: LoanDisplayData
     /// 行に表示するアクションビュー
     let action: Action
-    
+
     var body: some View {
         rowLayout {
             // サムネイル画像
@@ -182,12 +182,12 @@ private struct LoanListRowView<Action: View>: View {
             .frame(width: 50, height: 65)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 labelLayout {
                     Text(loan.userName)
                         .font(.headline)
-                    
+
                     if loan.isOverdue {
                         Label("延滞", systemImage: "exclamationmark.triangle.fill")
                             .font(.caption)
@@ -198,16 +198,16 @@ private struct LoanListRowView<Action: View>: View {
                             .clipShape(Capsule())
                     }
                 }
-                
+
                 Text(loan.bookTitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                
+
                 labelLayout {
                     Text("返却期限:")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
-                    
+
                     Text(
                         loan.dueDate.formatted(
                             .dateTime.year().month(.abbreviated).day().locale(
@@ -217,9 +217,9 @@ private struct LoanListRowView<Action: View>: View {
                     .foregroundStyle(loan.isOverdue ? AppColor.overdue : .secondary)
                 }
             }
-            
+
             if !dynamicTypeSize.isAccessibilitySize { Spacer() }
-            
+
             action
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -229,7 +229,7 @@ private struct LoanListRowView<Action: View>: View {
 
 #Preview {
     @Previewable @State var selectedGroupFilter: ClassGroup?
-    
+
     let sampleLoans: [String: [LoanDisplayData]] = [
         "もも組": [
             LoanDisplayData(

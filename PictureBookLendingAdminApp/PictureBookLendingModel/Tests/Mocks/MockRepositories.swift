@@ -4,7 +4,7 @@ import PictureBookLendingDomain
 /// テスト用のモックブックリポジトリ
 class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private var books: [Book] = []
-    
+
     func save(_ book: Book) throws -> Book {
         if books.contains(where: { $0.id == book.id }) {
             throw RepositoryError.saveFailed
@@ -12,15 +12,15 @@ class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
         books.append(book)
         return book
     }
-    
+
     func fetchAll() throws -> [Book] {
         return books
     }
-    
+
     func findById(_ id: UUID) throws -> Book? {
         return books.first { $0.id == id }
     }
-    
+
     func update(_ book: Book) throws -> Book {
         guard let index = books.firstIndex(where: { $0.id == book.id }) else {
             throw RepositoryError.notFound
@@ -28,7 +28,7 @@ class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
         books[index] = book
         return book
     }
-    
+
     func delete(_ id: UUID) throws -> Bool {
         guard let index = books.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
@@ -41,7 +41,7 @@ class MockBookRepository: BookRepositoryProtocol, @unchecked Sendable {
 /// テスト用のモックユーザーリポジトリ
 class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
     private var users: [User] = []
-    
+
     func save(_ user: User) throws -> User {
         if users.contains(where: { $0.id == user.id }) {
             throw RepositoryError.saveFailed
@@ -49,15 +49,15 @@ class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
         users.append(user)
         return user
     }
-    
+
     func fetchAll() throws -> [User] {
         return users
     }
-    
+
     func findById(_ id: UUID) throws -> User? {
         return users.first { $0.id == id }
     }
-    
+
     func update(_ user: User) throws -> User {
         guard let index = users.firstIndex(where: { $0.id == user.id }) else {
             throw RepositoryError.notFound
@@ -65,7 +65,7 @@ class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
         users[index] = user
         return user
     }
-    
+
     func delete(_ id: UUID) throws -> Bool {
         guard let index = users.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
@@ -78,7 +78,7 @@ class MockUserRepository: UserRepositoryProtocol, @unchecked Sendable {
 /// テスト用のモック貸出リポジトリ
 class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
     private var loans: [Loan] = []
-    
+
     func save(_ loan: Loan) throws -> Loan {
         if loans.contains(where: { $0.id == loan.id }) {
             throw RepositoryError.saveFailed
@@ -86,27 +86,27 @@ class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
         loans.append(loan)
         return loan
     }
-    
+
     func fetchAll() throws -> [Loan] {
         return loans
     }
-    
+
     func findById(_ id: UUID) throws -> Loan? {
         return loans.first { $0.id == id }
     }
-    
+
     func findByBookId(_ bookId: UUID) throws -> [Loan] {
         return loans.filter { $0.bookId == bookId }
     }
-    
+
     func findByUserId(_ userId: UUID) throws -> [Loan] {
         return loans.filter { $0.user.id == userId }
     }
-    
+
     func fetchActiveLoans() throws -> [Loan] {
         return loans.filter { $0.returnedDate == nil }
     }
-    
+
     func update(_ loan: Loan) throws -> Loan {
         guard let index = loans.firstIndex(where: { $0.id == loan.id }) else {
             throw RepositoryError.notFound
@@ -114,7 +114,7 @@ class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
         loans[index] = loan
         return loan
     }
-    
+
     func delete(_ id: UUID) throws -> Bool {
         guard let index = loans.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
@@ -127,15 +127,15 @@ class MockLoanRepository: LoanRepositoryProtocol, @unchecked Sendable {
 /// テスト用のモッククラスグループリポジトリ
 class MockClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendable {
     private var classGroups: [ClassGroup] = []
-    
+
     func fetchAll() throws -> [ClassGroup] {
         return classGroups
     }
-    
+
     func fetch(by id: UUID) throws -> ClassGroup? {
         return classGroups.first { $0.id == id }
     }
-    
+
     func save(_ classGroup: ClassGroup) throws {
         if let index = classGroups.firstIndex(where: { $0.id == classGroup.id }) {
             classGroups[index] = classGroup
@@ -143,7 +143,7 @@ class MockClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendabl
             classGroups.append(classGroup)
         }
     }
-    
+
     func delete(by id: UUID) throws {
         guard let index = classGroups.firstIndex(where: { $0.id == id }) else {
             throw RepositoryError.notFound
@@ -155,11 +155,11 @@ class MockClassGroupRepository: ClassGroupRepositoryProtocol, @unchecked Sendabl
 /// テスト用のモック貸出設定リポジトリ
 class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sendable {
     private var settings: LoanSettings = .default
-    
+
     func fetch() -> LoanSettings {
         return settings
     }
-    
+
     func save(_ newSettings: LoanSettings) throws {
         settings = newSettings
     }
@@ -168,11 +168,11 @@ class MockLoanSettingsRepository: LoanSettingsRepositoryProtocol, @unchecked Sen
 /// テスト用のモック図書画像リポジトリ
 class MockImageStorageRepository: ImageStorageRepositoryProtocol, @unchecked Sendable {
     private var images: [String: Data] = [:]
-    
+
     func loadImageData(fileName: String) -> Data? {
         images[fileName]
     }
-    
+
     func saveImageData(_ data: Data, fileName: String) throws {
         images[fileName] = data
     }

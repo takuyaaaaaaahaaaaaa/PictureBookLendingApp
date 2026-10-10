@@ -16,20 +16,20 @@ public struct SuccessFeedback: Equatable, Sendable {
     /// 連続操作時にも毎回ハプティクスが鳴り、自動消滅タイマーが新しい表示の
     /// タイミングから再スタートする。
     public private(set) var occurrenceCount: Int
-    
+
     public init() {
         self.isPresented = false
         self.message = ""
         self.occurrenceCount = 0
     }
-    
+
     /// 成功フィードバックを表示する
     public mutating func show(_ message: String) {
         self.message = message
         isPresented = true
         occurrenceCount += 1
     }
-    
+
     /// 成功フィードバックを非表示にする
     public mutating func dismiss() {
         isPresented = false
@@ -43,26 +43,26 @@ public struct SuccessFeedback: Equatable, Sendable {
 public struct SuccessFeedbackView: View {
     /// チェックアイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
-    
+
     let message: String
-    
+
     private enum Layout {
         static let spacing: CGFloat = 12
         static let padding: CGFloat = 32
         static let cornerRadius: CGFloat = 20
     }
-    
+
     public init(message: String) {
         self.message = message
     }
-    
+
     public var body: some View {
         VStack(spacing: Layout.spacing) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: iconSize))
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(AppColor.borrowActionForeground, AppColor.borrowAction)
-            
+
             Text(message)
                 .font(.title3.bold())
                 .multilineTextAlignment(.center)
@@ -86,14 +86,14 @@ private struct SuccessFeedbackModifier: ViewModifier {
     @Binding var feedback: SuccessFeedback
     /// 自動消滅までの表示時間
     let displayDuration: Duration
-    
+
     private enum Constants {
         /// 出現・消滅アニメーションの時間
         static let transitionDuration: TimeInterval = 0.3
         /// 出現時の初期スケール
         static let initialScale: CGFloat = 0.8
     }
-    
+
     func body(content: Content) -> some View {
         content
             .overlay {
@@ -131,7 +131,7 @@ extension View {
 
 #Preview {
     @Previewable @State var feedback = SuccessFeedback()
-    
+
     List {
         Button("貸出成功") {
             feedback.show("山田太郎さんに貸出しました")

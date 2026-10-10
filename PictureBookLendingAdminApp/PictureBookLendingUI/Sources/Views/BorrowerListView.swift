@@ -21,7 +21,7 @@ public struct BorrowerRowDisplay: Identifiable, Equatable, Sendable {
     /// 家庭の枠がすべて使用中かどうか（貸出フローの利用者選択で
     /// 「タップしても借りられない」ことを事前に知らせるバッジに使用）
     public let hasNoOpenSlot: Bool
-    
+
     public init(
         id: UUID, name: String, isGuardian: Bool, isOverdue: Bool, hasNoOpenSlot: Bool = false
     ) {
@@ -44,7 +44,7 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
     public let title: String
     /// この組の借用者
     public let rows: [BorrowerRowDisplay]
-    
+
     public init(id: UUID, title: String, rows: [BorrowerRowDisplay]) {
         self.id = id
         self.title = title
@@ -78,7 +78,7 @@ public struct BorrowerListView: View {
         /// タップでその組だけに絞り込む（再タップで解除）
         case filter(selection: Binding<UUID?>)
     }
-    
+
     public let sections: [BorrowerListSection]
     /// 組チップの動作モード（既定はインデックス）
     public let chipBehavior: SectionChipBehavior
@@ -91,7 +91,7 @@ public struct BorrowerListView: View {
     /// 階層へ進む場合だけ開示インジケータを表示する（Sheetを開く返却一覧では非表示）。
     public let showsDisclosureIndicator: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
-    
+
     private enum Layout {
         static let chipSpacing: CGFloat = 8
         static let rowVerticalPadding: CGFloat = 16
@@ -101,7 +101,7 @@ public struct BorrowerListView: View {
         /// 先頭行の上にあるセクション見出しが視界に入るようにする
         static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
     }
-    
+
     public init(
         sections: [BorrowerListSection],
         chipBehavior: SectionChipBehavior = .scrollIndex(scrollToTopTrigger: 0),
@@ -119,7 +119,7 @@ public struct BorrowerListView: View {
         self.showsDisclosureIndicator = showsDisclosureIndicator
         self.onSelect = onSelect
     }
-    
+
     /// 一覧に表示するセクション（フィルタモードで組が選ばれていればその組だけ）
     private var displayedSections: [BorrowerListSection] {
         if case .filter(let selection) = chipBehavior, let selectedId = selection.wrappedValue {
@@ -128,7 +128,7 @@ public struct BorrowerListView: View {
             sections
         }
     }
-    
+
     /// スクロールインデックスモードのトリガ値（`.onChange`用。フィルタモードでは実質未使用）
     private var scrollToTopTrigger: Int {
         if case .scrollIndex(let trigger) = chipBehavior {
@@ -137,7 +137,7 @@ public struct BorrowerListView: View {
             0
         }
     }
-    
+
     /// チップのハイライト判定（フィルタモードで選択中の組のときだけtrue）
     private func isChipSelected(_ section: BorrowerListSection) -> Bool {
         if case .filter(let selection) = chipBehavior {
@@ -146,12 +146,12 @@ public struct BorrowerListView: View {
             false
         }
     }
-    
+
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: Layout.chipSpacing) {
                 indexSection(proxy: proxy)
-                
+
                 // 空判定はフィルタ前の全体で行う（組の絞り込みによる一時的な空を
                 // 「利用者がいない」空状態と誤認しないため）
                 if sections.allSatisfy({ $0.rows.isEmpty }) {
@@ -173,9 +173,9 @@ public struct BorrowerListView: View {
             }
         }
     }
-    
+
     // MARK: - Private Views
-    
+
     /// 組チップ（動作は `chipBehavior` に従う）＋「延滞のみ」フィルタ
     ///
     /// チップは借用者がいる組だけ表示する（押しても何も起きないチップを作らない）。
@@ -190,9 +190,9 @@ public struct BorrowerListView: View {
                 Color.clear
                     .frame(width: 0, height: 0)
             }
-            
+
             Spacer()
-            
+
             if let isOverdueOnly {
                 Toggle("延滞のみ", isOn: isOverdueOnly)
                     .toggleStyle(.button)
@@ -203,7 +203,7 @@ public struct BorrowerListView: View {
         }
         .padding(.top, isPhone && isOverdueOnly != nil ? Layout.chipSpacing : 0)
     }
-    
+
     /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
     private func chipRow(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: Layout.chipSpacing) {
@@ -216,7 +216,7 @@ public struct BorrowerListView: View {
             }
         }
     }
-    
+
     /// 組チップのタップ処理（インデックス＝スクロール／フィルタ＝絞り込みトグル）
     private func handleChipTap(section: BorrowerListSection, proxy: ScrollViewProxy) {
         switch chipBehavior {
@@ -232,7 +232,7 @@ public struct BorrowerListView: View {
             selection.wrappedValue = selection.wrappedValue == section.id ? nil : section.id
         }
     }
-    
+
     /// 空状態（タブは隠さず理由を説明する・HIG準拠）
     private var emptyStateView: some View {
         ContentUnavailableView(
@@ -242,7 +242,7 @@ public struct BorrowerListView: View {
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var borrowerListSection: some View {
         List {
             ForEach(displayedSections) { section in
@@ -267,7 +267,7 @@ public struct BorrowerListView: View {
         }
         .scrollContentBackground(.hidden)
     }
-    
+
     /// 借用者1行：名前＋（保護者ラベル）＋（延滞マーク）
     private func borrowerRow(_ row: BorrowerRowDisplay) -> some View {
         HStack(alignment: .top, spacing: 16) {
@@ -275,7 +275,7 @@ public struct BorrowerListView: View {
                 .fill(AppColor.libraryAction)
                 .frame(width: 4, height: 40)
                 .accessibilityHidden(true)
-            
+
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: Layout.chipSpacing) {
                     borrowerName(row)
@@ -284,7 +284,7 @@ public struct BorrowerListView: View {
                     borrowerBadges(row)
                     borrowerDisclosureIndicator
                 }
-                
+
                 VStack(alignment: .leading, spacing: Layout.chipSpacing) {
                     HStack(spacing: Layout.chipSpacing) {
                         borrowerName(row)
@@ -316,7 +316,7 @@ public struct BorrowerListView: View {
         .shadow(color: .black.opacity(0.10), radius: 5, y: 2)
         .contentShape(Rectangle())
     }
-    
+
     private func borrowerName(_ row: BorrowerRowDisplay) -> some View {
         VStack(alignment: .leading, spacing: 3) {
             Text("利用者")
@@ -328,7 +328,7 @@ public struct BorrowerListView: View {
                 .foregroundStyle(AppColor.libraryTitle)
         }
     }
-    
+
     @ViewBuilder
     private var borrowerDisclosureIndicator: some View {
         if showsDisclosureIndicator {
@@ -338,7 +338,7 @@ public struct BorrowerListView: View {
                 .accessibilityHidden(true)
         }
     }
-    
+
     @ViewBuilder
     private func borrowerBadges(_ row: BorrowerRowDisplay) -> some View {
         if row.isOverdue {
@@ -351,7 +351,7 @@ public struct BorrowerListView: View {
                 .foregroundStyle(AppColor.onEmphasis)
                 .fixedSize()
         }
-        
+
         if row.hasNoOpenSlot {
             // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる。
             Label("空き枠なし", systemImage: "book.closed")
@@ -363,7 +363,7 @@ public struct BorrowerListView: View {
                 .foregroundStyle(AppColor.lentForeground)
                 .fixedSize()
         }
-        
+
         if row.isGuardian {
             Text("保護者")
                 .font(.caption)
@@ -385,10 +385,10 @@ private struct BorrowerCardButtonStyle: ButtonStyle {
 
 #Preview {
     @Previewable @State var isOverdueOnly = false
-    
+
     let momo = ClassGroup(name: "もも組", ageGroup: AgeGroup.age(4), year: 2026)
     let bara = ClassGroup(name: "ばら組", ageGroup: AgeGroup.age(5), year: 2026)
-    
+
     NavigationStack {
         BorrowerListView(
             sections: [
@@ -424,7 +424,7 @@ private struct BorrowerCardButtonStyle: ButtonStyle {
 
 #Preview("空状態") {
     @Previewable @State var isOverdueOnly = false
-    
+
     NavigationStack {
         BorrowerListView(
             sections: [],

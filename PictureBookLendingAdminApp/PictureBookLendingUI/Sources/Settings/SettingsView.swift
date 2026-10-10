@@ -27,7 +27,7 @@ public struct SettingsView: View {
     let onSelectBackupImport: () -> Void
     let onSelectPrivacy: () -> Void
     let onSelectLicenses: () -> Void
-    
+
     public init(
         classGroupCount: Int,
         userCount: Int,
@@ -75,7 +75,7 @@ public struct SettingsView: View {
         self.onSelectPrivacy = onSelectPrivacy
         self.onSelectLicenses = onSelectLicenses
     }
-    
+
     public var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -97,7 +97,7 @@ public struct SettingsView: View {
                     }
                 }
                 .accessibilityHint(highlightUserManagement ? "次の手順。ここから組と利用者を登録します" : "")
-                
+
                 SettingsMenuItem(
                     iconName: "book",
                     title: "図書管理",
@@ -116,7 +116,7 @@ public struct SettingsView: View {
                     }
                 }
                 .accessibilityHint(highlightBookManagement ? "次の手順。ここから図書を登録します" : "")
-                
+
                 SettingsMenuItem(
                     iconName: "clock",
                     title: "貸出設定",
@@ -127,14 +127,14 @@ public struct SettingsView: View {
 
                 Divider()
                     .padding(.vertical, 8)
-                
+
                 // お試し機能セクション
                 VStack(alignment: .leading, spacing: 8) {
                     Text("お試し機能")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
-                    
+
                     SettingsMenuItem(
                         iconName: "camera.viewfinder",
                         title: "表紙検索の準備",
@@ -149,7 +149,7 @@ public struct SettingsView: View {
                         action: onCreateGuardiansForAllChildren,
                         showChevron: false
                     )
-                    
+
                     SettingsMenuItem(
                         iconName: "books.vertical",
                         title: "図書一括登録",
@@ -157,7 +157,7 @@ public struct SettingsView: View {
                         action: onSelectBookBulkRegistration,
                         showChevron: false
                     )
-                    
+
                     SettingsMenuItem(
                         iconName: "graduationcap",
                         title: "進級処理",
@@ -166,17 +166,17 @@ public struct SettingsView: View {
                         showChevron: false
                     )
                 }
-                
+
                 Divider()
                     .padding(.vertical, 8)
-                
+
                 // サポートセクション
                 VStack(alignment: .leading, spacing: 8) {
                     Text("サポート")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
-                    
+
                     SettingsMenuItem(
                         iconName: "envelope",
                         title: "不具合・ご要望を報告",
@@ -184,7 +184,7 @@ public struct SettingsView: View {
                         action: onSelectFeedback,
                         showChevron: false
                     )
-                    
+
                     SettingsMenuItem(
                         iconName: "qrcode",
                         title: "保護者向け不具合・ご要望フォームのQRコード",
@@ -207,17 +207,17 @@ public struct SettingsView: View {
                         action: onSelectPrivacy
                     )
                 }
-                
+
                 Divider()
                     .padding(.vertical, 8)
-                
+
                 // データ引き継ぎセクション
                 VStack(alignment: .leading, spacing: 8) {
                     Text("データ引き継ぎ")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
-                    
+
                     SettingsMenuItem(
                         iconName: "square.and.arrow.up",
                         title: "バックアップを書き出す",
@@ -225,7 +225,7 @@ public struct SettingsView: View {
                         action: onSelectBackupExport,
                         showChevron: false
                     )
-                    
+
                     SettingsMenuItem(
                         iconName: "square.and.arrow.down",
                         title: "バックアップから復元する",
@@ -234,10 +234,10 @@ public struct SettingsView: View {
                         showChevron: false
                     )
                 }
-                
+
                 Divider()
                     .padding(.vertical, 8)
-                
+
                 SettingsMenuItem(
                     iconName: "trash.circle",
                     title: "端末初期化",
@@ -261,18 +261,18 @@ private struct SettingsMenuItem: View {
     let action: () -> Void
     let style: Style
     let showChevron: Bool
-    
+
     enum Style {
         case normal
         case destructive
-        
+
         var iconColor: Color {
             switch self {
             case .normal: return .primary
             case .destructive: return AppColor.destructive
             }
         }
-        
+
         var titleColor: Color {
             switch self {
             case .normal: return .primary
@@ -280,7 +280,7 @@ private struct SettingsMenuItem: View {
             }
         }
     }
-    
+
     init(
         iconName: String, title: String, subtitle: String, action: @escaping () -> Void,
         style: Style = .normal, showChevron: Bool = true
@@ -292,7 +292,7 @@ private struct SettingsMenuItem: View {
         self.style = style
         self.showChevron = showChevron
     }
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 20) {
