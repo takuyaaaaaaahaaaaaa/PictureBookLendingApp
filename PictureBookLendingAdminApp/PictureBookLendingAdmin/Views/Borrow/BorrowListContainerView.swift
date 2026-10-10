@@ -21,6 +21,9 @@ struct BorrowListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.analytics) private var analytics
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
@@ -129,7 +132,7 @@ struct BorrowListContainerView: View {
             }
             .navigationTitle("貸出")
             #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
             #endif
             .safeAreaInset(edge: .top) {
                 VStack(spacing: 0) {

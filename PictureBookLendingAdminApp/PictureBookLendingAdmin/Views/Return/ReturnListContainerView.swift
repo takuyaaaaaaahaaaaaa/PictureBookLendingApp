@@ -16,6 +16,9 @@ struct ReturnListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.analytics) private var analytics
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     @State private var selectedBorrower: BorrowerRowDisplay?
     @State private var searchText = ""
@@ -54,7 +57,7 @@ struct ReturnListContainerView: View {
             )
             .navigationTitle("返却")
             #if os(iOS)
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
                 .safeAreaInset(edge: .top, spacing: 0) {
                     LendingSearchBar(
                         searchText: $searchText,
