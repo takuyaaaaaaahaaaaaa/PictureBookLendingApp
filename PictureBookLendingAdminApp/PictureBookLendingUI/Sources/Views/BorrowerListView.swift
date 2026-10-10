@@ -120,14 +120,6 @@ public struct BorrowerListView: View {
         self.onSelect = onSelect
     }
 
-    private var isCompact: Bool {
-        #if os(iOS)
-            horizontalSizeClass == .compact
-        #else
-            false
-        #endif
-    }
-
     private var usesAdaptiveColumns: Bool {
         #if os(iOS)
             layoutStyle == .adaptiveColumns && horizontalSizeClass == .regular
@@ -228,7 +220,12 @@ public struct BorrowerListView: View {
                     .padding(.trailing)
             }
         }
-        .padding(.top, isCompact && isOverdueOnly != nil ? Layout.chipSpacing : 0)
+        .padding(.vertical, isOverdueOnly != nil ? Layout.chipSpacing : 0)
+        .background {
+            if isOverdueOnly != nil {
+                Rectangle().fill(.background)
+            }
+        }
     }
 
     /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
