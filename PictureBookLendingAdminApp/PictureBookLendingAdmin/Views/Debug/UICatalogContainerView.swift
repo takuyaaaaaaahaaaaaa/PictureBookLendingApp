@@ -29,6 +29,10 @@
                         AdaptiveLayoutPreview()
                     }
                     .font(.title3)
+                    NavigationLink("利用者カードを確認（共通・幅・文字サイズ）") {
+                        BorrowerCardCatalogView()
+                    }
+                    .font(.title3)
                     NavigationLink("本棚を確認（サンプル・保存なし）") {
                         BookshelfColorPreview()
                     }
