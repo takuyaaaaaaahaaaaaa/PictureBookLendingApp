@@ -137,12 +137,13 @@ struct SettingsContainerView: View {
                         Button("準備ガイド") { setupStarted = true }
                     }
                 }
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
-                        dismiss()
-                    }
-                    .disabled(isDataOperationRunning)
+            }
+            // ToolbarItemと直接配置のButtonはbuilderが異なるため、toolbarを分ける。
+            .toolbar {
+                Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
+                    dismiss()
                 }
+                .disabled(isDataOperationRunning)
             }
             .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
@@ -217,10 +218,8 @@ struct SettingsContainerView: View {
                             .navigationBarTitleDisplayMode(.inline)
                         #endif
                         .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
-                                    isParentFeedbackQRCodeSheetPresented = false
-                                }
+                            Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
+                                isParentFeedbackQRCodeSheetPresented = false
                             }
                         }
                 }

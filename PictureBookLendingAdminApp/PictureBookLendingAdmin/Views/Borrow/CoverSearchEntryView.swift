@@ -39,10 +39,8 @@ struct CoverSearchEntryView: View {
                         isSearching = true
                     })
                     .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
-                                dismiss()
-                            }
+                        Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
+                            dismiss()
                         }
                     }
                 }
