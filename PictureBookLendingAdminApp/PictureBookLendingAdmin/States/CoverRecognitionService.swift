@@ -617,7 +617,8 @@ final class CoverRecognitionService {
     private(set) var hasCheckedPreparation = false
     var preparedCount: Int { preparedBookIDs.intersection(catalogBookIDs).count }
     private var catalogBookIDs: Set<UUID> = []
-    var pendingCount: Int { catalogBookIDs.subtracting(preparedBookIDs).count }
+    var pendingBookIDs: Set<UUID> { catalogBookIDs.subtracting(preparedBookIDs) }
+    var pendingCount: Int { pendingBookIDs.count }
     func hasPreparedBook(in books: [Book], isComplete: Bool) -> Bool {
         isComplete && !preparedBookIDs.isDisjoint(with: books.map(\.id))
     }

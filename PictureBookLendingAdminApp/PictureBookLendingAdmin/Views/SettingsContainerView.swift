@@ -206,16 +206,20 @@ struct SettingsContainerView: View {
             }
             .sheet(isPresented: $isParentFeedbackQRCodeSheetPresented) {
                 NavigationStack {
-                    FeedbackQRCodeView(url: FeedbackFormLinks.parent)
-                        .navigationTitle("保護者向けフォームのQRコード")
-                        #if !os(macOS)
-                            .navigationBarTitleDisplayMode(.inline)
-                        #endif
-                        .toolbar {
-                            Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
-                                isParentFeedbackQRCodeSheetPresented = false
-                            }
+                    FeedbackQRCodeView(
+                        url: FeedbackFormLinks.parent,
+                        handoutURL: Bundle.main.url(
+                            forResource: "Ehon-Feedback-Form", withExtension: "pdf")
+                    )
+                    .navigationTitle("保護者向けフォームのご案内")
+                    #if !os(macOS)
+                        .navigationBarTitleDisplayMode(.inline)
+                    #endif
+                    .toolbar {
+                        Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
+                            isParentFeedbackQRCodeSheetPresented = false
                         }
+                    }
                 }
             }
             .alert(

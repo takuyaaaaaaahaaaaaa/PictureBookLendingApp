@@ -68,6 +68,7 @@ actor CoverPhotoProcessor {
         return image
     }
     func propose(_ data: Data) throws -> CoverPhotoProposal {
+        try Task.checkCancellation()
         let source = try image(data)
         let request = VNDetectRectanglesRequest()
         request.maximumObservations = 6
@@ -76,6 +77,7 @@ actor CoverPhotoProcessor {
         request.minimumAspectRatio = 0.25
         request.maximumAspectRatio = 1
         try? VNImageRequestHandler(cgImage: source).perform([request])
+        try Task.checkCancellation()
         let rectangle = request.results?
             .filter { $0.boundingBox.width * $0.boundingBox.height >= 0.1 }
             .max {

@@ -1,3 +1,4 @@
+import PictureBookLendingDomain
 import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
@@ -8,10 +9,25 @@ struct CoverPreparationContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @State private var service = CoverRecognitionService.shared
     @State private var isRetryRequested = false
+    @State private var editingBook: Book?
     var onSearch: (() -> Void)? = nil
 
     private var canSearch: Bool {
         service.hasPreparedBook(in: bookModel.books, isComplete: bookModel.hasLoadedBooks)
+    }
+
+    private var pendingBooks: [PendingCoverBookDisplay] {
+        guard bookModel.hasLoadedBooks, service.hasCheckedPreparation else { return [] }
+        let pendingIDs = service.pendingBookIDs
+        return bookModel.books.filter { pendingIDs.contains($0.id) }
+            .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+            .map { book in
+                let number =
+                    book.managementNumber?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                return PendingCoverBookDisplay(
+                    id: book.id, title: book.title, author: book.author ?? "",
+                    managementNumber: number.isEmpty ? "管理番号なし" : "管理番号：\(number)")
+            }
     }
 
     private var status: String {
@@ -57,7 +73,14 @@ struct CoverPreparationContainerView: View {
                     isRetryRequested = false
                 }
             },
-            onSearch: onSearch
+            onSearch: onSearch,
+            pendingBooks: pendingBooks,
+            onSelectPendingBook: { id in
+                editingBook = bookModel.books.first { $0.id == id }
+            }
         )
+        .fullScreenCover(item: $editingBook) { book in
+            BookFormContainerView(mode: .edit(book))
+        }
     }
 }

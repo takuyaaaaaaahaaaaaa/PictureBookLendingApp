@@ -67,4 +67,87 @@ struct CoverPhotoProcessorTests {
         #expect(normalized.imageOrientation == .up)
         #expect(normalized.size.width > normalized.size.height)
     }
+
+    @Test(
+        "自動検出は回転・反転後の表示座標に一致し、その後も手動調整できる",
+        arguments: [
+            UIImage.Orientation.up, .down, .left, .right,
+            .upMirrored, .downMirrored, .leftMirrored, .rightMirrored,
+        ])
+    @MainActor func detectAndReadjust(orientation: UIImage.Orientation) async throws {
+        // Original geometric artwork, deliberately off-center to expose flipped coordinates.
+        let original = syntheticPhoto(hasCover: true)
+        let oriented = UIImage(
+            cgImage: try #require(original.cgImage), scale: 1, orientation: orientation)
+        let data = try CoverPhotoProcessor.normalizedData(oriented)
+        let proposal = try await CoverPhotoProcessor.shared.propose(data)
+        #expect(proposal.detected)
+        let expected: CGRect
+        switch orientation {
+        case .up: expected = CGRect(x: 0.12, y: 0.18, width: 0.56, height: 0.62)
+        case .down: expected = CGRect(x: 0.32, y: 0.20, width: 0.56, height: 0.62)
+        case .left: expected = CGRect(x: 0.18, y: 0.32, width: 0.62, height: 0.56)
+        case .right: expected = CGRect(x: 0.20, y: 0.12, width: 0.62, height: 0.56)
+        case .upMirrored: expected = CGRect(x: 0.32, y: 0.18, width: 0.56, height: 0.62)
+        case .downMirrored: expected = CGRect(x: 0.12, y: 0.20, width: 0.56, height: 0.62)
+        case .leftMirrored: expected = CGRect(x: 0.18, y: 0.12, width: 0.62, height: 0.56)
+        case .rightMirrored: expected = CGRect(x: 0.20, y: 0.32, width: 0.62, height: 0.56)
+        @unknown default: throw CoverRecognitionError.invalidImage
+        }
+        let expectedPoints = [
+            CGPoint(x: expected.minX, y: expected.minY),
+            CGPoint(x: expected.maxX, y: expected.minY),
+            CGPoint(x: expected.maxX, y: expected.maxY),
+            CGPoint(x: expected.minX, y: expected.maxY),
+        ]
+        for (actual, expected) in zip(proposal.corners.points, expectedPoints) {
+            #expect(abs(actual.x - expected.x) < 0.02)
+            #expect(abs(actual.y - expected.y) < 0.02)
+        }
+        let topLeft = proposal.corners.points[0]
+        let adjusted = proposal.corners.moving(
+            0, to: CGPoint(x: topLeft.x + 0.03, y: topLeft.y + 0.03))
+        #expect(adjusted != proposal.corners)
+        #expect(adjusted.isValid)
+        let rendered = try await CoverPhotoProcessor.shared.render(data, corners: adjusted)
+        #expect(UIImage(data: rendered) != nil)
+    }
+
+    @Test("単色画像は未検出として返す")
+    @MainActor func noRectangle() async throws {
+        let data = try CoverPhotoProcessor.normalizedData(syntheticPhoto(hasCover: false))
+        let proposal = try await CoverPhotoProcessor.shared.propose(data)
+        #expect(!proposal.detected)
+        #expect(proposal.corners == .fullImage)
+    }
+
+    @Test("キャンセル済みの検出は結果を返さない")
+    func cancelledDetection() async {
+        let task = Task {
+            withUnsafeCurrentTask { $0?.cancel() }
+            do {
+                _ = try await CoverPhotoProcessor.shared.propose(Data())
+                Issue.record("Cancelled detection returned a result")
+            } catch is CancellationError {
+                // Cancellation is checked before decoding or running Vision.
+            } catch {
+                Issue.record("Expected cancellation, got \(error)")
+            }
+        }
+        await task.value
+    }
+
+    @MainActor private func syntheticPhoto(hasCover: Bool) -> UIImage {
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        return UIGraphicsImageRenderer(size: CGSize(width: 800, height: 1000), format: format)
+            .image { context in
+                UIColor.black.setFill()
+                context.fill(CGRect(x: 0, y: 0, width: 800, height: 1000))
+                if hasCover {
+                    UIColor.white.setFill()
+                    context.fill(CGRect(x: 96, y: 180, width: 448, height: 620))
+                }
+            }
+    }
 }
