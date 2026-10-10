@@ -27,8 +27,9 @@ enum CoverSearchPolicy {
     static let maximumCandidates = 5
 
     static func candidates(from matches: [CoverMatch]) -> [CoverMatch] {
-        Array(matches.filter { $0.similarity >= minimumSimilarity }
-            .sorted { $0.similarity > $1.similarity }.prefix(maximumCandidates))
+        Array(
+            matches.filter { $0.similarity >= minimumSimilarity }
+                .sorted { $0.similarity > $1.similarity }.prefix(maximumCandidates))
     }
 }
 
@@ -71,7 +72,11 @@ struct LiveCoverConfirmation {
     private var lastID: UUID?
     private(set) var count = 0
     mutating func accept(_ id: UUID?) -> Bool {
-        guard let id else { lastID = nil; count = 0; return false }
+        guard let id else {
+            lastID = nil
+            count = 0
+            return false
+        }
         count = lastID == id ? count + 1 : 1
         lastID = id
         return count >= 2
@@ -90,8 +95,12 @@ actor CoverRecognitionEngine {
     private let deleteFile: @Sendable (URL) throws -> Void
     private var index = CoverFeatureIndex()
     private var model: MLModel?
-    init(indexURL: URL? = nil, session: URLSession = .shared,
-         deleteFile: @escaping @Sendable (URL) throws -> Void = { try FileManager.default.removeItem(at: $0) }) {
+    init(
+        indexURL: URL? = nil, session: URLSession = .shared,
+        deleteFile: @escaping @Sendable (URL) throws -> Void = {
+            try FileManager.default.removeItem(at: $0)
+        }
+    ) {
         self.deleteFile = deleteFile
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let resolvedURL = indexURL ?? documents.appendingPathComponent("CoverFeatures-v1.json")
@@ -105,7 +114,8 @@ actor CoverRecognitionEngine {
         guard !loaded else { return }
         loaded = true
         do {
-            crops = try JSONDecoder().decode([UUID: ManualCoverCrop].self, from: Data(contentsOf: cropsURL))
+            crops = try JSONDecoder().decode(
+                [UUID: ManualCoverCrop].self, from: Data(contentsOf: cropsURL))
         } catch CocoaError.fileReadNoSuchFile {
             crops = [:]
         } catch {
@@ -113,7 +123,8 @@ actor CoverRecognitionEngine {
         }
         if let data = try? Data(contentsOf: indexURL),
             let saved = try? JSONDecoder().decode(CoverFeatureIndex.self, from: data),
-            saved.version == CoverFeatureIndex.version {
+            saved.version == CoverFeatureIndex.version
+        {
             index = saved
         }
         // Keep legacy inline bytes until metadata has been committed successfully.
@@ -130,19 +141,29 @@ actor CoverRecognitionEngine {
     }
     func removeBooks(notIn ids: Set<UUID>) throws {
         loadIfNeeded()
-        guard !unreadableCrops || ids.isEmpty else { throw CoverRecognitionError.unreadablePreparation }
+        guard !unreadableCrops || ids.isEmpty else {
+            throw CoverRecognitionError.unreadablePreparation
+        }
         catalogRevision += 1
         let previousIndex = index.entries
         index.entries = index.entries.filter { ids.contains($0.key) }
-        do { try save() } catch { index.entries = previousIndex; throw error }
+        do { try save() } catch {
+            index.entries = previousIndex
+            throw error
+        }
         let previousCrops = crops
         crops = crops.filter { ids.contains($0.key) }
-        do { try saveCrops(replacingUnreadable: ids.isEmpty) } catch { crops = previousCrops; throw error }
+        do { try saveCrops(replacingUnreadable: ids.isEmpty) } catch {
+            crops = previousCrops
+            throw error
+        }
         // Also retry orphan cleanup after an earlier partial deletion.
         let retained = Set(crops.values.map { cropImageURL($0).lastPathComponent })
         let files: [URL]
-        do { files = try FileManager.default.contentsOfDirectory(at: cropImagesURL, includingPropertiesForKeys: nil) }
-        catch CocoaError.fileReadNoSuchFile { return }
+        do {
+            files = try FileManager.default.contentsOfDirectory(
+                at: cropImagesURL, includingPropertiesForKeys: nil)
+        } catch CocoaError.fileReadNoSuchFile { return }
         var failure: Error?
         for url in files where !retained.contains(url.lastPathComponent) {
             do { try deleteFile(url) } catch { failure = error }
@@ -156,17 +177,22 @@ actor CoverRecognitionEngine {
         let retained = Set(index.entries.keys).union(crops.keys).subtracting([bookID])
         try removeBooks(notIn: retained)
     }
-    func indexedCount() -> Int { loadIfNeeded(); return index.entries.count }
+    func indexedCount() -> Int {
+        loadIfNeeded()
+        return index.entries.count
+    }
     /// Read persisted readiness before processing new books, without downloading images.
     func preparedBookIDs(in books: [Book]) -> Set<UUID> {
         loadIfNeeded()
         guard !unreadableCrops else { return [] }
-        return Set(books.compactMap { book in
-            guard let entry = index.entries[book.id], let source = imageSource(for: book),
-                entry.source == source else { return nil }
-            let manual = crops[book.id].flatMap { $0.source == source ? $0 : nil }
-            return entry.cropID == manual?.id ? book.id : nil
-        })
+        return Set(
+            books.compactMap { book in
+                guard let entry = index.entries[book.id], let source = imageSource(for: book),
+                    entry.source == source
+                else { return nil }
+                let manual = crops[book.id].flatMap { $0.source == source ? $0 : nil }
+                return entry.cropID == manual?.id ? book.id : nil
+            })
     }
 
     /// Returns false when the book has no usable image. A failed download remains retryable.
@@ -178,10 +204,14 @@ actor CoverRecognitionEngine {
         }
         let manual = crops[book.id].flatMap { $0.source == source ? $0 : nil }
         if let existing = index.entries[book.id], existing.source == source,
-            existing.cropID == manual?.id { return true }
+            existing.cropID == manual?.id
+        {
+            return true
+        }
         if let manual {
             let image = try croppedImage(try decodedImage(cropData(manual)), rect: manual.rect)
-            index.entries[book.id] = .init(source: source, vector: try encode(image),
+            index.entries[book.id] = .init(
+                source: source, vector: try encode(image),
                 croppedVector: nil, cropID: manual.id)
             try save()
             return true
@@ -189,7 +219,9 @@ actor CoverRecognitionEngine {
         // Never retain a vector for a cover that has been replaced.
         try remove(bookID: book.id)
         let revision = catalogRevision
-        guard let data = try await originalImageData(for: book, source: source) else { return false }
+        guard let data = try await originalImageData(for: book, source: source) else {
+            return false
+        }
         // Catalog replacement or deletion must win over a suspended old download.
         guard revision == catalogRevision, !Task.isCancelled else { return false }
         // A user may have saved a crop while the external image download was suspended.
@@ -207,8 +239,10 @@ actor CoverRecognitionEngine {
         imageData: Data, validBookIDs: Set<UUID>, detectCover: Bool = false
     ) throws -> [CoverMatch] {
         // Similarity is a trial threshold, not calibrated confidence.
-        CoverSearchPolicy.candidates(from:
-            try scoredMatches(imageData: imageData, validBookIDs: validBookIDs, detectCover: detectCover))
+        CoverSearchPolicy.candidates(
+            from:
+                try scoredMatches(
+                    imageData: imageData, validBookIDs: validBookIDs, detectCover: detectCover))
     }
     private func scoredMatches(
         imageData: Data, validBookIDs: Set<UUID>, detectCover: Bool
@@ -218,7 +252,9 @@ actor CoverRecognitionEngine {
         var queries = [try encode(image)]
         if detectCover { queries.append(try encode(rectifiedCover(in: image) ?? image)) }
         return index.entries.compactMap { id, entry -> CoverMatch? in
-            guard validBookIDs.contains(id), entry.vector.count == queries[0].count else { return nil }
+            guard validBookIDs.contains(id), entry.vector.count == queries[0].count else {
+                return nil
+            }
             let stored = [entry.vector] + [entry.croppedVector].compactMap { $0 }
             let similarities = queries.flatMap { query in
                 stored.filter { $0.count == query.count }.map { Self.dot(query, $0) }
@@ -256,10 +292,13 @@ actor CoverRecognitionEngine {
         return book.displayImageSource
     }
     private func saveCrops(replacingUnreadable: Bool = false) throws {
-        guard !unreadableCrops || replacingUnreadable else { throw CoverRecognitionError.unreadablePreparation }
+        guard !unreadableCrops || replacingUnreadable else {
+            throw CoverRecognitionError.unreadablePreparation
+        }
         var metadata = crops
         if crops.values.contains(where: { $0.imageData != nil }) {
-            try FileManager.default.createDirectory(at: cropImagesURL, withIntermediateDirectories: true)
+            try FileManager.default.createDirectory(
+                at: cropImagesURL, withIntermediateDirectories: true)
         }
         for (id, crop) in crops where crop.imageData != nil {
             try crop.imageData?.write(to: cropImageURL(crop), options: .atomic)
@@ -272,17 +311,23 @@ actor CoverRecognitionEngine {
     private func croppedImage(_ image: CGImage, rect: CGRect) throws -> CGImage {
         guard rect.minX.isFinite, rect.minY.isFinite, rect.width.isFinite, rect.height.isFinite,
             rect.minX >= 0, rect.minY >= 0, rect.maxX <= 1.000001, rect.maxY <= 1.000001,
-            rect.width >= 0.049999, rect.height >= 0.049999 else { throw CoverRecognitionError.invalidImage }
-        let pixels = CGRect(x: rect.minX * Double(image.width), y: rect.minY * Double(image.height),
+            rect.width >= 0.049999, rect.height >= 0.049999
+        else { throw CoverRecognitionError.invalidImage }
+        let pixels = CGRect(
+            x: rect.minX * Double(image.width), y: rect.minY * Double(image.height),
             width: rect.width * Double(image.width), height: rect.height * Double(image.height))
-        guard let crop = image.cropping(to: pixels.integral) else { throw CoverRecognitionError.invalidImage }
+        guard let crop = image.cropping(to: pixels.integral) else {
+            throw CoverRecognitionError.invalidImage
+        }
         return crop
     }
     func approveRegisteredPhoto(_ book: Book) throws {
         guard let fileName = book.localImageFileName,
-              let data = ImageStorageUtility.readImageData(fileName: fileName),
-              let source = imageSource(for: book) else { throw CoverRecognitionError.invalidImage }
-        try saveManualCrop(book, imageData: data, source: source,
+            let data = ImageStorageUtility.readImageData(fileName: fileName),
+            let source = imageSource(for: book)
+        else { throw CoverRecognitionError.invalidImage }
+        try saveManualCrop(
+            book, imageData: data, source: source,
             rect: CGRect(x: 0, y: 0, width: 1, height: 1))
     }
     func saveManualCrop(_ book: Book, imageData: Data, source: String, rect: CGRect) throws {
@@ -301,8 +346,12 @@ actor CoverRecognitionEngine {
         if let previous { try? FileManager.default.removeItem(at: cropImageURL(previous)) }
         // Revision mismatch causes prepare() to rebuild if the index write is interrupted.
         let oldEntry = index.entries[book.id]
-        index.entries[book.id] = .init(source: source, vector: vector, croppedVector: nil, cropID: crop.id)
-        do { try save() } catch { index.entries[book.id] = oldEntry; throw error }
+        index.entries[book.id] = .init(
+            source: source, vector: vector, croppedVector: nil, cropID: crop.id)
+        do { try save() } catch {
+            index.entries[book.id] = oldEntry
+            throw error
+        }
     }
     /// Transfer user-selected preparation, not regenerable feature vectors.
     func exportPreparation(books: [Book], bookImages: [String: Data]) throws -> Data {
@@ -314,18 +363,23 @@ actor CoverRecognitionEngine {
             // Export only the crop corresponding to the image in this exact snapshot.
             if let fileName = book.localImageFileName {
                 guard let archivedImage = bookImages[fileName],
-                    ImageStorageUtility.readImageData(fileName: fileName) == archivedImage else { continue }
+                    ImageStorageUtility.readImageData(fileName: fileName) == archivedImage
+                else { continue }
             }
             var snapshot = crop
             snapshot.imageData = try cropData(crop)
             exported[book.id] = snapshot
         }
-        return try JSONEncoder().encode(CoverPreparationArchive(version: CoverPreparationArchive.currentVersion, crops: exported))
+        return try JSONEncoder().encode(
+            CoverPreparationArchive(
+                version: CoverPreparationArchive.currentVersion, crops: exported))
     }
     private func decodedPreparation(_ data: Data?) throws -> [UUID: ManualCoverCrop] {
         guard let data else { return [:] }
         let archive = try JSONDecoder().decode(CoverPreparationArchive.self, from: data)
-        guard archive.version == CoverPreparationArchive.currentVersion else { throw CoverRecognitionError.invalidImage }
+        guard archive.version == CoverPreparationArchive.currentVersion else {
+            throw CoverRecognitionError.invalidImage
+        }
         for crop in archive.crops.values {
             guard let pixels = crop.imageData else { throw CoverRecognitionError.invalidImage }
             _ = try croppedImage(try decodedImage(pixels), rect: crop.rect)
@@ -338,7 +392,9 @@ actor CoverRecognitionEngine {
         loadIfNeeded()
         var replacement: [UUID: ManualCoverCrop] = [:]
         for book in books {
-            guard let crop = restored[book.id], let source = imageSource(for: book) else { continue }
+            guard let crop = restored[book.id], let source = imageSource(for: book) else {
+                continue
+            }
             let sourceMatches: Bool
             if let fileName = book.localImageFileName {
                 sourceMatches = crop.source.hasPrefix("local:\(fileName):")
@@ -347,18 +403,24 @@ actor CoverRecognitionEngine {
             }
             guard sourceMatches else { continue }
             // Restored files have new modification times, while their approved pixels remain unchanged.
-            replacement[book.id] = ManualCoverCrop(id: UUID(), source: source,
+            replacement[book.id] = ManualCoverCrop(
+                id: UUID(), source: source,
                 imageData: crop.imageData, rect: crop.rect)
         }
         catalogRevision += 1
         let previousIndex = index
         index = CoverFeatureIndex()
-        do { try save() } catch { index = previousIndex; throw error }
+        do { try save() } catch {
+            index = previousIndex
+            throw error
+        }
         let previous = crops
         crops = replacement
         do { try saveCrops(replacingUnreadable: true) } catch {
             crops = previous
-            for crop in replacement.values { try? FileManager.default.removeItem(at: cropImageURL(crop)) }
+            for crop in replacement.values {
+                try? FileManager.default.removeItem(at: cropImageURL(crop))
+            }
             throw error
         }
         for crop in previous.values { try? FileManager.default.removeItem(at: cropImageURL(crop)) }
@@ -471,7 +533,9 @@ actor CoverRecognitionEngine {
         /// Read-only reconstruction: old indexes contain vectors, not the input pixels.
         func inspectRegistration(_ book: Book) async throws -> CoverRegistrationInspection {
             loadIfNeeded()
-            guard let source = imageSource(for: book) else { throw CoverRecognitionError.invalidImage }
+            guard let source = imageSource(for: book) else {
+                throw CoverRecognitionError.invalidImage
+            }
             let manual = crops[book.id].flatMap { $0.source == source ? $0 : nil }
             let data: Data
             if let manual {
@@ -483,7 +547,8 @@ actor CoverRecognitionEngine {
             }
             let image = try decodedImage(data)
             // External product covers have always used the original-image path only.
-            let rectified = try manual.map { try croppedImage(image, rect: $0.rect) }
+            let rectified =
+                try manual.map { try croppedImage(image, rect: $0.rect) }
                 ?? (book.localImageFileName != nil ? rectifiedCover(in: image) : nil)
             let stored = index.entries[book.id]
             let originalVector = try encode(image)
@@ -509,8 +574,10 @@ actor CoverRecognitionEngine {
                 originalModelInput: modelInput(image),
                 rectifiedImage: rectified.map { try png($0) },
                 rectifiedModelInput: hasRectifiedSide ? modelInput(rectified ?? image) : nil,
-                originalSimilarity: manual == nil ? similarity(originalVector, stored?.vector) : nil,
-                rectifiedSimilarity: similarity(rectifiedVector, manual != nil ? stored?.vector : stored?.croppedVector),
+                originalSimilarity: manual == nil
+                    ? similarity(originalVector, stored?.vector) : nil,
+                rectifiedSimilarity: similarity(
+                    rectifiedVector, manual != nil ? stored?.vector : stored?.croppedVector),
                 sourceMatchesIndex: stored?.source == source,
                 isRemote: book.localImageFileName == nil,
                 sourceIdentity: source,
@@ -571,11 +638,11 @@ final class CoverRecognitionService {
             finishPreparation(generation: generation)
         }
         preparationError = nil
-        do { try await engine.removeBooks(notIn: Set(books.map(\.id))) }
-        catch {
+        do { try await engine.removeBooks(notIn: Set(books.map(\.id))) } catch {
             await refreshReadiness(books: books, generation: generation)
             guard generation == preparationGeneration else { return }
-            preparationError = ((error as? CoverRecognitionError) ?? .cleanupFailed).localizedDescription
+            preparationError =
+                ((error as? CoverRecognitionError) ?? .cleanupFailed).localizedDescription
             return
         }
         await refreshReadiness(books: books, generation: generation)
@@ -627,7 +694,9 @@ final class CoverRecognitionService {
         } catch {
             let failure = (error as? CoverRecognitionError) ?? .cleanupFailed
             await refreshReadiness(books: books, generation: generation)
-            if generation == preparationGeneration { preparationError = failure.localizedDescription }
+            if generation == preparationGeneration {
+                preparationError = failure.localizedDescription
+            }
             throw failure
         }
     }
@@ -684,16 +753,16 @@ final class CoverRecognitionService {
 }
 
 #if DEBUG
-struct CoverRegistrationInspection: Sendable {
-    let sourceImage: Data
-    let originalModelInput: Data
-    let rectifiedImage: Data?
-    let rectifiedModelInput: Data?
-    let originalSimilarity: Float?
-    let rectifiedSimilarity: Float?
-    let sourceMatchesIndex: Bool
-    let isRemote: Bool
-    let sourceIdentity: String
-    let manualRect: CGRect?
-}
+    struct CoverRegistrationInspection: Sendable {
+        let sourceImage: Data
+        let originalModelInput: Data
+        let rectifiedImage: Data?
+        let rectifiedModelInput: Data?
+        let originalSimilarity: Float?
+        let rectifiedSimilarity: Float?
+        let sourceMatchesIndex: Bool
+        let isRemote: Bool
+        let sourceIdentity: String
+        let manualRect: CGRect?
+    }
 #endif

@@ -66,7 +66,9 @@ xcodebuild -scheme PictureBookLendingAdmin test -project PictureBookLendingAdmin
 (cd PictureBookLendingAdminApp/PictureBookLendingInfrastructure && swift test)
 
 # コードフォーマット（swift-format）- プロジェクトルートから
-(cd PictureBookLendingAdminApp && swift format --configuration .swift-format --in-place --recursive **/*.swift)
+python3 scripts/swift_style.py --fix
+python3 scripts/swift_style.py
+python3 scripts/check_build_configuration.py
 
 # 特定モジュールのみフォーマットとリント（ルートディレクトリから）
 # 修正範囲が限定的な場合は、該当モジュールのみ処理することを推奨
@@ -86,6 +88,8 @@ xcodebuild -scheme PictureBookLendingAdmin test -project PictureBookLendingAdmin
 # サブシェル使用により、元のディレクトリ位置を維持
 # 各コマンドは ( ) 内で実行され、完了後に元の位置に戻る
 ```
+
+整形・警告・App/Widgetビルド番号の運用は `docs/BUILD_HYGIENE.md` を参照。
 
 ### 技術スタック
 

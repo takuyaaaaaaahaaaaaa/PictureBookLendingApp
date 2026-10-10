@@ -22,7 +22,7 @@ public struct RowActionButton: View {
     let hasSubtleDepth: Bool
     let font: Font
     let onTap: () -> Void
-    
+
     public init(
         title: String = "貸出",
         systemImage: String = "plus.circle",
@@ -42,12 +42,12 @@ public struct RowActionButton: View {
         self.font = font
         self.onTap = onTap
     }
-    
+
     private enum Layout {
         /// 片手親指で押せるタップ領域の最小高さ（DESIGN_PRINCIPLES.md §5準拠）
         static let minTapTargetHeight: CGFloat = 44
     }
-    
+
     public var body: some View {
         Button(action: onTap) {
             HStack(spacing: 6) {
@@ -63,7 +63,7 @@ public struct RowActionButton: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     @ViewBuilder
     private var buttonBackground: some View {
         let shape = RoundedRectangle(cornerRadius: 8)
@@ -106,7 +106,7 @@ public struct RowActionButton: View {
                 }
         }
     }
-    
+
 }
 
 #Preview("借りる・ライト") {
@@ -115,7 +115,7 @@ public struct RowActionButton: View {
             title: "借りる", tint: AppColor.borrowAction, foreground: AppColor.borrowActionForeground,
             hasSubtleDepth: true, onTap: {}
         )
-        
+
         // リスト内での表示例
         List {
             HStack {
@@ -126,9 +126,9 @@ public struct RowActionButton: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 RowActionButton(
                     title: "借りる", tint: AppColor.borrowAction,
                     foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,

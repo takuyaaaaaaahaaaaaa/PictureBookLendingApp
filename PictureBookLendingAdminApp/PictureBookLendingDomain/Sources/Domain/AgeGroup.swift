@@ -8,7 +8,7 @@ import Foundation
 public enum AgeGroup: Codable, Hashable, Sendable {
     case age(Int)  // 0-5歳児
     case other  // 大人・その他
-    
+
     /// SwiftDataでの保存用にString形式で表現
     public var rawValue: String {
         switch self {
@@ -16,7 +16,7 @@ public enum AgeGroup: Codable, Hashable, Sendable {
         case .other: return "大人"
         }
     }
-    
+
     /// String形式からAgeGroupを作成
     public init?(rawValue: String) {
         if rawValue == "大人" {
@@ -32,17 +32,17 @@ public enum AgeGroup: Codable, Hashable, Sendable {
             return nil
         }
     }
-    
+
     /// 表示用のテキスト
     public var displayText: String {
         return rawValue
     }
-    
+
     /// 年齢順でソートされた全ケース
     public static var sortedCases: [AgeGroup] {
         return [.age(0), .age(1), .age(2), .age(3), .age(4), .age(5), .other]
     }
-    
+
     /// 次の年齢グループを取得（進級処理用）
     /// - Returns: 進級後の年齢グループ。5歳児の場合はnil（卒業）
     public func nextAgeGroup() -> AgeGroup? {
@@ -53,7 +53,7 @@ public enum AgeGroup: Codable, Hashable, Sendable {
             return .other  // 変更なし
         }
     }
-    
+
     /// 進級可能かどうかを判定
     /// - Returns: 進級可能な場合true、卒業の場合false
     public var canPromote: Bool {
@@ -71,7 +71,7 @@ extension AgeGroup: Comparable {
         case .other: return Int.max  // 最後尾
         }
     }
-    
+
     public static func < (lhs: AgeGroup, rhs: AgeGroup) -> Bool {
         return lhs.sortKey < rhs.sortKey
     }

@@ -5,12 +5,12 @@ import SwiftUI
 public struct ManagementNumberBadge: View {
     let text: String
     let style: Style
-    
+
     public enum Style {
         case primary  // 通常の青色
         case success  // 成功時の緑色
         case secondary  // セカンダリ色
-        
+
         var backgroundColor: Color {
             switch self {
             case .primary:
@@ -21,7 +21,7 @@ public struct ManagementNumberBadge: View {
                 return .gray.opacity(0.1)
             }
         }
-        
+
         var foregroundColor: Color {
             switch self {
             case .primary:
@@ -33,12 +33,12 @@ public struct ManagementNumberBadge: View {
             }
         }
     }
-    
+
     public init(text: String, style: Style = .primary) {
         self.text = text
         self.style = style
     }
-    
+
     public var body: some View {
         Text(text)
             .font(.caption)

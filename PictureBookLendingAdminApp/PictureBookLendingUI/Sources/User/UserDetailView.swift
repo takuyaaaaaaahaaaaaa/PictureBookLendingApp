@@ -17,7 +17,7 @@ public struct UserDetailView: View {
     let getClassGroupName: (UUID) -> String
     let getRelatedUserName: (UUID) -> String
     let onEdit: () -> Void
-    
+
     public init(
         userName: Binding<String>,
         userClassGroupId: Binding<UUID>,
@@ -43,26 +43,26 @@ public struct UserDetailView: View {
         self.getRelatedUserName = getRelatedUserName
         self.onEdit = onEdit
     }
-    
+
     public var body: some View {
         List {
             Section("基本情報") {
                 EditableDetailRow(label: "名前", value: $userName)
-                
+
                 EditableDetailRowWithSelection(
                     label: "グループ",
                     selectedValue: $userClassGroupId,
                     options: availableClassGroups.map(\.id),
                     displayText: getClassGroupName
                 )
-                
+
                 // 利用者種別表示
                 HStack {
                     Text("利用者種別")
                     Spacer()
                     HStack {
                         Text(userType.displayName)
-                        
+
                         if case .guardian(let relatedChildId) = userType {
                             Text("(\(getRelatedUserName(relatedChildId))の保護者)")
                                 .foregroundStyle(.secondary)
@@ -70,10 +70,10 @@ public struct UserDetailView: View {
                         }
                     }
                 }
-                
+
                 DetailRow(label: "管理ID", value: userId.uuidString)
             }
-            
+
             Section("貸出状況") {
                 if activeLoansCount > 0 {
                     Label("現在 \(activeLoansCount) 冊借りています", systemImage: "book.closed")
@@ -83,7 +83,7 @@ public struct UserDetailView: View {
                         .foregroundStyle(AppColor.available)
                 }
             }
-            
+
             Section("貸出履歴") {
                 if loanHistory.isEmpty {
                     Text("貸出履歴はありません")
@@ -106,7 +106,7 @@ public struct UserDetailView: View {
 public struct UserLoanHistoryRow: View {
     let loan: Loan
     let getBookTitle: (UUID) -> String
-    
+
     public init(
         loan: Loan,
         getBookTitle: @escaping (UUID) -> String
@@ -114,7 +114,7 @@ public struct UserLoanHistoryRow: View {
         self.loan = loan
         self.getBookTitle = getBookTitle
     }
-    
+
     public var body: some View {
         VStack(alignment: .leading) {
             HStack {
@@ -127,12 +127,12 @@ public struct UserLoanHistoryRow: View {
                 )
                 .foregroundStyle(loan.isReturned ? AppColor.returned : AppColor.lent)
             }
-            
+
             Text(
                 "貸出日: \(loan.loanDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
             )
             .font(.caption)
-            
+
             if loan.isReturned, let returnedDate = loan.returnedDate {
                 Text(
                     "返却日: \(returnedDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
@@ -148,7 +148,7 @@ public struct UserLoanHistoryRow: View {
         }
         .padding(.vertical, 4)
     }
-    
+
     // 返却期限切れかどうかのチェック
     private var isOverdue: Bool {
         !loan.isReturned && Date() > loan.dueDate
@@ -158,7 +158,7 @@ public struct UserLoanHistoryRow: View {
 #Preview {
     @Previewable @State var userName = "山田太郎"
     @Previewable @State var userClassGroupId = UUID()
-    
+
     let sampleUserId = UUID()
     let sampleClassGroups = [
         ClassGroup(id: userClassGroupId, name: "きく", ageGroup: AgeGroup.age(3), year: 2025),
@@ -172,7 +172,7 @@ public struct UserLoanHistoryRow: View {
         loanDate: Date(),
         dueDate: Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
     )
-    
+
     NavigationStack {
         UserDetailView(
             userName: $userName,

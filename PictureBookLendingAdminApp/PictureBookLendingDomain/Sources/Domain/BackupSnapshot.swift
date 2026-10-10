@@ -4,10 +4,10 @@ import Foundation
 ///
 /// 図書・利用者・組・貸出記録・貸出設定・図書画像をまとめて1つにしたデータの塊です。
 /// 端末変更やApple ID切替に伴うデータ引き継ぎ（エクスポート/インポート）に使用します。
-public struct BackupSnapshot: Codable {
+public struct BackupSnapshot: Codable, Sendable {
     /// このスナップショット形式の現在のバージョン
     public static let currentSchemaVersion = 2
-    
+
     /// スキーマバージョン（将来の互換性チェック用）
     public var schemaVersion: Int
     /// 作成日時
@@ -27,7 +27,7 @@ public struct BackupSnapshot: Codable {
     /// Optional, versioned cover preparation archive. Derived feature vectors are not backed up.
     /// Nil in older backups; the app layer owns its image/rect encoding.
     public var coverSearchPreparation: Data?
-    
+
     /// イニシャライザ
     /// - Parameters:
     ///   - schemaVersion: スキーマバージョン（デフォルトは現在のバージョン）

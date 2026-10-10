@@ -10,12 +10,12 @@ import SwiftUI
 private struct KioskIdleTimeoutModifier: ViewModifier {
     /// 無操作タイムアウトの秒数
     static let timeout: Duration = .seconds(15)
-    
+
     /// 操作のたびに変える値（変わるたびにタイマーが再起動する）
     let ticket: Int
     /// タイムアウト時の処理（置き去り復帰等）
     let onTimeout: () -> Void
-    
+
     func body(content: Content) -> some View {
         content.task(id: ticket) {
             try? await Task.sleep(for: Self.timeout)

@@ -3,7 +3,7 @@
     import PictureBookLendingInfrastructure
     import PictureBookLendingModel
     import SwiftUI
-    
+
     /// 本番ContainerのState寿命を、メモリ内の見本だけで確認する。
     /// 幅は親のframeだけで変え、Containerのidentityとモデルを維持する。
     struct ContainerStatePreview: View {
@@ -12,7 +12,7 @@
         @State private var width: CGFloat = 375
         @State private var screen = Screen.books
         @State private var borrowClosed = false
-        
+
         private enum Screen: String, CaseIterable, Identifiable {
             case books = "図書"
             case form = "利用者入力"
@@ -21,7 +21,7 @@
             case returns = "返却詳細"
             var id: String { rawValue }
         }
-        
+
         var body: some View {
             VStack(spacing: 8) {
                 Button("確認を終了") { dismiss() }
@@ -59,7 +59,7 @@
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: screen) { _, _ in borrowClosed = false }
         }
-        
+
         @ViewBuilder
         private var screenContent: some View {
             switch screen {
@@ -83,7 +83,7 @@
             }
         }
     }
-    
+
     @MainActor
     private final class ContainerPreviewFixtures {
         let books: BookModel
@@ -94,7 +94,7 @@
         let availableBook: Book
         let defaults: UserDefaults
         private let defaultsName: String
-        
+
         init() {
             let factory = MockRepositoryFactory()
             let group = ClassGroup(name: "見本の組", ageGroup: .age(4), year: 2026)
@@ -113,7 +113,9 @@
                 Loan(
                     bookId: sampleBooks[0].id, user: sampleUsers[0], loanDate: .now,
                     dueDate: .now.addingTimeInterval(7 * 24 * 60 * 60)))
-            books = BookModel(repository: factory.bookRepository, imageStorageRepository: factory.imageStorageRepository)
+            books = BookModel(
+                repository: factory.bookRepository,
+                imageStorageRepository: factory.imageStorageRepository)
             users = UserModel(repository: factory.userRepository)
             groups = ClassGroupModel(repository: factory.classGroupRepository)
             loans = LoanModel(
@@ -123,7 +125,7 @@
             defaultsName = "ContainerStatePreview.\(UUID().uuidString)"
             defaults = UserDefaults(suiteName: defaultsName)!
         }
-        
+
         deinit { defaults.removePersistentDomain(forName: defaultsName) }
     }
 #endif

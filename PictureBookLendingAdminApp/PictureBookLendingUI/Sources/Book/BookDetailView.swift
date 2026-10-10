@@ -17,7 +17,7 @@ public struct BookDetailView<ActionButton: View>: View {
     let loanHistory: [Loan]
     /// 貸出・返却などのアクションボタンを生成するクロージャ
     let actionButton: () -> ActionButton
-    
+
     public init(
         book: Binding<Book>,
         imageURL: String? = nil,
@@ -31,13 +31,13 @@ public struct BookDetailView<ActionButton: View>: View {
         self.loanHistory = loanHistory
         self.actionButton = actionButton
     }
-    
+
     public var body: some View {
         List {
             Section("サムネイル") {
                 HStack {
                     Spacer()
-                    
+
                     BookImageView(imageURL: imageURL) {
                         Image(systemName: "book.closed")
                             .foregroundStyle(.secondary)
@@ -47,12 +47,12 @@ public struct BookDetailView<ActionButton: View>: View {
                     .frame(width: 120, height: 160)
                     .background(.regularMaterial)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    
+
                     Spacer()
                 }
                 .padding(.vertical, 8)
             }
-            
+
             Section("基本情報") {
                 EditableDetailRow(label: "タイトル", value: $book.title)
                 EditableDetailRow(
@@ -94,7 +94,7 @@ public struct BookDetailView<ActionButton: View>: View {
                     }
                 }
             }
-            
+
             if let description = book.description, !description.isEmpty {
                 Section("内容説明") {
                     Text(description)
@@ -102,16 +102,16 @@ public struct BookDetailView<ActionButton: View>: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             Section("貸出状況") {
                 HStack {
                     BookStatusView(isCurrentlyLent: currentLoan != nil)
-                    
+
                     Spacer()
-                    
+
                     actionButton()
                 }
-                
+
                 if let loan = currentLoan {
                     HStack {
                         Text("返却予定日")
@@ -124,7 +124,7 @@ public struct BookDetailView<ActionButton: View>: View {
                     }
                 }
             }
-            
+
             Section("貸出履歴") {
                 if loanHistory.isEmpty {
                     Text("まだ貸出履歴がありません")
@@ -147,7 +147,7 @@ public struct BookDetailView<ActionButton: View>: View {
                                         .foregroundStyle(AppColor.lent)
                                 }
                             }
-                            
+
                             HStack {
                                 Text(
                                     "貸出日: \(loan.loanDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
@@ -155,7 +155,7 @@ public struct BookDetailView<ActionButton: View>: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             }
-                            
+
                             HStack {
                                 if let returnedDate = loan.returnedDate {
                                     Text(
@@ -196,7 +196,7 @@ public struct BookDetailView<ActionButton: View>: View {
         categories: ["絵本", "しかけ絵本"],
         managementNumber: "PB-001"
     )
-    
+
     NavigationStack {
         BookDetailView(
             book: $sampleBook,

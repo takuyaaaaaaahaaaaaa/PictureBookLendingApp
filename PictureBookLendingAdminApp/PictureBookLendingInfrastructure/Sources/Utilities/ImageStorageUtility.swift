@@ -6,10 +6,10 @@ import Foundation
 
 /// 画像のローカル保存・読み込みを管理するユーティリティ
 public enum ImageStorageUtility {
-    
+
     /// 画像保存用のディレクトリ名
     private static let imageDirectoryName = "BookImages"
-    
+
     /// 画像保存用ディレクトリのURL
     private static var imageDirectoryURL: URL {
         let documentsURL = FileManager.default.urls(
@@ -17,7 +17,7 @@ public enum ImageStorageUtility {
         ).first!
         return documentsURL.appendingPathComponent(imageDirectoryName)
     }
-    
+
     /// ローカル保存された画像ファイル名から表示用のファイルURLを取得する
     /// パスは呼び出し時に動的に構築する（アップデート時のコンテナID変更に対応）
     /// - Parameter fileName: 保存済み画像のファイル名（拡張子付き）
@@ -25,7 +25,7 @@ public enum ImageStorageUtility {
     public static func imageURL(for fileName: String) -> URL {
         imageDirectoryURL.appendingPathComponent(fileName)
     }
-    
+
     /// 画像保存用ディレクトリを作成
     private static func createImageDirectoryIfNeeded() throws {
         let imageDirectory = imageDirectoryURL
@@ -37,7 +37,7 @@ public enum ImageStorageUtility {
             )
         }
     }
-    
+
     /// 画像データをそのまま保存する（バックアップ復元用）
     /// UIImageを経由せず、既に圧縮済みのバイナリデータを直接書き込みます。
     /// - Parameters:
@@ -48,16 +48,16 @@ public enum ImageStorageUtility {
         try createImageDirectoryIfNeeded()
         try data.write(to: imageDirectoryURL.appendingPathComponent(fileName))
     }
-    
+
     /// 画像ファイルをDataとして読み込む（バックアップ書き出し用）
     /// - Parameter fileName: 画像ファイル名
     /// - Returns: 画像データ（存在しない場合はnil）
     public static func readImageData(fileName: String) -> Data? {
         try? Data(contentsOf: imageDirectoryURL.appendingPathComponent(fileName))
     }
-    
+
     #if canImport(UIKit)
-        
+
         /// 画像を保存してファイル名を返す
         /// - Parameters:
         ///   - image: 保存する画像
@@ -68,20 +68,20 @@ public enum ImageStorageUtility {
             -> String
         {
             try createImageDirectoryIfNeeded()
-            
+
             guard let imageData = image.jpegData(compressionQuality: 0.8) else {
                 throw ImageStorageError.imageCompressionFailed
             }
-            
+
             let fullFileName = "\(fileName).jpg"
             let fileURL = imageDirectoryURL.appendingPathComponent(fullFileName)
-            
+
             try imageData.write(to: fileURL)
-            
+
             // ファイル名のみを返す（アップデート時のコンテナID変更に対応）
             return fullFileName
         }
-        
+
         /// ローカルパスまたはファイル名から画像を読み込む
         /// - Parameter pathOrFileName: ローカルファイルパス（file://形式）またはファイル名
         /// - Returns: 読み込まれた画像（失敗時はnil）
@@ -92,18 +92,18 @@ public enum ImageStorageUtility {
                 guard let url = URL(string: pathOrFileName) else { return nil }
                 return UIImage(contentsOfFile: url.path)
             }
-            
+
             // ファイル名のみの場合は動的にパスを構築
             let fileURL = imageDirectoryURL.appendingPathComponent(pathOrFileName)
             return UIImage(contentsOfFile: fileURL.path)
         }
-        
+
         /// 指定されたローカルパスまたはファイル名の画像ファイルを削除
         /// - Parameter pathOrFileName: 削除するファイルのローカルパス（file://形式）またはファイル名
         /// - Returns: 削除に成功した場合はtrue
         public static func deleteImage(at pathOrFileName: String) -> Bool {
             let fileURL: URL
-            
+
             // TODO: file://スキームの後方互換性サポート - 将来的に削除予定
             // file://スキームの場合は絶対パス（後方互換性のため）
             if pathOrFileName.hasPrefix("file://") {
@@ -113,7 +113,7 @@ public enum ImageStorageUtility {
                 // ファイル名のみの場合は動的にパスを構築
                 fileURL = imageDirectoryURL.appendingPathComponent(pathOrFileName)
             }
-            
+
             do {
                 try FileManager.default.removeItem(at: fileURL)
                 return true
@@ -131,7 +131,7 @@ public enum ImageStorageError: Error, LocalizedError {
     case imageCompressionFailed
     case fileNotFound
     case saveLocationNotAvailable
-    
+
     public var errorDescription: String? {
         switch self {
         case .imageCompressionFailed:

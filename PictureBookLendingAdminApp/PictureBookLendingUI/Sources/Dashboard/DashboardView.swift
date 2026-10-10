@@ -12,7 +12,7 @@ public struct DashboardView: View {
     let overdueLoans: [Loan]
     let getBookTitle: (UUID) -> String
     let getUserName: (UUID) -> String
-    
+
     public init(
         bookCount: Int,
         userCount: Int,
@@ -28,7 +28,7 @@ public struct DashboardView: View {
         self.getBookTitle = getBookTitle
         self.getUserName = getUserName
     }
-    
+
     public var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -38,7 +38,7 @@ public struct DashboardView: View {
                     userCount: userCount,
                     activeLoansCount: activeLoansCount
                 )
-                
+
                 // 期限切れ貸出の警告
                 if !overdueLoans.isEmpty {
                     OverdueWarningView(
@@ -47,7 +47,7 @@ public struct DashboardView: View {
                         getUserName: getUserName
                     )
                 }
-                
+
                 // 概要情報
                 SummaryCardsView()
             }
@@ -61,19 +61,19 @@ public struct StatisticsCardView: View {
     let bookCount: Int
     let userCount: Int
     let activeLoansCount: Int
-    
+
     public init(bookCount: Int, userCount: Int, activeLoansCount: Int) {
         self.bookCount = bookCount
         self.userCount = userCount
         self.activeLoansCount = activeLoansCount
     }
-    
+
     public var body: some View {
         VStack(spacing: 16) {
             Text("統計情報")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             HStack(spacing: 20) {
                 StatItem(
                     title: "図書",
@@ -81,14 +81,14 @@ public struct StatisticsCardView: View {
                     iconName: "book.fill",
                     color: .blue
                 )
-                
+
                 StatItem(
                     title: "利用者",
                     count: userCount,
                     iconName: "person.2.fill",
                     color: .green
                 )
-                
+
                 StatItem(
                     title: "貸出中",
                     count: activeLoansCount,
@@ -112,24 +112,24 @@ public struct StatItem: View {
     let count: Int
     let iconName: String
     let color: Color
-    
+
     public init(title: String, count: Int, iconName: String, color: Color) {
         self.title = title
         self.count = count
         self.iconName = iconName
         self.color = color
     }
-    
+
     public var body: some View {
         VStack {
             Image(systemName: iconName)
                 .font(.system(size: 24))
                 .foregroundStyle(color)
-            
+
             Text("\(count)")
                 .font(.title)
                 .bold()
-            
+
             Text(title)
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -143,7 +143,7 @@ public struct OverdueWarningView: View {
     let loans: [Loan]
     let getBookTitle: (UUID) -> String
     let getUserName: (UUID) -> String
-    
+
     public init(
         loans: [Loan],
         getBookTitle: @escaping (UUID) -> String,
@@ -153,18 +153,18 @@ public struct OverdueWarningView: View {
         self.getBookTitle = getBookTitle
         self.getUserName = getUserName
     }
-    
+
     public var body: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColor.overdue)
-                
+
                 Text("返却期限切れ")
                     .font(.headline)
-                
+
                 Spacer()
-                
+
                 Text("\(loans.count)件")
                     .font(.subheadline)
                     .padding(.horizontal, 8)
@@ -174,35 +174,35 @@ public struct OverdueWarningView: View {
                             .fill(AppColor.overdue.opacity(0.2))
                     )
             }
-            
+
             Divider()
-            
+
             ForEach(loans) { loan in
                 HStack {
                     VStack(alignment: .leading) {
                         Text(getBookTitle(loan.bookId))
                             .font(.subheadline)
                             .bold()
-                        
+
                         Text(loan.user.name)
                             .font(.caption)
                     }
-                    
+
                     Spacer()
-                    
+
                     VStack(alignment: .trailing) {
                         Text(
                             "期限: \(loan.dueDate.formatted(.dateTime.year().month(.abbreviated).day().locale(Locale(identifier: "ja_JP"))))"
                         )
                         .font(.caption)
-                        
+
                         Text("\(daysSinceOverdue(loan.dueDate))日経過")
                             .font(.caption)
                             .foregroundStyle(AppColor.overdue)
                     }
                 }
                 .padding(.vertical, 4)
-                
+
                 if loan.id != loans.last?.id {
                     Divider()
                 }
@@ -215,7 +215,7 @@ public struct OverdueWarningView: View {
                 .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         )
     }
-    
+
     // 期限切れ日数の計算
     private func daysSinceOverdue(_ dueDate: Date) -> Int {
         let calendar = Calendar.current
@@ -227,20 +227,20 @@ public struct OverdueWarningView: View {
 /// 概要カードビュー
 public struct SummaryCardsView: View {
     public init() {}
-    
+
     public var body: some View {
         VStack(spacing: 16) {
             Text("概要")
                 .font(.headline)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             InfoCardView(
                 title: "新機能",
                 description: "貸出管理アプリの使い方については「図書の貸出管理」ボタンをタップして確認してください。",
                 iconName: "star.fill",
                 color: .yellow
             )
-            
+
             InfoCardView(
                 title: "貸出期間",
                 description: "標準の貸出期間は14日間です。必要に応じて変更できます。",
@@ -257,25 +257,25 @@ public struct InfoCardView: View {
     let description: String
     let iconName: String
     let color: Color
-    
+
     public init(title: String, description: String, iconName: String, color: Color) {
         self.title = title
         self.description = description
         self.iconName = iconName
         self.color = color
     }
-    
+
     public var body: some View {
         HStack(spacing: 16) {
             Image(systemName: iconName)
                 .font(.system(size: 30))
                 .foregroundStyle(color)
                 .frame(width: 40, height: 40)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.headline)
-                
+
                 Text(description)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -300,7 +300,7 @@ public struct InfoCardView: View {
         dueDate: Calendar.current.date(byAdding: .day, value: -5, to: Date()) ?? Date(),
         returnedDate: nil
     )
-    
+
     NavigationStack {
         DashboardView(
             bookCount: 150,

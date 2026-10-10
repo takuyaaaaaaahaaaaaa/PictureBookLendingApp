@@ -12,9 +12,9 @@ struct UserFormContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.dismiss) private var dismiss
-    
+
     let initialClassGroupId: UUID?
-    
+
     /// 利用者名
     @State private var name = ""
     /// 所属している組
@@ -34,13 +34,13 @@ struct UserFormContainerView: View {
     /// 組一覧
     @State private var classGroups: [ClassGroup] = []
     @State private var alertState = AlertState()
-    
+
     init(
         initialClassGroupId: UUID? = nil
     ) {
         self.initialClassGroupId = initialClassGroupId
     }
-    
+
     var body: some View {
         NavigationStack {
             UserFormView(
@@ -62,7 +62,7 @@ struct UserFormContainerView: View {
                         handleCancel()
                     }
                 }
-                
+
                 ToolbarItem(placement: .confirmationAction) {
                     Button("登録", systemImage: "checkmark", role: .confirmIfAvailable) {
                         handleSave()
@@ -80,25 +80,25 @@ struct UserFormContainerView: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var isValidInput: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && classGroup != nil
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleCancel() {
         dismiss()
     }
-    
+
     private func handleSave() {
         guard let selectedClassGroup = classGroup else {
             alertState = .error("利用者登録に失敗しました", message: "組を選択してください")
             return
         }
-        
+
         // userTypeForPickerからuserTypeを設定
         switch userTypeForPicker {
         case .child:
@@ -111,7 +111,7 @@ struct UserFormContainerView: View {
             }
             userType = .guardian(relatedChildId: selectedChild.id)
         }
-        
+
         do {
             // 新規登録
             let newUser = User(
@@ -120,7 +120,7 @@ struct UserFormContainerView: View {
                 userType: userType
             )
             _ = try userModel.registerUser(newUser)
-            
+
             // 園児を登録する場合で保護者も一緒に登録するオプションが有効の場合
             if userType == .child && shouldRegisterGuardians {
                 for i in 1...guardianCount {
@@ -133,20 +133,20 @@ struct UserFormContainerView: View {
                     _ = try userModel.registerUser(guardian)
                 }
             }
-            
+
             dismiss()
         } catch {
             alertState = .error("利用者保存に失敗しました", message: "\(error.localizedDescription)")
         }
     }
-    
+
     /// 初期読み込み
     private func loadInitialData() {
         // 選択可能な組・園児一覧
         classGroups = classGroupModel.getAllClassGroups()
         availableChildren = userModel.users
             .filter { $0.userType == .child }
-        
+
         // 組が決まっている場合は組固定
         if let initialClassGroupId = initialClassGroupId,
             let initialClassGroup = classGroupModel.findClassGroupById(initialClassGroupId)
@@ -164,7 +164,7 @@ struct UserFormContainerView: View {
     let mockFactory = MockRepositoryFactory()
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
-    
+
     return UserFormContainerView()
         .environment(userModel)
         .environment(classGroupModel)

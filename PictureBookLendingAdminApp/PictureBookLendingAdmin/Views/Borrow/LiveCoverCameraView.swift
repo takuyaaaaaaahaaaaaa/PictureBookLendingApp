@@ -6,11 +6,14 @@ import SwiftUI
 /// Samples upright, unmirrored frames with one recognition request in flight.
 /// Rectangle detection is an optional part of recognition, never a capture gate.
 struct LiveCoverCameraView: UIViewRepresentable {
-    let onFrame: @MainActor (Data) async -> Bool
-    let onFailure: (String) -> Void
+    let onFrame: @MainActor @Sendable (Data) async -> Bool
+    let onFailure: @MainActor @Sendable (String) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onFrame: onFrame, onFailure: onFailure)
+        Coordinator(
+            onFrame: { [onFrame] data in await onFrame(data) },
+            onFailure: { [onFailure] message in onFailure(message) }
+        )
     }
     func makeUIView(context: Context) -> PreviewView {
         let view = PreviewView()
@@ -52,7 +55,7 @@ struct LiveCoverCameraView: UIViewRepresentable {
         }
         private func updateOrientation() {
             let orientation: AVCaptureVideoOrientation
-            switch window?.windowScene?.interfaceOrientation {
+            switch window?.windowScene?.effectiveGeometry.interfaceOrientation {
             case .landscapeLeft: orientation = .landscapeLeft
             case .landscapeRight: orientation = .landscapeRight
             case .portraitUpsideDown: orientation = .portraitUpsideDown
@@ -65,14 +68,19 @@ struct LiveCoverCameraView: UIViewRepresentable {
             }
         }
     }
-    final class Coordinator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+    // AVFoundation calls the delegate on `queue`. Capture state is confined to that
+    // queue (asserted at every internal entry); UI references/callbacks are MainActor.
+    // This Objective-C delegate cannot express DispatchQueue isolation to Swift.
+    final class Coordinator: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate,
+        @unchecked Sendable
+    {
         private static let accessDeniedMessage = "設定アプリでカメラへのアクセスを許可してください。"
         let session = AVCaptureSession()
-        weak var previewView: PreviewView?
+        @MainActor weak var previewView: PreviewView?
         private let queue = DispatchQueue(label: "CoverLiveCamera")
         private let context = CIContext()
-        private let onFrame: @MainActor (Data) async -> Bool
-        private let onFailure: (String) -> Void
+        private let onFrame: @MainActor @Sendable (Data) async -> Bool
+        private let onFailure: @MainActor @Sendable (String) -> Void
         private var orientation: AVCaptureVideoOrientation = .portrait
         private var outputConnection: AVCaptureConnection?
         private var lastFrameTime: CFTimeInterval = 0
@@ -81,9 +89,11 @@ struct LiveCoverCameraView: UIViewRepresentable {
         private let notificationCenter: NotificationCenter
         private var sessionObservers: [NSObjectProtocol] = []
 
-        init(onFrame: @escaping @MainActor (Data) async -> Bool,
-             onFailure: @escaping (String) -> Void,
-             notificationCenter: NotificationCenter = .default) {
+        init(
+            onFrame: @escaping @MainActor @Sendable (Data) async -> Bool,
+            onFailure: @escaping @MainActor @Sendable (String) -> Void,
+            notificationCenter: NotificationCenter = .default
+        ) {
             self.onFrame = onFrame
             self.onFailure = onFailure
             self.notificationCenter = notificationCenter
@@ -91,12 +101,16 @@ struct LiveCoverCameraView: UIViewRepresentable {
             // Session-specific observers also cover errors emitted by startRunning().
             // Retry creates a fresh coordinator; this session never restarts itself.
             sessionObservers = [
-                notificationCenter.addObserver(forName: AVCaptureSession.runtimeErrorNotification,
-                    object: session, queue: nil) { [weak self] _ in
+                notificationCenter.addObserver(
+                    forName: AVCaptureSession.runtimeErrorNotification,
+                    object: session, queue: nil
+                ) { [weak self] _ in
                     self?.fail("カメラが停止しました。「もう一度探す」で再開してください。")
                 },
-                notificationCenter.addObserver(forName: AVCaptureSession.wasInterruptedNotification,
-                    object: session, queue: nil) { [weak self] _ in
+                notificationCenter.addObserver(
+                    forName: AVCaptureSession.wasInterruptedNotification,
+                    object: session, queue: nil
+                ) { [weak self] _ in
                     self?.fail("カメラの使用が中断されました。再び利用できる状態で「もう一度探す」を押してください。")
                 },
             ]
@@ -117,8 +131,11 @@ struct LiveCoverCameraView: UIViewRepresentable {
             case .authorized: queue.async { self.configureAndStart() }
             case .notDetermined:
                 AVCaptureDevice.requestAccess(for: .video) { allowed in
-                    if allowed { self.queue.async { self.configureAndStart() } }
-                    else { self.fail(Self.accessDeniedMessage) }
+                    if allowed {
+                        self.queue.async { self.configureAndStart() }
+                    } else {
+                        self.fail(Self.accessDeniedMessage)
+                    }
                 }
             default: fail(Self.accessDeniedMessage)
             }
@@ -128,15 +145,20 @@ struct LiveCoverCameraView: UIViewRepresentable {
         }
         /// Must run on `queue`.
         private func halt() {
+            dispatchPrecondition(condition: .onQueue(queue))
             stopped = true
             for observer in sessionObservers { notificationCenter.removeObserver(observer) }
             sessionObservers.removeAll()
             if session.isRunning { session.stopRunning() }
         }
         private func configureAndStart() {
+            dispatchPrecondition(condition: .onQueue(queue))
             guard !stopped else { return }
-            guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front),
-                  let input = try? AVCaptureDeviceInput(device: camera) else {
+            guard
+                let camera = AVCaptureDevice.default(
+                    .builtInWideAngleCamera, for: .video, position: .front),
+                let input = try? AVCaptureDeviceInput(device: camera)
+            else {
                 fail("インナーカメラを開けませんでした。")
                 return
             }
@@ -144,13 +166,19 @@ struct LiveCoverCameraView: UIViewRepresentable {
             session.sessionPreset = .high
             let output = AVCaptureVideoDataOutput()
             output.alwaysDiscardsLateVideoFrames = true
-            output.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+            output.videoSettings = [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ]
             guard session.canAddInput(input) else {
-                session.commitConfiguration(); fail("カメラを開けませんでした。"); return
+                session.commitConfiguration()
+                fail("カメラを開けませんでした。")
+                return
             }
             session.addInput(input)
             guard session.canAddOutput(output) else {
-                session.commitConfiguration(); fail("カメラ映像を取得できませんでした。"); return
+                session.commitConfiguration()
+                fail("カメラ映像を取得できませんでした。")
+                return
             }
             session.addOutput(output)
             outputConnection = output.connection(with: .video)
@@ -161,10 +189,14 @@ struct LiveCoverCameraView: UIViewRepresentable {
             session.startRunning()
             DispatchQueue.main.async { self.previewView?.setNeedsLayout() }
         }
-        func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
-                           from connection: AVCaptureConnection) {
+        func captureOutput(
+            _ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
+            from connection: AVCaptureConnection
+        ) {
+            dispatchPrecondition(condition: .onQueue(queue))
             guard !stopped, !processing,
-                  let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+                let buffer = CMSampleBufferGetImageBuffer(sampleBuffer)
+            else { return }
             let now = CACurrentMediaTime()
             guard now - lastFrameTime >= 1 else { return }
             lastFrameTime = now
@@ -172,7 +204,9 @@ struct LiveCoverCameraView: UIViewRepresentable {
             let scale = min(1, 1024 / max(image.extent.width, image.extent.height))
             image = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
             guard let cgImage = context.createCGImage(image, from: image.extent) else { return }
-            guard let frame = try? cgImage.encodedData(type: "public.jpeg", quality: 0.9) else { return }
+            guard let frame = try? cgImage.encodedData(type: "public.jpeg", quality: 0.9) else {
+                return
+            }
             processing = true
             Task { @MainActor in
                 let finished = await self.onFrame(frame)
@@ -192,8 +226,8 @@ struct LiveCoverCameraView: UIViewRepresentable {
     }
 }
 
-private extension AVCaptureConnection {
-    func makeUpright(_ orientation: AVCaptureVideoOrientation) {
+extension AVCaptureConnection {
+    fileprivate func makeUpright(_ orientation: AVCaptureVideoOrientation) {
         if isVideoOrientationSupported { videoOrientation = orientation }
         if isVideoMirroringSupported {
             automaticallyAdjustsVideoMirroring = false

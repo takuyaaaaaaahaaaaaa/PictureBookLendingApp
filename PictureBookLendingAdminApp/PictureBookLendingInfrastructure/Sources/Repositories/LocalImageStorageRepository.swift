@@ -11,7 +11,8 @@ public final class LocalImageStorageRepository: ImageStorageRepositoryProtocol {
 
     private func imageURL(_ fileName: String) throws -> URL {
         guard !fileName.isEmpty, fileName != ".", fileName != "..",
-              !fileName.contains("/"), !fileName.contains("\\") else {
+            !fileName.contains("/"), !fileName.contains("\\")
+        else {
             throw CocoaError(.fileWriteInvalidFileName)
         }
         return directoryURL.appendingPathComponent(fileName)
@@ -32,7 +33,8 @@ public final class LocalImageStorageRepository: ImageStorageRepositoryProtocol {
     public func deleteAllImages() throws { try removeIfPresent(directoryURL) }
 
     private func removeIfPresent(_ url: URL) throws {
-        do { try FileManager.default.removeItem(at: url) }
-        catch CocoaError.fileNoSuchFile { /* Already removed. */ }
+        do { try FileManager.default.removeItem(at: url) } catch CocoaError.fileNoSuchFile {
+            // Already removed.
+        }
     }
 }

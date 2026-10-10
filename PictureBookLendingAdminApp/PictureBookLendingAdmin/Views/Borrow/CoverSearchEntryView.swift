@@ -1,6 +1,7 @@
-import PictureBookLendingUI
 import PictureBookLendingDomain
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
+import PictureBookLendingUI
 import SwiftUI
 
 /// Readiness is checked before opening the camera; preparation never blocks books already indexed.
@@ -37,11 +38,13 @@ struct CoverSearchEntryView: View {
                         enteredCamera = true
                         isSearching = true
                     })
-                        .toolbar {
-                            ToolbarItem(placement: .cancellationAction) {
-                                Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
+                                dismiss()
                             }
                         }
+                    }
                 }
             }
         }
@@ -54,7 +57,9 @@ struct CoverSearchEntryView: View {
         .onDisappear {
             if !enteredCamera && !hasFinishedPreparation {
                 hasFinishedPreparation = true
-                analytics.track(.coverSearchFinished(outcome: .abandoned, hadCandidates: false, noCandidates: false))
+                analytics.track(
+                    .coverSearchFinished(
+                        outcome: .abandoned, hadCandidates: false, noCandidates: false))
             }
         }
         .onChange(of: service.hasCheckedPreparation && bookModel.hasLoadedBooks, initial: true) {

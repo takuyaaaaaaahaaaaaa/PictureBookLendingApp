@@ -8,25 +8,25 @@ import UniformTypeIdentifiers
 struct BackupDocument: FileDocument {
     static let readableContentTypes: [UTType] = [.json]
     static let writableContentTypes: [UTType] = [.json]
-    
+
     let snapshot: BackupSnapshot
-    
+
     init(snapshot: BackupSnapshot) {
         self.snapshot = snapshot
     }
-    
+
     init(configuration: ReadConfiguration) throws {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
         snapshot = try BackupDocument.decoder.decode(BackupSnapshot.self, from: data)
     }
-    
+
     func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
         let data = try BackupDocument.encoder.encode(snapshot)
         return FileWrapper(regularFileWithContents: data)
     }
-    
+
     static let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601

@@ -7,12 +7,12 @@ public protocol StringNormalizer: Sendable {
     /// - Parameter input: 入力文字列
     /// - Returns: 正規化された文字列
     func normalize(_ input: String) -> String
-    
+
     /// タイトル用の正規化
     /// - Parameter title: 絵本のタイトル
     /// - Returns: 正規化されたタイトル
     func normalizeTitle(_ title: String) -> String
-    
+
     /// 著者名用の正規化
     /// - Parameter author: 著者名
     /// - Returns: 正規化された著者名
@@ -24,7 +24,7 @@ extension StringNormalizer {
     public func normalizeTitle(_ title: String) -> String {
         normalize(title)
     }
-    
+
     public func normalizeAuthor(_ author: String) -> String {
         normalize(author)
     }
@@ -89,14 +89,14 @@ public enum NormalizationHelper {
         "作", "著", "文", "絵", "画", "訳", "編",
         "さく", "ちょ", "ぶん", "え", "やく", "へん",
     ]
-    
+
     /// カタカナをひらがなに変換
     public static func katakanaToHiragana(_ text: String) -> String {
         let mutableString = NSMutableString(string: text) as CFMutableString
         CFStringTransform(mutableString, nil, kCFStringTransformHiraganaKatakana as NSString, true)
         return mutableString as String
     }
-    
+
     /// 連続するスペースを1つに統一
     public static func normalizeSpaces(_ text: String) -> String {
         let components = text.components(separatedBy: .whitespacesAndNewlines)

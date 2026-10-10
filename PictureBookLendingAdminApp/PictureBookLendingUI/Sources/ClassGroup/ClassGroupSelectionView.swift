@@ -5,7 +5,7 @@ import SwiftUI
 public struct ClassGroupSelectionView: View {
     let classGroups: [ClassGroup]
     let onSelect: (ClassGroup) -> Void
-    
+
     public init(
         classGroups: [ClassGroup],
         onSelect: @escaping (ClassGroup) -> Void
@@ -13,7 +13,7 @@ public struct ClassGroupSelectionView: View {
         self.classGroups = classGroups
         self.onSelect = onSelect
     }
-    
+
     public var body: some View {
         NavigationView {
             if classGroups.isEmpty {
@@ -38,7 +38,7 @@ public struct ClassGroupSelectionView: View {
 private struct ClassGroupRowView: View {
     let classGroup: ClassGroup
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             HStack {
@@ -46,14 +46,14 @@ private struct ClassGroupRowView: View {
                     Text(classGroup.name)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    
-                    Text("\(classGroup.ageGroup) • \(classGroup.year)年度")
+
+                    Text("\(classGroup.ageGroup.displayText) • \(classGroup.year)年度")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(.secondary)

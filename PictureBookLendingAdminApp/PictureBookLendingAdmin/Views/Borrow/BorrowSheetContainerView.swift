@@ -26,7 +26,7 @@ struct BorrowSheetContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.analytics) private var analytics
     @Environment(\.scenePhase) private var scenePhase
-    
+
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
     @State private var sheetPath = NavigationPath()
     /// 利用者選択画面で組チップにより絞り込み中の組ID（nilなら全組）
@@ -54,18 +54,18 @@ struct BorrowSheetContainerView: View {
     @State private var sheetOutcome = SheetOutcome.inProgress
     /// 表紙⇄拡大表示のズーム遷移用Namespace
     @Namespace private var coverZoomNamespace
-    
+
     /// タップされた図書と開いた時点の貸出状態のスナップショット（シートの提示単位）
     let context: BorrowSheetContext
     /// シートを閉じるだけの要求（✕ボタン・無操作タイムアウト）
     let onClose: () -> Void
     /// 貸出が完了し✓カードも消えたときの通知（親が図書一覧を次の貸出へ引き継ぐ）
     let onLendCompleted: () -> Void
-    
+
     /// 貸出成功の✓カードの表示時間。カードの消滅がシートを閉じる合図を兼ねるため、
     /// 既定の1.5秒では読み切る前に画面が変わってしまう。読み切れる長さに延ばす
     private static let lendFeedbackDuration: Duration = .seconds(2.5)
-    
+
     private enum Layout {
         static let sectionSpacing: CGFloat = 24
         static let headerContentSpacing: CGFloat = 16
@@ -79,12 +79,12 @@ struct BorrowSheetContainerView: View {
         static let zoomBadgeInnerPadding: CGFloat = 6
         static let zoomBadgeEdgePadding: CGFloat = 8
     }
-    
+
     /// 表紙⇄拡大表示のズーム遷移の対応付けID
     private enum CoverZoomSource: Hashable {
         case cover
     }
-    
+
     /// 貸出フローの結末（`sheetOutcome`参照）
     private enum SheetOutcome: Hashable {
         /// まだ完了も離脱もしていない（＝閉じたら離脱として記録する）
@@ -94,7 +94,7 @@ struct BorrowSheetContainerView: View {
         /// 離脱として記録済み
         case abandoned
     }
-    
+
     var body: some View {
         NavigationStack(path: $sheetPath) {
             borrowerPickScreen(for: context)
@@ -157,9 +157,9 @@ struct BorrowSheetContainerView: View {
             }
         #endif
     }
-    
+
     // MARK: - Private Views
-    
+
     /// 利用者選択画面（フォームシートの最初の画面・「だれが借りますか？」）
     ///
     /// 貸出中の図書が選ばれた場合は貸出できない理由を説明する空状態を表示する。
@@ -188,7 +188,7 @@ struct BorrowSheetContainerView: View {
             }
         }
     }
-    
+
     /// 枠確認画面（シート内で利用者タップから進む先・「どの枠で借りますか？」）
     ///
     /// 選んだ図書の要約（表紙＋タイトル＋著者）を上部に示し、
@@ -200,7 +200,7 @@ struct BorrowSheetContainerView: View {
                 VStack(alignment: .leading, spacing: Layout.sectionSpacing) {
                     HStack(spacing: Layout.headerContentSpacing) {
                         coverZoomButton(for: route.book)
-                        
+
                         VStack(alignment: .leading, spacing: Layout.headerTextSpacing) {
                             Text("『\(route.book.title)』")
                                 .font(.title3.bold())
@@ -211,7 +211,7 @@ struct BorrowSheetContainerView: View {
                             }
                         }
                     }
-                    
+
                     FamilyLoanSlotsContainerView(
                         undoFeedback: $undoFeedback,
                         userId: route.userId,
@@ -229,7 +229,7 @@ struct BorrowSheetContainerView: View {
             }
         }
     }
-    
+
     /// 枠確認画面の表紙（タップで全画面拡大・虫めがねバッジ付き）
     ///
     /// 文字が見えづらい利用者がタイトル等を確かめられるように、
@@ -266,7 +266,7 @@ struct BorrowSheetContainerView: View {
             .matchedTransitionSource(id: CoverZoomSource.cover, in: coverZoomNamespace)
         #endif
     }
-    
+
     /// 表紙の拡大表示画面（タップか✕で閉じる）
     ///
     /// 拡大には小サムネイルではなく大きい画像（`resolvedImageSource`）を使い、
@@ -291,7 +291,7 @@ struct BorrowSheetContainerView: View {
             .navigationTransition(.zoom(sourceID: CoverZoomSource.cover, in: coverZoomNamespace))
         #endif
     }
-    
+
     /// シート内画面の共通装飾（無操作タイマー・インラインタイトル・✕閉じるボタン）
     ///
     /// ✕ボタンは、下スワイプでの閉じ方を知らない利用者のための明示的な閉じる手段
@@ -320,13 +320,13 @@ struct BorrowSheetContainerView: View {
                 }
             #endif
     }
-    
+
     // MARK: - Computed Properties
 
     private var isBorrowInProgress: Bool {
         !context.isAlreadyLent && sheetOutcome == .inProgress
     }
-    
+
     /// 利用者選択画面の組セクション（組は組一覧の並び順、組内は利用者名順）
     ///
     /// 一覧から隠すのは「別の入口から構造的に到達できる利用者」＝保護者だけ
@@ -343,7 +343,7 @@ struct BorrowSheetContainerView: View {
                 ($1.id, $0)
             }
         )
-        
+
         // 空き枠判定の材料：借用中の利用者IDと、園児→紐づく保護者の対応表
         let borrowedUserIds = Set(loanModel.activeLoans.map { $0.user.id })
         var guardiansByChildId: [UUID: [User]] = [:]
@@ -352,7 +352,7 @@ struct BorrowSheetContainerView: View {
                 guardiansByChildId[relatedChildId, default: []].append(user)
             }
         }
-        
+
         return Dictionary(grouping: entranceUsers) { $0.classGroupId }
             .map { classGroupId, users in
                 BorrowerListSection(
@@ -388,7 +388,7 @@ struct BorrowSheetContainerView: View {
                 }
             }
     }
-    
+
     /// 貸出中の図書の説明文（「いつ戻るか」の目安を日付だけで知らせる）
     ///
     /// 誰が借りているかは表示しない（プライバシー配慮・IA_REVIEW 追記13）
@@ -399,14 +399,14 @@ struct BorrowSheetContainerView: View {
             "返却されると貸出できるようになります"
         }
     }
-    
+
     /// 貸出先の枠の種別（記録用。利用者を解決できない場合は園児枠として扱う）
     private func slotType(of userId: UUID) -> AnalyticsEvent.SlotType {
         userModel.findUserById(userId)?.userType.category == .guardian ? .guardian : .child
     }
-    
+
     // MARK: - Actions
-    
+
     /// シートを閉じる（✕ボタン・無操作タイムアウトの共通経路）
     ///
     /// 完了しなかった貸出フローは離脱として記録する。
@@ -426,7 +426,7 @@ struct BorrowSheetContainerView: View {
         }
         onClose()
     }
-    
+
     /// 枠確認画面での返却の取り消し（Undoカードの「元に戻す」）
     ///
     /// 取り消したらその場に留まり、枠に本が戻るのを見せる
@@ -441,7 +441,7 @@ struct BorrowSheetContainerView: View {
             alertState = .error("返却の取り消しに失敗しました", message: error.localizedDescription)
         }
     }
-    
+
     /// 貸出の実行（枠選択のタップで確定・✓カードまたは節目のお祝いで完了を伝える）
     ///
     /// - Parameters:
@@ -491,7 +491,9 @@ private struct BorrowConfirmRoute: Hashable {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let classGroupModel = ClassGroupModel(repository: mockFactory.classGroupRepository)
     let loanModel = LoanModel(
@@ -500,20 +502,20 @@ private struct BorrowConfirmRoute: Hashable {
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     // 組1つ・園児2人（うち1人に保護者を紐付け）・図書1冊（貸出可能）をセットアップ
     let momo = ClassGroup(name: "もも組", ageGroup: AgeGroup.age(4), year: 2026)
     try! mockFactory.classGroupRepository.save(momo)
-    
+
     let sakura = try! userModel.registerUser(User(name: "いとう さくら", classGroupId: momo.id))
     _ = try! userModel.registerUser(
         User(
             name: "伊藤 由美子", classGroupId: momo.id,
             userType: .guardian(relatedChildId: sakura.id)))
     _ = try! userModel.registerUser(User(name: "あおき はると", classGroupId: momo.id))
-    
+
     let guriToGura = try! bookModel.registerBook(Book(title: "ぐりとぐら", author: "中川李枝子"))
-    
+
     return BorrowSheetContainerView(
         context: BorrowSheetContext(book: guriToGura, isAlreadyLent: false),
         onClose: {},

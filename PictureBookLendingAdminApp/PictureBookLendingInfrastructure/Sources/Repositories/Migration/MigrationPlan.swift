@@ -8,8 +8,6 @@
 import Foundation
 import SwiftData
 
-extension MigrationStage: @unchecked @retroactive Sendable {}
-
 enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
     static var schemas: [any VersionedSchema.Type] {
         [
@@ -18,12 +16,12 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
             PictureBookLendingSchemaV1_3.self,
         ]
     }
-    
+
     static var stages: [MigrationStage] {
-        [migrateV1ToV1_1, migrateV1_1ToV1_2, migrateV1_2ToV1_3]
+        [migrateV1ToV1Point1, migrateV1Point1ToV1Point2, migrateV1Point2ToV1Point3]
     }
-    
-    static let migrateV1ToV1_1: MigrationStage = MigrationStage.custom(
+
+    static let migrateV1ToV1Point1: MigrationStage = MigrationStage.custom(
         fromVersion: PictureBookLendingSchemaV1.self,
         toVersion: PictureBookLendingSchemaV1_1.self,
         willMigrate: { context in
@@ -34,7 +32,7 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
         didMigrate: nil
     )
 
-    static let migrateV1_1ToV1_2: MigrationStage = MigrationStage.custom(
+    static let migrateV1Point1ToV1Point2: MigrationStage = MigrationStage.custom(
         fromVersion: PictureBookLendingSchemaV1_1.self,
         toVersion: PictureBookLendingSchemaV1_2.self,
         willMigrate: nil,
@@ -42,7 +40,7 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
             // V1_2のBookデータを読み込み、thumbnailのfile://パスをlocalImageFileNameに移行
             let books = try context.fetch(
                 FetchDescriptor<PictureBookLendingSchemaV1_2.SwiftDataBook>())
-            
+
             for book in books {
                 // thumbnailに絶対パス（file://）が保存されている場合、ファイル名を抽出してlocalImageFileNameに移行
                 if let thumbnail = book.thumbnail, thumbnail.hasPrefix("file://") {
@@ -56,12 +54,12 @@ enum PictureBookLendingMigrationPlan: SchemaMigrationPlan {
                     }
                 }
             }
-            
+
             try context.save()
         }
     )
 
-    static let migrateV1_2ToV1_3: MigrationStage = MigrationStage.lightweight(
+    static let migrateV1Point2ToV1Point3: MigrationStage = MigrationStage.lightweight(
         fromVersion: PictureBookLendingSchemaV1_2.self,
         toVersion: PictureBookLendingSchemaV1_3.self
     )

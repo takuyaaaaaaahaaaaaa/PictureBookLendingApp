@@ -8,16 +8,16 @@ import PictureBookLendingUI
 struct BookSections {
     /// 五十音順グループごとの絵本分類
     private let bookSections: [BookSection]
-    
+
     init(books: [Book]) {
         self.bookSections = Self.createSections(from: books)
     }
-    
+
     /// 全絵本（セクションから都度導出。bookSectionsとの二重保持を避ける）
     private var allBooks: [Book] {
         bookSections.flatMap { $0.books }
     }
-    
+
     /// フィルタリング・ソート済みの絵本セクション
     ///
     /// 検索の質（あいまい検索の発動有無）に関心がない呼び出し側のための入口。
@@ -27,7 +27,7 @@ struct BookSections {
     ) -> [BookSection] {
         filterOutcome(searchText: searchText, kanafilter: kanafilter, sortType: sortType).sections
     }
-    
+
     /// フィルタリング・ソート結果（あいまい検索の発動有無つき）
     ///
     /// 部分一致（＋かなフィルタ）で0件のときは、タイプミスを許容した
@@ -42,7 +42,7 @@ struct BookSections {
             searchText: searchText,
             selectedKanaFilter: kanafilter
         )
-        
+
         // 2. 部分一致で0件のとき、タイプミスを許容したあいまい検索で救済するフォールバック
         var isFuzzyFallback = false
         let trimmed = searchText.trimmingCharacters(in: .whitespaces)
@@ -50,14 +50,14 @@ struct BookSections {
             filteredSections = fuzzyFallbackSections(searchText: trimmed, kanafilter: kanafilter)
             isFuzzyFallback = true
         }
-        
+
         // 3. ソート
         return BookFilterOutcome(
             sections: Self.sorted(sections: filteredSections, by: sortType),
             isFuzzyFallback: isFuzzyFallback
         )
     }
-    
+
     /// 部分一致で0件のとき、タイプミスを許容したあいまい検索で図書を探すフォールバック
     ///
     /// かなフィルタ指定時はそのグループ内の図書のみを候補とし、
@@ -79,26 +79,26 @@ struct BookSections {
             )
             .filter { $0.score > 0 }
             .map { $0.book }
-        
+
         return Self.createSections(from: matchedBooks)
     }
-    
+
     /// 全絵本からBookSectionの配列を作成
     private static func createSections(from books: [Book]) -> [BookSection] {
         // 五十音グループごとに分類
         let groupedBooks = Dictionary(grouping: books) { book -> KanaGroup in
             book.kanaGroup ?? .other
         }
-        
+
         // セクションを作成
         let sections = groupedBooks.map { (kanaGroup, books) in
             BookSection(kanaGroup: kanaGroup, books: books)
         }
-        
+
         // 五十音順にソート
         return sections.sorted { $0.kanaGroup.sortOrder < $1.kanaGroup.sortOrder }
     }
-    
+
     /// 検索テキストとかなフィルターでセクション配列をフィルタリング
     private static func filtered(
         sections: [BookSection],
@@ -106,7 +106,7 @@ struct BookSections {
         selectedKanaFilter: KanaGroup?
     ) -> [BookSection] {
         var filteredSections = sections
-        
+
         // 検索テキストでフィルタリング
         if !searchText.isEmpty {
             filteredSections = filteredSections.compactMap { section in
@@ -118,15 +118,15 @@ struct BookSections {
                     ? nil : BookSection(kanaGroup: section.kanaGroup, books: filteredBooks)
             }
         }
-        
+
         // 選択されたフィルターがある場合は該当セクションのみ表示
         if let selectedKanaFilter {
             filteredSections = filteredSections.filter { $0.kanaGroup == selectedKanaFilter }
         }
-        
+
         return filteredSections
     }
-    
+
     /// ソート方法に基づいてセクション配列をソート
     private static func sorted(sections: [BookSection], by sortType: BookSortType) -> [BookSection]
     {
@@ -173,7 +173,7 @@ struct BookFilterOutcome {
     let sections: [BookSection]
     /// あいまい検索フォールバックが発動したか（発動して0件だった場合もtrue）
     let isFuzzyFallback: Bool
-    
+
     /// 結果に含まれる図書の冊数
     var bookCount: Int {
         sections.reduce(0) { $0 + $1.books.count }
@@ -185,12 +185,12 @@ struct BookFilterOutcome {
 /// 全角数字と半角数字の両方に対応
 private func sortKey(_ text: String) -> (hiragana: String, number: Int) {
     let normalizedText = normalizeNumbers(text)
-    
+
     // 最初の数字列を見つける
     var stringPrefix = ""
     var numberString = ""
     var foundNumber = false
-    
+
     for char in normalizedText {
         if char.isNumber {
             if !foundNumber {
@@ -207,11 +207,11 @@ private func sortKey(_ text: String) -> (hiragana: String, number: Int) {
             }
         }
     }
-    
+
     // 文字列部分が空の場合は元のテキストを使用
     let prefix = stringPrefix.isEmpty ? text : stringPrefix
     let number = Int(numberString) ?? 0
-    
+
     return (prefix, number)
 }
 
@@ -219,7 +219,7 @@ private func sortKey(_ text: String) -> (hiragana: String, number: Int) {
 private func normalizeNumbers(_ text: String) -> String {
     let fullWidthNumbers = "０１２３４５６７８９"
     let halfWidthNumbers = "0123456789"
-    
+
     var result = text
     for (fullWidth, halfWidth) in zip(fullWidthNumbers, halfWidthNumbers) {
         result = result.replacingOccurrences(of: String(fullWidth), with: String(halfWidth))

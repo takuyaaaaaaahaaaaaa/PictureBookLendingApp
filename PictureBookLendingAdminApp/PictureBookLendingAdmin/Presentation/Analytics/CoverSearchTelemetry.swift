@@ -21,7 +21,8 @@ struct CoverSearchTelemetry {
     mutating func finish(selected: Bool) -> AnalyticsEvent? {
         guard !finished else { return nil }
         finished = true
-        return .coverSearchFinished(outcome: selected ? .selected : .abandoned,
+        return .coverSearchFinished(
+            outcome: selected ? .selected : .abandoned,
             hadCandidates: hadCandidates,
             noCandidates: searched && !hadCandidates && failures.isEmpty)
     }

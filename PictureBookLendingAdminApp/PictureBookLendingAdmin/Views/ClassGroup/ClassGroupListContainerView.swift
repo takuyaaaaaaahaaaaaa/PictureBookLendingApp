@@ -12,18 +12,18 @@ import SwiftUI
 struct ClassGroupListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(UserModel.self) private var userModel
-    
+
     @State private var alertState = AlertState()
     @State private var isAddSheetPresented = false
     @State private var editingClassGroup: ClassGroup?
     @State private var isEditMode = false
-    
+
     let onClassGroupSelected: ((UUID) -> Void)?
-    
+
     init(onClassGroupSelected: ((UUID) -> Void)? = nil) {
         self.onClassGroupSelected = onClassGroupSelected
     }
-    
+
     var body: some View {
         ClassGroupListView(
             classGroups: classGroupModel.classGroups,
@@ -45,9 +45,9 @@ struct ClassGroupListContainerView: View {
                     isEditMode.toggle()
                 }
             }
-            
+
             ToolbarSpacer(.fixed)
-            
+
             ToolbarItem(id: "add", placement: .primaryAction) {
                 Button {
                     handleAdd()
@@ -74,27 +74,27 @@ struct ClassGroupListContainerView: View {
             Text(alertState.message)
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleAdd() {
         isAddSheetPresented = true
     }
-    
+
     private func handleSelectClassGroup(_ classGroup: ClassGroup) {
         onClassGroupSelected?(classGroup.id)
     }
-    
+
     private func handleEditClassGroup(_ classGroup: ClassGroup) {
         editingClassGroup = classGroup
     }
-    
+
     private func getChildCountForClassGroup(_ classGroupId: UUID) -> Int {
         userModel.users.filter { user in
             user.classGroupId == classGroupId && user.userType == .child
         }.count
     }
-    
+
     private func getGuardianCountForClassGroup(_ classGroupId: UUID) -> Int {
         userModel.users.filter { user in
             user.classGroupId == classGroupId
@@ -106,7 +106,7 @@ struct ClassGroupListContainerView: View {
                 }()
         }.count
     }
-    
+
     private func handleDelete(at offsets: IndexSet) {
         // 削除するたびに classGroups が縮むため、ループ前に対象を確定させる
         // （インデックスのまま引くと2件目以降がずれた組を削除してしまう）
@@ -119,7 +119,7 @@ struct ClassGroupListContainerView: View {
             }
         }
     }
-    
+
     private func handleSave(_ classGroup: ClassGroup) {
         do {
             try classGroupModel.registerClassGroup(classGroup)
@@ -128,7 +128,7 @@ struct ClassGroupListContainerView: View {
             alertState = .error("組の追加に失敗しました", message: error.localizedDescription)
         }
     }
-    
+
     private func handleUpdate(_ classGroup: ClassGroup) {
         do {
             try classGroupModel.updateClassGroup(classGroup)

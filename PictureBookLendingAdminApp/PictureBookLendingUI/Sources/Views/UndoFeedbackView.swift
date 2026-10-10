@@ -19,14 +19,14 @@ public struct UndoFeedback: Equatable, Sendable {
     /// 連続操作時にも毎回ハプティクスが鳴り、自動消滅タイマーが新しい表示の
     /// タイミングから再スタートする。
     public private(set) var occurrenceCount: Int
-    
+
     public init() {
         self.isPresented = false
         self.message = ""
         self.targetId = nil
         self.occurrenceCount = 0
     }
-    
+
     /// フィードバックを表示する
     ///
     /// - Parameters:
@@ -38,7 +38,7 @@ public struct UndoFeedback: Equatable, Sendable {
         isPresented = true
         occurrenceCount += 1
     }
-    
+
     /// フィードバックを非表示にする
     public mutating func dismiss() {
         isPresented = false
@@ -53,32 +53,32 @@ public struct UndoFeedback: Equatable, Sendable {
 public struct UndoFeedbackView: View {
     /// チェックアイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var iconSize: CGFloat = 64
-    
+
     let message: String
     let onUndo: () -> Void
-    
+
     private enum Layout {
         static let spacing: CGFloat = 16
         static let padding: CGFloat = 32
         static let cornerRadius: CGFloat = 20
     }
-    
+
     public init(message: String, onUndo: @escaping () -> Void) {
         self.message = message
         self.onUndo = onUndo
     }
-    
+
     public var body: some View {
         VStack(spacing: Layout.spacing) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: iconSize))
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(AppColor.borrowActionForeground, AppColor.borrowAction)
-            
+
             Text(message)
                 .font(.title3.bold())
                 .multilineTextAlignment(.center)
-            
+
             // 主役は「返却しました」の報告。取り消しは脇役の非常口なので
             // 強調スタイルにしない（反射的なOK連打タップによる誤取り消しを防ぐ）
             Button("元に戻す", action: onUndo)
@@ -112,10 +112,14 @@ private struct UndoFeedbackCardModifier: ViewModifier {
             .overlay {
                 if isVisible && feedback.isPresented {
                     UndoFeedbackView(message: feedback.message, onUndo: onUndo)
-                        .transition(.scale(scale: UndoFeedbackConstants.initialScale).combined(with: .opacity))
+                        .transition(
+                            .scale(scale: UndoFeedbackConstants.initialScale).combined(
+                                with: .opacity))
                 }
             }
-            .animation(.spring(duration: UndoFeedbackConstants.transitionDuration), value: feedback.isPresented)
+            .animation(
+                .spring(duration: UndoFeedbackConstants.transitionDuration),
+                value: feedback.isPresented)
     }
 }
 
@@ -164,7 +168,7 @@ extension View {
 
 #Preview {
     @Previewable @State var feedback = UndoFeedback()
-    
+
     List {
         Button("返却する") {
             feedback.show("『はらぺこあおむし』を返却しました", targetId: UUID())

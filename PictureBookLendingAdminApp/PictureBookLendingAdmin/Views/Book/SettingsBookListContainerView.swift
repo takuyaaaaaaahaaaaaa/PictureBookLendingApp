@@ -10,7 +10,7 @@ import SwiftUI
 struct SettingsBookListContainerView: View {
     @Environment(BookModel.self) private var bookModel
     @Environment(LoanModel.self) private var loanModel
-    
+
     /// 図書一覧の絞り込み状態（検索テキスト・五十音フィルタ。両者は排他制御される）
     @State private var filterState = BookListFilterState()
     @State private var isAddSheetPresented = false
@@ -29,7 +29,7 @@ struct SettingsBookListContainerView: View {
     /// 管理業務では著者・管理番号・貸出状況の情報密度が必要なためリストを既定にする
     /// （貸出タブは実物の表紙との照合が主タスクなので棚表示既定。使い分けの経緯はissue #179）
     @State private var displayMode: BookDisplayMode = .list
-    
+
     let onBookRegistered: () -> Void
 
     var body: some View {
@@ -70,9 +70,9 @@ struct SettingsBookListContainerView: View {
                     isEditMode.toggle()
                 }
             }
-            
+
             ToolbarSpacer(.fixed)
-            
+
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
                     isAddSheetPresented = true
@@ -116,16 +116,16 @@ struct SettingsBookListContainerView: View {
             loanModel.refreshLoans()
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     /// 五十音グループでセクション化された全絵本データ（フィルタリング・ソート前のベース）
     ///
     /// `bookModel.books`から都度導出する。値型なので手動同期（onChange/onAppear）は不要。
     private var bookSections: BookSections {
         BookSections(books: bookModel.books)
     }
-    
+
     /// 検索テキストのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var searchTextBinding: Binding<String> {
         Binding(
@@ -133,7 +133,7 @@ struct SettingsBookListContainerView: View {
             set: { filterState.updateSearchText($0) }
         )
     }
-    
+
     /// 五十音フィルタのバインディング（書き込みはStateの排他制御メソッドを経由させる）
     private var kanaFilterBinding: Binding<KanaGroup?> {
         Binding(
@@ -141,9 +141,9 @@ struct SettingsBookListContainerView: View {
             set: { filterState.setKanaFilter($0) }
         )
     }
-    
+
     // MARK: - Actions
-    
+
     private func finishAddingBook() {
         guard didRegisterBook else { return }
         didRegisterBook = false
@@ -153,7 +153,7 @@ struct SettingsBookListContainerView: View {
     private func handleEditBook(_ book: Book) {
         editingBook = book
     }
-    
+
     /// 削除の確認
     ///
     /// 貸出中の図書は削除と同時に自動返却されるため、貸出の有無にかかわらず必ず確認を挟む。
@@ -164,7 +164,7 @@ struct SettingsBookListContainerView: View {
         if !booksToDelete.contains(where: { $0.id == book.id }) {
             booksToDelete.append(book)
         }
-        
+
         deleteConfirmationState = AlertState(
             isPresented: true,
             title: "図書の削除",
@@ -179,7 +179,7 @@ struct SettingsBookListContainerView: View {
             ) + "\n他の図書で使われていない登録写真と、この図書の表紙検索データも削除します。"
         )
     }
-    
+
     private func executeDelete() {
         guard !isDeleting else { return }
         let targetBooks = booksToDelete
@@ -198,7 +198,9 @@ struct SettingsBookListContainerView: View {
                 }
                 for book in targetBooks { _ = try bookModel.deleteBook(book.id) }
             } catch { failures.append(error.localizedDescription) }
-            let remaining = targetBooks.filter { target in bookModel.books.contains { $0.id == target.id } }
+            let remaining = targetBooks.filter { target in
+                bookModel.books.contains { $0.id == target.id }
+            }
             if !remaining.isEmpty {
                 failures.append("削除されていない図書: " + remaining.map(\.title).joined(separator: "、"))
             }
@@ -210,8 +212,10 @@ struct SettingsBookListContainerView: View {
                 failures.append(error.localizedDescription)
             }
             if !failures.isEmpty {
-                let returnedNote = returnedCount > 0 ? "\n貸出中だった図書\(returnedCount)冊は返却済みになっています。" : ""
-                alertState = .error("削除が完了していません", message: failures.joined(separator: "\n") + returnedNote)
+                let returnedNote =
+                    returnedCount > 0 ? "\n貸出中だった図書\(returnedCount)冊は返却済みになっています。" : ""
+                alertState = .error(
+                    "削除が完了していません", message: failures.joined(separator: "\n") + returnedNote)
             }
         }
     }
@@ -228,21 +232,23 @@ struct SettingsBookListContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    
+
     // プレビュー用のサンプルデータを追加
     let book1 = Book(title: "はらぺこあおむし", author: "エリック・カール")
     let book2 = Book(title: "ぐりとぐら", author: "中川李枝子")
     _ = try? mockFactory.bookRepository.save(book1)
     _ = try? mockFactory.bookRepository.save(book2)
-    
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
         bookRepository: mockFactory.bookRepository,
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     return SettingsBookListContainerView(onBookRegistered: {})
         .environment(bookModel)
         .environment(loanModel)

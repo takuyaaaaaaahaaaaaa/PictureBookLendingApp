@@ -11,7 +11,7 @@ public struct BookAutoFillButton: View {
     let searchError: String?
     /// 検索実行アクション
     let onSearch: () -> Void
-    
+
     public init(
         isSearching: Bool,
         searchError: String?,
@@ -21,7 +21,7 @@ public struct BookAutoFillButton: View {
         self.searchError = searchError
         self.onSearch = onSearch
     }
-    
+
     public var body: some View {
         VStack(spacing: 8) {
             Button("自動入力") {
@@ -29,7 +29,7 @@ public struct BookAutoFillButton: View {
             }
             .buttonStyle(.bordered)
             .disabled(isSearching)
-            
+
             if let searchError = searchError {
                 Text(searchError)
                     .foregroundStyle(.red)
@@ -49,13 +49,13 @@ public struct BookAutoFillButton: View {
                 print("Search triggered")
             }
         )
-        
+
         BookAutoFillButton(
             isSearching: true,
             searchError: nil,
             onSearch: {}
         )
-        
+
         BookAutoFillButton(
             isSearching: false,
             searchError: "検索に失敗しました",

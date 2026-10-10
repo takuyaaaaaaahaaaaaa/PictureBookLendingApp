@@ -14,7 +14,7 @@ public struct ClassGroupListView: View {
     let onSelect: (ClassGroup) -> Void
     let onEdit: (ClassGroup) -> Void
     let onDelete: (IndexSet) -> Void
-    
+
     public init(
         classGroups: [ClassGroup],
         getChildCount: @escaping (UUID) -> Int,
@@ -34,7 +34,7 @@ public struct ClassGroupListView: View {
         self.onEdit = onEdit
         self.onDelete = onDelete
     }
-    
+
     public var body: some View {
         if classGroups.isEmpty {
             ContentUnavailableView(
@@ -69,7 +69,7 @@ public struct ClassGroupListRowView: View {
     let childCount: Int
     let guardianCount: Int
     let onTap: () -> Void
-    
+
     public init(
         classGroup: ClassGroup, childCount: Int, guardianCount: Int, onTap: @escaping () -> Void
     ) {
@@ -78,7 +78,7 @@ public struct ClassGroupListRowView: View {
         self.guardianCount = guardianCount
         self.onTap = onTap
     }
-    
+
     public var body: some View {
         Button(action: onTap) {
             HStack {
@@ -86,7 +86,7 @@ public struct ClassGroupListRowView: View {
                     Text(classGroup.name)
                         .font(.headline)
                         .foregroundStyle(.primary)
-                    
+
                     let ageGroupText = Text("\(classGroup.ageGroup.displayText) ")
                     let yearText = Text("\(classGroup.year, format: .number.grouping(.never))年度")
                     let childCountText = Text(" • 園児\(childCount)人")
@@ -95,9 +95,9 @@ public struct ClassGroupListRowView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundStyle(.secondary)

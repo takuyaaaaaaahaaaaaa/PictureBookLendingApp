@@ -5,7 +5,7 @@ import SwiftUI
 public struct BookImageView<PlaceholderContent: View>: View {
     let imageURL: String?
     let placeholder: PlaceholderContent
-    
+
     public init(
         imageURL: String?,
         @ViewBuilder placeholder: () -> PlaceholderContent
@@ -13,7 +13,7 @@ public struct BookImageView<PlaceholderContent: View>: View {
         self.imageURL = imageURL
         self.placeholder = placeholder()
     }
-    
+
     public var body: some View {
         ExternalBookCoverCache.image(for: URL(string: imageURL ?? ""))
             .placeholder {
@@ -21,7 +21,7 @@ public struct BookImageView<PlaceholderContent: View>: View {
             }
             .resizable()
     }
-    
+
 }
 
 /// 絵本一覧の画像未設定・読み込み中・読み込み失敗時に表示する表紙。
@@ -59,7 +59,7 @@ struct BookCoverPlaceholder: View {
         .frame(width: 100, height: 130)
         .background(.regularMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 8))
-        
+
         Text("画像プレビュー")
             .font(.caption)
             .foregroundStyle(.secondary)

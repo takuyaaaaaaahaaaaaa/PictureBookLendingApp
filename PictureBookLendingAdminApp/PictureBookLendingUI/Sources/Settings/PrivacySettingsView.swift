@@ -8,7 +8,7 @@ public struct PrivacySettingsView: View {
     let diagnosticsStatus: String
     let serviceAvailable: Bool
     let policyURL: URL
-    
+
     public init(
         analyticsEnabled: Binding<Bool>, diagnosticsEnabled: Binding<Bool>,
         analyticsStatus: String, diagnosticsStatus: String,
@@ -21,12 +21,14 @@ public struct PrivacySettingsView: View {
         self.serviceAvailable = serviceAvailable
         self.policyURL = policyURL
     }
-    
+
     public var body: some View {
         Form {
             Section("送信は任意です") {
                 Text("どちらもオフのまま、貸出・返却・図書と利用者の管理を利用できます。管理者がこの端末の送信を選び、いつでもこの画面で取り消せます。")
-                Text("アプリが送信する利用状況イベントには、園児・保護者の名前、絵本の題名、検索文字列、貸出記録そのものを含めません。アプリからクラッシュ診断へ、これらを追加情報として付加する処理もありません。")
+                Text(
+                    "アプリが送信する利用状況イベントには、園児・保護者の名前、絵本の題名、検索文字列、貸出記録そのものを含めません。アプリからクラッシュ診断へ、これらを追加情報として付加する処理もありません。"
+                )
             }
             Section {
                 Toggle("利用状況の送信に同意する", isOn: $analyticsEnabled)

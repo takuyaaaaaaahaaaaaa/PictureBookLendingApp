@@ -10,7 +10,7 @@ public struct ClassGroupFormView: View {
     @Binding var name: String
     @Binding var ageGroup: AgeGroup
     @Binding var year: Int
-    
+
     public init(
         mode: ClassGroupFormMode,
         name: Binding<String>,
@@ -22,18 +22,18 @@ public struct ClassGroupFormView: View {
         self._ageGroup = ageGroup
         self._year = year
     }
-    
+
     public var body: some View {
         Form {
             Section("組情報") {
                 TextField("組名", text: $name)
-                
+
                 Picker("年齢区分", selection: $ageGroup) {
                     ForEach(AgeGroup.sortedCases, id: \.self) { ageGroupCase in
                         Text(ageGroupCase.displayText).tag(ageGroupCase)
                     }
                 }
-                
+
                 Picker("年度", selection: $year) {
                     ForEach(2020...2050, id: \.self) { year in
                         Text("\(year,format:.number.grouping(.never))年度").tag(year)
@@ -48,7 +48,7 @@ public struct ClassGroupFormView: View {
 public enum ClassGroupFormMode {
     case add
     case edit(ClassGroup)
-    
+
     public var title: String {
         switch self {
         case .add:

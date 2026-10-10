@@ -13,7 +13,7 @@ public enum AnalyticsParamValue: Equatable, Sendable, CustomStringConvertible {
     case int(Int)
     /// 有無の判定
     case bool(Bool)
-    
+
     public var description: String {
         switch self {
         case .string(let value): value
@@ -41,9 +41,9 @@ public protocol AnalyticsService: Sendable {
 /// Phase Aで実機の操作を眺め、イベント設計の妥当性を確かめるために使う。
 public struct ConsoleAnalyticsService: AnalyticsService {
     private let logger = Logger(subsystem: "com.picturebooklending", category: "Analytics")
-    
+
     public init() {}
-    
+
     public func track(name: String, params: [String: AnalyticsParamValue]) {
         // 辞書の列挙順は不定のため、キー順に並べて毎回同じ並びで出力する
         let formattedParams =
@@ -61,6 +61,6 @@ public struct ConsoleAnalyticsService: AnalyticsService {
 /// 何もしない記録先（Release・Previewの既定値）
 public struct NoopAnalyticsService: AnalyticsService {
     public init() {}
-    
+
     public func track(name: String, params: [String: AnalyticsParamValue]) {}
 }

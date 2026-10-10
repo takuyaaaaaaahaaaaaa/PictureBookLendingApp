@@ -8,7 +8,7 @@ extension ButtonRole {
         }
         return nil
     }
-    
+
     /// Close semantics on supported systems; older systems use no role (nil).
     public static var closeIfAvailable: ButtonRole? {
         if #available(iOS 26, macOS 26, *) {

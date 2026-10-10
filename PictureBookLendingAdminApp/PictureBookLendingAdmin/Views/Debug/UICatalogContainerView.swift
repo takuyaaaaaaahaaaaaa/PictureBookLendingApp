@@ -2,7 +2,7 @@
     import PictureBookLendingDomain
     import PictureBookLendingUI
     import SwiftUI
-    
+
     /// UIカタログ（DEBUGビルド限定）
     ///
     /// 開発中のUIコンポーネントをサンプルデータで一覧表示します。
@@ -11,10 +11,10 @@
     struct UICatalogContainerView: View {
         @State private var celebrationFeedback = CelebrationFeedback()
         @State private var showsContainerStatePreview = false
-        
+
         private let childId = UUID()
         private let guardianId = UUID()
-        
+
         var body: some View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 32) {
@@ -52,7 +52,7 @@
                     catalogSection("節目のお祝い：紙吹雪＋カード（タップでスキップ・3.5秒で自動終了）") {
                         celebrationDemo
                     }
-                    
+
                     catalogSection("家庭の枠：返却文脈（両方貸出中・1件延滞）") {
                         FamilyLoanSlotsView(
                             slots: [
@@ -77,7 +77,7 @@
                         )
                         .padding(.vertical, 8)
                     }
-                    
+
                     catalogSection("家庭の枠：貸出文脈（保護者枠が空き）") {
                         FamilyLoanSlotsView(
                             slots: [
@@ -98,7 +98,7 @@
                         )
                         .padding(.vertical, 8)
                     }
-                    
+
                     catalogSection("家庭の枠：返却文脈（片方のみ貸出中）") {
                         FamilyLoanSlotsView(
                             slots: [
@@ -123,7 +123,7 @@
                         borrowerListDemo
                             .frame(height: 600)
                     }
-                    
+
                     catalogSection("Firebase Crashlytics：導入確認用のテストクラッシュ") {
                         crashlyticsTestButton
                     }
@@ -134,7 +134,7 @@
             .navigationTitle("UIカタログ（開発用）")
             .celebrationFeedback($celebrationFeedback)
         }
-        
+
         /// 節目のお祝いフィードバックの発火ボタン（節目の種類ごとに文言も確認できる）
         private var celebrationDemo: some View {
             HStack(spacing: 12) {
@@ -143,7 +143,7 @@
                 celebrationButton("10冊目", milestone: .distinctBooks(count: 10))
             }
         }
-        
+
         /// 借用者一覧（組インデックスのスクロール確認用・ダミー5組×6人）
         private var borrowerListDemo: some View {
             BorrowerListView(
@@ -163,7 +163,7 @@
                 onSelect: { _ in }
             )
         }
-        
+
         /// Crashlyticsの導入確認用ボタン（タップするとその場でクラッシュする）
         ///
         /// GoogleService-Info.plistを配置し、設定でクラッシュ診断の自動送信を許可してから使う。
@@ -184,7 +184,7 @@
                 .buttonStyle(.bordered)
             }
         }
-        
+
         /// 見出し付きのカタログ区画
         private func catalogSection<Content: View>(
             _ title: String, @ViewBuilder content: () -> Content
@@ -196,7 +196,7 @@
                 content()
             }
         }
-        
+
         /// 節目のお祝いを発火するボタン（実際の貸出時と同じ文言生成を通す）
         private func celebrationButton(_ label: String, milestone: LoanMilestone) -> some View {
             Button(label) {
@@ -209,7 +209,7 @@
             .buttonStyle(.bordered)
         }
     }
-    
+
     #Preview {
         NavigationStack {
             UICatalogContainerView()

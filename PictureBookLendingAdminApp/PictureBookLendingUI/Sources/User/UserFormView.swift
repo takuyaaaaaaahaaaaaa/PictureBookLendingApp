@@ -7,7 +7,7 @@ public enum UserTypeForPicker: String, CaseIterable, Codable, Hashable {
     case child = "child"
     /// 保護者
     case guardian = "guardian"
-    
+
     /// 表示用の日本語名
     public var displayName: String {
         switch self {
@@ -17,7 +17,7 @@ public enum UserTypeForPicker: String, CaseIterable, Codable, Hashable {
             return "保護者"
         }
     }
-    
+
     /// UserTypeに変換（保護者の場合は仮のUUIDを使用）
     public func toUserType(guardianRelatedChildId: UUID? = nil) -> UserType {
         switch self {
@@ -27,7 +27,7 @@ public enum UserTypeForPicker: String, CaseIterable, Codable, Hashable {
             return .guardian(relatedChildId: guardianRelatedChildId ?? UUID())
         }
     }
-    
+
     /// UserTypeから変換
     public static func from(_ userType: UserType) -> UserTypeForPicker {
         switch userType {
@@ -54,7 +54,7 @@ public struct UserFormView: View {
     let guardianCount: Binding<Int>
     let availableChildren: [User]
     let selectedChild: Binding<User?>
-    
+
     public init(
         editingUser: User? = nil,
         name: Binding<String>,
@@ -78,7 +78,7 @@ public struct UserFormView: View {
         self.availableChildren = availableChildren
         self.selectedChild = selectedChild
     }
-    
+
     public var body: some View {
         Form {
             Section(header: Text("利用者情報")) {
@@ -88,9 +88,9 @@ public struct UserFormView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                
+
                 TextField("名前", text: name)
-                
+
                 if classGroups.count == 1 {
                     HStack {
                         Text("組")
@@ -106,7 +106,7 @@ public struct UserFormView: View {
                     }
                 }
             }
-            
+
             // 保護者を選択した場合は関連する園児を選択
             if editingUser == nil && userTypeForPicker.wrappedValue == .guardian {
                 Section(header: Text("関連する園児")) {
@@ -116,7 +116,7 @@ public struct UserFormView: View {
                             Text(child.name).tag(child as User?)
                         }
                     }
-                    
+
                     if selectedChild.wrappedValue != nil {
                         Text("選択した園児の保護者として登録されます")
                             .font(.caption)
@@ -124,7 +124,7 @@ public struct UserFormView: View {
                     }
                 }
             }
-            
+
             // 利用者を選択した場合は保護者の同時登録オプション
             if editingUser == nil && userTypeForPicker.wrappedValue == .child {
                 Section(header: Text("保護者登録")) {
@@ -132,7 +132,7 @@ public struct UserFormView: View {
                         "合わせて保護者も利用者登録します。",
                         isOn: shouldRegisterGuardians
                     )
-                    
+
                     if shouldRegisterGuardians.wrappedValue {
                         HStack {
                             Text("登録する保護者数")
@@ -143,7 +143,7 @@ public struct UserFormView: View {
                                 in: 1...5
                             )
                         }
-                        
+
                         Text(
                             guardianCount.wrappedValue == 1
                                 ? "保護者名は「\(name.wrappedValue)の保護者」として自動設定されます"
@@ -161,13 +161,13 @@ public struct UserFormView: View {
 #Preview {
     @Previewable @State var userTypeForPicker: UserTypeForPicker = .child
     @Previewable @State var guardianCount = 1
-    
+
     let sampleUser = User(name: "山田太郎", classGroupId: UUID())
     let classGroups = [
         ClassGroup(name: "きく", ageGroup: AgeGroup.age(1), year: 2025),
         ClassGroup(name: "ひまわり", ageGroup: AgeGroup.age(2), year: 2025),
     ]
-    
+
     NavigationStack {
         UserFormView(
             editingUser: sampleUser,

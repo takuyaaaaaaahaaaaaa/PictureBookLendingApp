@@ -6,9 +6,9 @@ import SwiftUI
 public enum BookSortType: String, CaseIterable, Identifiable {
     case title = "title"
     case managementNumber = "managementNumber"
-    
+
     public var id: String { rawValue }
-    
+
     public var displayName: String {
         switch self {
         case .title:
@@ -17,7 +17,7 @@ public enum BookSortType: String, CaseIterable, Identifiable {
             return "管理番号順"
         }
     }
-    
+
     public var iconName: String {
         switch self {
         case .title:
@@ -33,9 +33,9 @@ public enum BookDisplayMode: String, CaseIterable, Identifiable {
     case list = "list"
     case grid = "grid"
     case shelf = "shelf"
-    
+
     public var id: String { rawValue }
-    
+
     public var displayName: String {
         switch self {
         case .list:
@@ -46,7 +46,7 @@ public enum BookDisplayMode: String, CaseIterable, Identifiable {
             return "棚表示"
         }
     }
-    
+
     public var iconName: String {
         switch self {
         case .list:
@@ -65,13 +65,13 @@ public struct BookSection: Identifiable, Hashable {
     public let id: String
     public let kanaGroup: KanaGroup
     public let books: [Book]
-    
+
     public init(kanaGroup: KanaGroup, books: [Book]) {
         self.id = kanaGroup.rawValue
         self.kanaGroup = kanaGroup
         self.books = books
     }
-    
+
     /// 表示用のセクションタイトル
     public var title: String {
         kanaGroup.displayName
@@ -98,7 +98,7 @@ private enum Layout {
 public struct BookListView<RowAction: View>: View {
     /// 空状態アイコンのサイズ（Dynamic Typeに追従してスケール）
     @ScaledMetric(relativeTo: .largeTitle) private var emptyIconSize: CGFloat = 48
-    
+
     @ScaledMetric(relativeTo: .subheadline) private var standardCellWidth = BookDisplayScale
         .standard.minCellWidth
     @ScaledMetric(relativeTo: .title3) private var largeCellWidth = BookDisplayScale.large
@@ -106,12 +106,12 @@ public struct BookListView<RowAction: View>: View {
     @ScaledMetric(relativeTo: .title3) private var shelfBoardSpacing = ShelfLayout.boardSpacing
     /// 棚札の文字拡大に合わせ、札と次の絵本が重ならない余白を確保する。
     @ScaledMetric(relativeTo: .title3) private var shelfSectionSpacing = ShelfLayout.sectionSpacing
-    
+
     /// 棚表示のビューポート幅（折り返し列数の計算に使用）
     @State private var viewportWidth: CGFloat = 0
     /// 列数が変わっても先頭の本を基準に位置を維持する。
     @State private var visibleBookID: Book.ID?
-    
+
     /// 五十音グループでセクション化された絵本
     public let sections: [BookSection]
     /// 検索テキスト
@@ -144,7 +144,7 @@ public struct BookListView<RowAction: View>: View {
     public let imageURLProvider: (Book) -> String?
     /// 各行に表示するアクションビューを生成するクロージャ
     public let rowAction: (Book) -> RowAction
-    
+
     /// BookListView イニシャライザ
     public init(
         sections: [BookSection],
@@ -179,7 +179,7 @@ public struct BookListView<RowAction: View>: View {
         self.imageURLProvider = imageURLProvider
         self.rowAction = rowAction
     }
-    
+
     public var body: some View {
         ScrollViewReader { proxy in
             VStack(alignment: .leading, spacing: 5) {
@@ -188,7 +188,7 @@ public struct BookListView<RowAction: View>: View {
                         selectedKana: $selectedKanaFilter, sort: $selectedSortType,
                         mode: $displayMode, kanaOptions: kanaFilterOptions)
                 }
-                
+
                 if sections.allSatisfy({ $0.books.isEmpty }) {
                     emptyStateView
                 } else {
@@ -228,7 +228,7 @@ public struct BookListView<RowAction: View>: View {
             }
         }
     }
-    
+
     /// 一覧を先頭行までスクロールする
     private func scrollToTop(proxy: ScrollViewProxy) {
         guard let firstBookId = sections.first?.books.first?.id else { return }
@@ -237,30 +237,30 @@ public struct BookListView<RowAction: View>: View {
             proxy.scrollTo(firstBookId, anchor: Layout.listTopAnchor)
         }
     }
-    
+
     // MARK: - Private Views
-    
+
     private var minimumCellWidth: CGFloat {
         displayScale == .standard ? standardCellWidth : largeCellWidth
     }
-    
+
     private var emptyStateView: some View {
         VStack(spacing: 16) {
             Image(systemName: "book.closed")
                 .font(.system(size: emptyIconSize))
                 .foregroundStyle(.secondary)
-            
+
             Text("図書が登録されていません")
                 .font(.title3)
                 .foregroundStyle(.secondary)
-            
+
             Text("設定画面から図書を登録してください")
                 .font(.subheadline)
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var bookListSection: some View {
         List {
             ForEach(sections) { section in
@@ -281,14 +281,14 @@ public struct BookListView<RowAction: View>: View {
             }
         }
     }
-    
+
     /// グリッドの列定義。iPadの広い幅では自動的に列数が増える（適応的グリッド）。
     /// セル最小幅は表示の大きさ（displayScale）に従う
     private var gridColumns: [GridItem] {
         let availableWidth = viewportWidth > 0 ? max(1, viewportWidth - 32) : minimumCellWidth
         return [GridItem(.adaptive(minimum: min(minimumCellWidth, availableWidth)), spacing: 16)]
     }
-    
+
     private var bookGridSection: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
@@ -297,7 +297,7 @@ public struct BookListView<RowAction: View>: View {
                         Text(section.title)
                             .font(.headline)
                             .padding(.horizontal)
-                        
+
                         LazyVGrid(columns: gridColumns, spacing: 16) {
                             ForEach(section.books) { book in
                                 bookGridCellContent(for: book)
@@ -317,7 +317,7 @@ public struct BookListView<RowAction: View>: View {
             viewportWidth = width
         }
     }
-    
+
     /// 棚表示（壁紙／革の背景と細い木の棚板）のセクション
     ///
     /// 五十音セクション＝棚のまとまりとして、棚札＋折り返しの絵本の並びで構成する。
@@ -349,7 +349,7 @@ public struct BookListView<RowAction: View>: View {
             viewportWidth = width
         }
     }
-    
+
     /// 棚表示の折り返し列数（ビューポート幅から算出。セル最小幅はdisplayScaleに従う）
     private var shelfColumnCount: Int {
         let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
@@ -358,7 +358,7 @@ public struct BookListView<RowAction: View>: View {
             (available + ShelfLayout.bookSpacing)
                 / (minimumCellWidth + ShelfLayout.bookSpacing))
     }
-    
+
     /// 棚表示の絵本セル幅（折り返し列数で等分し、行内いっぱいに使う）
     private var shelfCellWidth: CGFloat {
         let available = viewportWidth - ShelfLayout.rowHorizontalPadding * 2
@@ -366,7 +366,7 @@ public struct BookListView<RowAction: View>: View {
         let columnCount = CGFloat(shelfColumnCount)
         return (available - ShelfLayout.bookSpacing * (columnCount - 1)) / columnCount
     }
-    
+
     /// かなグループ1つ分の棚のまとまり（折り返しの棚段の集まり）
     ///
     /// かなラベルは独立した棚札としては置かず、1つ上の棚板に付ける。
@@ -383,7 +383,7 @@ public struct BookListView<RowAction: View>: View {
             }
         }
     }
-    
+
     /// 棚1段分のビュー（絵本の並び＋棚板）
     ///
     /// セル下端は貸出ボタン等の操作UIのため、棚板に張り付かないよう少し間隔を空ける
@@ -399,11 +399,11 @@ public struct BookListView<RowAction: View>: View {
             .scrollTargetLayout()
             .padding(.horizontal, ShelfLayout.rowHorizontalPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             ShelfBoardView(labelText: labelText)
         }
     }
-    
+
     /// 配列を指定サイズごとの行に分割する（棚表示の折り返し用）
     private static func chunked(_ books: [Book], into size: Int) -> [[Book]] {
         guard size > 0 else { return books.isEmpty ? [] : [books] }
@@ -411,7 +411,7 @@ public struct BookListView<RowAction: View>: View {
             Array(books[$0..<min($0 + size, books.count)])
         }
     }
-    
+
     /// 絵本グリッドセルのコンテンツ
     ///
     /// タップ領域（表紙＋タイトル）とrowAction（貸出ボタン等）を縦に分離し、
@@ -462,12 +462,12 @@ public struct BookListView<RowAction: View>: View {
                     Button("削除", role: .destructive) { onDelete(book) }
                 }
             }
-            
+
             rowAction(book)
         }
         .id(book.id)
     }
-    
+
     /// 絵本行のコンテンツ
     @ViewBuilder
     private func bookRowContent(for book: Book) -> some View {
@@ -514,7 +514,7 @@ public struct BookRowView<RowAction: View>: View {
     /// 表示の大きさ（「大きく表示」時はサムネイル・文字を一回り大きくする）
     var scale: BookDisplayScale = .standard
     let rowAction: (Book) -> RowAction
-    
+
     public var body: some View {
         HStack {
             // サムネイル画像
@@ -528,23 +528,23 @@ public struct BookRowView<RowAction: View>: View {
             .frame(width: scale.rowThumbnailWidth, height: scale.rowThumbnailHeight)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 6))
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(scale.rowTitleFont)
                     .foregroundStyle(AppColor.libraryTitle)
-                
+
                 Text(book.author ?? "")
                     .font(scale.rowAuthorFont)
                     .foregroundStyle(AppColor.librarySecondaryText)
-                
+
                 if let managementNumber = book.managementNumber {
                     ManagementNumberBadge(text: managementNumber)
                 }
             }
-            
+
             Spacer()
-            
+
             rowAction(book)
         }
         .padding(.vertical, 4)
@@ -563,13 +563,13 @@ private struct BookGridCoverView: View {
     @ScaledMetric(relativeTo: .subheadline) private var titleHeight: CGFloat = 38
     /// 「大きく表示」時のタイトル表示領域の高さ（title3の2行分固定）
     @ScaledMetric(relativeTo: .title3) private var largeTitleHeight: CGFloat = 52
-    
+
     let book: Book
     let imageURL: String?
     /// 表示の大きさ（「大きく表示」時はタイトル文字を一回り大きくする。
     /// 表紙はセル幅いっぱいに描かれるため、列定義側のセル幅拡大に自動で追従する）
     var scale: BookDisplayScale = .standard
-    
+
     var body: some View {
         VStack(spacing: 6) {
             // 表紙画像は縦長・横長どちらでも正方形の枠に揃える（GeometryReaderで
@@ -588,7 +588,7 @@ private struct BookGridCoverView: View {
             .aspectRatio(1, contentMode: .fit)
             .background(.regularMaterial)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            
+
             Text(book.title)
                 .font(scale.gridTitleFont)
                 .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
@@ -599,7 +599,7 @@ private struct BookGridCoverView: View {
         }
         .contentShape(Rectangle())
     }
-    
+
     /// 表示の大きさに応じたタイトル表示領域の高さ
     private var scaledTitleHeight: CGFloat {
         switch scale {
@@ -614,16 +614,16 @@ private struct BookGridCoverView: View {
     @Previewable @State var selectedKanaFilter: KanaGroup?
     @Previewable @State var selectedSortType: BookSortType = .title
     @Previewable @State var displayMode: BookDisplayMode = .list
-    
+
     let book1 = Book(
         title: "はらぺこあおむし", author: "エリック・カール", managementNumber: "は001", kanaGroup: .ha)
     let book2 = Book(title: "ぐりとぐら", author: "中川李枝子", managementNumber: "く002", kanaGroup: .ka)
-    
+
     let sections = [
         BookSection(kanaGroup: .ka, books: [book2]),
         BookSection(kanaGroup: .ha, books: [book1]),
     ]
-    
+
     NavigationStack {
         BookListView(
             sections: sections,
@@ -651,7 +651,7 @@ private struct BookGridCoverView: View {
     @Previewable @State var selectedKanaFilter: KanaGroup?
     @Previewable @State var selectedSortType: BookSortType = .title
     @Previewable @State var displayMode: BookDisplayMode = .shelf
-    
+
     let aBooks = [
         Book(title: "おおきなかぶ", author: "内田莉莎子", managementNumber: "あ001", kanaGroup: .a),
         Book(title: "あおくんときいろちゃん", author: "レオ・レオニ", managementNumber: "あ002", kanaGroup: .a),
@@ -668,13 +668,13 @@ private struct BookGridCoverView: View {
         Book(title: "３びきのやぎのがらがらどん", author: "せたていじ", managementNumber: "さ002", kanaGroup: .sa),
         Book(title: "そらまめくんのベッド", author: "なかやみわ", managementNumber: "さ003", kanaGroup: .sa),
     ]
-    
+
     let sections = [
         BookSection(kanaGroup: .a, books: aBooks),
         BookSection(kanaGroup: .ka, books: kaBooks),
         BookSection(kanaGroup: .sa, books: saBooks),
     ]
-    
+
     NavigationStack {
         BookListView(
             sections: sections,
@@ -701,7 +701,7 @@ private struct BookGridCoverView: View {
     @Previewable @State var selectedKanaFilter: KanaGroup?
     @Previewable @State var selectedSortType: BookSortType = .title
     @Previewable @State var displayMode: BookDisplayMode = .grid
-    
+
     let aBooks = [
         Book(title: "おおきなかぶ", author: "内田莉莎子", managementNumber: "あ001", kanaGroup: .a),
         Book(title: "あおくんときいろちゃん", author: "レオ・レオニ", managementNumber: "あ002", kanaGroup: .a),
@@ -738,7 +738,7 @@ private struct BookGridCoverView: View {
         Book(title: "ろくべえまってろよ", author: "灰谷健次郎", managementNumber: "ら001", kanaGroup: .ra),
         Book(title: "らいおんとねずみ", author: "いそっぷ", managementNumber: "ら002", kanaGroup: .ra),
     ]
-    
+
     let sections = [
         BookSection(kanaGroup: .a, books: aBooks),
         BookSection(kanaGroup: .ka, books: kaBooks),
@@ -749,7 +749,7 @@ private struct BookGridCoverView: View {
         BookSection(kanaGroup: .ya, books: yaBooks),
         BookSection(kanaGroup: .ra, books: raBooks),
     ]
-    
+
     NavigationStack {
         BookListView(
             sections: sections,
@@ -778,7 +778,7 @@ private struct BookScrollPosition: ViewModifier {
     @Binding var bookID: Book.ID?
     @State private var isUserScrolling = false
     @State private var scrollingBookID: Book.ID?
-    
+
     func body(content: Content) -> some View {
         if #available(iOS 18, macOS 15, *) {
             content

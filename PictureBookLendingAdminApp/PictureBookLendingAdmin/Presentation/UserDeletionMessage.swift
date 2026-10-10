@@ -11,7 +11,7 @@ enum UserDeletionMessage {
         /// 借りたままの図書のタイトル
         let bookTitle: String
     }
-    
+
     /// 確認ダイアログの本文を組み立てる
     ///
     /// - Parameters:
@@ -25,22 +25,22 @@ enum UserDeletionMessage {
         autoReturningLoans: [AutoReturningLoan]
     ) -> String {
         var lines = ["\(namesWithHonorific(targetNames))を削除しますか？"]
-        
+
         if !cascadedGuardianNames.isEmpty {
             lines.append(
                 "関連する保護者（\(namesWithHonorific(cascadedGuardianNames))）も合わせて削除されます。")
         }
-        
+
         if !autoReturningLoans.isEmpty {
             lines.append("")
             lines.append("借りたままの図書が\(autoReturningLoans.count)冊あります。削除すると自動的に返却されます。")
             lines.append(
                 contentsOf: autoReturningLoans.map { "・\($0.userName)さん『\($0.bookTitle)』" })
         }
-        
+
         return lines.joined(separator: "\n")
     }
-    
+
     /// 名前を敬称付きで読点区切りに整形する
     private static func namesWithHonorific(_ names: [String]) -> String {
         names.map { "\($0)さん" }.joined(separator: "、")

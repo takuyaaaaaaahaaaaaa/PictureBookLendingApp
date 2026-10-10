@@ -11,14 +11,14 @@ import SwiftUI
 struct BookDetailContainerView: View {
     @Environment(LoanModel.self) private var loanModel
     @Environment(BookModel.self) private var bookModel
-    
+
     @State private var book: Book
     @State private var alertState = AlertState()
-    
+
     init(book: Book) {
         self._book = State(initialValue: book)
     }
-    
+
     var body: some View {
         BookDetailView(
             book: $book,
@@ -45,11 +45,11 @@ struct BookDetailContainerView: View {
             }
         }
     }
-    
+
     private var currentLoan: Loan? {
         loanModel.getCurrentLoan(bookId: book.id)
     }
-    
+
     private var loanHistory: [Loan] {
         loanModel.getLoansByBook(bookId: book.id)
             .sorted { $0.loanDate > $1.loanDate }  // 新しい順にソート
@@ -58,7 +58,9 @@ struct BookDetailContainerView: View {
 
 #Preview {
     let mockFactory = MockRepositoryFactory()
-    let bookModel = BookModel(repository: mockFactory.bookRepository, imageStorageRepository: mockFactory.imageStorageRepository)
+    let bookModel = BookModel(
+        repository: mockFactory.bookRepository,
+        imageStorageRepository: mockFactory.imageStorageRepository)
     let userModel = UserModel(repository: mockFactory.userRepository)
     let loanModel = LoanModel(
         repository: mockFactory.loanRepository,
@@ -66,9 +68,9 @@ struct BookDetailContainerView: View {
         userRepository: mockFactory.userRepository,
         loanSettingsRepository: mockFactory.loanSettingsRepository
     )
-    
+
     let sampleBook = Book(title: "はらぺこあおむし", author: "エリック・カール")
-    
+
     NavigationStack {
         BookDetailContainerView(book: sampleBook)
             .environment(loanModel)

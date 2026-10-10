@@ -6,11 +6,11 @@ import SwiftUI
 /// アクション処理はContainer Viewに委譲します。
 public struct ReturnButtonView: View {
     let onTap: () -> Void
-    
+
     public init(onTap: @escaping () -> Void) {
         self.onTap = onTap
     }
-    
+
     public var body: some View {
         Button(action: onTap) {
             HStack(spacing: 6) {
@@ -34,7 +34,7 @@ public struct ReturnButtonView: View {
         ReturnButtonView(onTap: {
             print("返却ボタンがタップされました")
         })
-        
+
         // リスト内での表示例
         List {
             HStack {
@@ -45,9 +45,9 @@ public struct ReturnButtonView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 ReturnButtonView(onTap: {
                     print("返却ボタンがタップされました")
                 })

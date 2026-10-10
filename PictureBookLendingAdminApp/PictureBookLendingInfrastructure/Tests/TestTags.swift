@@ -16,7 +16,7 @@ extension Trait where Self == ConditionTrait {
     static var liveAPITest: ConditionTrait {
         .enabled(if: ProcessInfo.processInfo.environment["RUN_LIVE_API_TESTS"] == "1")
     }
-    
+
     /// 楽天ブックスAPIのライブテストを実行する条件
     /// RUN_LIVE_API_TESTS=1 かつ RAKUTEN_APPLICATION_ID・RAKUTEN_ACCESS_KEY が
     /// 設定されている場合のみ実行される
@@ -34,7 +34,7 @@ extension ProcessInfo {
     var rakutenApplicationId: String {
         environment["RAKUTEN_APPLICATION_ID"] ?? ""
     }
-    
+
     /// 環境変数から楽天アクセスキーを取得する（未設定時は空文字列）
     var rakutenAccessKey: String {
         environment["RAKUTEN_ACCESS_KEY"] ?? ""

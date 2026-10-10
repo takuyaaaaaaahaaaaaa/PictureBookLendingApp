@@ -5,7 +5,7 @@ public struct PrivacyConsentView: View {
     let policyURL: URL
     let onAllow: () -> Void
     let onDecline: () -> Void
-    
+
     public init(
         policyURL: URL, onAllow: @escaping () -> Void, onDecline: @escaping () -> Void
     ) {
@@ -13,7 +13,7 @@ public struct PrivacyConsentView: View {
         self.onAllow = onAllow
         self.onDecline = onDecline
     }
-    
+
     public var body: some View {
         NavigationStack {
             ScrollView {
@@ -62,8 +62,10 @@ private struct PrivacyConsentDataExplanation: View {
                 explanation:
                     "機種・OS・アプリのバージョン、異常終了時の処理の記録、診断用IDをGoogleのFirebase Crashlyticsへ送り、不具合の原因調査に利用します。許可した時点と以後のアプリ起動時に、保存済みの診断情報の送信をアプリが要求します。同じ起動中の要求は一度です。同意前やオフ期間中の診断も送信対象になる場合があります。毎回の送信確認は行いません。"
             )
-            Text("アプリが送信する利用状況イベントには、園児・保護者の名前、絵本の題名、検索文字列、貸出記録そのものを含めません。アプリからクラッシュ診断へ、これらを追加情報として付加する処理もありません。広告や他社アプリをまたぐ追跡にも利用しません。")
-                .bold()
+            Text(
+                "アプリが送信する利用状況イベントには、園児・保護者の名前、絵本の題名、検索文字列、貸出記録そのものを含めません。アプリからクラッシュ診断へ、これらを追加情報として付加する処理もありません。広告や他社アプリをまたぐ追跡にも利用しません。"
+            )
+            .bold()
             Text(
                 "後から「設定 → プライバシーとデータ送信」で項目ごとに変更できます。利用状況をオフにすると新たな収集を停止します。クラッシュ診断をオフにすると新たな送信要求を停止しますが、送信済み・送信開始済みの情報は取り消せません。"
             )
@@ -75,7 +77,7 @@ private struct PrivacyConsentDataExplanation: View {
 private struct PrivacyConsentPurposeSection: View {
     let title: LocalizedStringResource
     let explanation: LocalizedStringResource
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -88,7 +90,7 @@ private struct PrivacyConsentPurposeSection: View {
 private struct PrivacyConsentActions: View {
     let onAllow: () -> Void
     let onDecline: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 12) {
             Text("「同意して貸出へ」を選ぶと、利用状況とクラッシュ診断の送信が両方オンになります。")

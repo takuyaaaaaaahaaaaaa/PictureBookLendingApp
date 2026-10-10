@@ -23,7 +23,7 @@ protocol TelemetryRuntime: AnyObject {
 final class ConsentGatedAnalyticsService: AnalyticsService {
     private let enabled = OSAllocatedUnfairLock(initialState: false)
     private let destination: any AnalyticsService
-    
+
     init(destination: any AnalyticsService) { self.destination = destination }
     func setEnabled(_ value: Bool) { enabled.withLock { $0 = value } }
     func track(name: String, params: [String: AnalyticsParamValue]) {
@@ -42,7 +42,7 @@ final class TelemetryPrivacyController {
         var analytics = TelemetryConsent.unspecified
         var diagnostics = TelemetryConsent.unspecified
     }
-    
+
     private var record: Record
     private let store: any TelemetryConsentStore
     private let runtime: any TelemetryRuntime
@@ -53,13 +53,13 @@ final class TelemetryPrivacyController {
     private(set) var isRuntimeAvailable = false
     private(set) var persistenceError: String?
     let analytics: ConsentGatedAnalyticsService
-    
+
     var analyticsConsent: TelemetryConsent { record.analytics }
     var diagnosticsConsent: TelemetryConsent { record.diagnostics }
     var needsInitialConsent: Bool {
         record.analytics == .unspecified && record.diagnostics == .unspecified
     }
-    
+
     init(
         store: (any TelemetryConsentStore)? = nil,
         runtime: (any TelemetryRuntime)? = nil,
@@ -77,15 +77,15 @@ final class TelemetryPrivacyController {
         resetAnalyticsOnStart = restored.analytics != .allowed
         analytics = ConsentGatedAnalyticsService(destination: analyticsDestination)
     }
-    
+
     func dismissPersistenceError() { persistenceError = nil }
-    
+
     func start() {
         guard !started else { return }
         started = true
         activateIfNeeded()
     }
-    
+
     /// 起動時の選択は両項目を一度に保存し、成功後だけ送信を有効にする。
     func completeInitialConsent(allowed: Bool) {
         guard needsInitialConsent else { return }
@@ -97,7 +97,7 @@ final class TelemetryPrivacyController {
         else { return }
         activateIfNeeded()
     }
-    
+
     func setAnalyticsConsent(_ allowed: Bool) {
         analytics.setEnabled(false)
         if !allowed && isRuntimeAvailable { runtime.setAnalyticsEnabled(false) }
@@ -111,13 +111,13 @@ final class TelemetryPrivacyController {
             activateIfNeeded()
         }
     }
-    
+
     func setDiagnosticsConsent(_ allowed: Bool) {
         guard updateRecord({ $0.diagnostics = allowed ? .allowed : .denied }) else { return }
         activateIfNeeded()
         requestDiagnosticsIfAllowed()
     }
-    
+
     private func activateIfNeeded() {
         guard started, !runtimeStarted,
             record.analytics == .allowed || record.diagnostics == .allowed
@@ -130,7 +130,7 @@ final class TelemetryPrivacyController {
         analytics.setEnabled(record.analytics == .allowed)
         requestDiagnosticsIfAllowed()
     }
-    
+
     private func requestDiagnosticsIfAllowed() {
         guard isRuntimeAvailable, record.diagnostics == .allowed,
             !hasRequestedDiagnosticsSend
@@ -140,7 +140,7 @@ final class TelemetryPrivacyController {
         hasRequestedDiagnosticsSend = true
         runtime.sendUnsentReports()
     }
-    
+
     @discardableResult
     private func updateRecord(_ update: (inout Record) -> Void) -> Bool {
         var candidate = record

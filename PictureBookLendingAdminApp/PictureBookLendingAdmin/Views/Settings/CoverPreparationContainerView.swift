@@ -1,3 +1,4 @@
+import PictureBookLendingInfrastructure
 import PictureBookLendingModel
 import PictureBookLendingUI
 import SwiftUI
@@ -51,7 +52,8 @@ struct CoverPreparationContainerView: View {
                 Task {
                     await service.prepare(
                         books: bookModel.books, isComplete: bookModel.hasLoadedBooks)
-                    analytics.track(.coverPreparationFinished(result: canSearch ? .ready : .unavailable))
+                    analytics.track(
+                        .coverPreparationFinished(result: canSearch ? .ready : .unavailable))
                     isRetryRequested = false
                 }
             },

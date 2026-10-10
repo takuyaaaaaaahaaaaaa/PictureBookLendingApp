@@ -5,11 +5,11 @@ import SwiftUI
 /// 設定画面などで絵本の貸出状況を表示するために使用します。
 public struct BookStatusView: View {
     let isCurrentlyLent: Bool
-    
+
     public init(isCurrentlyLent: Bool) {
         self.isCurrentlyLent = isCurrentlyLent
     }
-    
+
     public var body: some View {
         Label(
             isCurrentlyLent ? "貸出中" : "貸出可",
@@ -30,7 +30,7 @@ public struct BookStatusView: View {
     VStack(spacing: 16) {
         BookStatusView(isCurrentlyLent: false)
         BookStatusView(isCurrentlyLent: true)
-        
+
         // リスト内での表示例
         List {
             HStack {
@@ -41,12 +41,12 @@ public struct BookStatusView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 BookStatusView(isCurrentlyLent: false)
             }
-            
+
             HStack {
                 VStack(alignment: .leading) {
                     Text("ぐりとぐら")
@@ -55,9 +55,9 @@ public struct BookStatusView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 BookStatusView(isCurrentlyLent: true)
             }
         }

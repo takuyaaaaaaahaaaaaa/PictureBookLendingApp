@@ -27,13 +27,16 @@ struct CoverPhotoReviewView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+                        .background(
+                            Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
                     Text(editing ? "四隅を表紙に合わせてください" : "表紙全体が入っていますか？")
                         .font(.title2.bold())
-                    Text(editing
-                         ? "丸を動かすか、調整する角を選んでスライダーを動かします。"
-                         : "文字や絵が欠けていないか、机や手が余分に入っていないか確認してください。")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        editing
+                            ? "丸を動かすか、調整する角を選んでスライダーを動かします。"
+                            : "文字や絵が欠けていないか、机や手が余分に入っていないか確認してください。"
+                    )
+                    .foregroundStyle(.secondary)
                     if busy {
                         ProgressView("表紙を準備しています")
                             .frame(maxWidth: .infinity, minHeight: 250)
@@ -48,17 +51,27 @@ struct CoverPhotoReviewView: View {
                                     }.fill(.black.opacity(0.5), style: FillStyle(eoFill: true))
                                     cropOutline(size).stroke(.white, lineWidth: 2)
                                     ForEach(0..<4) { i in
-                                        Circle().fill(selectedCorner == i ? Color.orange : Color.blue)
-                                            .frame(width: 32, height: 32)
-                                            .overlay(Circle().stroke(.white, lineWidth: 2))
-                                            .position(scaled(corners.points[i], size))
-                                            .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .named("photoReview"))
-                                                .onChanged { value in
-                                                    selectedCorner = i
-                                                    corners = corners.moving(i, to: CGPoint(
-                                                        x: value.location.x / size.width, y: value.location.y / size.height))
-                                                })
-                                            .accessibilityHidden(true)
+                                        Circle().fill(
+                                            selectedCorner == i ? Color.orange : Color.blue
+                                        )
+                                        .frame(width: 32, height: 32)
+                                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                                        .position(scaled(corners.points[i], size))
+                                        .gesture(
+                                            DragGesture(
+                                                minimumDistance: 0,
+                                                coordinateSpace: .named("photoReview")
+                                            )
+                                            .onChanged { value in
+                                                selectedCorner = i
+                                                corners = corners.moving(
+                                                    i,
+                                                    to: CGPoint(
+                                                        x: value.location.x / size.width,
+                                                        y: value.location.y / size.height))
+                                            }
+                                        )
+                                        .accessibilityHidden(true)
                                     }
                                 }.coordinateSpace(name: "photoReview")
                             }
@@ -67,8 +80,16 @@ struct CoverPhotoReviewView: View {
                         Picker("調整する角", selection: $selectedCorner) {
                             ForEach(0..<4) { Text(names[$0]).tag($0) }
                         }.pickerStyle(.segmented)
-                        HStack { Text("左右"); Slider(value: coordinate(x: true), in: 0...1).accessibilityLabel("角の左右位置") }
-                        HStack { Text("上下"); Slider(value: coordinate(x: false), in: 0...1).accessibilityLabel("角の上下位置") }
+                        HStack {
+                            Text("左右")
+                            Slider(value: coordinate(x: true), in: 0...1).accessibilityLabel(
+                                "角の左右位置")
+                        }
+                        HStack {
+                            Text("上下")
+                            Slider(value: coordinate(x: false), in: 0...1).accessibilityLabel(
+                                "角の上下位置")
+                        }
                         Button("写真全体に戻す") { corners = .fullImage }
                         Button("切り抜きを確認") { render() }
                             .buttonStyle(.borderedProminent)
@@ -136,11 +157,13 @@ struct CoverPhotoReviewView: View {
         CGPoint(x: point.x * size.width, y: point.y * size.height)
     }
     private func coordinate(x: Bool) -> Binding<Double> {
-        Binding(get: { x ? corners.points[selectedCorner].x : corners.points[selectedCorner].y }, set: { value in
-            var point = corners.points[selectedCorner]
-            if x { point.x = value } else { point.y = value }
-            corners = corners.moving(selectedCorner, to: point)
-        })
+        Binding(
+            get: { x ? corners.points[selectedCorner].x : corners.points[selectedCorner].y },
+            set: { value in
+                var point = corners.points[selectedCorner]
+                if x { point.x = value } else { point.y = value }
+                corners = corners.moving(selectedCorner, to: point)
+            })
     }
     private func render() {
         guard let sourceData else { return }
@@ -148,7 +171,8 @@ struct CoverPhotoReviewView: View {
         failure = nil
         Task {
             do {
-                previewData = try await CoverPhotoProcessor.shared.render(sourceData, corners: corners)
+                previewData = try await CoverPhotoProcessor.shared.render(
+                    sourceData, corners: corners)
                 editing = false
                 detected = true
             } catch { failure = error.localizedDescription }

@@ -16,7 +16,7 @@ class BookListFilterState {
     private(set) var searchText: String
     /// 選択中の五十音フィルタ（nilなら全件）
     private(set) var selectedKanaFilter: KanaGroup?
-    
+
     init(
         searchText: String = "",
         selectedKanaFilter: KanaGroup? = nil
@@ -24,7 +24,7 @@ class BookListFilterState {
         self.searchText = searchText
         self.selectedKanaFilter = selectedKanaFilter
     }
-    
+
     /// 検索テキストを更新する（`.searchable`のバインディング経由で呼ぶ）
     ///
     /// 空→非空へ変わったとき（＝検索を始めたとき）は五十音フィルタを解除し、
@@ -36,7 +36,7 @@ class BookListFilterState {
             selectedKanaFilter = nil
         }
     }
-    
+
     /// 五十音フィルタを設定する（チップのトグルでBookListViewから書き込むバインディング経由）
     ///
     /// フィルタを選んだ（非nilにした）ら検索テキストをクリアし、
@@ -47,7 +47,7 @@ class BookListFilterState {
             searchText = ""
         }
     }
-    
+
     /// 絞り込みをすべて解除する（貸出完了後のリセット等で使う）
     func reset() {
         searchText = ""

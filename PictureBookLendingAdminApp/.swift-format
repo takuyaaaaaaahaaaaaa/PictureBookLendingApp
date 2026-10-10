@@ -12,7 +12,7 @@
   "lineBreakBeforeEachGenericRequirement" : false,
   "prioritizeKeepingFunctionOutputTogether" : false,
   "indentConditionalCompilationBlocks" : true,
-  "indentBlankLines" : true,
+  "indentBlankLines" : false,
   "lineBreakAroundMultilineExpressionChainComponents" : false,
   "rules" : {
     "AllPublicDeclarationsHaveDocumentation" : false,

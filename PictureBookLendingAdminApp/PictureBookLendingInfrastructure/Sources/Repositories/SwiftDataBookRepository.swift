@@ -7,14 +7,14 @@ import SwiftData
 /// SwiftDataを使用して絵本の永続化を担当するリポジトリ
 public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked Sendable {
     private let modelContext: ModelContext
-    
+
     /// イニシャライザ
     ///
     /// - Parameter modelContext: SwiftData用のモデルコンテキスト
     public init(modelContext: ModelContext) {
         self.modelContext = modelContext
     }
-    
+
     /// 絵本を保存する
     ///
     /// - Parameter book: 保存する絵本
@@ -40,9 +40,9 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             managementNumber: book.managementNumber,
             kanaGroup: book.kanaGroup
         )
-        
+
         modelContext.insert(swiftDataBook)
-        
+
         do {
             try modelContext.save()
             return book
@@ -50,7 +50,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             throw RepositoryError.saveFailed
         }
     }
-    
+
     /// 全ての絵本を取得する
     ///
     /// - Returns: 全ての絵本のリスト
@@ -59,7 +59,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
         do {
             let descriptor = FetchDescriptor<SwiftDataBook>()
             let swiftDataBooks = try modelContext.fetch(descriptor)
-            
+
             // SwiftDataモデルからドメインモデルに変換
             return swiftDataBooks.map { swiftDataBook in
                 Book(
@@ -87,7 +87,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             throw RepositoryError.fetchFailed
         }
     }
-    
+
     /// IDで絵本を検索する
     ///
     /// - Parameter id: 検索する絵本のID
@@ -97,12 +97,12 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
-            
+
             let swiftDataBooks = try modelContext.fetch(descriptor)
             guard let swiftDataBook = swiftDataBooks.first else {
                 return nil
             }
-            
+
             return Book(
                 id: swiftDataBook.id,
                 title: swiftDataBook.title,
@@ -125,7 +125,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             throw RepositoryError.fetchFailed
         }
     }
-    
+
     /// 絵本を更新する
     ///
     /// - Parameter book: 更新する絵本
@@ -135,12 +135,12 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == book.id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
-            
+
             let swiftDataBooks = try modelContext.fetch(descriptor)
             guard let swiftDataBook = swiftDataBooks.first else {
                 throw RepositoryError.notFound
             }
-            
+
             // プロパティを更新
             swiftDataBook.title = book.title
             swiftDataBook.author = book.author
@@ -157,9 +157,9 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             swiftDataBook.pageCount = book.pageCount
             swiftDataBook.categories = book.categories
             swiftDataBook.kanaGroup = book.kanaGroup
-            
+
             try modelContext.save()
-            
+
             return book
         } catch RepositoryError.notFound {
             throw RepositoryError.notFound
@@ -167,7 +167,7 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
             throw RepositoryError.updateFailed
         }
     }
-    
+
     /// 絵本を削除する
     ///
     /// - Parameter id: 削除する絵本のID
@@ -177,15 +177,15 @@ public final class SwiftDataBookRepository: BookRepositoryProtocol, @unchecked S
         do {
             let predicate = #Predicate<SwiftDataBook> { $0.id == id }
             let descriptor = FetchDescriptor<SwiftDataBook>(predicate: predicate)
-            
+
             let swiftDataBooks = try modelContext.fetch(descriptor)
             guard let swiftDataBook = swiftDataBooks.first else {
                 throw RepositoryError.notFound
             }
-            
+
             modelContext.delete(swiftDataBook)
             try modelContext.save()
-            
+
             return true
         } catch RepositoryError.notFound {
             throw RepositoryError.notFound

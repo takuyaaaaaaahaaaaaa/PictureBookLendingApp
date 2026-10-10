@@ -3,7 +3,7 @@ import SwiftUI
 /// 明暗のトークンと実際の操作・状態表示を同時に比較するカタログ。
 public struct ColorTokenCatalogView: View {
     public init() {}
-    
+
     public var body: some View {
         // 狭幅では横スクロールし、各見本の幅を保つ。
         ScrollView(.horizontal) {
@@ -13,7 +13,7 @@ public struct ColorTokenCatalogView: View {
             }
         }
     }
-    
+
     private func samples(title: String, scheme: ColorScheme) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(title).font(.headline)
@@ -77,7 +77,7 @@ public struct ColorTokenCatalogView: View {
         .background(.background, in: RoundedRectangle(cornerRadius: 16))
         .environment(\.colorScheme, scheme)
     }
-    
+
     private func token(
         _ title: String, symbol: String, color: Color, foreground: Color = AppColor.onEmphasis
     ) -> some View {

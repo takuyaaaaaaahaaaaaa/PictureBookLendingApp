@@ -20,7 +20,7 @@ public enum LoanModelError: Error, Equatable, LocalizedError {
     case returnFailed
     /// 返却取り消し処理失敗エラー
     case undoReturnFailed
-    
+
     public var errorDescription: String? {
         switch self {
         case .loanNotFound:
@@ -56,22 +56,22 @@ public enum LoanModelError: Error, Equatable, LocalizedError {
 @Observable
 @MainActor
 public class LoanModel {
-    
+
     /// 貸出リポジトリ
     private let repository: LoanRepositoryProtocol
-    
+
     /// 絵本リポジトリ
     private let bookRepository: BookRepositoryProtocol
-    
+
     /// 利用者リポジトリ
     private let userRepository: UserRepositoryProtocol
-    
+
     /// 貸出設定リポジトリ
     private let loanSettingsRepository: LoanSettingsRepositoryProtocol
-    
+
     /// キャッシュ用の貸出情報リスト
     private var loans: [Loan] = []
-    
+
     /// イニシャライザ
     ///
     /// - Parameters:
@@ -89,7 +89,7 @@ public class LoanModel {
         self.bookRepository = bookRepository
         self.userRepository = userRepository
         self.loanSettingsRepository = loanSettingsRepository
-        
+
         // 初期データのロード
         do {
             self.loans = try repository.fetchAll()
@@ -98,7 +98,7 @@ public class LoanModel {
             self.loans = []
         }
     }
-    
+
     /// 絵本を貸し出す（設定値から返却期限を自動計算）
     ///
     /// - Parameters:
@@ -113,7 +113,7 @@ public class LoanModel {
         } catch {
             throw LoanModelError.bookNotFound
         }
-        
+
         // 利用者の存在確認と取得
         let user: User
         do {
@@ -124,22 +124,22 @@ public class LoanModel {
         } catch {
             throw LoanModelError.userNotFound
         }
-        
+
         // 貸出中かどうかのチェック
         if isBookLent(bookId: bookId) {
             throw LoanModelError.bookAlreadyLent
         }
-        
+
         // 利用者の貸出可能上限チェック
         let settings = loanSettingsRepository.fetch()
         let currentUserLoans = getUserActiveLoans(userId: userId)
         if currentUserLoans.count >= settings.maxBooksPerUser {
             throw LoanModelError.maxBooksPerUserExceeded
         }
-        
+
         // 返却期限日を設定から自動計算
         let dueDate = settings.calculateDueDate(from: Date())
-        
+
         // 貸出情報の作成（User情報を含める）
         let loan = Loan(
             id: UUID(),
@@ -149,7 +149,7 @@ public class LoanModel {
             dueDate: dueDate,
             returnedDate: nil
         )
-        
+
         do {
             // リポジトリに保存
             let savedLoan = try repository.save(loan)
@@ -160,7 +160,7 @@ public class LoanModel {
             throw LoanModelError.lendingFailed
         }
     }
-    
+
     /// 絵本を返却する
     ///
     /// - Parameter loanId: 返却する貸出情報のID
@@ -171,12 +171,12 @@ public class LoanModel {
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
             throw LoanModelError.loanNotFound
         }
-        
+
         // すでに返却済みかチェック
         if loans[loanIndex].isReturned {
             throw LoanModelError.returnFailed
         }
-        
+
         // 返却処理：返却日を設定
         let updatedLoan = loans[loanIndex]
         let returnedLoan = Loan(
@@ -187,20 +187,20 @@ public class LoanModel {
             dueDate: updatedLoan.dueDate,
             returnedDate: Date()
         )
-        
+
         do {
             // リポジトリで更新
             let result = try repository.update(returnedLoan)
-            
+
             // キャッシュも更新
             loans[loanIndex] = result
-            
+
             return result
         } catch {
             throw LoanModelError.returnFailed
         }
     }
-    
+
     /// 絵本IDから絵本を返却する
     ///
     /// - Parameter bookId: 返却する絵本のID
@@ -212,11 +212,11 @@ public class LoanModel {
         guard let currentLoan = loans.first(where: { $0.bookId == bookId && !$0.isReturned }) else {
             throw LoanModelError.loanNotFound
         }
-        
+
         // 見つかった貸出情報のIDで返却処理を実行
         return try returnBook(loanId: currentLoan.id)
     }
-    
+
     /// 返却を取り消す（返却操作のUndo）
     ///
     /// 返却済みの貸出情報を貸出中に戻します。貸出日・返却期限は元の値を保持します。
@@ -230,19 +230,19 @@ public class LoanModel {
         guard let loanIndex = loans.firstIndex(where: { $0.id == loanId }) else {
             throw LoanModelError.loanNotFound
         }
-        
+
         let loan = loans[loanIndex]
-        
+
         // 返却済みでなければ取り消せない
         guard loan.isReturned else {
             throw LoanModelError.undoReturnFailed
         }
-        
+
         // 取り消しまでに同じ絵本が貸し出されていたら取り消せない
         if isBookLent(bookId: loan.bookId) {
             throw LoanModelError.bookAlreadyLent
         }
-        
+
         // 取り消し処理：返却日を消して貸出中に戻す
         let restoredLoan = Loan(
             id: loan.id,
@@ -252,20 +252,20 @@ public class LoanModel {
             dueDate: loan.dueDate,
             returnedDate: nil
         )
-        
+
         do {
             // リポジトリで更新
             let result = try repository.update(restoredLoan)
-            
+
             // キャッシュも更新
             loans[loanIndex] = result
-            
+
             return result
         } catch {
             throw LoanModelError.undoReturnFailed
         }
     }
-    
+
     /// 絵本が現在貸出中かどうかを確認する
     ///
     /// - Parameter bookId: 確認する絵本のID
@@ -276,7 +276,7 @@ public class LoanModel {
             loan.bookId == bookId && !loan.isReturned
         }
     }
-    
+
     /// 絵本の現在の貸出情報を取得する
     ///
     /// - Parameter bookId: 取得したい絵本のID
@@ -286,14 +286,14 @@ public class LoanModel {
             loan.bookId == bookId && !loan.isReturned
         }
     }
-    
+
     /// 貸出情報を最新の状態に更新する
     ///
     /// リポジトリから最新のデータを取得して内部キャッシュを更新します。
     public func refreshLoans() {
         refreshActiveLoans()
     }
-    
+
     /// キャッシュをリポジトリの内容で完全に置き換える
     ///
     /// `refreshLoans()` と異なり、リポジトリから削除された貸出情報もキャッシュから除去します。
@@ -305,12 +305,12 @@ public class LoanModel {
             print("貸出情報の再読み込みに失敗しました: \(error)")
         }
     }
-    
+
     /// 貸出中の貸出情報を最新の状態に更新
     private func refreshActiveLoans() {
         do {
             let activeLoans = try repository.fetchActiveLoans()
-            
+
             // アクティブな貸出のみを更新
             for activeLoan in activeLoans {
                 if let index = loans.firstIndex(where: { $0.id == activeLoan.id }) {
@@ -319,7 +319,7 @@ public class LoanModel {
                     loans.append(activeLoan)
                 }
             }
-            
+
             // 返却済みの貸出情報も更新
             let allLoans = try repository.fetchAll()
             for loan in allLoans where loan.isReturned {
@@ -333,7 +333,7 @@ public class LoanModel {
             print("貸出情報の更新に失敗しました: \(error)")
         }
     }
-    
+
     /// 現在貸出中の全貸出情報を取得する
     ///
     /// - Important: このメソッドはリポジトリへの問い合わせによるキャッシュ更新の副作用を持ちます。
@@ -346,7 +346,7 @@ public class LoanModel {
         refreshActiveLoans()
         return loans.filter { !$0.isReturned }
     }
-    
+
     /// 現在貸出中の全貸出情報を取得する（副作用なし）
     ///
     /// キャッシュされた貸出情報から貸出中のものだけを絞り込みます。
@@ -357,7 +357,7 @@ public class LoanModel {
     public var activeLoans: [Loan] {
         getAllLoans().filter { !$0.isReturned }
     }
-    
+
     /// 延滞している貸出件数を取得する
     ///
     /// - Returns: 延滞している貸出件数
@@ -366,14 +366,14 @@ public class LoanModel {
             .filter { $0.isOverdue(at: today) }
             .count
     }
-    
+
     /// 全ての貸出履歴を取得する
     ///
     /// - Returns: 全ての貸出情報リスト
     public func getAllLoans() -> [Loan] {
         return loans
     }
-    
+
     /// 指定された利用者の貸出履歴を取得する
     ///
     /// - Parameter userId: 取得したい利用者のID
@@ -386,7 +386,7 @@ public class LoanModel {
             return loans.filter { $0.user.id == userId }
         }
     }
-    
+
     /// 貸出が節目（お祝いの対象となる記念の回数）に達したかを判定する
     ///
     /// 同じ利用者の過去の貸出履歴と照らし合わせ、達した節目を返します。
@@ -398,7 +398,7 @@ public class LoanModel {
         let previousLoans = getLoansByUser(userId: loan.user.id).filter { $0.id != loan.id }
         return LoanMilestoneEvaluator().evaluate(newLoan: loan, previousLoans: previousLoans)
     }
-    
+
     /// 指定された利用者の現在アクティブな貸出情報を取得する
     ///
     /// - Parameter userId: 取得したい利用者のID
@@ -406,7 +406,7 @@ public class LoanModel {
     public func getUserActiveLoans(userId: UUID) -> [Loan] {
         return loans.filter { $0.user.id == userId && !$0.isReturned }
     }
-    
+
     /// 未返却の貸出に記録されている利用者情報を取得する
     ///
     /// 貸出記録は貸出時点の利用者をスナップショットとして保持するため、
@@ -418,7 +418,7 @@ public class LoanModel {
     public func activeLoanBorrower(userId: UUID) -> User? {
         getUserActiveLoans(userId: userId).first?.user
     }
-    
+
     /// 複数の貸出をまとめて返却する
     ///
     /// 利用者の削除に先立つ自動返却で使用します。
@@ -434,7 +434,7 @@ public class LoanModel {
         }
         return loans.count
     }
-    
+
     /// 指定された絵本の現在アクティブな貸出情報を取得する
     ///
     /// 運用上は1冊につき1件ですが、図書を削除する前に自動返却する対象を洗い出す用途では
@@ -445,7 +445,7 @@ public class LoanModel {
     public func getBookActiveLoans(bookId: UUID) -> [Loan] {
         return loans.filter { $0.bookId == bookId && !$0.isReturned }
     }
-    
+
     /// 指定された絵本の貸出履歴を取得する
     ///
     /// - Parameter bookId: 取得したい絵本のID
@@ -458,7 +458,7 @@ public class LoanModel {
             return loans.filter { $0.bookId == bookId }
         }
     }
-    
+
     /// 全ての貸出記録を削除する
     ///
     /// 全貸出記録データを削除します。端末初期化時に使用されます。
@@ -468,15 +468,15 @@ public class LoanModel {
     public func deleteAllLoans() throws -> Int {
         do {
             let currentLoans = loans
-            
+
             // 全ての貸出記録を削除
             for loan in currentLoans {
                 _ = try repository.delete(loan.id)
             }
-            
+
             // キャッシュもクリア
             loans.removeAll()
-            
+
             return currentLoans.count
         } catch {
             throw LoanModelError.returnFailed

@@ -9,6 +9,10 @@ set -e
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 CONFIG_PATH="$REPO_ROOT/PictureBookLendingAdminApp/Secrets.xcconfig"
 
+# Read-only checks: fail before an expensive build; never rewrite sources in CI.
+python3 "$REPO_ROOT/scripts/check_build_configuration.py"
+python3 "$REPO_ROOT/scripts/swift_style.py"
+
 cat <<EOF > "$CONFIG_PATH"
 RAKUTEN_APPLICATION_ID = ${RAKUTEN_APPLICATION_ID}
 RAKUTEN_ACCESS_KEY = ${RAKUTEN_ACCESS_KEY}

@@ -10,22 +10,22 @@ import SwiftData
 final public class SwiftDataLoan {
     /// 貸出記録の一意識別子
     @Attribute(.unique) public var id: UUID
-    
+
     /// 貸出された絵本のID
     public var bookId: UUID
-    
+
     /// 借りた利用者の情報（貸出時点でのスナップショット）
     public var user: User
-    
+
     /// 貸出日
     public var loanDate: Date
-    
+
     /// 返却期限日
     public var dueDate: Date
-    
+
     /// 実際の返却日（未返却の場合はnil）
     public var returnedDate: Date?
-    
+
     /// イニシャライザ
     ///
     /// - Parameters:

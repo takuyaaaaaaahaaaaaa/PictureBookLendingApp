@@ -10,22 +10,22 @@ import SwiftUI
 struct BookAutoFillContainerButton: View {
     @Binding var targetBook: Book
     let onAutoFillComplete: (Book) -> Void
-    
+
     @State private var registerViewModel: BookRegisterViewModel
     @State private var isResultSheetPresented = false
     @State private var selectedBook: Book?
     @State private var isCoverReplacementPresented = false
-    
+
     init(targetBook: Binding<Book>, onAutoFillComplete: @escaping (Book) -> Void) {
         self._targetBook = targetBook
         self.onAutoFillComplete = onAutoFillComplete
-        
+
         // BookRegisterViewModelを初期化
         let repositoryFactory = SwiftDataRepositoryFactory.shared
         let gateway = repositoryFactory.makeBookSearchGateway()
         let normalizer = GoogleBooksOptimizedNormalizer()
         let repository = repositoryFactory.makeBookRepository()
-        
+
         self._registerViewModel = State(
             initialValue: BookRegisterViewModel(
                 gateway: gateway,
@@ -34,7 +34,7 @@ struct BookAutoFillContainerButton: View {
             )
         )
     }
-    
+
     var body: some View {
         BookAutoFillButton(
             isSearching: registerViewModel.isSearching,
@@ -60,7 +60,7 @@ struct BookAutoFillContainerButton: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var searchResultsSheet: some View {
         BookSearchResultsView(
@@ -72,21 +72,21 @@ struct BookAutoFillContainerButton: View {
             }
         )
     }
-    
+
     // MARK: - Action Handlers
-    
+
     private func handleSearch() {
         // BookFormViewのタイトルと著者名を使用して検索
         registerViewModel.searchTitle = targetBook.title
         registerViewModel.searchAuthor = targetBook.author ?? ""
-        
+
         do {
             try registerViewModel.searchBooks()
         } catch {
             // エラーはregisterViewModel.searchErrorに設定される
         }
     }
-    
+
     private func selectBook(_ book: Book) {
         selectedBook = book
         isResultSheetPresented = false
@@ -119,12 +119,13 @@ struct BookAutoFillContainerButton: View {
             categories: book.categories.isEmpty ? targetBook.categories : book.categories,
             managementNumber: targetBook.managementNumber  // 管理番号は既存値を保持
         )
-        
+
         targetBook = updatedBook
         onAutoFillComplete(updatedBook)
-        
+
         if updatedBook.localImageFileName != nil,
-           book.thumbnail != nil || book.smallThumbnail != nil {
+            book.thumbnail != nil || book.smallThumbnail != nil
+        {
             isCoverReplacementPresented = true
         }
     }
@@ -135,7 +136,7 @@ struct BookAutoFillContainerButton: View {
         title: "テスト絵本",
         author: "テスト著者"
     )
-    
+
     BookAutoFillContainerButton(
         targetBook: $sampleBook,
         onAutoFillComplete: { book in

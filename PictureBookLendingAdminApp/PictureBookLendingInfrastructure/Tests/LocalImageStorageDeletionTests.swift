@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import PictureBookLendingInfrastructure
 
 final class LocalImageStorageDeletionTests: XCTestCase {
@@ -14,7 +15,7 @@ final class LocalImageStorageDeletionTests: XCTestCase {
         try Data([3]).write(to: outside)
         XCTAssertThrowsError(try storage.deleteImage(fileName: "../keep.txt"))
         try storage.deleteImage(fileName: "one.jpg")
-        try storage.deleteImage(fileName: "one.jpg") // Missing is already deleted.
+        try storage.deleteImage(fileName: "one.jpg")  // Missing is already deleted.
         let reopened = LocalImageStorageRepository(directoryURL: folder)
         XCTAssertNil(reopened.loadImageData(fileName: "one.jpg"))
         XCTAssertNotNil(reopened.loadImageData(fileName: "orphan.jpg"))
