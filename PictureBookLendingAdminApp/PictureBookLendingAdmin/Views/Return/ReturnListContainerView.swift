@@ -46,6 +46,7 @@ struct ReturnListContainerView: View {
         NavigationStack {
             BorrowerListView(
                 sections: filteredSections,
+                layoutStyle: .adaptiveColumns,
                 chipBehavior: .scrollIndex(scrollToTopTrigger: scrollToTopTrigger),
                 isOverdueOnly: $isOverdueOnly,
                 showsDisclosureIndicator: false,
