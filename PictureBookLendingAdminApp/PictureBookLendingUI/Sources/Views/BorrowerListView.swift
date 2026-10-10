@@ -94,6 +94,8 @@ public struct BorrowerListView: View {
 
     private enum Layout {
         static let chipSpacing: CGFloat = 8
+        static let returnControlsTopPadding: CGFloat = 4
+        static let returnControlsBottomPadding: CGFloat = 16
         static let rowVerticalPadding: CGFloat = 16
         /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
         /// 先頭行の上にあるセクション見出しが視界に入るようにする
@@ -220,7 +222,8 @@ public struct BorrowerListView: View {
                     .padding(.trailing)
             }
         }
-        .padding(.vertical, isOverdueOnly != nil ? Layout.chipSpacing : 0)
+        .padding(.top, isOverdueOnly != nil ? Layout.returnControlsTopPadding : 0)
+        .padding(.bottom, isOverdueOnly != nil ? Layout.returnControlsBottomPadding : 0)
         .background {
             if isOverdueOnly != nil {
                 Rectangle().fill(.background)
