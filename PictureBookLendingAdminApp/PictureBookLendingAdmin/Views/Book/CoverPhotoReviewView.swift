@@ -15,6 +15,9 @@ struct CoverPhotoReviewView: View {
     @State private var editing = false
     @State private var selectedCorner = 0
     @State private var busy = true
+    @State private var isDetecting = false
+    @State private var processingTask: Task<Void, Never>?
+    @State private var isClosed = false
     @State private var failure: String?
     private let names = ["左上", "右上", "右下", "左下"]
 
@@ -37,10 +40,14 @@ struct CoverPhotoReviewView: View {
                             : "文字や絵が欠けていないか、机や手が余分に入っていないか確認してください。"
                     )
                     .foregroundStyle(.secondary)
+                    if let failure { Text(failure).foregroundStyle(.red) }
                     if busy {
-                        ProgressView("表紙を準備しています")
+                        ProgressView(isDetecting ? "表紙の範囲を検出しています" : "表紙を準備しています")
                             .frame(maxWidth: .infinity, minHeight: 250)
                     } else if editing, let sourceData, let source = UIImage(data: sourceData) {
+                        Button("自動切り抜き", systemImage: "wand.and.stars") { detectCover() }
+                            .buttonStyle(.bordered)
+                            .accessibilityHint("表紙の四隅を検出します。検出後も手動で調整できます。")
                         Image(uiImage: source).resizable().scaledToFit()
                             .overlay {
                                 GeometryReader { geometry in
@@ -110,10 +117,12 @@ struct CoverPhotoReviewView: View {
                                 .buttonStyle(.borderedProminent)
                         }
                     }
-                    if let failure { Text(failure).foregroundStyle(.red) }
                     if !adjustingExistingPhoto {
-                        Button("撮り直す", systemImage: "camera", action: onRetake)
-                            .buttonStyle(.bordered)
+                        Button("撮り直す", systemImage: "camera") {
+                            cancelProcessing()
+                            onRetake()
+                        }
+                        .buttonStyle(.bordered)
                     }
                 }
                 .padding(24)
@@ -123,10 +132,14 @@ struct CoverPhotoReviewView: View {
             .navigationTitle(editing ? "切り抜き範囲を調整" : "表紙の切り抜きを確認")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("キャンセル", systemImage: "xmark", role: .cancel, action: onCancel)
+                    Button("キャンセル", systemImage: "xmark", role: .cancel) {
+                        cancelProcessing()
+                        onCancel()
+                    }
                 }
             }
             .interactiveDismissDisabled(busy)
+            .onDisappear { cancelProcessing() }
             .task {
                 do {
                     let data = try CoverPhotoProcessor.normalizedData(image)
@@ -137,11 +150,14 @@ struct CoverPhotoReviewView: View {
                         return
                     }
                     let proposal = try await CoverPhotoProcessor.shared.propose(data)
-                    guard !Task.isCancelled else { return }
+                    guard !Task.isCancelled, !isClosed else { return }
                     corners = proposal.corners
                     detected = proposal.detected
                     previewData = proposal.previewData
-                } catch { failure = error.localizedDescription }
+                } catch {
+                    guard !Task.isCancelled, !isClosed else { return }
+                    failure = error.localizedDescription
+                }
                 busy = false
             }
         }
@@ -166,17 +182,54 @@ struct CoverPhotoReviewView: View {
             })
     }
     private func render() {
-        guard let sourceData else { return }
+        guard !busy, !isClosed, let sourceData else { return }
         busy = true
         failure = nil
-        Task {
+        processingTask = Task {
             do {
-                previewData = try await CoverPhotoProcessor.shared.render(
+                let rendered = try await CoverPhotoProcessor.shared.render(
                     sourceData, corners: corners)
+                guard !Task.isCancelled, !isClosed else { return }
+                previewData = rendered
                 editing = false
                 detected = true
-            } catch { failure = error.localizedDescription }
+            } catch {
+                guard !Task.isCancelled, !isClosed else { return }
+                failure = error.localizedDescription
+            }
             busy = false
+            processingTask = nil
         }
+    }
+
+    private func detectCover() {
+        guard !busy, !isClosed, let sourceData else { return }
+        busy = true
+        isDetecting = true
+        failure = nil
+        processingTask = Task {
+            do {
+                // Use the same upright source and upper-left normalized coordinates as the editor.
+                let proposal = try await CoverPhotoProcessor.shared.propose(sourceData)
+                guard !Task.isCancelled, !isClosed else { return }
+                if proposal.detected {
+                    corners = proposal.corners
+                } else {
+                    failure = "表紙の範囲を検出できませんでした。現在の範囲を保っています。四隅を手動で調整してください。"
+                }
+            } catch {
+                guard !Task.isCancelled, !isClosed else { return }
+                failure = "自動切り抜きに失敗しました。現在の範囲を保っています。四隅を手動で調整してください。"
+            }
+            isDetecting = false
+            busy = false
+            processingTask = nil
+        }
+    }
+
+    private func cancelProcessing() {
+        isClosed = true
+        processingTask?.cancel()
+        processingTask = nil
     }
 }
