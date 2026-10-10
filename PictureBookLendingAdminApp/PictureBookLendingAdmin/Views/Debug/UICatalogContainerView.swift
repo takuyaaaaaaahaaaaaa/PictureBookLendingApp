@@ -160,7 +160,7 @@
                                 id: UUID(),
                                 name: "みほん \(groupIndex)-\(rowIndex)",
                                 isGuardian: rowIndex == 6,
-                                isOverdue: rowIndex == 3,
+                                isOverdue: false,
                                 hasNoOpenSlot: rowIndex == 3 || rowIndex == 4)
                         })
                 },

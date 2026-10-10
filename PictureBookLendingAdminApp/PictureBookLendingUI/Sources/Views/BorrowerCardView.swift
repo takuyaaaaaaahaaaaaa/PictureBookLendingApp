@@ -20,6 +20,8 @@ public struct BorrowerCardView: View {
         static let spacing: CGFloat = 8
         static let cornerRadius: CGFloat = 14
         static let nameHeight: CGFloat = 50
+        // 標準サイズでは状態1種＋保護者の最大2タグを1行で表示する。
+        // 収まらないDynamic Typeでは、最低高さを超えて伸ばす。
         static let badgeHeight: CGFloat = 20
     }
 

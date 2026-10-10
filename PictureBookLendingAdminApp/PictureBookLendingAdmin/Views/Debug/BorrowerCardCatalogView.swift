@@ -19,7 +19,10 @@
                 hasNoOpenSlot: true),
             BorrowerRowDisplay(
                 id: UUID(), name: "てすとのながいみょうじ てすとのながいなまえ",
-                isGuardian: true, isOverdue: true, hasNoOpenSlot: true),
+                isGuardian: true, isOverdue: true),
+            BorrowerRowDisplay(
+                id: UUID(), name: "こばやし そういちろう", isGuardian: true, isOverdue: false,
+                hasNoOpenSlot: true),
         ]
 
         var body: some View {

@@ -386,8 +386,7 @@ private struct BorrowerCardButtonStyle: ButtonStyle {
                     id: momo.id, title: "もも組",
                     rows: [
                         BorrowerRowDisplay(
-                            id: UUID(), name: "やまもと さくらこ", isGuardian: true, isOverdue: true,
-                            hasNoOpenSlot: true),
+                            id: UUID(), name: "やまもと さくらこ", isGuardian: true, isOverdue: true),
                         BorrowerRowDisplay(
                             id: UUID(), name: "あおき はると", isGuardian: false, isOverdue: false),
                         BorrowerRowDisplay(
