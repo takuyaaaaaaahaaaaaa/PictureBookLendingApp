@@ -48,9 +48,7 @@ struct CoverSearchSheet: View {
             .navigationTitle("絵本の表紙をうつしてください")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
-                }
+                Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
             }
             .onAppear {
                 if !CameraUtility.isCameraAvailable { recordFailure(.camera) }

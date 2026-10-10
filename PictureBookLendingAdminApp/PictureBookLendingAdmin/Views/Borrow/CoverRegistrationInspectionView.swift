@@ -29,9 +29,7 @@ import PictureBookLendingUI
                 }
                 .navigationTitle("登録画像の検証")
                 .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
-                    }
+                    Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
                 }
             }
         }
