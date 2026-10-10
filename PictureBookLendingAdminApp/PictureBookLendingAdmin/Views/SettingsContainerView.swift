@@ -107,7 +107,9 @@ struct SettingsContainerView: View {
                     },
                     onSelectLicenses: {
                         navigationPath.append(SettingsDestination.licenses)
-                    }
+                    },
+                    onSelectSetupGuide: !setupStarted && !setupProgress.isComplete
+                        ? { setupStarted = true } : nil
                 )
             }
             .disabled(isDataOperationRunning)
@@ -131,14 +133,6 @@ struct SettingsContainerView: View {
                 }
             }
             .navigationTitle("設定")
-            .toolbar {
-                if !setupStarted && setupProgress.completedCount < 3 {
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("準備ガイド") { setupStarted = true }
-                    }
-                }
-            }
-            // ToolbarItemと直接配置のButtonはbuilderが異なるため、toolbarを分ける。
             .toolbar {
                 Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) {
                     dismiss()

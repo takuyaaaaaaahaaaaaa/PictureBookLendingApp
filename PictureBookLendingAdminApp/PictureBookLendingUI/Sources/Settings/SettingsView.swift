@@ -27,6 +27,7 @@ public struct SettingsView: View {
     let onSelectBackupImport: () -> Void
     let onSelectPrivacy: () -> Void
     let onSelectLicenses: () -> Void
+    let onSelectSetupGuide: (() -> Void)?
 
     public init(
         classGroupCount: Int,
@@ -50,7 +51,8 @@ public struct SettingsView: View {
         onSelectBackupExport: @escaping () -> Void,
         onSelectBackupImport: @escaping () -> Void,
         onSelectPrivacy: @escaping () -> Void,
-        onSelectLicenses: @escaping () -> Void
+        onSelectLicenses: @escaping () -> Void,
+        onSelectSetupGuide: (() -> Void)? = nil
     ) {
         self.classGroupCount = classGroupCount
         self.userCount = userCount
@@ -74,6 +76,7 @@ public struct SettingsView: View {
         self.onSelectBackupImport = onSelectBackupImport
         self.onSelectPrivacy = onSelectPrivacy
         self.onSelectLicenses = onSelectLicenses
+        self.onSelectSetupGuide = onSelectSetupGuide
     }
 
     public var body: some View {
@@ -176,6 +179,16 @@ public struct SettingsView: View {
                         .font(.headline)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal)
+
+                    if let onSelectSetupGuide {
+                        SettingsMenuItem(
+                            iconName: "list.number",
+                            title: "準備ガイド",
+                            subtitle: "組・利用者・図書を登録して貸出を始めます",
+                            action: onSelectSetupGuide,
+                            showChevron: false
+                        )
+                    }
 
                     SettingsMenuItem(
                         iconName: "envelope",
