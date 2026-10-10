@@ -194,7 +194,7 @@ struct BorrowListContainerView: View {
             onDismiss: {
                 if let book = selectedCoverBook {
                     selectedCoverBook = nil
-                    openBorrowSheet(for: book)
+                    openBorrowSheet(for: book, findMethod: .cover)
                 }
             }
         ) {
@@ -279,6 +279,7 @@ struct BorrowListContainerView: View {
     private var coverSearchBar: some View {
         LendingSearchBar(searchText: $searchText, isSearchFocused: $isSearchFocused) {
             isSearchFocused = false
+            analytics.track(.coverSearchOpened)
             isCoverSearchPresented = true
         }
     }
@@ -336,14 +337,18 @@ struct BorrowListContainerView: View {
     /// シート内フローの状態は子Container（`BorrowSheetContainerView`）の@Stateに任せるため、
     /// ここでは提示単位（図書＋貸出状態のスナップショット）を差し込むだけでよい。
     private func openBorrowSheet(for book: Book) {
+        openBorrowSheet(for: book, findMethod: currentBookFindMethod)
+    }
+
+    private func openBorrowSheet(for book: Book, findMethod: AnalyticsEvent.BookFindMethod) {
         flushPendingBookSearch()
         
         let isAlreadyLent = loanModel.isBookLent(bookId: book.id)
         // 貸出中の案内シートは貸出フローの開始ではないため記録しない
         if !isAlreadyLent {
-            analytics.track(.borrowFlowStarted(findMethod: currentBookFindMethod))
+            analytics.track(.borrowFlowStarted(findMethod: findMethod))
         }
-        borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent)
+        borrowSheetContext = BorrowSheetContext(book: book, isAlreadyLent: isAlreadyLent, findMethod: findMethod)
     }
     
     /// 図書タップ時にデバウンス待ちの検索をその場で確定させる
@@ -441,6 +446,7 @@ struct BorrowListContainerView: View {
 struct BorrowSheetContext: Identifiable {
     let book: Book
     let isAlreadyLent: Bool
+    var findMethod: AnalyticsEvent.BookFindMethod? = nil
     
     var id: UUID { book.id }
 }

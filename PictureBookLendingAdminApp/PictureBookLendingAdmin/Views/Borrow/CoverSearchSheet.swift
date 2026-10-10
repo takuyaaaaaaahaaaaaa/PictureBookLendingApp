@@ -2,9 +2,12 @@ import PictureBookLendingDomain
 import PictureBookLendingUI
 import SwiftUI
 import UIKit
+import AVFoundation
 
 /// Suggestions only; selecting a candidate continues into the existing loan flow.
 struct CoverSearchSheet: View {
+    @Environment(\.analytics) private var analytics
+    @State private var telemetry = CoverSearchTelemetry()
     let books: [Book]
     let onSelect: (Book) -> Void
     @Environment(\.dismiss) private var dismiss
@@ -40,7 +43,11 @@ struct CoverSearchSheet: View {
                     Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
                 }
             }
+            .onAppear {
+                if !CameraUtility.isCameraAvailable { recordFailure(.camera) }
+            }
             .onDisappear {
+                if let event = telemetry.finish(selected: false) { analytics.track(event) }
                 isLiveScanning = false
                 scanAttempt += 1
             }
@@ -62,6 +69,8 @@ struct CoverSearchSheet: View {
                         guard isCurrent(currentAttempt) else { return }
                         isLiveScanning = false
                         errorMessage = message
+                        let status = AVCaptureDevice.authorizationStatus(for: .video)
+                        recordFailure(status == .denied || status == .restricted ? .permission : .camera)
                     }
                 )
                 .id(scanAttempt)
@@ -104,7 +113,10 @@ struct CoverSearchSheet: View {
                         .font(.callout).foregroundStyle(.secondary)
                     ForEach(matches) { match in
                         if let book = books.first(where: { $0.id == match.id }) {
-                            Button { onSelect(book) } label: {
+                            Button {
+                                if let event = telemetry.finish(selected: true) { analytics.track(event) }
+                                onSelect(book)
+                            } label: {
                                 HStack(spacing: 12) {
                                     BookImageView(imageURL: book.resolvedSmallImageSource) {
                                         Image(systemName: "book.closed").font(.title)
@@ -139,6 +151,10 @@ struct CoverSearchSheet: View {
         }
     }
 
+    private func recordFailure(_ reason: AnalyticsEvent.CoverFailure) {
+        if let event = telemetry.fail(reason) { analytics.track(event) }
+    }
+
     private func restart() {
         matches = []
         capturedPreview = nil
@@ -154,8 +170,10 @@ struct CoverSearchSheet: View {
             let candidates = try await CoverRecognitionService.shared.search(
                 imageData: data, books: books, detectCover: true)
             guard isCurrent(attempt) else { return true }
+            telemetry.didSearch()
             if confirmation.accept(candidates.first?.id) {
                 matches = candidates
+                if let event = telemetry.showCandidates(count: candidates.count) { analytics.track(event) }
                 errorMessage = nil
                 isLiveScanning = false
                 capturedPreview = UIImage(data: data)
@@ -164,6 +182,7 @@ struct CoverSearchSheet: View {
             return false
         } catch {
             guard isCurrent(attempt) else { return true }
+            recordFailure(.recognition)
             errorMessage = error.localizedDescription
             isLiveScanning = false
             return true
