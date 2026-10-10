@@ -134,7 +134,7 @@ struct BorrowListContainerView: View {
             #if os(iOS)
                 .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
             #endif
-            .safeAreaInset(edge: .top) {
+            .safeAreaBar(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     if showsSettings && setupStarted && !setupCompleted
                         && !setupProgress.isComplete

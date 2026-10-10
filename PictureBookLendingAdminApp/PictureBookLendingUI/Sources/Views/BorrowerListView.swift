@@ -53,7 +53,7 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// 利用者を名前のみで組セクション単位に一覧表示します。
 /// 組チップの動作はホストする文脈に合わせて `SectionChipBehavior` で切り替えます
 /// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
-public struct BorrowerListView: View {
+public struct BorrowerListView<Header: View>: View {
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
@@ -90,15 +90,8 @@ public struct BorrowerListView: View {
     /// 階層へ進む場合だけ開示インジケータを表示する（Sheetを開く返却一覧では非表示）。
     public let showsDisclosureIndicator: Bool
     public let onSelect: (BorrowerRowDisplay) -> Void
-
-    private enum Layout {
-        static let chipSpacing: CGFloat = 8
-        static let returnControlsTopPadding: CGFloat = 4
-        static let returnControlsBottomPadding: CGFloat = 16
-        /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
-        /// 先頭行の上にあるセクション見出しが視界に入るようにする
-        static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
-    }
+    private let header: Header
+    private var usesControlsBar = true
 
     public init(
         sections: [BorrowerListSection],
@@ -108,7 +101,8 @@ public struct BorrowerListView: View {
         emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
         isOverdueOnly: Binding<Bool>? = nil,
         showsDisclosureIndicator: Bool = true,
-        onSelect: @escaping (BorrowerRowDisplay) -> Void
+        onSelect: @escaping (BorrowerRowDisplay) -> Void,
+        @ViewBuilder header: () -> Header
     ) {
         self.sections = sections
         self.layoutStyle = layoutStyle
@@ -118,6 +112,7 @@ public struct BorrowerListView: View {
         self.isOverdueOnly = isOverdueOnly
         self.showsDisclosureIndicator = showsDisclosureIndicator
         self.onSelect = onSelect
+        self.header = header()
     }
 
     private var usesAdaptiveColumns: Bool {
@@ -158,8 +153,10 @@ public struct BorrowerListView: View {
 
     public var body: some View {
         ScrollViewReader { proxy in
-            VStack(alignment: .leading, spacing: Layout.chipSpacing) {
-                indexSection(proxy: proxy)
+            VStack(alignment: .leading, spacing: BorrowerListLayout.chipSpacing) {
+                if !usesControlsBar {
+                    indexSection(proxy: proxy)
+                }
 
                 // 空判定はフィルタ前の全体で行う（組の絞り込みによる一時的な空を
                 // 「利用者がいない」空状態と誤認しないため）
@@ -174,6 +171,15 @@ public struct BorrowerListView: View {
                     borrowerListSection
                 }
             }
+            .modifier(
+                BorrowerControlsBar(
+                    content: VStack(spacing: 0) {
+                        if usesControlsBar {
+                            header
+                            indexSection(proxy: proxy)
+                        }
+                    })
+            )
             .background {
                 LibrarySurfaceBackgroundView()
                     .ignoresSafeArea()
@@ -184,7 +190,8 @@ public struct BorrowerListView: View {
                     let firstRowId = firstSection.rows.first?.id
                 else { return }
                 let targetId = usesAdaptiveColumns ? firstSection.id : firstRowId
-                let anchor = usesAdaptiveColumns ? UnitPoint.top : Layout.sectionJumpAnchor
+                let anchor =
+                    usesAdaptiveColumns ? UnitPoint.top : BorrowerListLayout.sectionJumpAnchor
                 Task { @MainActor in
                     // Sheetを閉じる更新後のScrollViewに対して移動する。
                     await Task.yield()
@@ -202,12 +209,13 @@ public struct BorrowerListView: View {
     ///
     /// チップは借用者がいる組だけ表示する（押しても何も起きないチップを作らない）。
     private func indexSection(proxy: ScrollViewProxy) -> some View {
-        HStack(spacing: Layout.chipSpacing) {
+        HStack(spacing: BorrowerListLayout.chipSpacing) {
             // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
             // ScrollViewを使わず素のHStackで並べる（絵本一覧のかなチップと同じ回避策）。
             // 収まらない幅（狭いSplit View等）ではかなチップと同じ思想でチップを出さない
             ViewThatFits(in: .horizontal) {
                 chipRow(proxy: proxy)
+                    .fixedSize(horizontal: true, vertical: false)
                     .padding(.leading)
                 Color.clear
                     .frame(width: 0, height: 0)
@@ -223,18 +231,13 @@ public struct BorrowerListView: View {
                     .padding(.trailing)
             }
         }
-        .padding(.top, isOverdueOnly != nil ? Layout.returnControlsTopPadding : 0)
-        .padding(.bottom, isOverdueOnly != nil ? Layout.returnControlsBottomPadding : 0)
-        .background {
-            if isOverdueOnly != nil {
-                Rectangle().fill(.background)
-            }
-        }
+        .padding(.top, isOverdueOnly != nil ? BorrowerListLayout.returnControlsTopPadding : 0)
+        .padding(.bottom, isOverdueOnly != nil ? BorrowerListLayout.returnControlsBottomPadding : 0)
     }
 
     /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
     private func chipRow(proxy: ScrollViewProxy) -> some View {
-        HStack(spacing: Layout.chipSpacing) {
+        HStack(spacing: BorrowerListLayout.chipSpacing) {
             ForEach(sections) { section in
                 Button(section.title) {
                     handleChipTap(section: section, proxy: proxy)
@@ -256,7 +259,8 @@ public struct BorrowerListView: View {
             let targetId = usesAdaptiveColumns ? section.id : targetRowId
             withAnimation {
                 proxy.scrollTo(
-                    targetId, anchor: usesAdaptiveColumns ? .top : Layout.sectionJumpAnchor)
+                    targetId,
+                    anchor: usesAdaptiveColumns ? .top : BorrowerListLayout.sectionJumpAnchor)
             }
         case .filter(let selection):
             selection.wrappedValue = selection.wrappedValue == section.id ? nil : section.id
@@ -299,6 +303,56 @@ public struct BorrowerListView: View {
         .scrollContentBackground(.hidden)
     }
 
+}
+
+private enum BorrowerListLayout {
+    static let chipSpacing: CGFloat = 8
+    static let returnControlsTopPadding: CGFloat = 4
+    static let returnControlsBottomPadding: CGFloat = 16
+    /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
+    /// 先頭行の上にあるセクション見出しが視界に入るようにする
+    static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
+}
+
+extension BorrowerListView where Header == EmptyView {
+    /// 検索ヘッダを持たない貸出シートなどは、従来の組チップ配置を保つ。
+    public init(
+        sections: [BorrowerListSection],
+        layoutStyle: LayoutStyle = .list,
+        chipBehavior: SectionChipBehavior = .scrollIndex(scrollToTopTrigger: 0),
+        emptyStateTitle: String = "現在、貸出中の利用者はいません",
+        emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
+        isOverdueOnly: Binding<Bool>? = nil,
+        showsDisclosureIndicator: Bool = true,
+        onSelect: @escaping (BorrowerRowDisplay) -> Void
+    ) {
+        self.init(
+            sections: sections,
+            layoutStyle: layoutStyle,
+            chipBehavior: chipBehavior,
+            emptyStateTitle: emptyStateTitle,
+            emptyStateDescription: emptyStateDescription,
+            isOverdueOnly: isOverdueOnly,
+            showsDisclosureIndicator: showsDisclosureIndicator,
+            onSelect: onSelect,
+            header: { EmptyView() }
+        )
+        usesControlsBar = false
+    }
+}
+
+/// UIパッケージの最低OSを維持しつつ、標準のスクロール端効果をバーへ延長する。
+private struct BorrowerControlsBar<BarContent: View>: ViewModifier {
+    let content: BarContent
+
+    @ViewBuilder
+    func body(content base: Content) -> some View {
+        if #available(iOS 26, macOS 26, *) {
+            base.safeAreaBar(edge: .top, spacing: 0) { content }
+        } else {
+            base.safeAreaInset(edge: .top, spacing: 0) { content }
+        }
+    }
 }
 
 private struct BorrowerCollectionView: View {

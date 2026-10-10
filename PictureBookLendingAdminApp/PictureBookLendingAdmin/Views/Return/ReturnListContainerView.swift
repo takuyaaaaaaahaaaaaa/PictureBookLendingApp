@@ -54,17 +54,18 @@ struct ReturnListContainerView: View {
                 isOverdueOnly: $isOverdueOnly,
                 showsDisclosureIndicator: false,
                 onSelect: handleSelect(_:)
-            )
-            .navigationTitle("返却")
-            #if os(iOS)
-                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
-                .safeAreaInset(edge: .top, spacing: 0) {
+            ) {
+                #if os(iOS)
                     LendingSearchBar(
                         searchText: $searchText,
                         isSearchFocused: $isSearchFocused,
                         prompt: "名前 または 図書のタイトルで検索"
                     )
-                }
+                #endif
+            }
+            .navigationTitle("返却")
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif
