@@ -54,7 +54,6 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// 組チップの動作はホストする文脈に合わせて `SectionChipBehavior` で切り替えます
 /// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
 public struct BorrowerListView: View {
-    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     #if os(iOS)
         @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     #endif
@@ -96,7 +95,6 @@ public struct BorrowerListView: View {
         static let chipSpacing: CGFloat = 8
         static let returnControlsTopPadding: CGFloat = 4
         static let returnControlsBottomPadding: CGFloat = 16
-        static let rowVerticalPadding: CGFloat = 16
         /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
         /// 先頭行の上にあるセクション見出しが視界に入るようにする
         static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
@@ -168,7 +166,10 @@ public struct BorrowerListView: View {
                 if sections.allSatisfy({ $0.rows.isEmpty }) {
                     emptyStateView
                 } else if usesAdaptiveColumns {
-                    BorrowerCollectionView(sections: displayedSections, onSelect: onSelect)
+                    BorrowerCollectionView(
+                        sections: displayedSections,
+                        showsDisclosureIndicator: showsDisclosureIndicator,
+                        onSelect: onSelect)
                 } else {
                     borrowerListSection
                 }
@@ -284,7 +285,8 @@ public struct BorrowerListView: View {
                         Button {
                             onSelect(row)
                         } label: {
-                            borrowerRow(row)
+                            BorrowerCardView(
+                                row: row, showsDisclosureIndicator: showsDisclosureIndicator)
                         }
                         .buttonStyle(BorrowerCardButtonStyle())
                         .listRowBackground(Color.clear)
@@ -297,82 +299,13 @@ public struct BorrowerListView: View {
         .scrollContentBackground(.hidden)
     }
 
-    /// 借用者1行：名前＋（保護者ラベル）＋（延滞マーク）
-    private func borrowerRow(_ row: BorrowerRowDisplay) -> some View {
-        HStack(alignment: .top, spacing: 16) {
-            RoundedRectangle(cornerRadius: 2)
-                .fill(AppColor.libraryAction)
-                .frame(width: 4, height: 40)
-                .accessibilityHidden(true)
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Layout.chipSpacing) {
-                    borrowerName(row)
-                        .fixedSize(horizontal: true, vertical: false)
-                    Spacer(minLength: 8)
-                    BorrowerBadgesView(row: row)
-                    borrowerDisclosureIndicator
-                }
-
-                VStack(alignment: .leading, spacing: Layout.chipSpacing) {
-                    HStack(spacing: Layout.chipSpacing) {
-                        borrowerName(row)
-                        Spacer(minLength: 8)
-                        borrowerDisclosureIndicator
-                    }
-                    if row.isGuardian || row.hasNoOpenSlot || row.isOverdue {
-                        ViewThatFits(in: .horizontal) {
-                            HStack(spacing: Layout.chipSpacing) { BorrowerBadgesView(row: row) }
-                            VStack(alignment: .leading, spacing: Layout.chipSpacing) {
-                                BorrowerBadgesView(row: row)
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.vertical, Layout.rowVerticalPadding)
-        .padding(.horizontal, 18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(AppColor.borrowerCardSurface, in: RoundedRectangle(cornerRadius: 14))
-        .overlay {
-            RoundedRectangle(cornerRadius: 14)
-                .strokeBorder(
-                    AppColor.returnCardBorder,
-                    lineWidth: colorSchemeContrast == .increased ? 2 : 1
-                )
-        }
-        .shadow(color: .black.opacity(0.10), radius: 5, y: 2)
-        .contentShape(Rectangle())
-    }
-
-    private func borrowerName(_ row: BorrowerRowDisplay) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text("利用者")
-                .font(.caption2)
-                .foregroundStyle(AppColor.librarySecondaryText)
-                .accessibilityHidden(true)
-            Text(row.name)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(AppColor.libraryTitle)
-        }
-    }
-
-    @ViewBuilder
-    private var borrowerDisclosureIndicator: some View {
-        if showsDisclosureIndicator {
-            Image(systemName: "chevron.right")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(AppColor.libraryAction)
-                .accessibilityHidden(true)
-        }
-    }
 }
 
 private struct BorrowerCollectionView: View {
     @ScaledMetric(relativeTo: .title3) private var minimumCardWidth = Layout.minimumCardWidth
 
     let sections: [BorrowerListSection]
+    let showsDisclosureIndicator: Bool
     let onSelect: (BorrowerRowDisplay) -> Void
 
     private enum Layout {
@@ -414,7 +347,9 @@ private struct BorrowerCollectionView: View {
                                     Button {
                                         onSelect(row)
                                     } label: {
-                                        BorrowerCollectionCard(row: row)
+                                        BorrowerCardView(
+                                            row: row,
+                                            showsDisclosureIndicator: showsDisclosureIndicator)
                                     }
                                     .buttonStyle(BorrowerCardButtonStyle())
                                     .id(row.id)
@@ -427,99 +362,6 @@ private struct BorrowerCollectionView: View {
                 .padding(.horizontal, Layout.horizontalPadding)
                 .padding(.vertical, Layout.spacing)
             }
-        }
-    }
-}
-
-private struct BorrowerCollectionCard: View {
-    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
-    @ScaledMetric(relativeTo: .title3) private var nameHeight = Layout.nameHeight
-    @ScaledMetric(relativeTo: .caption) private var badgeHeight = Layout.badgeHeight
-
-    let row: BorrowerRowDisplay
-
-    private enum Layout {
-        static let padding: CGFloat = 12
-        static let spacing: CGFloat = 8
-        static let cornerRadius: CGFloat = 14
-        static let nameHeight: CGFloat = 50
-        static let badgeHeight: CGFloat = 20
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Layout.spacing) {
-            Text(row.name)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(AppColor.libraryTitle)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: nameHeight, alignment: .topLeading)
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Layout.spacing) { BorrowerBadgesView(row: row) }
-                VStack(alignment: .leading, spacing: Layout.spacing) {
-                    BorrowerBadgesView(row: row)
-                }
-            }
-            .frame(minHeight: badgeHeight, alignment: .leading)
-        }
-        .padding(Layout.padding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            AppColor.borrowerCardSurface, in: RoundedRectangle(cornerRadius: Layout.cornerRadius)
-        )
-        .overlay {
-            RoundedRectangle(cornerRadius: Layout.cornerRadius)
-                .strokeBorder(
-                    AppColor.returnCardBorder,
-                    lineWidth: colorSchemeContrast == .increased ? 2 : 1
-                )
-        }
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
-    }
-}
-
-private struct BorrowerBadgesView: View {
-    let row: BorrowerRowDisplay
-
-    private enum Layout {
-        static let badgePaddingH: CGFloat = 8
-        static let badgePaddingV: CGFloat = 3
-    }
-
-    @ViewBuilder
-    var body: some View {
-        if row.isOverdue {
-            Label("延滞", systemImage: "exclamationmark.triangle.fill")
-                .labelStyle(.titleAndIcon)
-                .font(.caption.bold())
-                .padding(.horizontal, Layout.badgePaddingH)
-                .padding(.vertical, Layout.badgePaddingV)
-                .background(AppColor.overdue, in: Capsule())
-                .foregroundStyle(AppColor.onEmphasis)
-                .fixedSize()
-        }
-
-        if row.hasNoOpenSlot {
-            // 行はタップ可能なままにし、家庭の画面で枠が使用中である理由を見せる。
-            Label("空き枠なし", systemImage: "book.closed")
-                .labelStyle(.titleAndIcon)
-                .font(.caption.bold())
-                .padding(.horizontal, Layout.badgePaddingH)
-                .padding(.vertical, Layout.badgePaddingV)
-                .background(AppColor.lentSurface, in: Capsule())
-                .foregroundStyle(AppColor.lentForeground)
-                .fixedSize()
-        }
-
-        if row.isGuardian {
-            Text("保護者")
-                .font(.caption)
-                .padding(.horizontal, Layout.badgePaddingH)
-                .padding(.vertical, Layout.badgePaddingV)
-                .background(AppColor.chipSurface, in: Capsule())
-                .foregroundStyle(AppColor.librarySecondaryText)
-                .fixedSize()
         }
     }
 }
@@ -544,8 +386,7 @@ private struct BorrowerCardButtonStyle: ButtonStyle {
                     id: momo.id, title: "もも組",
                     rows: [
                         BorrowerRowDisplay(
-                            id: UUID(), name: "やまもと さくらこ", isGuardian: true, isOverdue: true,
-                            hasNoOpenSlot: true),
+                            id: UUID(), name: "やまもと さくらこ", isGuardian: true, isOverdue: true),
                         BorrowerRowDisplay(
                             id: UUID(), name: "あおき はると", isGuardian: false, isOverdue: false),
                         BorrowerRowDisplay(

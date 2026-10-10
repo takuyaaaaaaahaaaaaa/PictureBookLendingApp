@@ -29,6 +29,10 @@
                         AdaptiveLayoutPreview()
                     }
                     .font(.title3)
+                    NavigationLink("利用者カードを確認（共通・幅・文字サイズ）") {
+                        BorrowerCardCatalogView()
+                    }
+                    .font(.title3)
                     NavigationLink("本棚を確認（サンプル・保存なし）") {
                         BookshelfColorPreview()
                     }
@@ -156,7 +160,7 @@
                                 id: UUID(),
                                 name: "みほん \(groupIndex)-\(rowIndex)",
                                 isGuardian: rowIndex == 6,
-                                isOverdue: rowIndex == 3,
+                                isOverdue: false,
                                 hasNoOpenSlot: rowIndex == 3 || rowIndex == 4)
                         })
                 },
