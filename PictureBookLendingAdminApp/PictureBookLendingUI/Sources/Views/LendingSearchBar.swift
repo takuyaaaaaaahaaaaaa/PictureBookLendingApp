@@ -63,7 +63,7 @@ import SwiftUI
                 .padding(.horizontal, 12)
                 .frame(minWidth: 44, minHeight: 44)
                 .foregroundStyle(AppColor.onEmphasis)
-                .background(.tint, in: .capsule)
+                .background(AppColor.libraryAction, in: .capsule)
                 .contentShape(.capsule)
                 .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.5)
         }
