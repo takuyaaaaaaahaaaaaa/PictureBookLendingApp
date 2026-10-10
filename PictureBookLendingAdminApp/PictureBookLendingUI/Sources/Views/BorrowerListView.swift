@@ -1,10 +1,6 @@
 import PictureBookLendingDomain
 import SwiftUI
 
-#if os(iOS)
-    import UIKit
-#endif
-
 /// 借用者一覧の1行分の表示データ
 ///
 /// プライバシー配慮のため、一覧に出すのは名前・保護者ラベル・延滞マークまで。
@@ -59,13 +55,16 @@ public struct BorrowerListSection: Identifiable, Equatable, Sendable {
 /// （返却一覧＝スクロールインデックス／貸出の利用者選択＝フィルタ）。
 public struct BorrowerListView: View {
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
-    private var isPhone: Bool {
-        #if os(iOS)
-            UIDevice.current.userInterfaceIdiom == .phone
-        #else
-            false
-        #endif
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
+
+    /// 一覧の表示方式。返却の入口だけregular幅でコレクションにする。
+    public enum LayoutStyle: Hashable {
+        case list
+        case adaptiveColumns
     }
+
     /// 組チップの動作モード
     ///
     /// - 返却一覧＝インデックス：探している名前がどこにいるか分からない画面では、
@@ -80,6 +79,7 @@ public struct BorrowerListView: View {
     }
 
     public let sections: [BorrowerListSection]
+    public let layoutStyle: LayoutStyle
     /// 組チップの動作モード（既定はインデックス）
     public let chipBehavior: SectionChipBehavior
     /// 空状態のタイトル（ホストする文脈に合わせて差し替え可能）
@@ -94,9 +94,9 @@ public struct BorrowerListView: View {
 
     private enum Layout {
         static let chipSpacing: CGFloat = 8
+        static let returnControlsTopPadding: CGFloat = 4
+        static let returnControlsBottomPadding: CGFloat = 16
         static let rowVerticalPadding: CGFloat = 16
-        static let badgePaddingH: CGFloat = 8
-        static let badgePaddingV: CGFloat = 3
         /// 組ジャンプ時の着地アンカー。上端(y:0)より少し下げて、
         /// 先頭行の上にあるセクション見出しが視界に入るようにする
         static let sectionJumpAnchor = UnitPoint(x: 0.5, y: 0.06)
@@ -104,6 +104,7 @@ public struct BorrowerListView: View {
 
     public init(
         sections: [BorrowerListSection],
+        layoutStyle: LayoutStyle = .list,
         chipBehavior: SectionChipBehavior = .scrollIndex(scrollToTopTrigger: 0),
         emptyStateTitle: String = "現在、貸出中の利用者はいません",
         emptyStateDescription: String = "図書が貸し出されると、ここに名前が表示されます",
@@ -112,12 +113,22 @@ public struct BorrowerListView: View {
         onSelect: @escaping (BorrowerRowDisplay) -> Void
     ) {
         self.sections = sections
+        self.layoutStyle = layoutStyle
         self.chipBehavior = chipBehavior
         self.emptyStateTitle = emptyStateTitle
         self.emptyStateDescription = emptyStateDescription
         self.isOverdueOnly = isOverdueOnly
         self.showsDisclosureIndicator = showsDisclosureIndicator
         self.onSelect = onSelect
+    }
+
+    private var usesAdaptiveColumns: Bool {
+        #if os(iOS)
+            layoutStyle == .adaptiveColumns && horizontalSizeClass == .regular
+        #else
+            // sizeClassがない環境は従来の一覧を保つ。
+            false
+        #endif
     }
 
     /// 一覧に表示するセクション（フィルタモードで組が選ばれていればその組だけ）
@@ -156,6 +167,8 @@ public struct BorrowerListView: View {
                 // 「利用者がいない」空状態と誤認しないため）
                 if sections.allSatisfy({ $0.rows.isEmpty }) {
                     emptyStateView
+                } else if usesAdaptiveColumns {
+                    BorrowerCollectionView(sections: displayedSections, onSelect: onSelect)
                 } else {
                     borrowerListSection
                 }
@@ -166,9 +179,17 @@ public struct BorrowerListView: View {
             }
             .onChange(of: scrollToTopTrigger) { _, _ in
                 // 返却完了後の「次の利用者への引き継ぎ」：一覧を先頭へ戻す
-                guard let firstRowId = sections.first?.rows.first?.id else { return }
-                withAnimation {
-                    proxy.scrollTo(firstRowId, anchor: Layout.sectionJumpAnchor)
+                guard let firstSection = sections.first,
+                    let firstRowId = firstSection.rows.first?.id
+                else { return }
+                let targetId = usesAdaptiveColumns ? firstSection.id : firstRowId
+                let anchor = usesAdaptiveColumns ? UnitPoint.top : Layout.sectionJumpAnchor
+                Task { @MainActor in
+                    // Sheetを閉じる更新後のScrollViewに対して移動する。
+                    await Task.yield()
+                    withAnimation {
+                        proxy.scrollTo(targetId, anchor: anchor)
+                    }
                 }
             }
         }
@@ -201,7 +222,13 @@ public struct BorrowerListView: View {
                     .padding(.trailing)
             }
         }
-        .padding(.top, isPhone && isOverdueOnly != nil ? Layout.chipSpacing : 0)
+        .padding(.top, isOverdueOnly != nil ? Layout.returnControlsTopPadding : 0)
+        .padding(.bottom, isOverdueOnly != nil ? Layout.returnControlsBottomPadding : 0)
+        .background {
+            if isOverdueOnly != nil {
+                Rectangle().fill(.background)
+            }
+        }
     }
 
     /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
@@ -221,12 +248,14 @@ public struct BorrowerListView: View {
     private func handleChipTap(section: BorrowerListSection, proxy: ScrollViewProxy) {
         switch chipBehavior {
         case .scrollIndex:
-            // Listの遅延描画では見出しのIDがscrollToに解決されないため、
-            // 確実に登録される先頭行のIDへスクロールする。
-            // アンカーを上端より少し下げ、行の上にある組タイトルまで見せる
+            // コレクションはLazyVStack直下の組IDを使い、未描画の組にも移動する。
+            // Listでは従来どおり先頭の利用者IDを使う。
+            // compactでは先頭行より少し上、regularでは組見出しを上端に置く。
             guard let targetRowId = section.rows.first?.id else { return }
+            let targetId = usesAdaptiveColumns ? section.id : targetRowId
             withAnimation {
-                proxy.scrollTo(targetRowId, anchor: Layout.sectionJumpAnchor)
+                proxy.scrollTo(
+                    targetId, anchor: usesAdaptiveColumns ? .top : Layout.sectionJumpAnchor)
             }
         case .filter(let selection):
             selection.wrappedValue = selection.wrappedValue == section.id ? nil : section.id
@@ -281,7 +310,7 @@ public struct BorrowerListView: View {
                     borrowerName(row)
                         .fixedSize(horizontal: true, vertical: false)
                     Spacer(minLength: 8)
-                    borrowerBadges(row)
+                    BorrowerBadgesView(row: row)
                     borrowerDisclosureIndicator
                 }
 
@@ -293,9 +322,9 @@ public struct BorrowerListView: View {
                     }
                     if row.isGuardian || row.hasNoOpenSlot || row.isOverdue {
                         ViewThatFits(in: .horizontal) {
-                            HStack(spacing: Layout.chipSpacing) { borrowerBadges(row) }
+                            HStack(spacing: Layout.chipSpacing) { BorrowerBadgesView(row: row) }
                             VStack(alignment: .leading, spacing: Layout.chipSpacing) {
-                                borrowerBadges(row)
+                                BorrowerBadgesView(row: row)
                             }
                         }
                     }
@@ -338,9 +367,128 @@ public struct BorrowerListView: View {
                 .accessibilityHidden(true)
         }
     }
+}
+
+private struct BorrowerCollectionView: View {
+    @ScaledMetric(relativeTo: .title3) private var minimumCardWidth = Layout.minimumCardWidth
+
+    let sections: [BorrowerListSection]
+    let onSelect: (BorrowerRowDisplay) -> Void
+
+    private enum Layout {
+        static let minimumCardWidth: CGFloat = 240
+        static let maximumColumns = 4
+        static let spacing: CGFloat = 12
+        static let sectionSpacing: CGFloat = 24
+        static let horizontalPadding: CGFloat = 16
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            let availableWidth = max(0, geometry.size.width - Layout.horizontalPadding * 2)
+            let columnCount = max(
+                1,
+                min(
+                    Layout.maximumColumns,
+                    Int((availableWidth + Layout.spacing) / (minimumCardWidth + Layout.spacing))
+                )
+            )
+            let columns = Array(
+                repeating: GridItem(.flexible(), spacing: Layout.spacing, alignment: .top),
+                count: columnCount
+            )
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: Layout.sectionSpacing) {
+                    ForEach(sections) { section in
+                        VStack(alignment: .leading, spacing: Layout.spacing) {
+                            Text(section.title)
+                                .font(.headline)
+                                .foregroundStyle(AppColor.libraryTitle)
+                                .accessibilityAddTraits(.isHeader)
+
+                            LazyVGrid(
+                                columns: columns, alignment: .leading, spacing: Layout.spacing
+                            ) {
+                                ForEach(section.rows) { row in
+                                    Button {
+                                        onSelect(row)
+                                    } label: {
+                                        BorrowerCollectionCard(row: row)
+                                    }
+                                    .buttonStyle(BorrowerCardButtonStyle())
+                                    .id(row.id)
+                                }
+                            }
+                        }
+                        .id(section.id)
+                    }
+                }
+                .padding(.horizontal, Layout.horizontalPadding)
+                .padding(.vertical, Layout.spacing)
+            }
+        }
+    }
+}
+
+private struct BorrowerCollectionCard: View {
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @ScaledMetric(relativeTo: .title3) private var nameHeight = Layout.nameHeight
+    @ScaledMetric(relativeTo: .caption) private var badgeHeight = Layout.badgeHeight
+
+    let row: BorrowerRowDisplay
+
+    private enum Layout {
+        static let padding: CGFloat = 12
+        static let spacing: CGFloat = 8
+        static let cornerRadius: CGFloat = 14
+        static let nameHeight: CGFloat = 50
+        static let badgeHeight: CGFloat = 20
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Layout.spacing) {
+            Text(row.name)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(AppColor.libraryTitle)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, minHeight: nameHeight, alignment: .topLeading)
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Layout.spacing) { BorrowerBadgesView(row: row) }
+                VStack(alignment: .leading, spacing: Layout.spacing) {
+                    BorrowerBadgesView(row: row)
+                }
+            }
+            .frame(minHeight: badgeHeight, alignment: .leading)
+        }
+        .padding(Layout.padding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            AppColor.borrowerCardSurface, in: RoundedRectangle(cornerRadius: Layout.cornerRadius)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: Layout.cornerRadius)
+                .strokeBorder(
+                    AppColor.returnCardBorder,
+                    lineWidth: colorSchemeContrast == .increased ? 2 : 1
+                )
+        }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct BorrowerBadgesView: View {
+    let row: BorrowerRowDisplay
+
+    private enum Layout {
+        static let badgePaddingH: CGFloat = 8
+        static let badgePaddingV: CGFloat = 3
+    }
 
     @ViewBuilder
-    private func borrowerBadges(_ row: BorrowerRowDisplay) -> some View {
+    var body: some View {
         if row.isOverdue {
             Label("延滞", systemImage: "exclamationmark.triangle.fill")
                 .labelStyle(.titleAndIcon)
