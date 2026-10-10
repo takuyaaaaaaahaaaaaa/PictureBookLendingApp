@@ -51,7 +51,7 @@ import SwiftUI
             .frame(height: searchBarHeight)
             .padding(.horizontal, 16)
             .padding(.vertical, 6)
-            .background(Color(uiColor: .systemBackground))
+            .background(Color(uiColor: .systemBackground), ignoresSafeAreaEdges: [])
         }
     }
 
