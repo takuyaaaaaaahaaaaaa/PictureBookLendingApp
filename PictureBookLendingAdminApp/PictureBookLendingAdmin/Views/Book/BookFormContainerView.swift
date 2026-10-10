@@ -30,6 +30,7 @@ struct BookFormContainerView: View {
     @State private var draftImageFiles: Set<String> = []
     @State private var isSaving = false
     @State private var savedBookAwaitingClose: Book?
+    @State private var isDiscardPhotoConfirmationPresented = false
 
     init(mode: BookFormMode, onSave: ((Book) -> Void)? = nil) {
         self.mode = mode
@@ -84,6 +85,12 @@ struct BookFormContainerView: View {
                 )
             }
             .interactiveDismissDisabled()
+            .alert("保存せずに閉じますか？", isPresented: $isDiscardPhotoConfirmationPresented) {
+                Button("編集を続ける", role: .cancel) {}
+                Button("保存せずに閉じる", role: .destructive) { discardAndClose() }
+            } message: {
+                Text("変更した表紙画像はまだ保存されていません。編集を続けて図書を保存してください。")
+            }
             .onChange(of: book.title) { _, newTitle in
                 updateKanaGroup(for: newTitle)
             }
@@ -221,6 +228,14 @@ struct BookFormContainerView: View {
         draftImageFiles = []
     }
     private func handleCancel() {
+        if let fileName = book.localImageFileName, draftImageFiles.contains(fileName) {
+            isDiscardPhotoConfirmationPresented = true
+        } else {
+            discardAndClose()
+        }
+    }
+
+    private func discardAndClose() {
         cleanDraftImages()
         dismiss()
     }

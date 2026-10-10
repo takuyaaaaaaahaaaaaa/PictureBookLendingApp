@@ -6,31 +6,52 @@ import SwiftUI
 /// 保護者向けの報告フォームなど、印刷・掲示して院外の利用者に
 /// スキャンしてもらうことを想定している。
 public struct FeedbackQRCodeView: View {
-    let url: URL
     @State private var qrCGImage: CGImage?
 
-    public init(url: URL) {
+    let url: URL
+    let handoutURL: URL?
+
+    public init(url: URL, handoutURL: URL? = nil) {
         self.url = url
+        self.handoutURL = handoutURL
     }
 
     public var body: some View {
-        VStack(spacing: 16) {
-            Group {
-                if let qrCGImage {
-                    Image(decorative: qrCGImage, scale: 1)
-                        .interpolation(.none)
-                        .resizable()
+        ScrollView {
+            VStack(spacing: 16) {
+                Group {
+                    if let qrCGImage {
+                        Image(decorative: qrCGImage, scale: 1)
+                            .interpolation(.none)
+                            .resizable()
+                    } else {
+                        ProgressView()
+                    }
+                }
+                .frame(width: 280, height: 280)
+
+                Text("スマートフォンのカメラで読み取ってください")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                if let handoutURL {
+                    ShareLink(item: handoutURL) {
+                        Label("案内PDFを共有", systemImage: "square.and.arrow.up")
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Text("共有画面から「ファイルに保存」や印刷を選べます。保護者への配布にご利用ください。")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 } else {
-                    ProgressView()
+                    Text("案内PDFを読み込めませんでした。アプリを開き直してお試しください。")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 280, height: 280)
-
-            Text("スマートフォンのカメラで読み取ってください")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            .padding()
         }
-        .padding()
         .task {
             qrCGImage = Self.makeQRCode(from: url.absoluteString)
         }

@@ -200,8 +200,8 @@ public struct SettingsView: View {
 
                     SettingsMenuItem(
                         iconName: "qrcode",
-                        title: "保護者向け不具合・ご要望フォームのQRコード",
-                        subtitle: "掲示・印刷して保護者に案内できます",
+                        title: "保護者向け不具合・ご要望フォーム",
+                        subtitle: "QRコードの表示・案内PDFの共有や保存",
                         action: onSelectParentFeedbackQRCode,
                         showChevron: false
                     )

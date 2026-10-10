@@ -11,6 +11,8 @@ struct CoverPhotoReviewView: View {
     @State private var sourceData: Data?
     @State private var previewData: Data?
     @State private var corners = CoverPhotoCorners.fullImage
+    @State private var initialCorners: CoverPhotoCorners?
+    @State private var isDiscardConfirmationPresented = false
     @State private var detected = false
     @State private var editing = false
     @State private var selectedCorner = 0
@@ -20,6 +22,10 @@ struct CoverPhotoReviewView: View {
     @State private var isClosed = false
     @State private var failure: String?
     private let names = ["左上", "右上", "右下", "左下"]
+
+    private var hasUnsavedChanges: Bool {
+        initialCorners.map { $0 != corners } ?? false
+    }
 
     var body: some View {
         NavigationStack {
@@ -133,18 +139,28 @@ struct CoverPhotoReviewView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("キャンセル", systemImage: "xmark", role: .cancel) {
-                        cancelProcessing()
-                        onCancel()
+                        if hasUnsavedChanges {
+                            isDiscardConfirmationPresented = true
+                        } else {
+                            closeWithoutSaving()
+                        }
                     }
                 }
             }
-            .interactiveDismissDisabled(busy)
+            .interactiveDismissDisabled(busy || hasUnsavedChanges)
+            .alert("保存せずに閉じますか？", isPresented: $isDiscardConfirmationPresented) {
+                Button("編集を続ける", role: .cancel) {}
+                Button("保存せずに閉じる", role: .destructive) { closeWithoutSaving() }
+            } message: {
+                Text("調整した切り抜き範囲は保存されません。編集を続けて「この表紙を使う」で確定してください。")
+            }
             .onDisappear { cancelProcessing() }
             .task {
                 do {
                     let data = try CoverPhotoProcessor.normalizedData(image)
                     sourceData = data
                     if adjustingExistingPhoto {
+                        initialCorners = corners
                         editing = true
                         busy = false
                         return
@@ -152,6 +168,7 @@ struct CoverPhotoReviewView: View {
                     let proposal = try await CoverPhotoProcessor.shared.propose(data)
                     guard !Task.isCancelled, !isClosed else { return }
                     corners = proposal.corners
+                    initialCorners = proposal.corners
                     detected = proposal.detected
                     previewData = proposal.previewData
                 } catch {
@@ -231,5 +248,10 @@ struct CoverPhotoReviewView: View {
         isClosed = true
         processingTask?.cancel()
         processingTask = nil
+    }
+
+    private func closeWithoutSaving() {
+        cancelProcessing()
+        onCancel()
     }
 }

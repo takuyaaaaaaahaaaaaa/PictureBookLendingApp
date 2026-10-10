@@ -22,6 +22,7 @@ struct CoverPreparationTests {
         #expect(service.hasCheckedPreparation)
         #expect(service.preparedBookIDs.isEmpty)
         #expect(service.pendingCount == 0)
+        #expect(service.pendingBookIDs.isEmpty)
         #expect(!service.isPreparing)
     }
 
@@ -31,12 +32,17 @@ struct CoverPreparationTests {
         defer { try? FileManager.default.removeItem(at: folder) }
         let service = CoverRecognitionService(
             engine: CoverRecognitionEngine(indexURL: folder.appendingPathComponent("index.json")))
-        let books = [Book(title: "表紙なしの架空本")]
+        let books = [
+            Book(title: "表紙なしの架空本", managementNumber: "A-1"),
+            Book(title: "表紙なしの架空本", managementNumber: "A-2"),
+            Book(title: "別の架空本", managementNumber: "A-3"),
+        ]
         await service.prepare(books: books, isComplete: true)
         await service.prepare(books: books, isComplete: true)
         #expect(service.hasCheckedPreparation)
         #expect(service.preparedCount == 0)
-        #expect(service.pendingCount == 1)
+        #expect(service.pendingCount == 3)
+        #expect(service.pendingBookIDs == Set(books.map(\.id)))
         #expect(!service.isPreparing)
     }
 
@@ -53,6 +59,7 @@ struct CoverPreparationTests {
         var book = Book(title: "写真を追加する架空本")
         await service.prepare(books: [book], isComplete: true)
         #expect(service.pendingCount == 1)
+        #expect(service.pendingBookIDs == [book.id])
         let pixels = UIGraphicsImageRenderer(size: CGSize(width: 32, height: 48)).image { context in
             UIColor.green.setFill()
             context.fill(CGRect(x: 0, y: 0, width: 32, height: 48))
@@ -61,6 +68,7 @@ struct CoverPreparationTests {
         book.localImageFileName = fileName
         try await service.approveRegisteredPhoto(book)
         #expect(service.pendingCount == 0)
+        #expect(service.pendingBookIDs.isEmpty)
         #expect(service.hasPreparedBook(in: [book], isComplete: true))
         #expect(!service.hasPreparedBook(in: [book], isComplete: false))
         #expect(!service.hasPreparedBook(in: [], isComplete: true))
@@ -105,6 +113,7 @@ struct CoverPreparationTests {
         #expect(service.hasCheckedPreparation)
         #expect(service.preparedBookIDs == [readyBook.id])
         #expect(service.pendingCount == 1)
+        #expect(service.pendingBookIDs == [remote.id])
         // A second request must not clear the existing availability or start a second download.
         await service.prepare(books: [readyBook], isComplete: true)
         #expect(service.preparedBookIDs.contains(readyBook.id))
@@ -116,6 +125,7 @@ struct CoverPreparationTests {
         }
         #expect(service.preparedBookIDs == [readyBook.id])
         #expect(service.pendingCount == 0)
+        #expect(service.pendingBookIDs.isEmpty)
         #expect(!service.isPreparing)
         #expect(await engine.preparedBookIDs(in: [remote]).isEmpty)
     }
