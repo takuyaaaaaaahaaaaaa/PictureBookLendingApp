@@ -22,7 +22,7 @@ public struct BorrowerCardView: View {
         static let nameHeight: CGFloat = 50
         // 標準サイズでは状態1種＋保護者の最大2タグを1行で表示する。
         // 収まらないDynamic Typeでは、最低高さを超えて伸ばす。
-        static let badgeHeight: CGFloat = 20
+        static let badgeHeight: CGFloat = 22
     }
 
     public var body: some View {
