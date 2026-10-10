@@ -304,5 +304,11 @@ SDK既定の識別子に関する既存申告も含め、ASCの実設定を今�
 `python3 scripts/test_cover_analytics_local.py` で実ソースを一時Swift Packageへコピーし、
 Firebase境界のみstub化。AnalyticsEvent 16件・CoverSearchTelemetry 4件・TelemetryConsent 21件が成功。
 追加・変更した5画面の`swiftc -frontend -parse`も成功。
-Xcodeの全体build / build-for-testingは、未配置の`Secrets.xcconfig`により停止した。
-設定ファイルを作成・コピーしての回避は行っていない。全体の型検査・Simulatorでの画面確認・実SDK通信は未検証。
+初回の全体build / build-for-testingは未配置の`Secrets.xcconfig`で停止したが、追加承認後に
+独立worktreeだけへ空のgitignored設定（楽天ID/キーとも空）を作成し、
+Simulator向け全体`build-for-testing`が成功。GoogleService-Info.plistは配置せず、
+ビルド成果物にも含まれないことを確認した。実認証情報のコピーやFirebase本番送信は行っていない。
+専用の新規iPad Simulatorでsim-useのUI接続preflightが自動復旧後も失敗したため、
+画面操作は未検証。普段のSimulatorや他作業のdaemonは変更していない。実SDK通信も未検証。
+専用Simulatorの初回起動がデータ移行待ちで進まず、`test-without-building`は実行開始前に中止した。
+端末上のテスト成功とは扱わない。マージ前に分離テスト41件を再実行し、すべて成功した。
