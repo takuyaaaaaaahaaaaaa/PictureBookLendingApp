@@ -21,9 +21,6 @@ struct BorrowListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(TelemetryPrivacyController.self) private var privacy
     @Environment(\.analytics) private var analytics
-    #if os(iOS)
-        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    #endif
 
     /// タップされた図書と開いた時点の貸出状態。非nilの間フォームシートを開く（シートの提示単位）
     ///
@@ -132,7 +129,9 @@ struct BorrowListContainerView: View {
             }
             .navigationTitle("貸出")
             #if os(iOS)
-                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
+                // 検索バー併用時に報告された大きいタイトルのぼけを回避する。
+                // regular幅の従来のインライン表示も維持する。
+                .navigationBarTitleDisplayMode(.inline)
             #endif
             .safeAreaBar(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
