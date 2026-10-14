@@ -171,15 +171,14 @@ public struct BorrowerListView<Header: View>: View {
                     borrowerListSection
                 }
             }
-            .modifier(
-                BorrowerControlsBar(
-                    content: VStack(spacing: 0) {
-                        if usesControlsBar {
-                            header
-                            indexSection(proxy: proxy)
-                        }
-                    })
-            )
+            .lendingControlsBar {
+                VStack(spacing: 0) {
+                    if usesControlsBar {
+                        header
+                        indexSection(proxy: proxy)
+                    }
+                }
+            }
             .background {
                 LibrarySurfaceBackgroundView()
                     .ignoresSafeArea()
@@ -338,20 +337,6 @@ extension BorrowerListView where Header == EmptyView {
             header: { EmptyView() }
         )
         usesControlsBar = false
-    }
-}
-
-/// UIパッケージの最低OSを維持しつつ、標準のスクロール端効果をバーへ延長する。
-private struct BorrowerControlsBar<BarContent: View>: ViewModifier {
-    let content: BarContent
-
-    @ViewBuilder
-    func body(content base: Content) -> some View {
-        if #available(iOS 26, macOS 26, *) {
-            base.safeAreaBar(edge: .top, spacing: 0) { content }
-        } else {
-            base.safeAreaInset(edge: .top, spacing: 0) { content }
-        }
     }
 }
 
