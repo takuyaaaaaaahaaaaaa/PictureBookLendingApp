@@ -240,7 +240,7 @@ struct BorrowSheetContainerView: View {
             idleTicket += 1
             isCoverZoomPresented = true
         } label: {
-            BookImageView(imageURL: book.resolvedSmallImageSource) {
+            BookImageView(imageURL: book.resolvedImageSource) {
                 Image(systemName: "book.closed")
                     .foregroundStyle(.secondary)
                     .font(.largeTitle)
