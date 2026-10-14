@@ -47,7 +47,10 @@ xcresult の `totalTestCount` は265。パラメータ付き実行を展開し�
 | iPad 横、AX5 | 長い書名・名前・期限・返却ボタンの表示を確認。横向きスクロールの自動操作はツールの向き認識が不安定で未確認 |
 | 家庭枠の描画比較（iPadの部品） | 標準・XXXL・AX5 × 375/600/834/1194pt × 貸出/返却を SwiftUI ImageRenderer で取得。375pt等は分割幅の代理条件であり、実際のSplit Viewではない |
 | 標準834ptの家庭枠 | 貸出・返却それぞれのBefore/After PNGがバイト単位で一致 |
-| iPhone 17 Pro | 標準・AX5の本棚表示を目視。iOS 26の大タイトル回避策を保持。UIツリー取得が失敗し、貸出・返却の実操作確認は未完了 |
+| iPhone 17 Pro | 標準・AX5の本棚表示を目視。AX5の枠確認をスクロールして貸出→同じ本を検索→返却完了まで実操作で確認。iOS 26の大タイトル回避策を保持 |
+| iPhone・組メニュー（架空2組） | さくら組を選択して利用者を絞り込み、標準→AX5で選択を維持。AX5の「絞り込みを解除」でひまわり組を含む一覧に戻ることを確認 |
+| iPhone・利用者選択保持 | さくら組の「はると10」を選んだ枠確認で標準→AX5に変更。同じ利用者・同じ図書のまま、スクロール後の貸出ボタンから成功 |
+| iPhone・検索文字保持 | 貸出一覧で確定入力「10」を標準→XXXL→AX5で維持。返却一覧でも「10」を標準→AX5で維持し、該当利用者を選んで返却成功 |
 
 標準834pt描画のSHA-256（Before/After共通）：
 
@@ -56,8 +59,10 @@ xcresult の `totalTestCount` は265。パラメータ付き実行を展開し�
 
 ## 未確認・制約
 
-- 実機、実際のSplit View、設定アプリの「アプリごとの設定」経由、検索文字入力後の保持、組メニューの実操作は未確認。システム文字サイズのライブ変更は `simctl ui … content_size` で確認した。
-- iPhoneのUIツリーは `No translation object returned for simulator` となり、アプリ再起動とテスト実行後も改善しなかった。画像確認・テスト成功を、操作完了の代わりには扱わない。
+- 実機、実際のSplit View、設定アプリの「アプリごとの設定」経由は未確認。組メニューのスクロールインデックス動作（返却一覧）は未確認。システム文字サイズのライブ変更は `simctl ui … content_size` で確認した。
+- iPhoneのUIツリーは `No translation object returned for simulator` のまま。既に実施したsim-useのaccessibility有効化・対象アプリ再起動でも改善しなかったため、追加確認ではスクリーンショットから座標を決め、tap/swipe/pasteの後に画像で結果を確認した。シミュレータやデーモンの一括再起動、セキュリティ設定変更は行っていない。
+- 追加検証には架空の2組を使った。貸出・返却シートの既存15秒無操作終了を変更せず、確認済みの短い連続操作で記録した。タイムアウト後の画面は成功証拠から除外した。
+- iPadで通常チップからメニューへ切り替わる途中の選択保持は、追加検証中にUI取得が再び空になり完了していない。同じ共有Viewのメニュー選択・解除とDynamic Type変更時の状態保持はiPhoneで確認済み。
 - iPadの初回UI取得は事前チェックで失敗し、テスト実行後に回復した。事前チェック内部の自動修復はsim-useデーモンを停止するため、以後は全デーモンの自動修復を再実行していない。
 - 管理用の旧 `LoanConfirmationView` 等、今回の主要導線から外れる画面は変更していない。
 - 既存のカメラorientation非推奨警告は残る。Cloudの27.1 iPad runtime問題は本変更の対象外で、Cloud設定変更・追加ビルド起動は行っていない。
@@ -68,3 +73,13 @@ xcresult の `totalTestCount` は265。パラメータ付き実行を展開し�
 2. 組で絞り込んでから文字を大きくし、メニューで別の組への変更・解除ができること。
 3. 検索入力と選択を保ったまま、文字サイズ・縦横・分割幅を変更する。
 4. iPhoneの最大文字でも各操作とスクロールが可能なこと。
+
+## 既存の「大きく表示」の調査
+
+- `PictureBookLendingUI/Sources/Book/BookDisplayScale.swift` の `BookDisplayScale` / `BookDisplayScaleToggleButton` が実装。
+- グリッド・棚のセル最小幅を140→210ptへ変更し、幅に応じて列数も減る。これらは `BookListView` の `ScaledMetric` によるシステム文字サイズの拡大も受ける。
+- グリッドの書名はsubheadline→title3。リストは書名title3→title2、著者subheadline→body、表紙50×65→80×104pt。
+- `BorrowListContainerView` の `@AppStorage("borrowListDisplayScale")` に保存され、再起動後も維持される。
+- 一覧専用の表示設定で、システム全体のDynamic Typeや利用者・家庭枠の文字サイズは変更しない。今回のPRでは追加・変更していない。
+
+追加検証後の製品コード変更は、`LendingControlsBar.swift` の無関係なformatter空行の除去のみ（mainと同一）。新たな不具合修正は不要だった。実行済みの各265テストに加え、2組の一時fixtureでビルド成功、追加の実操作と `git diff --check` を確認した。
