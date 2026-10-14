@@ -16,6 +16,9 @@ struct ReturnListContainerView: View {
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.analytics) private var analytics
     @Environment(\.scenePhase) private var scenePhase
+    #if os(iOS)
+        @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    #endif
 
     @State private var selectedBorrower: BorrowerRowDisplay?
     @State private var searchText = ""
@@ -62,9 +65,7 @@ struct ReturnListContainerView: View {
             }
             .navigationTitle("返却")
             #if os(iOS)
-                // 検索バー併用時に報告された大きいタイトルのぼけを回避する。
-                // regular幅の従来のインライン表示も維持する。
-                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(horizontalSizeClass == .regular ? .inline : .large)
             #else
                 .searchable(text: $searchText, prompt: "名前 または 図書のタイトルで検索")
             #endif
