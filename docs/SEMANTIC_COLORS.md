@@ -19,6 +19,18 @@ UIパッケージのAsset Catalogで明暗を定義し、`AppColor`から参照�
 
 本棚の「借りる」ボタンは操作なので暖色、同じ位置の「貸出中」は状態案内なので淡紫の面と濃藍の文字を使う。貸出可の緑を借りるボタンの色へ兼用しない。
 
+## 現行の操作色と変更範囲
+
+上の操作色の説明と下の淡色への調整は2026-10-02時点の方針。後続の [PR #264](https://github.com/takuyaaaaaaahaaaaaa/PictureBookLendingApp/pull/264) で用途別の操作色を追加し、[PR #299](https://github.com/takuyaaaaaaahaaaaaa/PictureBookLendingApp/pull/299) で表紙検索も表示切替・返却と同じ組に揃えた。
+
+| 現行の組 | 用途 | ライト／ダークの背景アセット値 |
+| --- | --- | --- |
+| `accent`（本体／Widgetの`AccentColor`） | 環境のアクセントと、それを参照する標準コントロール・操作 | `#99673F`／`#D2A07A` |
+| `libraryAction`＋`onEmphasis` | 表紙検索、表示切替、返却 | `#67452F`／`#DEBD8D` |
+| `borrowAction`＋`borrowActionForeground` | 借りる操作と貸出・返却完了表示 | 専用アセットの明暗対応値 |
+
+`accent`は`Color.accentColor`の参照であり、用途別トークンのRGBコピーではない。`libraryAction`などはUIパッケージのAsset Catalogを`bundle: .module`で参照する。用途が違うので一律に同じ値へ揃えない。全体の色味を変更する場合は本体／WidgetのAccentColorを同じ内容に保ち、用途別トークンと明示overrideが追従するかは個別に確認する。表の値はアセット値であり、環境tintの実際の解決色や合成後の見え方を保証しない。
+
 ## 確認場所
 
 - DebugのUIカタログ先頭：明暗を横並びにした全トークン、塗り面＋文字、木地上の操作・状態表示。
