@@ -19,6 +19,7 @@ struct CoverSearchSheet: View {
     @State private var isLiveScanning = true
     @State private var scanAttempt = 0
     @State private var confirmation = LiveCoverConfirmation()
+    @State private var frameGeneration: UUID?
 
     var body: some View {
         NavigationStack {
@@ -45,7 +46,7 @@ struct CoverSearchSheet: View {
                 .padding(16)
             }
             .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("絵本の表紙をうつしてください")
+            .navigationTitle("枠に表紙を合わせてください")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 Button("閉じる", systemImage: "xmark", role: .closeIfAvailable) { dismiss() }
@@ -82,12 +83,7 @@ struct CoverSearchSheet: View {
                     }
                 )
                 .id(scanAttempt)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(.white.opacity(0.8), lineWidth: 2)
-                        .padding(24)
-                }
-                .accessibilityLabel("表紙を検知するカメラ")
+                .accessibilityLabel("固定枠の内側だけを検索するカメラ")
             } else if let capturedPreview {
                 Image(uiImage: capturedPreview).resizable().scaledToFit()
                     .accessibilityLabel("候補検索に使った表紙の写真")
@@ -111,10 +107,12 @@ struct CoverSearchSheet: View {
                     Text("検索できませんでした").font(.title3.bold())
                     Text(errorMessage).foregroundStyle(.secondary)
                 } else if matches.isEmpty {
-                    Label("表紙を中央に大きく映してください", systemImage: "viewfinder")
+                    Label("破線の枠に表紙を合わせてください", systemImage: "viewfinder")
                         .font(.headline)
-                    Text("少し止めると候補が表示されます。見つからない場合は、この画面を閉じてタイトル・著者で検索できます。")
-                        .foregroundStyle(.secondary)
+                    Text(
+                        "実線は四角い輪郭の検出を示し、図書の特定ではありません。輪郭が見つからなくても枠内を検索します。少し止めても候補が出ない場合は、閉じてタイトル・著者で検索できます。"
+                    )
+                    .foregroundStyle(.secondary)
                 } else {
                     Text("この本ですか？").font(.title2.bold())
                     Text("同じ表紙の本は、管理番号を確認して選んでください。")
@@ -175,16 +173,21 @@ struct CoverSearchSheet: View {
         capturedPreview = nil
         errorMessage = nil
         confirmation = LiveCoverConfirmation()
+        frameGeneration = nil
         scanAttempt += 1
         isLiveScanning = true
     }
     @MainActor
-    private func searchLive(_ data: Data, attempt: Int) async -> Bool {
-        guard isCurrent(attempt) else { return true }
+    private func searchLive(_ frame: LiveCoverCameraView.Frame, attempt: Int) async -> Bool {
+        guard isCurrent(attempt), frame.isCurrent() else { return false }
+        if frameGeneration != frame.generation {
+            frameGeneration = frame.generation
+            confirmation = LiveCoverConfirmation()
+        }
         do {
             let candidates = try await CoverRecognitionService.shared.search(
-                imageData: data, books: books, detectCover: true)
-            guard isCurrent(attempt) else { return true }
+                imageData: frame.data, books: books, detectCover: false)
+            guard isCurrent(attempt), frame.isCurrent() else { return false }
             telemetry.didSearch()
             if confirmation.accept(candidates.first?.id) {
                 matches = candidates
@@ -193,12 +196,12 @@ struct CoverSearchSheet: View {
                 }
                 errorMessage = nil
                 isLiveScanning = false
-                capturedPreview = UIImage(data: data)
+                capturedPreview = UIImage(data: frame.data)
                 return true
             }
             return false
         } catch {
-            guard isCurrent(attempt) else { return true }
+            guard isCurrent(attempt), frame.isCurrent() else { return false }
             recordFailure(.recognition)
             errorMessage = error.localizedDescription
             isLiveScanning = false
