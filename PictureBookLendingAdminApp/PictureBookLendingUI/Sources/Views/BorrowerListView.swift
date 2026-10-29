@@ -211,13 +211,13 @@ public struct BorrowerListView<Header: View>: View {
         HStack(spacing: BorrowerListLayout.chipSpacing) {
             // iOS 27ベータにHStack内の横ScrollViewが幅0のまま描画されない不具合があるため、
             // ScrollViewを使わず素のHStackで並べる（絵本一覧のかなチップと同じ回避策）。
-            // 収まらない幅（狭いSplit View等）ではかなチップと同じ思想でチップを出さない
+            // 大きい文字や狭い幅ではメニューに畳み、選択中の組を解除する操作も残す。
             ViewThatFits(in: .horizontal) {
                 chipRow(proxy: proxy)
                     .fixedSize(horizontal: true, vertical: false)
                     .padding(.leading)
-                Color.clear
-                    .frame(width: 0, height: 0)
+                groupMenu(proxy: proxy)
+                    .padding(.leading)
             }
 
             Spacer()
@@ -234,7 +234,36 @@ public struct BorrowerListView<Header: View>: View {
         .padding(.bottom, isOverdueOnly != nil ? BorrowerListLayout.returnControlsBottomPadding : 0)
     }
 
-    /// 組チップの並び（`ViewThatFits`の各候補から共通で参照する）
+    private func groupMenu(proxy: ScrollViewProxy) -> some View {
+        Menu {
+            if case .filter(let selection) = chipBehavior {
+                Button("絞り込みを解除", systemImage: "xmark.circle") {
+                    selection.wrappedValue = nil
+                }
+                .disabled(selection.wrappedValue == nil)
+                Divider()
+            }
+            ForEach(sections) { section in
+                Button {
+                    handleChipTap(section: section, proxy: proxy)
+                } label: {
+                    if isChipSelected(section) {
+                        Label(section.title, systemImage: "checkmark")
+                    } else {
+                        Text(section.title)
+                    }
+                }
+            }
+        } label: {
+            Label("組", systemImage: "line.3.horizontal.decrease")
+        }
+        .buttonStyle(.bordered)
+        .accessibilityLabel("組を選ぶ")
+        .accessibilityValue(sections.first(where: isChipSelected)?.title ?? "すべて")
+        .accessibilityIdentifier("borrower.group.menu")
+    }
+
+    /// 幅に収まるときに表示する組チップの並び
     private func chipRow(proxy: ScrollViewProxy) -> some View {
         HStack(spacing: BorrowerListLayout.chipSpacing) {
             ForEach(sections) { section in

@@ -74,14 +74,24 @@ public struct FamilyLoanSlotsView: View {
         #endif
     }
 
+    private var usesVerticalLayout: Bool {
+        dynamicTypeSize >= .xxxLarge
+    }
+
+    private var headerLayout: AnyLayout {
+        usesVerticalLayout
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Layout.textSpacing))
+            : AnyLayout(HStackLayout(spacing: Layout.headerSpacing))
+    }
+
     private var dueDateLayout: AnyLayout {
-        isPhone
+        isPhone || usesVerticalLayout
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Layout.textSpacing))
             : AnyLayout(HStackLayout(spacing: Layout.headerSpacing))
     }
 
     private var lentCardLayout: AnyLayout {
-        isPhone && dynamicTypeSize.isAccessibilitySize
+        usesVerticalLayout
             ? AnyLayout(VStackLayout(alignment: .leading, spacing: Layout.headerSpacing))
             : AnyLayout(
                 HStackLayout(spacing: isPhone ? Layout.headerSpacing : Layout.contentSpacing))
@@ -128,7 +138,7 @@ public struct FamilyLoanSlotsView: View {
     /// 枠1つ分：枠名ヘッダ＋カード
     private func slotSection(_ slot: FamilyLoanSlotDisplay) -> some View {
         VStack(alignment: .leading, spacing: Layout.headerSpacing) {
-            HStack(spacing: Layout.headerSpacing) {
+            headerLayout {
                 Text(slot.roleLabel)
                     .font(.headline)
                     .foregroundStyle(AppColor.libraryTitle)
@@ -136,6 +146,7 @@ public struct FamilyLoanSlotsView: View {
                     .font(.subheadline)
                     .foregroundStyle(AppColor.librarySecondaryText)
             }
+            .fixedSize(horizontal: false, vertical: true)
 
             if let loan = slot.loan {
                 // 貸出文脈では「すでに借りている本」は選べない情報なので、
@@ -168,6 +179,7 @@ public struct FamilyLoanSlotsView: View {
                 Text(loan.bookTitle)
                     .font(.title3.bold())
                     .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(AppColor.libraryTitle)
 
                 dueDateLayout {
@@ -183,11 +195,12 @@ public struct FamilyLoanSlotsView: View {
                             .foregroundStyle(AppColor.onEmphasis)
                     }
                 }
-                .frame(maxWidth: isPhone ? .infinity : nil, alignment: .leading)
+                .frame(
+                    maxWidth: isPhone || usesVerticalLayout ? .infinity : nil, alignment: .leading)
             }
-            .frame(maxWidth: isPhone ? .infinity : nil, alignment: .leading)
+            .frame(maxWidth: isPhone || usesVerticalLayout ? .infinity : nil, alignment: .leading)
 
-            if !isPhone {
+            if !isPhone && !usesVerticalLayout {
                 Spacer(minLength: Layout.contentSpacing)
             }
 
@@ -200,8 +213,8 @@ public struct FamilyLoanSlotsView: View {
                 .tint(AppColor.libraryAction)
                 .foregroundStyle(AppColor.onEmphasis)
                 .controlSize(.large)
-                .fixedSize(horizontal: isPhone, vertical: false)
-                .frame(minWidth: isPhone ? 44 : nil, minHeight: isPhone ? 44 : nil)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(minWidth: 44, minHeight: 44)
             }
         }
         .padding(Layout.cardPadding)
@@ -257,14 +270,16 @@ public struct FamilyLoanSlotsView: View {
                 in: RoundedRectangle(cornerRadius: Layout.cardCornerRadius)
             )
         } else {
-            HStack(spacing: Layout.headerSpacing) {
+            headerLayout {
                 Image(systemName: "book.closed")
                     .foregroundStyle(.secondary)
                 Text(loan.bookTitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Spacer(minLength: Layout.contentSpacing)
+                if !usesVerticalLayout {
+                    Spacer(minLength: Layout.contentSpacing)
+                }
 
                 Text("返却期限：\(loan.dueDateText)")
                     .font(.subheadline)
@@ -299,39 +314,30 @@ public struct FamilyLoanSlotsView: View {
 
     /// 空き枠：破線の枠＋（貸出文脈なら）借りるボタン
     private func emptyCard(slot: FamilyLoanSlotDisplay) -> some View {
-        let isPhoneBorrowing = isPhone && mode == .borrowing
-        return VStack(alignment: .leading, spacing: Layout.headerSpacing) {
-            HStack(spacing: Layout.contentSpacing) {
-                Text("借りていません")
-                    .font(.title3)
-                    .foregroundStyle(.tertiary)
+        let isStacked = isPhone || usesVerticalLayout
+        let layout =
+            isStacked
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Layout.headerSpacing))
+            : AnyLayout(HStackLayout(spacing: Layout.contentSpacing))
+        return layout {
+            Text("借りていません")
+                .font(.title3)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
 
-                if !isPhoneBorrowing {
-                    Spacer(minLength: Layout.contentSpacing)
-                }
-
-                if mode == .borrowing && !isPhoneBorrowing {
-                    RowActionButton(
-                        title: "この枠で借りる", tint: AppColor.borrowAction,
-                        foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,
-                        font: .title3
-                    ) {
-                        onBorrow(slot)
-                    }
-                }
+            if !isStacked {
+                Spacer(minLength: Layout.contentSpacing)
             }
-            if isPhoneBorrowing {
+
+            if mode == .borrowing {
                 RowActionButton(
-                    title: dynamicTypeSize.isAccessibilitySize ? "借りる" : "この枠で借りる",
-                    tint: AppColor.borrowAction,
+                    title: "この枠で借りる", tint: AppColor.borrowAction,
                     foreground: AppColor.borrowActionForeground, hasSubtleDepth: true,
                     font: .title3
                 ) {
                     onBorrow(slot)
                 }
-                .fixedSize(horizontal: true, vertical: false)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .trailing)
-                .accessibilityLabel("この枠で借りる")
+                .frame(maxWidth: isStacked ? .infinity : nil, minHeight: 44, alignment: .trailing)
             }
         }
         .padding(Layout.cardPadding)
