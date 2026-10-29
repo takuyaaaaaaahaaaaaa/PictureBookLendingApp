@@ -6,7 +6,13 @@ import SwiftUI
 /// Samples upright, unmirrored frames with one recognition request in flight.
 /// Rectangle detection is an optional part of recognition, never a capture gate.
 struct LiveCoverCameraView: UIViewRepresentable {
-    let onFrame: @MainActor @Sendable (Data) async -> Bool
+    let onFrame: @MainActor @Sendable (Frame) async -> Bool
+    struct Frame: Sendable {
+        let data: Data
+        let generation: UUID
+        let isCurrent: @MainActor @Sendable () -> Bool
+    }
+
     let onFailure: @MainActor @Sendable (String) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -19,7 +25,7 @@ struct LiveCoverCameraView: UIViewRepresentable {
         let view = PreviewView()
         view.previewLayer.session = context.coordinator.session
         view.previewLayer.videoGravity = .resizeAspectFill
-        view.onOrientation = { context.coordinator.setOrientation($0) }
+        view.onGeometry = { context.coordinator.setGeometry($0, orientation: $1) }
         context.coordinator.previewView = view
         context.coordinator.start()
         return view
@@ -29,7 +35,58 @@ struct LiveCoverCameraView: UIViewRepresentable {
         coordinator.stop()
     }
     final class PreviewView: UIView {
-        var onOrientation: ((AVCaptureVideoOrientation) -> Void)?
+        var onGeometry: ((LiveCoverGeometry, AVCaptureVideoOrientation) -> Void)?
+        private var lastGeometry: LiveCoverGeometry?
+        private let guideLayer = CAShapeLayer()
+        private let outlineLayer = CAShapeLayer()
+        private let statusLabel = UILabel()
+
+        override init(frame: CGRect) {
+            super.init(frame: frame)
+            for shape in [guideLayer, outlineLayer] {
+                shape.fillColor = UIColor.clear.cgColor
+                shape.strokeColor = UIColor.systemRed.cgColor
+                shape.lineWidth = 3
+                layer.addSublayer(shape)
+            }
+            guideLayer.lineDashPattern = [8, 6]
+            statusLabel.textColor = .white
+            statusLabel.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+            statusLabel.font = .preferredFont(forTextStyle: .caption1)
+            statusLabel.adjustsFontForContentSizeCategory = true
+            statusLabel.numberOfLines = 0
+            addSubview(statusLabel)
+            showOutline(nil, corrected: false)
+        }
+        required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+        func showOutline(_ points: [CGPoint]?, corrected: Bool) {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            if let points, let first = points.first {
+                let path = UIBezierPath()
+                path.move(to: first)
+                for point in points.dropFirst() { path.addLine(to: point) }
+                path.close()
+                outlineLayer.path = path.cgPath
+            } else {
+                outlineLayer.path = nil
+            }
+            CATransaction.commit()
+            statusLabel.text =
+                points == nil ? "枠内を検索中" : (corrected ? "輪郭の範囲を検索中・図書は未確定" : "四角い輪郭を検出・図書は未確定")
+            layoutStatus()
+        }
+
+        private func layoutStatus() {
+            let inset: CGFloat = 28
+            let width = max(0, bounds.width - 2 * inset)
+            let height = statusLabel.sizeThatFits(
+                CGSize(width: width, height: .greatestFiniteMagnitude)
+            ).height
+            statusLabel.frame = CGRect(
+                x: inset, y: bounds.height - inset - height, width: width, height: height)
+        }
         private var orientationTimer: Timer?
         private var lastOrientation: AVCaptureVideoOrientation?
         override func didMoveToWindow() {
@@ -62,10 +119,18 @@ struct LiveCoverCameraView: UIViewRepresentable {
             default: orientation = .portrait
             }
             previewLayer.connection?.makeUpright(orientation)
-            if lastOrientation != orientation {
+            let geometry = LiveCoverGeometry(size: bounds.size)
+            if lastOrientation != orientation || lastGeometry != geometry {
                 lastOrientation = orientation
-                onOrientation?(orientation)
+                lastGeometry = geometry
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                guideLayer.path = UIBezierPath(rect: geometry.guide).cgPath
+                CATransaction.commit()
+                showOutline(nil, corrected: false)
+                onGeometry?(geometry, orientation)
             }
+            layoutStatus()
         }
     }
     // AVFoundation calls the delegate on `queue`. Capture state is confined to that
@@ -78,8 +143,13 @@ struct LiveCoverCameraView: UIViewRepresentable {
         let session = AVCaptureSession()
         @MainActor weak var previewView: PreviewView?
         private let queue = DispatchQueue(label: "CoverLiveCamera")
-        private let context = CIContext()
-        private let onFrame: @MainActor @Sendable (Data) async -> Bool
+        private var processor = LiveCoverFrameProcessor()
+        @MainActor private var currentGeneration = UUID()
+        @MainActor private var isActive = true
+        private var generation = UUID()
+        private var geometry: LiveCoverGeometry?
+        private var acceptFramesAfter: CFTimeInterval = 0
+        private let onFrame: @MainActor @Sendable (Frame) async -> Bool
         private let onFailure: @MainActor @Sendable (String) -> Void
         private var orientation: AVCaptureVideoOrientation = .portrait
         private var outputConnection: AVCaptureConnection?
@@ -90,7 +160,7 @@ struct LiveCoverCameraView: UIViewRepresentable {
         private var sessionObservers: [NSObjectProtocol] = []
 
         init(
-            onFrame: @escaping @MainActor @Sendable (Data) async -> Bool,
+            onFrame: @escaping @MainActor @Sendable (Frame) async -> Bool,
             onFailure: @escaping @MainActor @Sendable (String) -> Void,
             notificationCenter: NotificationCenter = .default
         ) {
@@ -118,12 +188,19 @@ struct LiveCoverCameraView: UIViewRepresentable {
         deinit {
             for observer in sessionObservers { notificationCenter.removeObserver(observer) }
         }
-        func setOrientation(_ orientation: AVCaptureVideoOrientation) {
+        @MainActor
+        func setGeometry(_ geometry: LiveCoverGeometry, orientation: AVCaptureVideoOrientation) {
+            currentGeneration = UUID()
+            let generation = currentGeneration
             queue.async {
+                self.generation = generation
+                self.geometry = geometry
                 self.orientation = orientation
-                if let connection = self.outputConnection, connection.isVideoOrientationSupported {
-                    connection.videoOrientation = orientation
-                }
+                self.outputConnection?.makeUpright(orientation)
+                self.processor.reset()
+                self.lastFrameTime = 0
+                // Discard frames captured before the output rotation/layout change.
+                self.acceptFramesAfter = CACurrentMediaTime()
             }
         }
         func start() {
@@ -140,7 +217,10 @@ struct LiveCoverCameraView: UIViewRepresentable {
             default: fail(Self.accessDeniedMessage)
             }
         }
-        func stop() {
+        @MainActor func stop() {
+            isActive = false
+            currentGeneration = UUID()
+            previewView?.showOutline(nil, corrected: false)
             queue.async { self.halt() }
         }
         /// Must run on `queue`.
@@ -194,25 +274,39 @@ struct LiveCoverCameraView: UIViewRepresentable {
             from connection: AVCaptureConnection
         ) {
             dispatchPrecondition(condition: .onQueue(queue))
-            guard !stopped, !processing,
+            guard !stopped, !processing, let geometry,
+                CMTimeGetSeconds(CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
+                    >= acceptFramesAfter,
                 let buffer = CMSampleBufferGetImageBuffer(sampleBuffer)
             else { return }
             let now = CACurrentMediaTime()
             guard now - lastFrameTime >= 1 else { return }
             lastFrameTime = now
-            var image = CIImage(cvPixelBuffer: buffer)
-            let scale = min(1, 1024 / max(image.extent.width, image.extent.height))
-            image = image.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
-            guard let cgImage = context.createCGImage(image, from: image.extent) else { return }
-            guard let frame = try? cgImage.encodedData(type: "public.jpeg", quality: 0.9) else {
-                return
+            let image = CIImage(cvPixelBuffer: buffer)
+            guard let result = processor.process(image, geometry: geometry),
+                let data = try? result.image.encodedData(type: "public.jpeg", quality: 0.9)
+            else { return }
+            let points = result.outline?.points.map {
+                geometry.previewPoint($0, crop: result.crop, imageSize: image.extent.size)
             }
+            let corrected = result.isCorrected
+            let generation = generation
             processing = true
             Task { @MainActor in
-                let finished = await self.onFrame(frame)
+                let isCurrent: @MainActor @Sendable () -> Bool = { [weak self] in
+                    guard let self else { return false }
+                    return self.isActive && self.currentGeneration == generation
+                }
+                var finished = false
+                if isCurrent() {
+                    self.previewView?.showOutline(points, corrected: corrected)
+                    finished = await self.onFrame(
+                        Frame(data: data, generation: generation, isCurrent: isCurrent))
+                }
+                let shouldHalt = finished && isCurrent()
                 self.queue.async {
                     self.processing = false
-                    if finished { self.halt() }
+                    if shouldHalt { self.halt() }
                 }
             }
         }
@@ -220,7 +314,13 @@ struct LiveCoverCameraView: UIViewRepresentable {
             queue.async {
                 guard !self.stopped else { return }
                 self.halt()
-                DispatchQueue.main.async { self.onFailure(message) }
+                DispatchQueue.main.async {
+                    guard self.isActive else { return }
+                    self.isActive = false
+                    self.currentGeneration = UUID()
+                    self.previewView?.showOutline(nil, corrected: false)
+                    self.onFailure(message)
+                }
             }
         }
     }
