@@ -443,4 +443,4 @@ func foo(bar: Bar) -> Int {
 ## 🧪 単体テスト方針
 
 1. **Domain / Model / State / Formatter** は必ず単体テストを作成する。
-2. **テストが緑＝十分ではない**。境界条件・定数テーブル・分岐を含むDomain/Modelのロジックを追加・変更したら、`scripts/mutants/<モジュール名>.json` に変異（`from`→`to`）を追記し、`python3 scripts/mutation_probe.py <モジュール名>` で全件 killed を確認する。survived は「仕様上必要な振る舞いの未検証」ならテストを足し、等価変異ならその理由をPR説明に残す。数字（killed率）を目的にせず、期待値は仕様から決める。
+2. **テストが緑＝十分ではない**。境界条件・定数テーブル・分岐を含むDomainのロジックを追加・変更したら（Modelは変異リスト未整備のため、整備するときに同じ手順で追加する）、`scripts/mutants/PictureBookLendingDomain.json` に変異（`from`→`to`）を追記し、`python3 scripts/mutation_probe.py PictureBookLendingDomain` で全件 killed を確認する。survived は「仕様上必要な振る舞いの未検証」ならテストを足し、等価変異ならその理由をPR説明に残す。数字（killed率）を目的にせず、期待値は仕様から決める。
