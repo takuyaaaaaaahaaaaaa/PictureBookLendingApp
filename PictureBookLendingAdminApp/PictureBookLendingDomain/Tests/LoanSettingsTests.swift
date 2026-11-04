@@ -34,6 +34,13 @@ final class LoanSettingsTests: XCTestCase {
         XCTAssertFalse(invalidSettings3.isValid())
     }
 
+    func testValidationOfMaxBooksPerUser() {
+        XCTAssertTrue(LoanSettings(defaultLoanPeriodDays: 7, maxBooksPerUser: 1).isValid())
+        XCTAssertTrue(LoanSettings(defaultLoanPeriodDays: 7, maxBooksPerUser: 5).isValid())
+        XCTAssertFalse(LoanSettings(defaultLoanPeriodDays: 7, maxBooksPerUser: 0).isValid())
+        XCTAssertFalse(LoanSettings(defaultLoanPeriodDays: 7, maxBooksPerUser: -1).isValid())
+    }
+
     func testCalculateDueDate() {
         let settings = LoanSettings(defaultLoanPeriodDays: 14)
 
