@@ -55,6 +55,8 @@ public struct RowActionButton: View {
                     .font(font)
                 Text(title)
                     .font(font)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .multilineTextAlignment(.center)
             }
             .foregroundStyle(foreground)
             .padding(.horizontal, 16)

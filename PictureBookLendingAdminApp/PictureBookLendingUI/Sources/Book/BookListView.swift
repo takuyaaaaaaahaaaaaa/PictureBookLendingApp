@@ -509,14 +509,21 @@ public struct BookListView<RowAction: View>: View {
 ///
 /// 一覧の各行に表示する絵本情報のレイアウトを定義します。
 public struct BookRowView<RowAction: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let book: Book
     let imageURL: String?
     /// 表示の大きさ（「大きく表示」時はサムネイル・文字を一回り大きくする）
     var scale: BookDisplayScale = .standard
     let rowAction: (Book) -> RowAction
 
+    private var rowLayout: AnyLayout {
+        dynamicTypeSize >= .xxxLarge
+            ? AnyLayout(VStackLayout(alignment: .leading))
+            : AnyLayout(HStackLayout())
+    }
+
     public var body: some View {
-        HStack {
+        rowLayout {
             // サムネイル画像
             BookImageView(imageURL: imageURL) {
                 BookCoverPlaceholder(font: .title2, cornerRadius: 6)
@@ -532,10 +539,12 @@ public struct BookRowView<RowAction: View>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(scale.rowTitleFont)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(AppColor.libraryTitle)
 
                 Text(book.author ?? "")
                     .font(scale.rowAuthorFont)
+                    .fixedSize(horizontal: false, vertical: true)
                     .foregroundStyle(AppColor.librarySecondaryText)
 
                 if let managementNumber = book.managementNumber {
@@ -543,10 +552,11 @@ public struct BookRowView<RowAction: View>: View {
                 }
             }
 
-            Spacer()
+            if dynamicTypeSize < .xxxLarge { Spacer() }
 
             rowAction(book)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 4)
     }
 }
@@ -591,7 +601,7 @@ private struct BookGridCoverView: View {
 
             Text(book.title)
                 .font(scale.gridTitleFont)
-                .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
+                .lineLimit(dynamicTypeSize > .large ? nil : 2)
                 .fixedSize(horizontal: false, vertical: true)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(AppColor.libraryTitle)
