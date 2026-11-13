@@ -25,6 +25,7 @@ struct BorrowSheetContainerView: View {
     @Environment(UserModel.self) private var userModel
     @Environment(ClassGroupModel.self) private var classGroupModel
     @Environment(\.analytics) private var analytics
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
 
     /// フォームシート内部の遷移パス（利用者選択→枠確認）
@@ -78,6 +79,12 @@ struct BorrowSheetContainerView: View {
         /// 拡大できることを示す虫めがねバッジの内側余白と表紙端からの間隔
         static let zoomBadgeInnerPadding: CGFloat = 6
         static let zoomBadgeEdgePadding: CGFloat = 8
+    }
+
+    private var bookSummaryLayout: AnyLayout {
+        dynamicTypeSize >= .xxxLarge
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: Layout.headerContentSpacing))
+            : AnyLayout(HStackLayout(spacing: Layout.headerContentSpacing))
     }
 
     /// 表紙⇄拡大表示のズーム遷移の対応付けID
@@ -198,12 +205,13 @@ struct BorrowSheetContainerView: View {
         sheetScreen(title: "どの枠で借りますか？") {
             ScrollView {
                 VStack(alignment: .leading, spacing: Layout.sectionSpacing) {
-                    HStack(spacing: Layout.headerContentSpacing) {
+                    bookSummaryLayout {
                         coverZoomButton(for: route.book)
 
                         VStack(alignment: .leading, spacing: Layout.headerTextSpacing) {
                             Text("『\(route.book.title)』")
                                 .font(.title3.bold())
+                                .fixedSize(horizontal: false, vertical: true)
                             if let author = route.book.author {
                                 Text(author)
                                     .font(.subheadline)
